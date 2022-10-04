@@ -120,7 +120,7 @@ CREATE TABLE "promotion_product" (
 
 CREATE TABLE "product_category" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "parent_category_id" bigint UNIQUE NOT NULL,
+  "parent_category_id" bigint,
   "category_name" varchar NOT NULL
 );
 

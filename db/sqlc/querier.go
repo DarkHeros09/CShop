@@ -9,24 +9,47 @@ import (
 )
 
 type Querier interface {
+	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)
 	CreateAdminType(ctx context.Context, adminType string) (AdminType, error)
+	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
+	CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (ProductCategory, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
+	DeleteAddress(ctx context.Context, id int64) error
 	DeleteAdmin(ctx context.Context, id int64) error
 	DeleteAdminTypeByID(ctx context.Context, id int64) error
 	DeleteAdminTypeByType(ctx context.Context, adminType string) error
+	DeleteProduct(ctx context.Context, id int64) error
+	DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error
 	DeleteUser(ctx context.Context, id int64) error
+	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) error
+	GetAddress(ctx context.Context, id int64) (Address, error)
+	GetAddressByCity(ctx context.Context, city string) (Address, error)
 	GetAdmin(ctx context.Context, id int64) (Admin, error)
 	GetAdminByEmail(ctx context.Context, email string) (Admin, error)
 	GetAdminType(ctx context.Context, id int64) (AdminType, error)
+	GetProduct(ctx context.Context, id int64) (Product, error)
+	GetProductCategory(ctx context.Context, id int64) (ProductCategory, error)
+	GetProductCategoryByParent(ctx context.Context, arg GetProductCategoryByParentParams) (ProductCategory, error)
 	GetUser(ctx context.Context, id int64) (User, error)
+	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
+	ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error)
 	ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error)
+	ListProductCategories(ctx context.Context, arg ListProductCategoriesParams) ([]ProductCategory, error)
+	ListProductCategoriesByParent(ctx context.Context, arg ListProductCategoriesByParentParams) ([]ProductCategory, error)
+	ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error)
+	ListUserAddresses(ctx context.Context, arg ListUserAddressesParams) ([]UserAddress, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
 	UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
+	UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) (ProductCategory, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
 }
 
 var _ Querier = (*Queries)(nil)

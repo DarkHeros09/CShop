@@ -5,6 +5,7 @@
 package db
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -36,19 +37,12 @@ type AdminType struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type OrderLine struct {
-	ID            int64 `json:"id"`
-	ProductItemID int64 `json:"product_item_id"`
-	OrderID       int64 `json:"order_id"`
-	Quantity      int32 `json:"quantity"`
-	// price of product when ordered
-	Price string `json:"price"`
-}
-
 type OrderStatus struct {
 	ID int64 `json:"id"`
 	// values like ordered, proccessed and delivered
-	Status string `json:"status"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type PaymentMethod struct {
@@ -72,13 +66,15 @@ type Product struct {
 	Description  string `json:"description"`
 	ProductImage string `json:"product_image"`
 	// default is false
-	Active bool `json:"active"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ProductCategory struct {
-	ID               int64  `json:"id"`
-	ParentCategoryID int64  `json:"parent_category_id"`
-	CategoryName     string `json:"category_name"`
+	ID               int64         `json:"id"`
+	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
+	CategoryName     string        `json:"category_name"`
 }
 
 type ProductConfiguration struct {
@@ -95,7 +91,9 @@ type ProductItem struct {
 	ProductImage string `json:"product_image"`
 	Price        string `json:"price"`
 	// default is false
-	Active bool `json:"active"`
+	Active    bool      `json:"active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Promotion struct {
@@ -133,6 +131,19 @@ type ShopOrder struct {
 	OrderTotal        string    `json:"order_total"`
 	ShoppingMethod    int64     `json:"shopping_method"`
 	OrderStatus       int64     `json:"order_status"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+type ShopOrderItem struct {
+	ID            int64 `json:"id"`
+	ProductItemID int64 `json:"product_item_id"`
+	OrderID       int64 `json:"order_id"`
+	Quantity      int32 `json:"quantity"`
+	// price of product when ordered
+	Price     string    `json:"price"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ShoppingCart struct {
@@ -160,9 +171,11 @@ type User struct {
 }
 
 type UserAddress struct {
-	UserID    int64 `json:"user_id"`
-	AddressID int64 `json:"address_id"`
-	IsDefault bool  `json:"is_default"`
+	UserID    int64     `json:"user_id"`
+	AddressID int64     `json:"address_id"`
+	IsDefault bool      `json:"is_default"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type UserReview struct {
