@@ -93,7 +93,7 @@ CREATE TABLE "shop_order_item" (
 CREATE TABLE "product_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_id" bigint UNIQUE NOT NULL,
-  "SKU" bigint NOT NULL,
+  "product_sku" bigint NOT NULL,
   "qty_in_stock" int NOT NULL,
   "product_image" varchar NOT NULL,
   "price" decimal NOT NULL,
@@ -113,9 +113,10 @@ CREATE TABLE "product" (
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
-CREATE TABLE "promotion_product" (
+CREATE TABLE "product_promotion" (
   "product_id" bigint UNIQUE NOT NULL,
-  "promotion_id" bigint UNIQUE NOT NULL
+  "promotion_id" bigint UNIQUE NOT NULL,
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "product_category" (
@@ -129,13 +130,15 @@ CREATE TABLE "promotion" (
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
   "discount_rate" int NOT NULL,
-  "start_date" date NOT NULL,
-  "end_date" date NOT NULL
+  "active" boolean NOT NULL DEFAULT false,
+  "start_date" timestamptz NOT NULL,
+  "end_date" timestamptz NOT NULL
 );
 
-CREATE TABLE "promotion_category" (
+CREATE TABLE "category_promotion" (
   "category_id" bigint UNIQUE NOT NULL,
-  "promotion_id" bigint UNIQUE NOT NULL
+  "promotion_id" bigint UNIQUE NOT NULL,
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "variation" (
@@ -195,6 +198,12 @@ COMMENT ON COLUMN "product_item"."active" IS 'default is false';
 
 COMMENT ON COLUMN "product"."active" IS 'default is false';
 
+COMMENT ON COLUMN "product_promotion"."active" IS 'default is false';
+
+COMMENT ON COLUMN "promotion"."active" IS 'default is false';
+
+COMMENT ON COLUMN "category_promotion"."active" IS 'default is false';
+
 COMMENT ON COLUMN "variation"."name" IS 'variation names like color, and size';
 
 COMMENT ON COLUMN "variation_option"."value" IS 'variation values like Red, ans Size XL';
@@ -231,15 +240,15 @@ ALTER TABLE "product_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" (
 
 ALTER TABLE "product" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 
-ALTER TABLE "promotion_product" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
+ALTER TABLE "product_promotion" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 
-ALTER TABLE "promotion_product" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
+ALTER TABLE "product_promotion" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
 
 ALTER TABLE "product_category" ADD FOREIGN KEY ("parent_category_id") REFERENCES "product_category" ("id");
 
-ALTER TABLE "promotion_category" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
+ALTER TABLE "category_promotion" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 
-ALTER TABLE "promotion_category" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
+ALTER TABLE "category_promotion" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
 
 ALTER TABLE "variation" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 

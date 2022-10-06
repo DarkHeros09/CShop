@@ -37,6 +37,13 @@ type AdminType struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type CategoryPromotion struct {
+	CategoryID  int64 `json:"category_id"`
+	PromotionID int64 `json:"promotion_id"`
+	// default is false
+	Active bool `json:"active"`
+}
+
 type OrderStatus struct {
 	ID int64 `json:"id"`
 	// values like ordered, proccessed and delivered
@@ -85,7 +92,7 @@ type ProductConfiguration struct {
 type ProductItem struct {
 	ID         int64 `json:"id"`
 	ProductID  int64 `json:"product_id"`
-	SKU        int64 `json:"SKU"`
+	ProductSku int64 `json:"product_sku"`
 	QtyInStock int32 `json:"qty_in_stock"`
 	// may be used to show different images than original
 	ProductImage string `json:"product_image"`
@@ -96,23 +103,22 @@ type ProductItem struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Promotion struct {
-	ID           int64     `json:"id"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	DiscountRate int32     `json:"discount_rate"`
-	StartDate    time.Time `json:"start_date"`
-	EndDate      time.Time `json:"end_date"`
-}
-
-type PromotionCategory struct {
-	CategoryID  int64 `json:"category_id"`
-	PromotionID int64 `json:"promotion_id"`
-}
-
-type PromotionProduct struct {
+type ProductPromotion struct {
 	ProductID   int64 `json:"product_id"`
 	PromotionID int64 `json:"promotion_id"`
+	// default is false
+	Active bool `json:"active"`
+}
+
+type Promotion struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	DiscountRate int32  `json:"discount_rate"`
+	// default is false
+	Active    bool      `json:"active"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }
 
 type ShippingMethod struct {
