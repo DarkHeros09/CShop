@@ -46,7 +46,7 @@ CREATE TABLE "user_address" (
 CREATE TABLE "user_review" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "user_id" bigint UNIQUE NOT NULL,
-  "orderd_product_id" bigint UNIQUE NOT NULL,
+  "ordered_product_id" bigint UNIQUE NOT NULL,
   "rating_value" int NOT NULL DEFAULT 0,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -161,12 +161,12 @@ CREATE TABLE "product_configuration" (
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "user_id" bigint UNIQUE NOT NULL,
-  "order_date" date NOT NULL,
+  "order_date" timestamptz NOT NULL,
   "payment_method_id" bigint UNIQUE NOT NULL,
   "shipping_address_id" bigint UNIQUE NOT NULL,
   "order_total" decimal NOT NULL,
-  "shopping_method" bigint UNIQUE NOT NULL,
-  "order_status" bigint UNIQUE NOT NULL,
+  "shipping_method_id" bigint UNIQUE NOT NULL,
+  "order_status_id" bigint UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -220,7 +220,7 @@ ALTER TABLE "user_address" ADD FOREIGN KEY ("address_id") REFERENCES "address" (
 
 ALTER TABLE "user_review" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
-ALTER TABLE "user_review" ADD FOREIGN KEY ("orderd_product_id") REFERENCES "shop_order_item" ("id");
+ALTER TABLE "user_review" ADD FOREIGN KEY ("ordered_product_id") REFERENCES "shop_order_item" ("id");
 
 ALTER TABLE "payment_method" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
@@ -260,6 +260,6 @@ ALTER TABLE "product_configuration" ADD FOREIGN KEY ("variation_option_id") REFE
 
 ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "address" ("id");
 
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shopping_method") REFERENCES "shipping_method" ("id");
+ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
 
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status") REFERENCES "order_status" ("id");
+ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status_id") REFERENCES "order_status" ("id");

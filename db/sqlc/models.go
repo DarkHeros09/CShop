@@ -135,8 +135,8 @@ type ShopOrder struct {
 	PaymentMethodID   int64     `json:"payment_method_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`
 	OrderTotal        string    `json:"order_total"`
-	ShoppingMethod    int64     `json:"shopping_method"`
-	OrderStatus       int64     `json:"order_status"`
+	ShippingMethodID  int64     `json:"shipping_method_id"`
+	OrderStatusID     int64     `json:"order_status_id"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -185,12 +185,12 @@ type UserAddress struct {
 }
 
 type UserReview struct {
-	ID              int64     `json:"id"`
-	UserID          int64     `json:"user_id"`
-	OrderdProductID int64     `json:"orderd_product_id"`
-	RatingValue     int32     `json:"rating_value"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID               int64     `json:"id"`
+	UserID           int64     `json:"user_id"`
+	OrderedProductID int64     `json:"ordered_product_id"`
+	RatingValue      int32     `json:"rating_value"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type Variation struct {
