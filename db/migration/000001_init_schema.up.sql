@@ -74,8 +74,9 @@ CREATE TABLE "shopping_cart" (
 
 CREATE TABLE "shopping_cart_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "shopping_cart_id" bigint UNIQUE NOT NULL,
+  "shopping_cart_id" bigint NOT NULL,
   "product_item_id" bigint UNIQUE NOT NULL,
+  "qty" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -161,7 +162,6 @@ CREATE TABLE "product_configuration" (
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "user_id" bigint UNIQUE NOT NULL,
-  "order_date" timestamptz NOT NULL,
   "payment_method_id" bigint UNIQUE NOT NULL,
   "shipping_address_id" bigint UNIQUE NOT NULL,
   "order_total" decimal NOT NULL,

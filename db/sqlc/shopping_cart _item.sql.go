@@ -13,25 +13,28 @@ import (
 const createShoppingCartItem = `-- name: CreateShoppingCartItem :one
 INSERT INTO "shopping_cart_item" (
   shopping_cart_id,
-  product_item_id
+  product_item_id,
+  qty
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
-RETURNING id, shopping_cart_id, product_item_id, created_at, updated_at
+RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
 `
 
 type CreateShoppingCartItemParams struct {
 	ShoppingCartID int64 `json:"shopping_cart_id"`
 	ProductItemID  int64 `json:"product_item_id"`
+	Qty            int32 `json:"qty"`
 }
 
 func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error) {
-	row := q.db.QueryRowContext(ctx, createShoppingCartItem, arg.ShoppingCartID, arg.ProductItemID)
+	row := q.db.QueryRowContext(ctx, createShoppingCartItem, arg.ShoppingCartID, arg.ProductItemID, arg.Qty)
 	var i ShoppingCartItem
 	err := row.Scan(
 		&i.ID,
 		&i.ShoppingCartID,
 		&i.ProductItemID,
+		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -49,7 +52,7 @@ func (q *Queries) DeleteShoppingCartItem(ctx context.Context, id int64) error {
 }
 
 const getShoppingCartItem = `-- name: GetShoppingCartItem :one
-SELECT id, shopping_cart_id, product_item_id, created_at, updated_at FROM "shopping_cart_item"
+SELECT id, shopping_cart_id, product_item_id, qty, created_at, updated_at FROM "shopping_cart_item"
 WHERE id = $1 LIMIT 1
 `
 
@@ -60,6 +63,7 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCa
 		&i.ID,
 		&i.ShoppingCartID,
 		&i.ProductItemID,
+		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -67,7 +71,7 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCa
 }
 
 const listShoppingCartItems = `-- name: ListShoppingCartItems :many
-SELECT id, shopping_cart_id, product_item_id, created_at, updated_at FROM "shopping_cart_item"
+SELECT id, shopping_cart_id, product_item_id, qty, created_at, updated_at FROM "shopping_cart_item"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -91,6 +95,7 @@ func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCar
 			&i.ID,
 			&i.ShoppingCartID,
 			&i.ProductItemID,
+			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -111,24 +116,32 @@ const updateShoppingCartItem = `-- name: UpdateShoppingCartItem :one
 UPDATE "shopping_cart_item"
 SET 
 shopping_cart_id = COALESCE($1,shopping_cart_id),
-product_item_id = COALESCE($2,product_item_id)
-WHERE id = $3
-RETURNING id, shopping_cart_id, product_item_id, created_at, updated_at
+product_item_id = COALESCE($2,product_item_id),
+qty = COALESCE($3,qty)
+WHERE id = $4
+RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
 `
 
 type UpdateShoppingCartItemParams struct {
 	ShoppingCartID sql.NullInt64 `json:"shopping_cart_id"`
 	ProductItemID  sql.NullInt64 `json:"product_item_id"`
+	Qty            sql.NullInt32 `json:"qty"`
 	ID             int64         `json:"id"`
 }
 
 func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (ShoppingCartItem, error) {
-	row := q.db.QueryRowContext(ctx, updateShoppingCartItem, arg.ShoppingCartID, arg.ProductItemID, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateShoppingCartItem,
+		arg.ShoppingCartID,
+		arg.ProductItemID,
+		arg.Qty,
+		arg.ID,
+	)
 	var i ShoppingCartItem
 	err := row.Scan(
 		&i.ID,
 		&i.ShoppingCartID,
 		&i.ProductItemID,
+		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

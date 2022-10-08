@@ -18,7 +18,6 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
 		UserID:            user.ID,
-		OrderDate:         util.RandomEndDate(),
 		PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimal(1, 100),
@@ -31,7 +30,6 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	require.NotEmpty(t, shopOrder)
 
 	require.Equal(t, arg.UserID, shopOrder.UserID)
-	require.Equal(t, arg.OrderDate, shopOrder.OrderDate)
 	require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
 	require.Equal(t, arg.ShippingAddressID, shopOrder.ShippingAddressID)
 	require.Equal(t, arg.OrderTotal, shopOrder.OrderTotal)
@@ -53,7 +51,6 @@ func TestGetShopOrder(t *testing.T) {
 
 	require.Equal(t, shopOrder1.ID, shopOrder2.ID)
 	require.Equal(t, shopOrder1.UserID, shopOrder2.UserID)
-	require.Equal(t, shopOrder1.OrderDate, shopOrder2.OrderDate)
 	require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
 	require.Equal(t, shopOrder1.ShippingAddressID, shopOrder2.ShippingAddressID)
 	require.Equal(t, shopOrder1.OrderTotal, shopOrder2.OrderTotal)
@@ -65,7 +62,6 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
 	arg := UpdateShopOrderParams{
 		UserID:            sql.NullInt64{},
-		OrderDate:         sql.NullTime{},
 		PaymentMethodID:   sql.NullInt64{},
 		ShippingAddressID: sql.NullInt64{},
 		OrderTotal: sql.NullString{
@@ -83,7 +79,6 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 
 	require.Equal(t, shopOrder1.ID, shopOrder2.ID)
 	require.Equal(t, shopOrder1.UserID, shopOrder2.UserID)
-	require.Equal(t, shopOrder1.OrderDate, shopOrder2.OrderDate)
 	require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
 	require.Equal(t, shopOrder1.ShippingAddressID, shopOrder2.ShippingAddressID)
 	require.NotEqual(t, shopOrder1.OrderTotal, shopOrder2.OrderTotal)

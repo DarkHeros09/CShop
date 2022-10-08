@@ -1,9 +1,10 @@
 -- name: CreateShoppingCartItem :one
 INSERT INTO "shopping_cart_item" (
   shopping_cart_id,
-  product_item_id
+  product_item_id,
+  qty
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
 RETURNING *;
 
@@ -21,7 +22,8 @@ OFFSET $2;
 UPDATE "shopping_cart_item"
 SET 
 shopping_cart_id = COALESCE(sqlc.narg(shopping_cart_id),shopping_cart_id),
-product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id)
+product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
+qty = COALESCE(sqlc.narg(qty),qty)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

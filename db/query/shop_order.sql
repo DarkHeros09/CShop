@@ -1,14 +1,13 @@
 -- name: CreateShopOrder :one
 INSERT INTO "shop_order" (
   user_id,
-  order_date,
   payment_method_id,
   shipping_address_id,
   order_total,
   shipping_method_id,
   order_status_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -26,7 +25,6 @@ OFFSET $2;
 UPDATE "shop_order"
 SET 
 user_id = COALESCE(sqlc.narg(user_id),user_id),
-order_date = COALESCE(sqlc.narg(order_date),order_date),
 payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_id),
 order_total = COALESCE(sqlc.narg(order_total),order_total),

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"cshop.com/v2/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,6 +16,7 @@ func createRandomShoppingCartItem(t *testing.T) ShoppingCartItem {
 	arg := CreateShoppingCartItemParams{
 		ShoppingCartID: shoppingCart.ID,
 		ProductItemID:  productItem.ID,
+		Qty:            int32(util.RandomInt(0, 10)),
 	}
 	shoppingCartItem, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
 	require.NoError(t, err)
@@ -22,6 +24,7 @@ func createRandomShoppingCartItem(t *testing.T) ShoppingCartItem {
 
 	require.Equal(t, arg.ShoppingCartID, shoppingCartItem.ShoppingCartID)
 	require.Equal(t, arg.ProductItemID, shoppingCartItem.ProductItemID)
+	require.Equal(t, arg.Qty, shoppingCartItem.Qty)
 
 	return shoppingCartItem
 }
@@ -39,6 +42,7 @@ func TestGetShoppingCartItem(t *testing.T) {
 
 	require.Equal(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
 	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
+	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
 }
 
 func TestUpdateShoppingCartItem(t *testing.T) {
@@ -59,6 +63,7 @@ func TestUpdateShoppingCartItem(t *testing.T) {
 
 	require.NotEqual(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
 	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
+	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
 }
 
 func TestDeleteShoppingCartItem(t *testing.T) {

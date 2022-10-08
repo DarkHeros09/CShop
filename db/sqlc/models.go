@@ -131,7 +131,6 @@ type ShippingMethod struct {
 type ShopOrder struct {
 	ID                int64     `json:"id"`
 	UserID            int64     `json:"user_id"`
-	OrderDate         time.Time `json:"order_date"`
 	PaymentMethodID   int64     `json:"payment_method_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`
 	OrderTotal        string    `json:"order_total"`
@@ -163,6 +162,7 @@ type ShoppingCartItem struct {
 	ID             int64     `json:"id"`
 	ShoppingCartID int64     `json:"shopping_cart_id"`
 	ProductItemID  int64     `json:"product_item_id"`
+	Qty            int32     `json:"qty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
