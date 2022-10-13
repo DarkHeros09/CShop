@@ -28,6 +28,11 @@ migratedown:
 migratedown1:
 	migrate -path db/migration -database "postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable" -verbose down 1
 
+cimigrateup:
+	migrate -path db/migration -database "postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable" -verbose up
+
+cimigratedown:
+	migrate -path db/migration -database "postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable" -verbose down
 sqlc:
 	sqlc generate
 
@@ -43,4 +48,4 @@ sqlcfix:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb initmigrate migrateup migratedown sqlc sqlcwin sqlcfix triggersup triggersdown
+.PHONY: postgres createdb dropdb initmigrate migrateup migratedown cimigrateup cimigratedown sqlc sqlcwin sqlcfix triggersup triggersdown
