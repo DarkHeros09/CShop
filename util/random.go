@@ -74,7 +74,7 @@ func RandomStartDate() time.Time {
 	delta := max - min
 
 	sec := rand.Int63n(delta) + min
-	return time.Unix(sec, 0).UTC()
+	return time.Unix(sec, 0).Local().UTC()
 }
 
 func RandomEndDate() time.Time {
@@ -83,5 +83,5 @@ func RandomEndDate() time.Time {
 	delta := max - min
 
 	sec := rand.Int63n(delta) + min
-	return time.Unix(sec, 0).UTC()
+	return time.Unix(sec, 0).Local().UTC()
 }
