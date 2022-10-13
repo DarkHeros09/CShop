@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"testing"
+	"time"
 
 	"cshop.com/v2/util"
 	"github.com/stretchr/testify/require"
@@ -27,8 +28,8 @@ func createRandomPromotion(t *testing.T) Promotion {
 	require.Equal(t, arg.Description, promotion.Description)
 	require.Equal(t, arg.DiscountRate, promotion.DiscountRate)
 	require.Equal(t, arg.Active, promotion.Active)
-	require.Equal(t, arg.StartDate, promotion.StartDate)
-	require.Equal(t, arg.EndDate, promotion.EndDate)
+	require.WithinDuration(t, arg.StartDate, promotion.StartDate, time.Second)
+	require.WithinDuration(t, arg.EndDate, promotion.EndDate, time.Second)
 
 	return promotion
 }
@@ -48,8 +49,8 @@ func TestGetPromotion(t *testing.T) {
 	require.Equal(t, promotion1.Description, promotion2.Description)
 	require.Equal(t, promotion1.DiscountRate, promotion2.DiscountRate)
 	require.Equal(t, promotion1.Active, promotion2.Active)
-	require.Equal(t, promotion1.StartDate, promotion2.StartDate)
-	require.Equal(t, promotion1.EndDate, promotion2.EndDate)
+	require.WithinDuration(t, promotion1.StartDate, promotion2.StartDate, time.Second)
+	require.WithinDuration(t, promotion1.EndDate, promotion2.EndDate, time.Second)
 }
 
 func TestUpdatePromotionName(t *testing.T) {
@@ -74,8 +75,8 @@ func TestUpdatePromotionName(t *testing.T) {
 	require.Equal(t, promotion1.Description, promotion2.Description)
 	require.Equal(t, promotion1.DiscountRate, promotion2.DiscountRate)
 	require.Equal(t, promotion1.Active, promotion2.Active)
-	require.Equal(t, promotion1.StartDate, promotion2.StartDate)
-	require.Equal(t, promotion1.EndDate, promotion2.EndDate)
+	require.WithinDuration(t, promotion1.StartDate, promotion2.StartDate, time.Second)
+	require.WithinDuration(t, promotion1.EndDate, promotion2.EndDate, time.Second)
 	require.NotEqual(t, promotion1.StartDate, promotion2.EndDate)
 }
 
@@ -100,8 +101,8 @@ func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 	require.NotEqual(t, promotion1.Description, promotion2.Description)
 	require.NotEqual(t, promotion1.DiscountRate, promotion2.DiscountRate)
 	require.Equal(t, promotion1.Active, promotion2.Active)
-	require.Equal(t, promotion1.StartDate, promotion2.StartDate)
-	require.Equal(t, promotion1.EndDate, promotion2.EndDate)
+	require.WithinDuration(t, promotion1.StartDate, promotion2.StartDate, time.Second)
+	require.WithinDuration(t, promotion1.EndDate, promotion2.EndDate, time.Second)
 	require.NotEqual(t, promotion1.StartDate, promotion2.EndDate)
 
 }
