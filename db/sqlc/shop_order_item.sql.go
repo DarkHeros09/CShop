@@ -122,6 +122,43 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 	return items, nil
 }
 
+const listShopOrderItemsByOrderID = `-- name: ListShopOrderItemsByOrderID :many
+SELECT id, product_item_id, order_id, quantity, price, created_at, updated_at FROM "shop_order_item"
+WHERE order_id = $1
+ORDER BY id
+`
+
+func (q *Queries) ListShopOrderItemsByOrderID(ctx context.Context, orderID int64) ([]ShopOrderItem, error) {
+	rows, err := q.db.QueryContext(ctx, listShopOrderItemsByOrderID, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ShopOrderItem{}
+	for rows.Next() {
+		var i ShopOrderItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductItemID,
+			&i.OrderID,
+			&i.Quantity,
+			&i.Price,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateShopOrderItem = `-- name: UpdateShopOrderItem :one
 UPDATE "shop_order_item"
 SET 

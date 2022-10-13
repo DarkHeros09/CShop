@@ -18,6 +18,11 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
+-- name: ListShoppingCartItemsByCartID :many
+SELECT * FROM "shopping_cart_item"
+WHERE shopping_cart_id = $1
+ORDER BY id;
+
 -- name: UpdateShoppingCartItem :one
 UPDATE "shopping_cart_item"
 SET 

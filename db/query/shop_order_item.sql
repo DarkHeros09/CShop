@@ -19,6 +19,11 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
+-- name: ListShopOrderItemsByOrderID :many
+SELECT * FROM "shop_order_item"
+WHERE order_id = $1
+ORDER BY id;
+
 -- name: UpdateShopOrderItem :one
 UPDATE "shop_order_item"
 SET 

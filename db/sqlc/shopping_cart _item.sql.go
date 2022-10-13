@@ -112,6 +112,42 @@ func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCar
 	return items, nil
 }
 
+const listShoppingCartItemsByCartID = `-- name: ListShoppingCartItemsByCartID :many
+SELECT id, shopping_cart_id, product_item_id, qty, created_at, updated_at FROM "shopping_cart_item"
+WHERE shopping_cart_id = $1
+ORDER BY id
+`
+
+func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error) {
+	rows, err := q.db.QueryContext(ctx, listShoppingCartItemsByCartID, shoppingCartID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ShoppingCartItem{}
+	for rows.Next() {
+		var i ShoppingCartItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.ShoppingCartID,
+			&i.ProductItemID,
+			&i.Qty,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateShoppingCartItem = `-- name: UpdateShoppingCartItem :one
 UPDATE "shopping_cart_item"
 SET 

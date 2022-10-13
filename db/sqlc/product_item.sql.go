@@ -89,6 +89,29 @@ func (q *Queries) GetProductItem(ctx context.Context, id int64) (ProductItem, er
 	return i, err
 }
 
+const getProductItemForUpdate = `-- name: GetProductItemForUpdate :one
+SELECT id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at FROM "product_item"
+WHERE id = $1 LIMIT 1
+FOR NO KEY UPDATE
+`
+
+func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error) {
+	row := q.db.QueryRowContext(ctx, getProductItemForUpdate, id)
+	var i ProductItem
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.ProductSku,
+		&i.QtyInStock,
+		&i.ProductImage,
+		&i.Price,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listProductItems = `-- name: ListProductItems :many
 SELECT id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at FROM "product_item"
 ORDER BY id

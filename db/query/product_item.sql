@@ -15,6 +15,11 @@ RETURNING *;
 SELECT * FROM "product_item"
 WHERE id = $1 LIMIT 1;
 
+-- name: GetProductItemForUpdate :one
+SELECT * FROM "product_item"
+WHERE id = $1 LIMIT 1
+FOR NO KEY UPDATE;
+
 -- name: ListProductItems :many
 SELECT * FROM "product_item"
 ORDER BY id

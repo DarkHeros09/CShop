@@ -49,22 +49,20 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction
 type FinishedPurchaseTxParams struct {
-	UserAddress      UserAddress      `json:"user_address"`
-	PaymentMethod    PaymentMethod    `json:"payment_method"`
-	ProductItem      ProductItem      `json:"product_item"`
-	ShoppingCart     ShoppingCart     `json:"shopping_cart"`
-	ShoppingCartItem ShoppingCartItem `json:"shopping_cart_item"`
-	ShippingMethod   ShippingMethod   `json:"shipping_method"`
-	OrderStatus      OrderStatus      `json:"order_status"`
-	OrderTotal       string           `json:"order_total"`
+	UserAddress    UserAddress    `json:"user_address"`
+	PaymentMethod  PaymentMethod  `json:"payment_method"`
+	ShoppingCart   ShoppingCart   `json:"shopping_cart"`
+	ShippingMethod ShippingMethod `json:"shipping_method"`
+	OrderStatus    OrderStatus    `json:"order_status"`
+	OrderTotal     string         `json:"order_total"`
 }
 
 // FinishedPurchaseTxResult is the result of the purchase transaction
 type FinishedPurchaseTxResult struct {
-	ProductItem   ProductItem   `json:"product_item"`
-	OrderStatus   OrderStatus   `json:"order_status"`
-	ShopOrder     ShopOrder     `json:"shop_order"`
-	ShopOrderItem ShopOrderItem `json:"shop_order_item"`
+	UpdatedProductItem ProductItem   `json:"product_item"`
+	OrderStatus        OrderStatus   `json:"order_status"`
+	ShopOrder          ShopOrder     `json:"shop_order"`
+	ShopOrderItem      ShopOrderItem `json:"shop_order_item"`
 }
 
 /*
@@ -92,37 +90,50 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			return err
 		}
 
-		result.ShopOrderItem, err = q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
-			ProductItemID: arg.ProductItem.ID,
-			OrderID:       result.ShopOrder.ID,
-			Quantity:      arg.ShoppingCartItem.Qty,
-			Price:         arg.ProductItem.Price,
-		})
+		shopCartItems, err := q.ListShoppingCartItemsByCartID(ctx, arg.ShoppingCart.ID)
 		if err != nil {
 			return err
 		}
 
-		result.ProductItem, err = q.UpdateProductItem(ctx, UpdateProductItemParams{
-			ProductID: sql.NullInt64{
-				Int64: arg.ProductItem.ProductID,
-				Valid: true,
-			},
-			ProductSku: sql.NullInt64{},
-			QtyInStock: sql.NullInt32{
-				Int32: arg.ProductItem.QtyInStock - arg.ShoppingCartItem.Qty,
-				Valid: true,
-			},
-			ProductImage: sql.NullString{},
-			Price:        sql.NullString{},
-			Active:       sql.NullBool{},
-			ID:           arg.ProductItem.ID,
-		})
-		if err != nil {
-			return err
+		fmt.Println("user: ", arg.UserAddress.UserID)
+		for _, shopCartItem := range shopCartItems {
+
+			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItem.ProductItemID)
+			if err != nil {
+				return err
+			}
+
+			result.UpdatedProductItem, err = q.UpdateProductItem(ctx, UpdateProductItemParams{
+				ProductID: sql.NullInt64{
+					Int64: productItem.ProductID,
+					Valid: true,
+				},
+				ProductSku: sql.NullInt64{},
+				QtyInStock: sql.NullInt32{
+					Int32: productItem.QtyInStock - shopCartItem.Qty,
+					Valid: true,
+				},
+				ProductImage: sql.NullString{},
+				Price:        sql.NullString{},
+				Active:       sql.NullBool{},
+				ID:           productItem.ID,
+			})
+			if err != nil {
+				return err
+			}
+			result.ShopOrderItem, err = q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
+				ProductItemID: shopCartItem.ProductItemID,
+				OrderID:       result.ShopOrder.ID,
+				Quantity:      shopCartItem.Qty,
+				Price:         productItem.Price,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
-
 	})
+
 	return result, err
 }
