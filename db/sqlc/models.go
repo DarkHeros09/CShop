@@ -7,6 +7,8 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Address struct {
@@ -169,6 +171,7 @@ type ShoppingCartItem struct {
 
 type User struct {
 	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
 	Telephone int32     `json:"telephone"`
@@ -193,6 +196,17 @@ type UserReview struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+type UserSession struct {
+	ID           uuid.UUID `json:"id"`
+	UserID       int64     `json:"user_id"`
+	RefreshToken string    `json:"refresh_token"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	CreatedAt    time.Time `json:"created_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
+}
+
 type Variation struct {
 	ID         int64 `json:"id"`
 	CategoryID int64 `json:"category_id"`
@@ -205,4 +219,19 @@ type VariationOption struct {
 	VariationID int64 `json:"variation_id"`
 	// variation values like Red, ans Size XL
 	Value string `json:"value"`
+}
+
+type WishList struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type WishListItem struct {
+	ID            int64     `json:"id"`
+	WishListID    int64     `json:"wish_list_id"`
+	ProductItemID int64     `json:"product_item_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"cshop.com/v2/util"
+	"github.com/cshop/v3/util"
 	"github.com/stretchr/testify/require"
 )
 

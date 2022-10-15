@@ -1,10 +1,11 @@
 -- name: CreateUser :one
 INSERT INTO "user" (
+  username,
   email,
   password,
   telephone
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -25,6 +26,7 @@ OFFSET $2;
 -- name: UpdateUser :one
 UPDATE "user"
 SET 
+username = COALESCE(sqlc.narg(username),username),
 email = COALESCE(sqlc.narg(email),email),
 password = COALESCE(sqlc.narg(password),password),
 telephone = COALESCE(sqlc.narg(telephone),telephone)

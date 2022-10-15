@@ -19,11 +19,23 @@ CREATE TABLE "admin" (
 
 CREATE TABLE "user" (
   "id" bigserial PRIMARY KEY NOT NULL,
+  "username" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
   "telephone" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "user_session" (
+  "id" uuid UNIQUE PRIMARY KEY NOT NULL,
+  "user_id" bigint UNIQUE NOT NULL,
+  "refresh_token" varchar NOT NULL,
+  "user_agent" varchar NOT NULL,
+  "client_ip" varchar NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "expires_at" timestamptz NOT NULL
 );
 
 CREATE TABLE "address" (
@@ -77,6 +89,21 @@ CREATE TABLE "shopping_cart_item" (
   "shopping_cart_id" bigint NOT NULL,
   "product_item_id" bigint UNIQUE NOT NULL,
   "qty" int NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "wish_list" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "user_id" bigint UNIQUE NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "wish_list_item" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "wish_list_id" bigint NOT NULL,
+  "product_item_id" bigint UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -184,6 +211,8 @@ CREATE TABLE "shipping_method" (
   "price" decimal NOT NULL
 );
 
+CREATE INDEX ON "user" ("username");
+
 CREATE INDEX ON "user" ("email");
 
 CREATE INDEX ON "user" ("telephone");
@@ -214,6 +243,8 @@ COMMENT ON COLUMN "shipping_method"."name" IS 'values like normal, or free';
 
 ALTER TABLE "admin" ADD FOREIGN KEY ("type_id") REFERENCES "admin_type" ("id");
 
+ALTER TABLE "user_session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
 ALTER TABLE "user_address" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "user_address" ADD FOREIGN KEY ("address_id") REFERENCES "address" ("id");
@@ -231,6 +262,12 @@ ALTER TABLE "shopping_cart" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id")
 ALTER TABLE "shopping_cart_item" ADD FOREIGN KEY ("shopping_cart_id") REFERENCES "shopping_cart" ("id");
 
 ALTER TABLE "shopping_cart_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
+
+ALTER TABLE "wish_list" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+ALTER TABLE "wish_list_item" ADD FOREIGN KEY ("wish_list_id") REFERENCES "wish_list" ("id");
+
+ALTER TABLE "wish_list_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "shop_order_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 

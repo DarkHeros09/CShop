@@ -11,6 +11,11 @@ BEFORE UPDATE ON "user"
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
+CREATE TRIGGER set_timestamp_user_session
+BEFORE UPDATE ON "user_session"
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
 CREATE TRIGGER set_timestamp_address
 BEFORE UPDATE ON "address"
 FOR EACH ROW
@@ -33,6 +38,16 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TRIGGER set_timestamp_shopping_cart_item
 BEFORE UPDATE ON "shopping_cart_item"
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp_wish_list
+BEFORE UPDATE ON "wish_list"
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp_wish_list_item
+BEFORE UPDATE ON "wish_list_item"
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 

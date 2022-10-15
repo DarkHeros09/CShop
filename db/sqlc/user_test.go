@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"cshop.com/v2/util"
+	"github.com/cshop/v3/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,6 +16,7 @@ func createRandomUser(t *testing.T) User {
 	require.NotEmpty(t, hashedPassword)
 
 	arg := CreateUserParams{
+		Username:  util.RandomUser(),
 		Email:     util.RandomEmail(),
 		Password:  hashedPassword,
 		Telephone: int32(util.RandomInt(0, 7)),
@@ -24,6 +25,7 @@ func createRandomUser(t *testing.T) User {
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
+	require.Equal(t, arg.Username, user.Username)
 	require.Equal(t, arg.Email, user.Email)
 	require.Equal(t, arg.Password, user.Password)
 	require.Equal(t, arg.Telephone, user.Telephone)

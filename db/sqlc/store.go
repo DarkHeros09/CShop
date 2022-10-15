@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // Store provides all functions to execute db queries and transactions
@@ -78,27 +80,34 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 
-		result.ShopOrder, err = q.CreateShopOrder(ctx, CreateShopOrderParams{
-			UserID:            arg.UserAddress.UserID,
-			PaymentMethodID:   arg.PaymentMethod.ID,
-			ShippingAddressID: arg.UserAddress.AddressID,
-			OrderTotal:        arg.OrderTotal,
-			ShippingMethodID:  arg.ShippingMethod.ID,
-			OrderStatusID:     arg.OrderStatus.ID,
-		})
-		if err != nil {
-			return err
-		}
-
 		shopCartItems, err := q.ListShoppingCartItemsByCartID(ctx, arg.ShoppingCart.ID)
 		if err != nil {
 			return err
 		}
 
-		fmt.Println("user: ", arg.UserAddress.UserID)
 		for _, shopCartItem := range shopCartItems {
 
 			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItem.ProductItemID)
+			if err != nil {
+				return err
+			}
+
+			if productItem.QtyInStock <= shopCartItem.Qty && productItem.QtyInStock > 0 {
+				return errors.New("Not Enough Qty in Stock")
+			}
+
+			if productItem.QtyInStock <= 0 {
+				return errors.New("Stock is Empty")
+			}
+
+			result.ShopOrder, err = q.CreateShopOrder(ctx, CreateShopOrderParams{
+				UserID:            arg.UserAddress.UserID,
+				PaymentMethodID:   arg.PaymentMethod.ID,
+				ShippingAddressID: arg.UserAddress.AddressID,
+				OrderTotal:        arg.OrderTotal,
+				ShippingMethodID:  arg.ShippingMethod.ID,
+				OrderStatusID:     arg.OrderStatus.ID,
+			})
 			if err != nil {
 				return err
 			}

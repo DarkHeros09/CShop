@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"cshop.com/v2/util"
+	"github.com/cshop/v3/util"
 	_ "github.com/lib/pq"
 )
 

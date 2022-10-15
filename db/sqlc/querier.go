@@ -6,6 +6,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -30,8 +32,11 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
 	CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error)
+	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error)
 	CreateVariation(ctx context.Context, arg CreateVariationParams) (Variation, error)
 	CreateVariationOption(ctx context.Context, arg CreateVariationOptionParams) (VariationOption, error)
+	CreateWishList(ctx context.Context, userID int64) (WishList, error)
+	CreateWishListItem(ctx context.Context, arg CreateWishListItemParams) (WishListItem, error)
 	DeleteAddress(ctx context.Context, id int64) error
 	DeleteAdmin(ctx context.Context, id int64) error
 	DeleteAdminTypeByID(ctx context.Context, id int64) error
@@ -56,6 +61,8 @@ type Querier interface {
 	DeleteUserReview(ctx context.Context, id int64) error
 	DeleteVariation(ctx context.Context, id int64) error
 	DeleteVariationOption(ctx context.Context, id int64) error
+	DeleteWishList(ctx context.Context, id int64) error
+	DeleteWishListItem(ctx context.Context, id int64) error
 	GetAddress(ctx context.Context, id int64) (Address, error)
 	GetAddressByCity(ctx context.Context, city string) (Address, error)
 	GetAdmin(ctx context.Context, id int64) (Admin, error)
@@ -82,8 +89,11 @@ type Querier interface {
 	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserReview(ctx context.Context, id int64) (UserReview, error)
+	GetUserSession(ctx context.Context, id uuid.UUID) (UserSession, error)
 	GetVariation(ctx context.Context, id int64) (Variation, error)
 	GetVariationOption(ctx context.Context, id int64) (VariationOption, error)
+	GetWishList(ctx context.Context, id int64) (WishList, error)
+	GetWishListItem(ctx context.Context, id int64) (WishListItem, error)
 	ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error)
 	ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error)
@@ -110,6 +120,9 @@ type Querier interface {
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	ListVariationOptions(ctx context.Context, arg ListVariationOptionsParams) ([]VariationOption, error)
 	ListVariations(ctx context.Context, arg ListVariationsParams) ([]Variation, error)
+	ListWishListItems(ctx context.Context, arg ListWishListItemsParams) ([]WishListItem, error)
+	ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]WishListItem, error)
+	ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
 	UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error)
@@ -133,6 +146,8 @@ type Querier interface {
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)
 	UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error)
 	UpdateVariationOption(ctx context.Context, arg UpdateVariationOptionParams) (VariationOption, error)
+	UpdateWishList(ctx context.Context, arg UpdateWishListParams) (WishList, error)
+	UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error)
 }
 
 var _ Querier = (*Queries)(nil)
