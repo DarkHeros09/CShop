@@ -3,14 +3,16 @@ package api
 import (
 	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-reflect"
+
+	"github.com/goccy/go-json"
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
@@ -163,6 +165,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  password,
 				"telephone": user.Telephone,
 			},
+
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateUserParams{
 					Username:  user.Username,
@@ -944,7 +947,8 @@ func randomUser(t *testing.T) (user db.User, password string) {
 		Username:  util.RandomUser(),
 		Password:  hashedPassword,
 		Telephone: int32(util.RandomInt(910000000, 929999999)),
-		Email:     util.RandomEmail(),
+
+		Email: util.RandomEmail(),
 	}
 	return
 }

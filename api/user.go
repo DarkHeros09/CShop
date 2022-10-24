@@ -75,6 +75,72 @@ func (server *Server) createUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
+type changePasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (server *Server) resetPassword(ctx *gin.Context) {
+	var req changePasswordRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	getUser, err := server.store.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	newPassword, err := util.GeneratePassword(10, 3, 2, false, false)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	hashedPassword, err := util.HashPassword(newPassword)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = util.EmailSend(req.Email, newPassword)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateUserParams{
+		ID: getUser.ID,
+		Password: sql.NullString{
+			String: hashedPassword,
+			Valid:  true,
+		},
+	}
+
+	user, err := server.store.UpdateUser(ctx, arg)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := newUserResponse(user)
+	ctx.JSON(http.StatusOK, rsp)
+
+}
+
 type getUserRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }

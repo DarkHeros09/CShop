@@ -48,7 +48,10 @@ sqlcfix:
 test:
 	go test -v -cover ./...
 
+server:
+	go run main.go
+
 mock:
 	mockgen --build_flags=--mod=mod -package mockdb -destination db/mock/store.go github.com/cshop/v3/db/sqlc Store
 
-.PHONY: postgres createdb dropdb initmigrate migrateup migratedown cimigrateup cimigratedown sqlc sqlcwin sqlcfix triggersup triggersdown mock
+.PHONY: postgres createdb dropdb initmigrate migrateup migratedown cimigrateup cimigratedown sqlc sqlcwin sqlcfix triggersup triggersdown mock server

@@ -22,7 +22,7 @@ CREATE TABLE "user" (
   "username" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
-  "telephone" int NOT NULL,
+  "telephone" int NOT NULL DEFAULT 0,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );

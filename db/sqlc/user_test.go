@@ -19,8 +19,9 @@ func createRandomUser(t *testing.T) User {
 		Username:  util.RandomUser(),
 		Email:     util.RandomEmail(),
 		Password:  hashedPassword,
-		Telephone: int32(util.RandomInt(0, 7)),
+		Telephone: int32(util.RandomInt(0, 1000000)),
 	}
+
 	user, err := testQueires.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
@@ -77,7 +78,7 @@ func TestUpdateUser(t *testing.T) {
 	arg := UpdateUserParams{
 		ID: user1.ID,
 		Telephone: sql.NullInt32{
-			Int32: int32(util.RandomInt(0, 10)),
+			Int32: int32(util.RandomInt(0, 1000000)),
 			Valid: true,
 		},
 	}

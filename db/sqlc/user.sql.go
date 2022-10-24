@@ -16,6 +16,7 @@ INSERT INTO "user" (
   email,
   password,
   telephone
+
 ) VALUES (
   $1, $2, $3, $4
 )
