@@ -23,6 +23,7 @@ CREATE TABLE "user" (
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
   "telephone" int NOT NULL DEFAULT 0,
+  "default_payment" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -48,9 +49,9 @@ CREATE TABLE "address" (
 );
 
 CREATE TABLE "user_address" (
-  "user_id" bigint UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
   "address_id" bigint UNIQUE NOT NULL,
-  "is_default" boolean NOT NULL DEFAULT false,
+  "default_address" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );

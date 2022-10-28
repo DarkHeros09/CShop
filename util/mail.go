@@ -5,9 +5,9 @@ import (
 	"net/smtp"
 )
 
-func EmailSend(email string, newPassword string) error {
+func EmailSend(email string, newPassword string, hostPassword string) error {
 	from := "mnbenghuzzi@gmail.com"
-	password := "bijrdksdfjhhjukx"
+	password := hostPassword
 
 	// Receiver email address.
 	to := []string{email}

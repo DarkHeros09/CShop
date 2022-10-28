@@ -14,10 +14,9 @@ const createPaymentMethod = `-- name: CreatePaymentMethod :one
 INSERT INTO "payment_method" (
   user_id,
   payment_type_id,
-  provider,
-  is_default
+  provider
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3
 )
 RETURNING id, user_id, payment_type_id, provider, is_default
 `
@@ -26,16 +25,10 @@ type CreatePaymentMethodParams struct {
 	UserID        int64  `json:"user_id"`
 	PaymentTypeID int32  `json:"payment_type_id"`
 	Provider      string `json:"provider"`
-	IsDefault     bool   `json:"is_default"`
 }
 
 func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (PaymentMethod, error) {
-	row := q.db.QueryRowContext(ctx, createPaymentMethod,
-		arg.UserID,
-		arg.PaymentTypeID,
-		arg.Provider,
-		arg.IsDefault,
-	)
+	row := q.db.QueryRowContext(ctx, createPaymentMethod, arg.UserID, arg.PaymentTypeID, arg.Provider)
 	var i PaymentMethod
 	err := row.Scan(
 		&i.ID,
@@ -121,9 +114,8 @@ UPDATE "payment_method"
 SET 
 user_id = COALESCE($1,user_id),
 payment_type_id = COALESCE($2,payment_type_id),
-provider = COALESCE($3,provider),
-is_default = COALESCE($4,is_default)
-WHERE id = $5
+provider = COALESCE($3,provider)
+WHERE id = $4
 RETURNING id, user_id, payment_type_id, provider, is_default
 `
 
@@ -131,7 +123,6 @@ type UpdatePaymentMethodParams struct {
 	UserID        sql.NullInt64  `json:"user_id"`
 	PaymentTypeID sql.NullInt32  `json:"payment_type_id"`
 	Provider      sql.NullString `json:"provider"`
-	IsDefault     sql.NullBool   `json:"is_default"`
 	ID            int64          `json:"id"`
 }
 
@@ -140,7 +131,6 @@ func (q *Queries) UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMeth
 		arg.UserID,
 		arg.PaymentTypeID,
 		arg.Provider,
-		arg.IsDefault,
 		arg.ID,
 	)
 	var i PaymentMethod

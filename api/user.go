@@ -75,12 +75,12 @@ func (server *Server) createUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
-type changePasswordRequest struct {
+type resetPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
 func (server *Server) resetPassword(ctx *gin.Context) {
-	var req changePasswordRequest
+	var req resetPasswordRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -109,7 +109,7 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 		return
 	}
 
-	err = util.EmailSend(req.Email, newPassword)
+	err = util.EmailSend(getUser.Email, newPassword, server.config.GmailRandomPassword)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -153,6 +153,7 @@ func (server *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
 	user, err := server.store.GetUser(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -162,7 +163,6 @@ func (server *Server) getUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
 	if user.ID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
@@ -186,16 +186,16 @@ func (server *Server) listUsers(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListUsersParams{
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
-	}
-
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
+	}
+
+	arg := db.ListUsersParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
 	}
 
 	users, err := server.store.ListUsers(ctx, arg)
@@ -212,8 +212,9 @@ func (server *Server) listUsers(ctx *gin.Context) {
 }
 
 type updateUserRequest struct {
-	ID        int64 `json:"id" binding:"required,min=1"`
-	Telephone int32 `json:"telephone" binding:"required,numeric,min=910000000,max=929999999"`
+	ID             int64 `uri:"id" binding:"required,min=1"`
+	Telephone      int32 `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
+	DefaultPayment int64 `json:"default_payment" binding:"omitempty,required"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
@@ -224,11 +225,21 @@ func (server *Server) updateUser(ctx *gin.Context) {
 		return
 	}
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+	if req.ID != authPayload.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	arg := db.UpdateUserParams{
 		ID: authPayload.UserID,
 		Telephone: sql.NullInt32{
 			Int32: req.Telephone,
-			Valid: true,
+			Valid: req.Telephone != 0,
+		},
+		DefaultPayment: sql.NullInt64{
+			Int64: req.DefaultPayment,
+			Valid: req.DefaultPayment != 0,
 		},
 	}
 

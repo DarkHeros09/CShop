@@ -518,8 +518,9 @@ func TestUpdateUserAPI(t *testing.T) {
 			name:   "OK",
 			UserID: user.ID,
 			body: gin.H{
-				"id":        user.ID,
-				"telephone": user.Telephone,
+				"id":              user.ID,
+				"telephone":       user.Telephone,
+				"default_payment": user.DefaultPayment.Int64,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -529,7 +530,7 @@ func TestUpdateUserAPI(t *testing.T) {
 					ID: user.ID,
 					Telephone: sql.NullInt32{
 						Int32: user.Telephone,
-						Valid: true,
+						Valid: user.Telephone != 0,
 					},
 				}
 

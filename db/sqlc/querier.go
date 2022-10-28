@@ -31,6 +31,7 @@ type Querier interface {
 	CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
+	CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error)
 	CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error)
 	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error)
 	CreateVariation(ctx context.Context, arg CreateVariationParams) (Variation, error)
@@ -57,6 +58,32 @@ type Querier interface {
 	DeleteShoppingCart(ctx context.Context, id int64) error
 	DeleteShoppingCartItem(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
+	// -- name: UpdateUserAddressWithAddress :one
+	// WITH t1 AS (
+	//     UPDATE "address" as a
+	//     SET
+	//     address_line = COALESCE(sqlc.narg(address_line),address_line),
+	//     region = COALESCE(sqlc.narg(region),region),
+	//     city= COALESCE(sqlc.narg(city),city)
+	//     WHERE id = COALESCE(sqlc.arg(id),id)
+	//     RETURNING a.id, a.address_line, a.region, a.city
+	//    ),
+	//     t2 AS (
+	//     UPDATE "user_address"
+	//     SET
+	//     default_address = COALESCE(sqlc.narg(default_address),default_address)
+	//     WHERE
+	//     user_id = COALESCE(sqlc.arg(user_id),user_id)
+	//     AND address_id = COALESCE(sqlc.arg(address_id),address_id)
+	//     RETURNING user_id, address_id, default_address
+	// 	)
+	// SELECT
+	// user_id,
+	// address_id,
+	// default_address,
+	// address_line,
+	// region,
+	// city From t1,t2;
 	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) error
 	DeleteUserReview(ctx context.Context, id int64) error
 	DeleteVariation(ctx context.Context, id int64) error
@@ -87,6 +114,7 @@ type Querier interface {
 	GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCartItem, error)
 	GetUser(ctx context.Context, id int64) (User, error)
 	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
+	GetUserAddressWithAddress(ctx context.Context, arg GetUserAddressWithAddressParams) (GetUserAddressWithAddressRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserReview(ctx context.Context, id int64) (UserReview, error)
 	GetUserSession(ctx context.Context, id uuid.UUID) (UserSession, error)

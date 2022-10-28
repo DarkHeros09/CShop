@@ -16,7 +16,6 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 		UserID:        user1.ID,
 		PaymentTypeID: int32(paymentType.ID),
 		Provider:      util.RandomString(5),
-		IsDefault:     util.RandomBool(),
 	}
 	paymentMethod, err := testQueires.CreatePaymentMethod(context.Background(), arg)
 	require.NoError(t, err)
@@ -25,7 +24,6 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 	require.Equal(t, arg.UserID, paymentMethod.UserID)
 	require.Equal(t, arg.PaymentTypeID, paymentMethod.PaymentTypeID)
 	require.Equal(t, arg.Provider, paymentMethod.Provider)
-	require.Equal(t, arg.IsDefault, paymentMethod.IsDefault)
 
 	return paymentMethod
 }
@@ -57,10 +55,7 @@ func TestUpdatePaymentMethodIsDefaultAndProvider(t *testing.T) {
 			String: util.RandomString(5),
 			Valid:  true,
 		},
-		IsDefault: sql.NullBool{
-			Bool:  !paymentMethod1.IsDefault,
-			Valid: true,
-		},
+
 		ID: paymentMethod1.ID,
 	}
 
@@ -72,7 +67,6 @@ func TestUpdatePaymentMethodIsDefaultAndProvider(t *testing.T) {
 	require.Equal(t, paymentMethod1.UserID, paymentMethod2.UserID)
 	require.Equal(t, paymentMethod1.PaymentTypeID, paymentMethod2.PaymentTypeID)
 	require.NotEqual(t, paymentMethod1.Provider, paymentMethod2.Provider)
-	require.NotEqual(t, paymentMethod1.IsDefault, paymentMethod2.IsDefault)
 }
 
 func TestDeletePaymentMethod(t *testing.T) {

@@ -170,21 +170,22 @@ type ShoppingCartItem struct {
 }
 
 type User struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	Telephone int32     `json:"telephone"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID             int64         `json:"id"`
+	Username       string        `json:"username"`
+	Email          string        `json:"email"`
+	Password       string        `json:"password"`
+	Telephone      int32         `json:"telephone"`
+	DefaultPayment sql.NullInt64 `json:"default_payment"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 }
 
 type UserAddress struct {
-	UserID    int64     `json:"user_id"`
-	AddressID int64     `json:"address_id"`
-	IsDefault bool      `json:"is_default"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UserID         int64         `json:"user_id"`
+	AddressID      int64         `json:"address_id"`
+	DefaultAddress sql.NullInt64 `json:"default_address"`
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 }
 
 type UserReview struct {

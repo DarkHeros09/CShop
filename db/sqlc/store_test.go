@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"testing"
@@ -57,7 +58,6 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			UserID:        userAddress.UserID,
 			PaymentTypeID: int32(paymentType.ID),
 			Provider:      util.RandomString(5),
-			IsDefault:     true,
 		})
 		if err != nil {
 			log.Fatal("err is: ", err)
@@ -107,7 +107,9 @@ func TestFinishedPurchaseTx(t *testing.T) {
 				UserAddress: UserAddress{
 					UserID:    userAddress.UserID,
 					AddressID: userAddress.AddressID,
-					IsDefault: userAddress.IsDefault,
+					DefaultAddress: sql.NullInt64{
+						Int64: userAddress.AddressID,
+					},
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,
@@ -222,7 +224,6 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			UserID:        userAddress.UserID,
 			PaymentTypeID: int32(paymentType.ID),
 			Provider:      util.RandomString(5),
-			IsDefault:     true,
 		})
 		if err != nil {
 			log.Fatal("err is: ", err)
@@ -272,7 +273,9 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 				UserAddress: UserAddress{
 					UserID:    userAddress.UserID,
 					AddressID: userAddress.AddressID,
-					IsDefault: userAddress.IsDefault,
+					DefaultAddress: sql.NullInt64{
+						Int64: userAddress.AddressID,
+					},
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,
@@ -360,7 +363,6 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			UserID:        userAddress.UserID,
 			PaymentTypeID: int32(paymentType.ID),
 			Provider:      util.RandomString(5),
-			IsDefault:     true,
 		})
 		if err != nil {
 			log.Fatal("err is: ", err)
@@ -410,7 +412,9 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 				UserAddress: UserAddress{
 					UserID:    userAddress.UserID,
 					AddressID: userAddress.AddressID,
-					IsDefault: userAddress.IsDefault,
+					DefaultAddress: sql.NullInt64{
+						Int64: userAddress.AddressID,
+					},
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,

@@ -336,6 +336,21 @@ func (mr *MockStoreMockRecorder) CreateUserAddress(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserAddress", reflect.TypeOf((*MockStore)(nil).CreateUserAddress), arg0, arg1)
 }
 
+// CreateUserAddressWithAddress mocks base method.
+func (m *MockStore) CreateUserAddressWithAddress(arg0 context.Context, arg1 db.CreateUserAddressWithAddressParams) (db.CreateUserAddressWithAddressRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserAddressWithAddress", arg0, arg1)
+	ret0, _ := ret[0].(db.CreateUserAddressWithAddressRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUserAddressWithAddress indicates an expected call of CreateUserAddressWithAddress.
+func (mr *MockStoreMockRecorder) CreateUserAddressWithAddress(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserAddressWithAddress", reflect.TypeOf((*MockStore)(nil).CreateUserAddressWithAddress), arg0, arg1)
+}
+
 // CreateUserReview mocks base method.
 func (m *MockStore) CreateUserReview(arg0 context.Context, arg1 db.CreateUserReviewParams) (db.UserReview, error) {
 	m.ctrl.T.Helper()
@@ -1163,6 +1178,21 @@ func (m *MockStore) GetUserAddress(arg0 context.Context, arg1 db.GetUserAddressP
 func (mr *MockStoreMockRecorder) GetUserAddress(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddress", reflect.TypeOf((*MockStore)(nil).GetUserAddress), arg0, arg1)
+}
+
+// GetUserAddressWithAddress mocks base method.
+func (m *MockStore) GetUserAddressWithAddress(arg0 context.Context, arg1 db.GetUserAddressWithAddressParams) (db.GetUserAddressWithAddressRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserAddressWithAddress", arg0, arg1)
+	ret0, _ := ret[0].(db.GetUserAddressWithAddressRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserAddressWithAddress indicates an expected call of GetUserAddressWithAddress.
+func (mr *MockStoreMockRecorder) GetUserAddressWithAddress(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddressWithAddress", reflect.TypeOf((*MockStore)(nil).GetUserAddressWithAddress), arg0, arg1)
 }
 
 // GetUserByEmail mocks base method.

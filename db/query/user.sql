@@ -3,10 +3,10 @@ INSERT INTO "user" (
   username,
   email,
   password,
-  telephone
-
+  telephone,
+  default_payment
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -30,7 +30,8 @@ SET
 username = COALESCE(sqlc.narg(username),username),
 email = COALESCE(sqlc.narg(email),email),
 password = COALESCE(sqlc.narg(password),password),
-telephone = COALESCE(sqlc.narg(telephone),telephone)
+telephone = COALESCE(sqlc.narg(telephone),telephone),
+default_payment = COALESCE(sqlc.narg(default_payment),default_payment)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

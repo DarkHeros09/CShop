@@ -15,19 +15,20 @@ INSERT INTO "user" (
   username,
   email,
   password,
-  telephone
-
+  telephone,
+  default_payment
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
-RETURNING id, username, email, password, telephone, created_at, updated_at
+RETURNING id, username, email, password, telephone, default_payment, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Telephone int32  `json:"telephone"`
+	Username       string        `json:"username"`
+	Email          string        `json:"email"`
+	Password       string        `json:"password"`
+	Telephone      int32         `json:"telephone"`
+	DefaultPayment sql.NullInt64 `json:"default_payment"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -36,6 +37,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Email,
 		arg.Password,
 		arg.Telephone,
+		arg.DefaultPayment,
 	)
 	var i User
 	err := row.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.Password,
 		&i.Telephone,
+		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -61,7 +64,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, email, password, telephone, created_at, updated_at FROM "user"
+SELECT id, username, email, password, telephone, default_payment, created_at, updated_at FROM "user"
 WHERE id = $1 LIMIT 1
 `
 
@@ -74,6 +77,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Email,
 		&i.Password,
 		&i.Telephone,
+		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -81,7 +85,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password, telephone, created_at, updated_at FROM "user"
+SELECT id, username, email, password, telephone, default_payment, created_at, updated_at FROM "user"
 WHERE email = $1 LIMIT 1
 `
 
@@ -94,6 +98,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.Password,
 		&i.Telephone,
+		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -101,7 +106,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, email, password, telephone, created_at, updated_at FROM "user"
+SELECT id, username, email, password, telephone, default_payment, created_at, updated_at FROM "user"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -127,6 +132,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Email,
 			&i.Password,
 			&i.Telephone,
+			&i.DefaultPayment,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -149,17 +155,19 @@ SET
 username = COALESCE($1,username),
 email = COALESCE($2,email),
 password = COALESCE($3,password),
-telephone = COALESCE($4,telephone)
-WHERE id = $5
-RETURNING id, username, email, password, telephone, created_at, updated_at
+telephone = COALESCE($4,telephone),
+default_payment = COALESCE($5,default_payment)
+WHERE id = $6
+RETURNING id, username, email, password, telephone, default_payment, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	Username  sql.NullString `json:"username"`
-	Email     sql.NullString `json:"email"`
-	Password  sql.NullString `json:"password"`
-	Telephone sql.NullInt32  `json:"telephone"`
-	ID        int64          `json:"id"`
+	Username       sql.NullString `json:"username"`
+	Email          sql.NullString `json:"email"`
+	Password       sql.NullString `json:"password"`
+	Telephone      sql.NullInt32  `json:"telephone"`
+	DefaultPayment sql.NullInt64  `json:"default_payment"`
+	ID             int64          `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -168,6 +176,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Email,
 		arg.Password,
 		arg.Telephone,
+		arg.DefaultPayment,
 		arg.ID,
 	)
 	var i User
@@ -177,6 +186,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Email,
 		&i.Password,
 		&i.Telephone,
+		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

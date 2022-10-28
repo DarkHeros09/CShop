@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/cshop/v3/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +15,10 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 	arg := CreateUserAddressParams{
 		UserID:    user1.ID,
 		AddressID: address1.ID,
-		IsDefault: util.RandomBool(),
+		DefaultAddress: sql.NullInt64{
+			Int64: address1.ID,
+			Valid: address1.ID != 0,
+		},
 	}
 
 	userAddress, err := testQueires.CreateUserAddress(context.Background(), arg)
@@ -25,7 +27,7 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 
 	require.Equal(t, arg.UserID, userAddress.UserID)
 	require.Equal(t, arg.AddressID, userAddress.AddressID)
-	require.Equal(t, arg.IsDefault, userAddress.IsDefault)
+	require.Equal(t, arg.DefaultAddress, userAddress.DefaultAddress)
 
 	return userAddress
 
@@ -33,6 +35,39 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 
 func TestCreateUserAddress(t *testing.T) {
 	createRandomUserAddress(t)
+}
+
+func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddressRow {
+	user1 := createRandomUser(t)
+	address1 := createRandomAddress(t)
+
+	arg := CreateUserAddressWithAddressParams{
+		AddressLine: address1.AddressLine,
+		Region:      address1.Region,
+		City:        address1.City,
+		UserID:      user1.ID,
+		DefaultAddress: sql.NullInt64{
+			Int64: address1.ID,
+			Valid: address1.ID != 0,
+		},
+	}
+
+	userAddress, err := testQueires.CreateUserAddressWithAddress(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, userAddress)
+
+	require.Equal(t, arg.UserID, userAddress.UserID)
+	require.Equal(t, arg.AddressLine, userAddress.AddressLine)
+	require.Equal(t, arg.Region, userAddress.Region)
+	require.Equal(t, arg.City, userAddress.City)
+	require.Equal(t, arg.DefaultAddress, userAddress.DefaultAddress)
+
+	return userAddress
+
+}
+
+func TestCreateUserAddressWithAddress(t *testing.T) {
+	createRandomUserAddressWithAddress(t)
 }
 
 func TestGetUserAddress(t *testing.T) {
@@ -48,7 +83,27 @@ func TestGetUserAddress(t *testing.T) {
 
 	require.Equal(t, userAddress1.UserID, userAddress2.UserID)
 	require.Equal(t, userAddress1.AddressID, userAddress2.AddressID)
-	require.Equal(t, userAddress1.IsDefault, userAddress2.IsDefault)
+	require.Equal(t, userAddress1.DefaultAddress, userAddress2.DefaultAddress)
+
+}
+
+func TestGetUserAddressWithAddress(t *testing.T) {
+	userAddress1 := createRandomUserAddressWithAddress(t)
+
+	arg := GetUserAddressWithAddressParams{
+		UserID:    userAddress1.UserID,
+		AddressID: userAddress1.AddressID,
+	}
+
+	userAddress2, err := testQueires.GetUserAddressWithAddress(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, userAddress2)
+
+	require.Equal(t, userAddress1.UserID, userAddress2.UserID)
+	require.Equal(t, userAddress1.AddressID, userAddress2.AddressID)
+	require.Equal(t, userAddress1.AddressLine, userAddress2.AddressLine)
+	require.Equal(t, userAddress1.Region, userAddress2.Region)
+	require.Equal(t, userAddress1.City, userAddress2.City)
 
 }
 
@@ -57,7 +112,10 @@ func TestUpdateUserAddress(t *testing.T) {
 	arg := UpdateUserAddressParams{
 		UserID:    userAddress1.UserID,
 		AddressID: userAddress1.AddressID,
-		IsDefault: !userAddress1.IsDefault,
+		DefaultAddress: sql.NullInt64{
+			Int64: userAddress1.AddressID,
+			Valid: userAddress1.AddressID != 0,
+		},
 	}
 
 	userAddress2, err := testQueires.UpdateUserAddress(context.Background(), arg)
@@ -67,7 +125,7 @@ func TestUpdateUserAddress(t *testing.T) {
 
 	require.Equal(t, userAddress1.UserID, userAddress2.UserID)
 	require.Equal(t, arg.AddressID, userAddress2.AddressID)
-	require.Equal(t, arg.IsDefault, userAddress2.IsDefault)
+	require.Equal(t, arg.DefaultAddress, userAddress2.DefaultAddress)
 
 }
 
@@ -112,7 +170,7 @@ func TestListUserAddresses(t *testing.T) {
 		require.NotEmpty(t, userAddress)
 		require.Equal(t, lastUserAddress.UserID, userAddress.UserID)
 		require.Equal(t, lastUserAddress.AddressID, userAddress.AddressID)
-		require.Equal(t, lastUserAddress.IsDefault, userAddress.IsDefault)
+		require.Equal(t, lastUserAddress.DefaultAddress, userAddress.DefaultAddress)
 
 	}
 }
