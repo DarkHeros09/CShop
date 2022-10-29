@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,12 +50,9 @@ func TestUpdateShoppingCartItem(t *testing.T) {
 	shoppingCart := createRandomShoppingCart(t)
 	shoppingCartItem1 := createRandomShoppingCartItem(t)
 	arg := UpdateShoppingCartItemParams{
-		ShoppingCartID: sql.NullInt64{
-			Int64: shoppingCart.ID,
-			Valid: true,
-		},
-		ProductItemID: sql.NullInt64{},
-		ID:            shoppingCartItem1.ID,
+		ShoppingCartID: null.IntFromPtr(&shoppingCart.ID),
+		ProductItemID:  null.Int{},
+		ID:             shoppingCartItem1.ID,
 	}
 
 	shoppingCartItem2, err := testQueires.UpdateShoppingCartItem(context.Background(), arg)
@@ -76,7 +74,7 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shoppingCartItem2)
 
 }

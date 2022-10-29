@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createVariationOption = `-- name: CreateVariationOption :one
@@ -26,7 +27,7 @@ type CreateVariationOptionParams struct {
 }
 
 func (q *Queries) CreateVariationOption(ctx context.Context, arg CreateVariationOptionParams) (VariationOption, error) {
-	row := q.db.QueryRowContext(ctx, createVariationOption, arg.VariationID, arg.Value)
+	row := q.db.QueryRow(ctx, createVariationOption, arg.VariationID, arg.Value)
 	var i VariationOption
 	err := row.Scan(&i.ID, &i.VariationID, &i.Value)
 	return i, err
@@ -38,7 +39,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteVariationOption(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteVariationOption, id)
+	_, err := q.db.Exec(ctx, deleteVariationOption, id)
 	return err
 }
 
@@ -48,7 +49,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetVariationOption(ctx context.Context, id int64) (VariationOption, error) {
-	row := q.db.QueryRowContext(ctx, getVariationOption, id)
+	row := q.db.QueryRow(ctx, getVariationOption, id)
 	var i VariationOption
 	err := row.Scan(&i.ID, &i.VariationID, &i.Value)
 	return i, err
@@ -67,7 +68,7 @@ type ListVariationOptionsParams struct {
 }
 
 func (q *Queries) ListVariationOptions(ctx context.Context, arg ListVariationOptionsParams) ([]VariationOption, error) {
-	rows, err := q.db.QueryContext(ctx, listVariationOptions, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listVariationOptions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,6 @@ func (q *Queries) ListVariationOptions(ctx context.Context, arg ListVariationOpt
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -99,13 +97,13 @@ RETURNING id, variation_id, value
 `
 
 type UpdateVariationOptionParams struct {
-	VariationID sql.NullInt64  `json:"variation_id"`
-	Value       sql.NullString `json:"value"`
-	ID          int64          `json:"id"`
+	VariationID null.Int    `json:"variation_id"`
+	Value       null.String `json:"value"`
+	ID          int64       `json:"id"`
 }
 
 func (q *Queries) UpdateVariationOption(ctx context.Context, arg UpdateVariationOptionParams) (VariationOption, error) {
-	row := q.db.QueryRowContext(ctx, updateVariationOption, arg.VariationID, arg.Value, arg.ID)
+	row := q.db.QueryRow(ctx, updateVariationOption, arg.VariationID, arg.Value, arg.ID)
 	var i VariationOption
 	err := row.Scan(&i.ID, &i.VariationID, &i.Value)
 	return i, err

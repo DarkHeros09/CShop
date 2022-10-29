@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,13 +48,10 @@ func TestGetUserReview(t *testing.T) {
 func TestUpdateUserReviewRating(t *testing.T) {
 	userReview1 := createRandomUserReview(t)
 	arg := UpdateUserReviewParams{
-		UserID:           sql.NullInt64{},
-		OrderedProductID: sql.NullInt64{},
-		RatingValue: sql.NullInt32{
-			Int32: 0,
-			Valid: true,
-		},
-		ID: userReview1.ID,
+		UserID:           null.Int{},
+		OrderedProductID: null.Int{},
+		RatingValue:      null.IntFrom(0),
+		ID:               userReview1.ID,
 	}
 
 	userReview2, err := testQueires.UpdateUserReview(context.Background(), arg)
@@ -75,7 +73,7 @@ func TestDeleteUserReview(t *testing.T) {
 	userReview2, err := testQueires.GetUserReview(context.Background(), userReview1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, userReview2)
 
 }

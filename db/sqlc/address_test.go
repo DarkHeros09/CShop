@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,19 +50,10 @@ func TestGetAddress(t *testing.T) {
 func TestUpdateAddressLine(t *testing.T) {
 	address1 := createRandomAddress(t)
 	arg := UpdateAddressParams{
-		ID: address1.ID,
-		AddressLine: sql.NullString{
-			String: "New Address Line",
-			Valid:  true,
-		},
-		Region: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		City: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
+		ID:          address1.ID,
+		AddressLine: null.StringFrom("New Address Line"),
+		Region:      null.String{},
+		City:        null.String{},
 	}
 	address2, err := testQueires.UpdateAddress(context.Background(), arg)
 	require.NoError(t, err)
@@ -77,19 +69,10 @@ func TestUpdateAddressLine(t *testing.T) {
 func TestUpdateAddressCity(t *testing.T) {
 	address1 := createRandomAddress(t)
 	arg := UpdateAddressParams{
-		ID: address1.ID,
-		AddressLine: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Region: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		City: sql.NullString{
-			String: "New Benghazi",
-			Valid:  true,
-		},
+		ID:          address1.ID,
+		AddressLine: null.String{},
+		Region:      null.String{},
+		City:        null.StringFrom("New Benghazi"),
 	}
 
 	address2, err := testQueires.UpdateAddress(context.Background(), arg)
@@ -106,19 +89,10 @@ func TestUpdateAddressCity(t *testing.T) {
 func TestUpdateAddressLineAndCity(t *testing.T) {
 	address1 := createRandomAddress(t)
 	arg := UpdateAddressParams{
-		ID: address1.ID,
-		AddressLine: sql.NullString{
-			String: "New Address Line",
-			Valid:  true,
-		},
-		Region: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		City: sql.NullString{
-			String: "New Tubroq",
-			Valid:  true,
-		},
+		ID:          address1.ID,
+		AddressLine: null.StringFrom("New Address Line"),
+		Region:      null.String{},
+		City:        null.StringFrom("New Tubroq"),
 	}
 
 	address2, err := testQueires.UpdateAddress(context.Background(), arg)
@@ -142,7 +116,7 @@ func TestDeleteAddress(t *testing.T) {
 	useraddress2, err := testQueires.GetAddress(context.Background(), arg)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, useraddress2)
 
 }

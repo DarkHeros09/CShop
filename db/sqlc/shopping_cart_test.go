@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,13 +37,10 @@ func TestGetShoppingCart(t *testing.T) {
 
 func TestUpdateShoppingCart(t *testing.T) {
 	shoppingCart1 := createRandomShoppingCart(t)
-	user := createRandomUser(t)
+	// user := createRandomUser(t)
 	arg := UpdateShoppingCartParams{
-		UserID: sql.NullInt64{
-			Int64: user.ID,
-			Valid: false,
-		},
-		ID: shoppingCart1.ID,
+		UserID: null.IntFromPtr(&shoppingCart1.UserID),
+		ID:     shoppingCart1.ID,
 	}
 
 	shoppingCart2, err := testQueires.UpdateShoppingCart(context.Background(), arg)
@@ -62,7 +60,7 @@ func TestDeleteShoppingCart(t *testing.T) {
 	shoppingCart2, err := testQueires.GetShoppingCart(context.Background(), shoppingCart1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shoppingCart2)
 
 }

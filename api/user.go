@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"time"
@@ -11,7 +10,9 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/guregu/null"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 )
 
 type createUserRequest struct {
@@ -60,8 +61,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 
 	user, err := server.store.CreateUser(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
@@ -89,7 +90,7 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 
 	getUser, err := server.store.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -116,17 +117,14 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateUserParams{
-		ID: getUser.ID,
-		Password: sql.NullString{
-			String: hashedPassword,
-			Valid:  true,
-		},
+		ID:       getUser.ID,
+		Password: null.StringFromPtr(&hashedPassword),
 	}
 
 	user, err := server.store.UpdateUser(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
@@ -156,7 +154,7 @@ func (server *Server) getUser(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
 	user, err := server.store.GetUser(ctx, req.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -200,7 +198,7 @@ func (server *Server) listUsers(ctx *gin.Context) {
 
 	users, err := server.store.ListUsers(ctx, arg)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -212,9 +210,9 @@ func (server *Server) listUsers(ctx *gin.Context) {
 }
 
 type updateUserRequest struct {
-	ID             int64 `uri:"id" binding:"required,min=1"`
-	Telephone      int32 `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
-	DefaultPayment int64 `json:"default_payment" binding:"omitempty,required"`
+	ID             int64    `uri:"id" binding:"required,min=1"`
+	Telephone      int64    `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
+	DefaultPayment null.Int `json:"default_payment"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
@@ -232,21 +230,15 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateUserParams{
-		ID: authPayload.UserID,
-		Telephone: sql.NullInt32{
-			Int32: req.Telephone,
-			Valid: req.Telephone != 0,
-		},
-		DefaultPayment: sql.NullInt64{
-			Int64: req.DefaultPayment,
-			Valid: req.DefaultPayment != 0,
-		},
+		ID:             authPayload.UserID,
+		Telephone:      null.IntFromPtr(&req.Telephone),
+		DefaultPayment: req.DefaultPayment,
 	}
 
 	user, err := server.store.UpdateUser(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
@@ -280,13 +272,13 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 	}
 	err := server.store.DeleteUser(ctx, req.ID)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
-		} else if err == sql.ErrNoRows {
+		} else if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -321,7 +313,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	user, err := server.store.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}

@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createProductItem = `-- name: CreateProductItem :one
@@ -34,7 +35,7 @@ type CreateProductItemParams struct {
 }
 
 func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error) {
-	row := q.db.QueryRowContext(ctx, createProductItem,
+	row := q.db.QueryRow(ctx, createProductItem,
 		arg.ProductID,
 		arg.ProductSku,
 		arg.QtyInStock,
@@ -63,7 +64,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteProductItem(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteProductItem, id)
+	_, err := q.db.Exec(ctx, deleteProductItem, id)
 	return err
 }
 
@@ -73,7 +74,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProductItem(ctx context.Context, id int64) (ProductItem, error) {
-	row := q.db.QueryRowContext(ctx, getProductItem, id)
+	row := q.db.QueryRow(ctx, getProductItem, id)
 	var i ProductItem
 	err := row.Scan(
 		&i.ID,
@@ -96,7 +97,7 @@ FOR NO KEY UPDATE
 `
 
 func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error) {
-	row := q.db.QueryRowContext(ctx, getProductItemForUpdate, id)
+	row := q.db.QueryRow(ctx, getProductItemForUpdate, id)
 	var i ProductItem
 	err := row.Scan(
 		&i.ID,
@@ -125,7 +126,7 @@ type ListProductItemsParams struct {
 }
 
 func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ProductItem, error) {
-	rows, err := q.db.QueryContext(ctx, listProductItems, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProductItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +149,6 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -171,17 +169,17 @@ RETURNING id, product_id, product_sku, qty_in_stock, product_image, price, activ
 `
 
 type UpdateProductItemParams struct {
-	ProductID    sql.NullInt64  `json:"product_id"`
-	ProductSku   sql.NullInt64  `json:"product_sku"`
-	QtyInStock   sql.NullInt32  `json:"qty_in_stock"`
-	ProductImage sql.NullString `json:"product_image"`
-	Price        sql.NullString `json:"price"`
-	Active       sql.NullBool   `json:"active"`
-	ID           int64          `json:"id"`
+	ProductID    null.Int    `json:"product_id"`
+	ProductSku   null.Int    `json:"product_sku"`
+	QtyInStock   null.Int    `json:"qty_in_stock"`
+	ProductImage null.String `json:"product_image"`
+	Price        null.String `json:"price"`
+	Active       null.Bool   `json:"active"`
+	ID           int64       `json:"id"`
 }
 
 func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error) {
-	row := q.db.QueryRowContext(ctx, updateProductItem,
+	row := q.db.QueryRow(ctx, updateProductItem,
 		arg.ProductID,
 		arg.ProductSku,
 		arg.QtyInStock,

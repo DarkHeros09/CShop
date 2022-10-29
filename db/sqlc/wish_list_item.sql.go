@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createWishListItem = `-- name: CreateWishListItem :one
@@ -26,7 +27,7 @@ type CreateWishListItemParams struct {
 }
 
 func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItemParams) (WishListItem, error) {
-	row := q.db.QueryRowContext(ctx, createWishListItem, arg.WishListID, arg.ProductItemID)
+	row := q.db.QueryRow(ctx, createWishListItem, arg.WishListID, arg.ProductItemID)
 	var i WishListItem
 	err := row.Scan(
 		&i.ID,
@@ -44,7 +45,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteWishListItem(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteWishListItem, id)
+	_, err := q.db.Exec(ctx, deleteWishListItem, id)
 	return err
 }
 
@@ -54,7 +55,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, error) {
-	row := q.db.QueryRowContext(ctx, getWishListItem, id)
+	row := q.db.QueryRow(ctx, getWishListItem, id)
 	var i WishListItem
 	err := row.Scan(
 		&i.ID,
@@ -79,7 +80,7 @@ type ListWishListItemsParams struct {
 }
 
 func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsParams) ([]WishListItem, error) {
-	rows, err := q.db.QueryContext(ctx, listWishListItems, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listWishListItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +98,6 @@ func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsPa
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -114,7 +112,7 @@ ORDER BY id
 `
 
 func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]WishListItem, error) {
-	rows, err := q.db.QueryContext(ctx, listWishListItemsByCartID, wishListID)
+	rows, err := q.db.Query(ctx, listWishListItemsByCartID, wishListID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,9 +130,6 @@ func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int6
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -152,13 +147,13 @@ RETURNING id, wish_list_id, product_item_id, created_at, updated_at
 `
 
 type UpdateWishListItemParams struct {
-	WishListID    sql.NullInt64 `json:"wish_list_id"`
-	ProductItemID sql.NullInt64 `json:"product_item_id"`
-	ID            int64         `json:"id"`
+	WishListID    null.Int `json:"wish_list_id"`
+	ProductItemID null.Int `json:"product_item_id"`
+	ID            int64    `json:"id"`
 }
 
 func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error) {
-	row := q.db.QueryRowContext(ctx, updateWishListItem, arg.WishListID, arg.ProductItemID, arg.ID)
+	row := q.db.QueryRow(ctx, updateWishListItem, arg.WishListID, arg.ProductItemID, arg.ID)
 	var i WishListItem
 	err := row.Scan(
 		&i.ID,

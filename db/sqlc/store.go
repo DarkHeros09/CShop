@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 )
 
@@ -17,11 +18,11 @@ type Store interface {
 // Store provides all functions to execute db queries and transactions
 type SQLStore struct {
 	*Queries
-	db *sql.DB
+	db *pgx.Conn
 }
 
 // NewStore creates a new Store
-func NewStore(db *sql.DB) Store {
+func NewStore(db *pgx.Conn) Store {
 	return &SQLStore{
 		db:      db,
 		Queries: New(db),
@@ -32,7 +33,7 @@ func NewStore(db *sql.DB) Store {
 // method starts with lower case to not be exported so external packages can't call it directly
 // we will provide an exported function for each specific transaction
 func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
-	tx, err := store.db.BeginTx(ctx, nil)
+	tx, err := store.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -40,12 +41,12 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 	q := New(tx)
 	err = fn(q)
 	if err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
+		if rbErr := tx.Rollback(ctx); rbErr != nil {
 			return fmt.Errorf("transaction error: %v, rollback error: %v", err, rbErr)
 		}
 		return err
 	}
-	return tx.Commit()
+	return tx.Commit(ctx)
 
 }
 
@@ -113,18 +114,12 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			}
 
 			result.UpdatedProductItem, err = q.UpdateProductItem(ctx, UpdateProductItemParams{
-				ProductID: sql.NullInt64{
-					Int64: productItem.ProductID,
-					Valid: true,
-				},
-				ProductSku: sql.NullInt64{},
-				QtyInStock: sql.NullInt32{
-					Int32: productItem.QtyInStock - shopCartItem.Qty,
-					Valid: true,
-				},
-				ProductImage: sql.NullString{},
-				Price:        sql.NullString{},
-				Active:       sql.NullBool{},
+				ProductID:    null.IntFromPtr(&productItem.ProductID),
+				ProductSku:   null.Int{},
+				QtyInStock:   null.IntFrom(int64(productItem.QtyInStock - shopCartItem.Qty)),
+				ProductImage: null.String{},
+				Price:        null.String{},
+				Active:       null.Bool{},
 				ID:           productItem.ID,
 			})
 			if err != nil {

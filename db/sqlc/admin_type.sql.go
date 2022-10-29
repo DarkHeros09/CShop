@@ -17,7 +17,7 @@ RETURNING id, admin_type, created_at, updated_at
 `
 
 func (q *Queries) CreateAdminType(ctx context.Context, adminType string) (AdminType, error) {
-	row := q.db.QueryRowContext(ctx, createAdminType, adminType)
+	row := q.db.QueryRow(ctx, createAdminType, adminType)
 	var i AdminType
 	err := row.Scan(
 		&i.ID,
@@ -34,7 +34,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteAdminTypeByID(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteAdminTypeByID, id)
+	_, err := q.db.Exec(ctx, deleteAdminTypeByID, id)
 	return err
 }
 
@@ -44,7 +44,7 @@ WHERE admin_type = $1
 `
 
 func (q *Queries) DeleteAdminTypeByType(ctx context.Context, adminType string) error {
-	_, err := q.db.ExecContext(ctx, deleteAdminTypeByType, adminType)
+	_, err := q.db.Exec(ctx, deleteAdminTypeByType, adminType)
 	return err
 }
 
@@ -54,7 +54,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetAdminType(ctx context.Context, id int64) (AdminType, error) {
-	row := q.db.QueryRowContext(ctx, getAdminType, id)
+	row := q.db.QueryRow(ctx, getAdminType, id)
 	var i AdminType
 	err := row.Scan(
 		&i.ID,
@@ -78,7 +78,7 @@ type ListAdminTypesParams struct {
 }
 
 func (q *Queries) ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error) {
-	rows, err := q.db.QueryContext(ctx, listAdminTypes, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAdminTypes, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +95,6 @@ func (q *Queries) ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) 
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -118,7 +115,7 @@ type UpdateAdminTypeParams struct {
 }
 
 func (q *Queries) UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error) {
-	row := q.db.QueryRowContext(ctx, updateAdminType, arg.ID, arg.AdminType)
+	row := q.db.QueryRow(ctx, updateAdminType, arg.ID, arg.AdminType)
 	var i AdminType
 	err := row.Scan(
 		&i.ID,

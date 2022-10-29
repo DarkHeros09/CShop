@@ -29,7 +29,7 @@ type CreateAdminParams struct {
 }
 
 func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error) {
-	row := q.db.QueryRowContext(ctx, createAdmin,
+	row := q.db.QueryRow(ctx, createAdmin,
 		arg.Username,
 		arg.Email,
 		arg.Password,
@@ -56,7 +56,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteAdmin(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteAdmin, id)
+	_, err := q.db.Exec(ctx, deleteAdmin, id)
 	return err
 }
 
@@ -66,7 +66,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetAdmin(ctx context.Context, id int64) (Admin, error) {
-	row := q.db.QueryRowContext(ctx, getAdmin, id)
+	row := q.db.QueryRow(ctx, getAdmin, id)
 	var i Admin
 	err := row.Scan(
 		&i.ID,
@@ -88,7 +88,7 @@ WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) GetAdminByEmail(ctx context.Context, email string) (Admin, error) {
-	row := q.db.QueryRowContext(ctx, getAdminByEmail, email)
+	row := q.db.QueryRow(ctx, getAdminByEmail, email)
 	var i Admin
 	err := row.Scan(
 		&i.ID,
@@ -117,7 +117,7 @@ type ListAdminsParams struct {
 }
 
 func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error) {
-	rows, err := q.db.QueryContext(ctx, listAdmins, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAdmins, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +140,6 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -162,7 +159,7 @@ type UpdateAdminParams struct {
 }
 
 func (q *Queries) UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error) {
-	row := q.db.QueryRowContext(ctx, updateAdmin, arg.ID, arg.Active)
+	row := q.db.QueryRow(ctx, updateAdmin, arg.ID, arg.Active)
 	var i Admin
 	err := row.Scan(
 		&i.ID,

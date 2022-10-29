@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createUserReview = `-- name: CreateUserReview :one
@@ -28,7 +29,7 @@ type CreateUserReviewParams struct {
 }
 
 func (q *Queries) CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error) {
-	row := q.db.QueryRowContext(ctx, createUserReview, arg.UserID, arg.OrderedProductID, arg.RatingValue)
+	row := q.db.QueryRow(ctx, createUserReview, arg.UserID, arg.OrderedProductID, arg.RatingValue)
 	var i UserReview
 	err := row.Scan(
 		&i.ID,
@@ -47,7 +48,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteUserReview(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteUserReview, id)
+	_, err := q.db.Exec(ctx, deleteUserReview, id)
 	return err
 }
 
@@ -57,7 +58,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserReview(ctx context.Context, id int64) (UserReview, error) {
-	row := q.db.QueryRowContext(ctx, getUserReview, id)
+	row := q.db.QueryRow(ctx, getUserReview, id)
 	var i UserReview
 	err := row.Scan(
 		&i.ID,
@@ -83,7 +84,7 @@ type ListUserReviewsParams struct {
 }
 
 func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams) ([]UserReview, error) {
-	rows, err := q.db.QueryContext(ctx, listUserReviews, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listUserReviews, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +104,6 @@ func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -123,14 +121,14 @@ RETURNING id, user_id, ordered_product_id, rating_value, created_at, updated_at
 `
 
 type UpdateUserReviewParams struct {
-	UserID           sql.NullInt64 `json:"user_id"`
-	OrderedProductID sql.NullInt64 `json:"ordered_product_id"`
-	RatingValue      sql.NullInt32 `json:"rating_value"`
-	ID               int64         `json:"id"`
+	UserID           null.Int `json:"user_id"`
+	OrderedProductID null.Int `json:"ordered_product_id"`
+	RatingValue      null.Int `json:"rating_value"`
+	ID               int64    `json:"id"`
 }
 
 func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error) {
-	row := q.db.QueryRowContext(ctx, updateUserReview,
+	row := q.db.QueryRow(ctx, updateUserReview,
 		arg.UserID,
 		arg.OrderedProductID,
 		arg.RatingValue,

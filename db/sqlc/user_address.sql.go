@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createUserAddress = `-- name: CreateUserAddress :one
@@ -22,13 +23,13 @@ RETURNING user_id, address_id, default_address, created_at, updated_at
 `
 
 type CreateUserAddressParams struct {
-	UserID         int64         `json:"user_id"`
-	AddressID      int64         `json:"address_id"`
-	DefaultAddress sql.NullInt64 `json:"default_address"`
+	UserID         int64    `json:"user_id"`
+	AddressID      int64    `json:"address_id"`
+	DefaultAddress null.Int `json:"default_address"`
 }
 
 func (q *Queries) CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error) {
-	row := q.db.QueryRowContext(ctx, createUserAddress, arg.UserID, arg.AddressID, arg.DefaultAddress)
+	row := q.db.QueryRow(ctx, createUserAddress, arg.UserID, arg.AddressID, arg.DefaultAddress)
 	var i UserAddress
 	err := row.Scan(
 		&i.UserID,
@@ -76,24 +77,24 @@ From t1, t2
 `
 
 type CreateUserAddressWithAddressParams struct {
-	AddressLine    string        `json:"address_line"`
-	Region         string        `json:"region"`
-	City           string        `json:"city"`
-	UserID         int64         `json:"user_id"`
-	DefaultAddress sql.NullInt64 `json:"default_address"`
+	AddressLine    string   `json:"address_line"`
+	Region         string   `json:"region"`
+	City           string   `json:"city"`
+	UserID         int64    `json:"user_id"`
+	DefaultAddress null.Int `json:"default_address"`
 }
 
 type CreateUserAddressWithAddressRow struct {
-	UserID         int64         `json:"user_id"`
-	AddressID      int64         `json:"address_id"`
-	DefaultAddress sql.NullInt64 `json:"default_address"`
-	AddressLine    string        `json:"address_line"`
-	Region         string        `json:"region"`
-	City           string        `json:"city"`
+	UserID         int64    `json:"user_id"`
+	AddressID      int64    `json:"address_id"`
+	DefaultAddress null.Int `json:"default_address"`
+	AddressLine    string   `json:"address_line"`
+	Region         string   `json:"region"`
+	City           string   `json:"city"`
 }
 
 func (q *Queries) CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error) {
-	row := q.db.QueryRowContext(ctx, createUserAddressWithAddress,
+	row := q.db.QueryRow(ctx, createUserAddressWithAddress,
 		arg.AddressLine,
 		arg.Region,
 		arg.City,
@@ -155,7 +156,7 @@ type DeleteUserAddressParams struct {
 // region,
 // city From t1,t2;
 func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) error {
-	_, err := q.db.ExecContext(ctx, deleteUserAddress, arg.UserID, arg.AddressID)
+	_, err := q.db.Exec(ctx, deleteUserAddress, arg.UserID, arg.AddressID)
 	return err
 }
 
@@ -172,7 +173,7 @@ type GetUserAddressParams struct {
 }
 
 func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error) {
-	row := q.db.QueryRowContext(ctx, getUserAddress, arg.UserID, arg.AddressID)
+	row := q.db.QueryRow(ctx, getUserAddress, arg.UserID, arg.AddressID)
 	var i UserAddress
 	err := row.Scan(
 		&i.UserID,
@@ -199,16 +200,16 @@ type GetUserAddressWithAddressParams struct {
 }
 
 type GetUserAddressWithAddressRow struct {
-	UserID         int64         `json:"user_id"`
-	AddressID      int64         `json:"address_id"`
-	DefaultAddress sql.NullInt64 `json:"default_address"`
-	AddressLine    string        `json:"address_line"`
-	Region         string        `json:"region"`
-	City           string        `json:"city"`
+	UserID         int64    `json:"user_id"`
+	AddressID      int64    `json:"address_id"`
+	DefaultAddress null.Int `json:"default_address"`
+	AddressLine    string   `json:"address_line"`
+	Region         string   `json:"region"`
+	City           string   `json:"city"`
 }
 
 func (q *Queries) GetUserAddressWithAddress(ctx context.Context, arg GetUserAddressWithAddressParams) (GetUserAddressWithAddressRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserAddressWithAddress, arg.UserID, arg.AddressID)
+	row := q.db.QueryRow(ctx, getUserAddressWithAddress, arg.UserID, arg.AddressID)
 	var i GetUserAddressWithAddressRow
 	err := row.Scan(
 		&i.UserID,
@@ -236,7 +237,7 @@ type ListUserAddressesParams struct {
 }
 
 func (q *Queries) ListUserAddresses(ctx context.Context, arg ListUserAddressesParams) ([]UserAddress, error) {
-	rows, err := q.db.QueryContext(ctx, listUserAddresses, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listUserAddresses, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -255,9 +256,6 @@ func (q *Queries) ListUserAddresses(ctx context.Context, arg ListUserAddressesPa
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -274,13 +272,13 @@ RETURNING user_id, address_id, default_address, created_at, updated_at
 `
 
 type UpdateUserAddressParams struct {
-	DefaultAddress sql.NullInt64 `json:"default_address"`
-	UserID         int64         `json:"user_id"`
-	AddressID      int64         `json:"address_id"`
+	DefaultAddress null.Int `json:"default_address"`
+	UserID         int64    `json:"user_id"`
+	AddressID      int64    `json:"address_id"`
 }
 
 func (q *Queries) UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error) {
-	row := q.db.QueryRowContext(ctx, updateUserAddress, arg.DefaultAddress, arg.UserID, arg.AddressID)
+	row := q.db.QueryRow(ctx, updateUserAddress, arg.DefaultAddress, arg.UserID, arg.AddressID)
 	var i UserAddress
 	err := row.Scan(
 		&i.UserID,

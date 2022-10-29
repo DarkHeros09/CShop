@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,11 +45,8 @@ func TestUpdateProductConfiguration(t *testing.T) {
 	productConfiguration1 := createRandomProductConfiguration(t)
 	variationOption := createRandomVariationOption(t)
 	arg := UpdateProductConfigurationParams{
-		VariationOptionID: sql.NullInt64{
-			Int64: variationOption.ID,
-			Valid: true,
-		},
-		ProductItemID: productConfiguration1.ProductItemID,
+		VariationOptionID: null.IntFromPtr(&variationOption.ID),
+		ProductItemID:     productConfiguration1.ProductItemID,
 	}
 
 	productConfiguration2, err := testQueires.UpdateProductConfiguration(context.Background(), arg)
@@ -68,7 +66,7 @@ func TestDeleteProductConfiguration(t *testing.T) {
 	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), productConfiguration1.ProductItemID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, productConfiguration2)
 
 }

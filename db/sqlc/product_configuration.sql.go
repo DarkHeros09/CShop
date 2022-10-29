@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createProductConfiguration = `-- name: CreateProductConfiguration :one
@@ -26,7 +27,7 @@ type CreateProductConfigurationParams struct {
 }
 
 func (q *Queries) CreateProductConfiguration(ctx context.Context, arg CreateProductConfigurationParams) (ProductConfiguration, error) {
-	row := q.db.QueryRowContext(ctx, createProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
+	row := q.db.QueryRow(ctx, createProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
 	return i, err
@@ -38,7 +39,7 @@ WHERE product_item_id = $1
 `
 
 func (q *Queries) DeleteProductConfiguration(ctx context.Context, productItemID int64) error {
-	_, err := q.db.ExecContext(ctx, deleteProductConfiguration, productItemID)
+	_, err := q.db.Exec(ctx, deleteProductConfiguration, productItemID)
 	return err
 }
 
@@ -48,7 +49,7 @@ WHERE product_item_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProductConfiguration(ctx context.Context, productItemID int64) (ProductConfiguration, error) {
-	row := q.db.QueryRowContext(ctx, getProductConfiguration, productItemID)
+	row := q.db.QueryRow(ctx, getProductConfiguration, productItemID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
 	return i, err
@@ -67,7 +68,7 @@ type ListProductConfigurationsParams struct {
 }
 
 func (q *Queries) ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error) {
-	rows, err := q.db.QueryContext(ctx, listProductConfigurations, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProductConfigurations, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,6 @@ func (q *Queries) ListProductConfigurations(ctx context.Context, arg ListProduct
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -98,12 +96,12 @@ RETURNING product_item_id, variation_option_id
 `
 
 type UpdateProductConfigurationParams struct {
-	VariationOptionID sql.NullInt64 `json:"variation_option_id"`
-	ProductItemID     int64         `json:"product_item_id"`
+	VariationOptionID null.Int `json:"variation_option_id"`
+	ProductItemID     int64    `json:"product_item_id"`
 }
 
 func (q *Queries) UpdateProductConfiguration(ctx context.Context, arg UpdateProductConfigurationParams) (ProductConfiguration, error) {
-	row := q.db.QueryRowContext(ctx, updateProductConfiguration, arg.VariationOptionID, arg.ProductItemID)
+	row := q.db.QueryRow(ctx, updateProductConfiguration, arg.VariationOptionID, arg.ProductItemID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
 	return i, err

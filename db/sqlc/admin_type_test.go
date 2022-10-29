@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -70,7 +70,7 @@ func TestDeleteAdminTypeByID(t *testing.T) {
 	adminType2, err := testQueires.GetAdminType(context.Background(), adminType1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, adminType2)
 
 }
@@ -84,7 +84,7 @@ func TestDeleteAdminTypeByType(t *testing.T) {
 	adminType2, err := testQueires.GetAdminType(context.Background(), adminType1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, adminType2)
 
 }

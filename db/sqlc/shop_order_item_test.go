@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func createRandomShopOrderItem(t *testing.T) ShopOrderItem {
 		ProductItemID: productItem.ID,
 		OrderID:       shopOrder.ID,
 		Quantity:      int32(util.RandomInt(0, 100)),
-		Price:         fmt.Sprint(util.RandomDecimal(0, 100)),
+		Price:         util.RandomDecimalString(1, 100),
 	}
 
 	shopOrderItem, err := testQueires.CreateShopOrderItem(context.Background(), arg)
@@ -52,14 +52,11 @@ func TestGetShopOrderItem(t *testing.T) {
 func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 	shopOrderItem1 := createRandomShopOrderItem(t)
 	arg := UpdateShopOrderItemParams{
-		ProductItemID: sql.NullInt64{},
-		OrderID:       sql.NullInt64{},
-		Quantity:      sql.NullInt32{},
-		Price: sql.NullString{
-			String: fmt.Sprint(util.RandomDecimal(1, 100)),
-			Valid:  true,
-		},
-		ID: shopOrderItem1.ID,
+		ProductItemID: null.Int{},
+		OrderID:       null.Int{},
+		Quantity:      null.Int{},
+		Price:         null.StringFrom(util.RandomDecimalString(1, 100)),
+		ID:            shopOrderItem1.ID,
 	}
 
 	shopOrderItem2, err := testQueires.UpdateShopOrderItem(context.Background(), arg)
@@ -82,7 +79,7 @@ func TestDeleteShopOrderItem(t *testing.T) {
 	shopOrderItem2, err := testQueires.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shopOrderItem2)
 
 }

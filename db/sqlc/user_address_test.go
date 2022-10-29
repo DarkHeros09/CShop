@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,12 +14,9 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 	address1 := createRandomAddress(t)
 
 	arg := CreateUserAddressParams{
-		UserID:    user1.ID,
-		AddressID: address1.ID,
-		DefaultAddress: sql.NullInt64{
-			Int64: address1.ID,
-			Valid: address1.ID != 0,
-		},
+		UserID:         user1.ID,
+		AddressID:      address1.ID,
+		DefaultAddress: null.IntFromPtr(&address1.ID),
 	}
 
 	userAddress, err := testQueires.CreateUserAddress(context.Background(), arg)
@@ -42,14 +40,11 @@ func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddre
 	address1 := createRandomAddress(t)
 
 	arg := CreateUserAddressWithAddressParams{
-		AddressLine: address1.AddressLine,
-		Region:      address1.Region,
-		City:        address1.City,
-		UserID:      user1.ID,
-		DefaultAddress: sql.NullInt64{
-			Int64: address1.ID,
-			Valid: address1.ID != 0,
-		},
+		AddressLine:    address1.AddressLine,
+		Region:         address1.Region,
+		City:           address1.City,
+		UserID:         user1.ID,
+		DefaultAddress: null.IntFromPtr(&address1.ID),
 	}
 
 	userAddress, err := testQueires.CreateUserAddressWithAddress(context.Background(), arg)
@@ -110,12 +105,9 @@ func TestGetUserAddressWithAddress(t *testing.T) {
 func TestUpdateUserAddress(t *testing.T) {
 	userAddress1 := createRandomUserAddress(t)
 	arg := UpdateUserAddressParams{
-		UserID:    userAddress1.UserID,
-		AddressID: userAddress1.AddressID,
-		DefaultAddress: sql.NullInt64{
-			Int64: userAddress1.AddressID,
-			Valid: userAddress1.AddressID != 0,
-		},
+		UserID:         userAddress1.UserID,
+		AddressID:      userAddress1.AddressID,
+		DefaultAddress: null.IntFromPtr(&userAddress1.DefaultAddress.Int64),
 	}
 
 	userAddress2, err := testQueires.UpdateUserAddress(context.Background(), arg)
@@ -146,7 +138,7 @@ func TestDeleteUserAddress(t *testing.T) {
 	useraddress2, err := testQueires.GetUserAddress(context.Background(), arg1)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, useraddress2)
 
 }

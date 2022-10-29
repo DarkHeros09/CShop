@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 		UserID:            user.ID,
 		PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
-		OrderTotal:        util.RandomDecimal(1, 100),
+		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
 		OrderStatusID:     orderStatus.ID,
 	}
@@ -61,16 +61,13 @@ func TestGetShopOrder(t *testing.T) {
 func TestUpdateShopOrderOrderTotal(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
 	arg := UpdateShopOrderParams{
-		UserID:            sql.NullInt64{},
-		PaymentMethodID:   sql.NullInt64{},
-		ShippingAddressID: sql.NullInt64{},
-		OrderTotal: sql.NullString{
-			String: fmt.Sprint(util.RandomDecimal(10, 90)),
-			Valid:  true,
-		},
-		ShippingMethodID: sql.NullInt64{},
-		OrderStatusID:    sql.NullInt64{},
-		ID:               shopOrder1.ID,
+		UserID:            null.Int{},
+		PaymentMethodID:   null.Int{},
+		ShippingAddressID: null.Int{},
+		OrderTotal:        null.StringFrom(util.RandomDecimalString(1, 100)),
+		ShippingMethodID:  null.Int{},
+		OrderStatusID:     null.Int{},
+		ID:                shopOrder1.ID,
 	}
 
 	shopOrder2, err := testQueires.UpdateShopOrder(context.Background(), arg)
@@ -95,7 +92,7 @@ func TestDeleteShopOrder(t *testing.T) {
 	shopOrder2, err := testQueires.GetShopOrder(context.Background(), shopOrder1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shopOrder2)
 
 }

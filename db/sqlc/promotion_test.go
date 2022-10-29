@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,12 +57,12 @@ func TestGetPromotion(t *testing.T) {
 func TestUpdatePromotionName(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
 	arg := UpdatePromotionParams{
-		Name:         sql.NullString{String: util.RandomString(5), Valid: true},
-		Description:  sql.NullString{},
-		DiscountRate: sql.NullInt32{},
-		Active:       sql.NullBool{},
-		StartDate:    sql.NullTime{},
-		EndDate:      sql.NullTime{},
+		Name:         null.StringFrom(util.RandomString(5)),
+		Description:  null.String{},
+		DiscountRate: null.Int{},
+		Active:       null.Bool{},
+		StartDate:    null.Time{},
+		EndDate:      null.Time{},
 		ID:           promotion1.ID,
 	}
 
@@ -83,12 +84,12 @@ func TestUpdatePromotionName(t *testing.T) {
 func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
 	arg := UpdatePromotionParams{
-		Name:         sql.NullString{},
-		Description:  sql.NullString{String: util.RandomString(5), Valid: true},
-		DiscountRate: sql.NullInt32{Int32: int32(util.RandomInt(1, 90)), Valid: true},
-		Active:       sql.NullBool{},
-		StartDate:    sql.NullTime{},
-		EndDate:      sql.NullTime{},
+		Name:         null.String{},
+		Description:  null.StringFrom(util.RandomString(5)),
+		DiscountRate: null.IntFrom(util.RandomInt(1, 90)),
+		Active:       null.Bool{},
+		StartDate:    null.Time{},
+		EndDate:      null.Time{},
 		ID:           promotion1.ID,
 	}
 
@@ -116,7 +117,7 @@ func TestDeletePromotion(t *testing.T) {
 	promotion2, err := testQueires.GetPromotion(context.Background(), promotion1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, promotion2)
 
 }

@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createVariation = `-- name: CreateVariation :one
@@ -26,7 +27,7 @@ type CreateVariationParams struct {
 }
 
 func (q *Queries) CreateVariation(ctx context.Context, arg CreateVariationParams) (Variation, error) {
-	row := q.db.QueryRowContext(ctx, createVariation, arg.CategoryID, arg.Name)
+	row := q.db.QueryRow(ctx, createVariation, arg.CategoryID, arg.Name)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
 	return i, err
@@ -38,7 +39,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteVariation(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteVariation, id)
+	_, err := q.db.Exec(ctx, deleteVariation, id)
 	return err
 }
 
@@ -48,7 +49,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetVariation(ctx context.Context, id int64) (Variation, error) {
-	row := q.db.QueryRowContext(ctx, getVariation, id)
+	row := q.db.QueryRow(ctx, getVariation, id)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
 	return i, err
@@ -67,7 +68,7 @@ type ListVariationsParams struct {
 }
 
 func (q *Queries) ListVariations(ctx context.Context, arg ListVariationsParams) ([]Variation, error) {
-	rows, err := q.db.QueryContext(ctx, listVariations, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listVariations, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,6 @@ func (q *Queries) ListVariations(ctx context.Context, arg ListVariationsParams) 
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -99,13 +97,13 @@ RETURNING id, category_id, name
 `
 
 type UpdateVariationParams struct {
-	Name       sql.NullString `json:"name"`
-	CategoryID sql.NullInt64  `json:"category_id"`
-	ID         int64          `json:"id"`
+	Name       null.String `json:"name"`
+	CategoryID null.Int    `json:"category_id"`
+	ID         int64       `json:"id"`
 }
 
 func (q *Queries) UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error) {
-	row := q.db.QueryRowContext(ctx, updateVariation, arg.Name, arg.CategoryID, arg.ID)
+	row := q.db.QueryRow(ctx, updateVariation, arg.Name, arg.CategoryID, arg.ID)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
 	return i, err

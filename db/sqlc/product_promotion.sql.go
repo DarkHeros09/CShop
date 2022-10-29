@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createProductPromotion = `-- name: CreateProductPromotion :one
@@ -28,7 +29,7 @@ type CreateProductPromotionParams struct {
 }
 
 func (q *Queries) CreateProductPromotion(ctx context.Context, arg CreateProductPromotionParams) (ProductPromotion, error) {
-	row := q.db.QueryRowContext(ctx, createProductPromotion, arg.ProductID, arg.PromotionID, arg.Active)
+	row := q.db.QueryRow(ctx, createProductPromotion, arg.ProductID, arg.PromotionID, arg.Active)
 	var i ProductPromotion
 	err := row.Scan(&i.ProductID, &i.PromotionID, &i.Active)
 	return i, err
@@ -40,7 +41,7 @@ WHERE product_id = $1
 `
 
 func (q *Queries) DeleteProductPromotion(ctx context.Context, productID int64) error {
-	_, err := q.db.ExecContext(ctx, deleteProductPromotion, productID)
+	_, err := q.db.Exec(ctx, deleteProductPromotion, productID)
 	return err
 }
 
@@ -50,7 +51,7 @@ WHERE product_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProductPromotion(ctx context.Context, productID int64) (ProductPromotion, error) {
-	row := q.db.QueryRowContext(ctx, getProductPromotion, productID)
+	row := q.db.QueryRow(ctx, getProductPromotion, productID)
 	var i ProductPromotion
 	err := row.Scan(&i.ProductID, &i.PromotionID, &i.Active)
 	return i, err
@@ -69,7 +70,7 @@ type ListProductPromotionsParams struct {
 }
 
 func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error) {
-	rows, err := q.db.QueryContext(ctx, listProductPromotions, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProductPromotions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +82,6 @@ func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductProm
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -101,13 +99,13 @@ RETURNING product_id, promotion_id, active
 `
 
 type UpdateProductPromotionParams struct {
-	PromotionID sql.NullInt64 `json:"promotion_id"`
-	Active      sql.NullBool  `json:"active"`
-	ProductID   int64         `json:"product_id"`
+	PromotionID null.Int  `json:"promotion_id"`
+	Active      null.Bool `json:"active"`
+	ProductID   int64     `json:"product_id"`
 }
 
 func (q *Queries) UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (ProductPromotion, error) {
-	row := q.db.QueryRowContext(ctx, updateProductPromotion, arg.PromotionID, arg.Active, arg.ProductID)
+	row := q.db.QueryRow(ctx, updateProductPromotion, arg.PromotionID, arg.Active, arg.ProductID)
 	var i ProductPromotion
 	err := row.Scan(&i.ProductID, &i.PromotionID, &i.Active)
 	return i, err

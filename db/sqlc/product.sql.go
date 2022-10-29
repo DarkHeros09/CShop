@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createProduct = `-- name: CreateProduct :one
@@ -32,7 +33,7 @@ type CreateProductParams struct {
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
-	row := q.db.QueryRowContext(ctx, createProduct,
+	row := q.db.QueryRow(ctx, createProduct,
 		arg.CategoryID,
 		arg.Name,
 		arg.Description,
@@ -59,7 +60,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	_, err := q.db.Exec(ctx, deleteProduct, id)
 	return err
 }
 
@@ -69,7 +70,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
-	row := q.db.QueryRowContext(ctx, getProduct, id)
+	row := q.db.QueryRow(ctx, getProduct, id)
 	var i Product
 	err := row.Scan(
 		&i.ID,
@@ -97,7 +98,7 @@ type ListProductsParams struct {
 }
 
 func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listProducts, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +120,6 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]P
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -141,16 +139,16 @@ RETURNING id, category_id, name, description, product_image, active, created_at,
 `
 
 type UpdateProductParams struct {
-	CategoryID   sql.NullInt64  `json:"category_id"`
-	Name         sql.NullString `json:"name"`
-	Description  sql.NullString `json:"description"`
-	ProductImage sql.NullString `json:"product_image"`
-	Active       sql.NullBool   `json:"active"`
-	ID           int64          `json:"id"`
+	CategoryID   null.Int    `json:"category_id"`
+	Name         null.String `json:"name"`
+	Description  null.String `json:"description"`
+	ProductImage null.String `json:"product_image"`
+	Active       null.Bool   `json:"active"`
+	ID           int64       `json:"id"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
-	row := q.db.QueryRowContext(ctx, updateProduct,
+	row := q.db.QueryRow(ctx, updateProduct,
 		arg.CategoryID,
 		arg.Name,
 		arg.Description,

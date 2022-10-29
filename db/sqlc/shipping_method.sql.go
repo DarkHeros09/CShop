@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createShippingMethod = `-- name: CreateShippingMethod :one
@@ -26,7 +27,7 @@ type CreateShippingMethodParams struct {
 }
 
 func (q *Queries) CreateShippingMethod(ctx context.Context, arg CreateShippingMethodParams) (ShippingMethod, error) {
-	row := q.db.QueryRowContext(ctx, createShippingMethod, arg.Name, arg.Price)
+	row := q.db.QueryRow(ctx, createShippingMethod, arg.Name, arg.Price)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
 	return i, err
@@ -38,7 +39,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteShippingMethod(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteShippingMethod, id)
+	_, err := q.db.Exec(ctx, deleteShippingMethod, id)
 	return err
 }
 
@@ -48,7 +49,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetShippingMethod(ctx context.Context, id int64) (ShippingMethod, error) {
-	row := q.db.QueryRowContext(ctx, getShippingMethod, id)
+	row := q.db.QueryRow(ctx, getShippingMethod, id)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
 	return i, err
@@ -67,7 +68,7 @@ type ListShippingMethodsParams struct {
 }
 
 func (q *Queries) ListShippingMethods(ctx context.Context, arg ListShippingMethodsParams) ([]ShippingMethod, error) {
-	rows, err := q.db.QueryContext(ctx, listShippingMethods, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listShippingMethods, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -79,9 +80,6 @@ func (q *Queries) ListShippingMethods(ctx context.Context, arg ListShippingMetho
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -99,13 +97,13 @@ RETURNING id, name, price
 `
 
 type UpdateShippingMethodParams struct {
-	Name  sql.NullString `json:"name"`
-	Price sql.NullString `json:"price"`
-	ID    int64          `json:"id"`
+	Name  null.String `json:"name"`
+	Price null.String `json:"price"`
+	ID    int64       `json:"id"`
 }
 
 func (q *Queries) UpdateShippingMethod(ctx context.Context, arg UpdateShippingMethodParams) (ShippingMethod, error) {
-	row := q.db.QueryRowContext(ctx, updateShippingMethod, arg.Name, arg.Price, arg.ID)
+	row := q.db.QueryRow(ctx, updateShippingMethod, arg.Name, arg.Price, arg.ID)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
 	return i, err

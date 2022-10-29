@@ -2,18 +2,18 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomShippingMethod(t *testing.T) ShippingMethod {
 	arg := CreateShippingMethodParams{
 		Name:  util.RandomString(5),
-		Price: util.RandomDecimal(0, 100),
+		Price: util.RandomDecimalString(1, 100),
 	}
 
 	shippingMethod, err := testQueires.CreateShippingMethod(context.Background(), arg)
@@ -44,15 +44,9 @@ func TestGetShippingMethod(t *testing.T) {
 func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 	shippingMethod1 := createRandomShippingMethod(t)
 	arg := UpdateShippingMethodParams{
-		ID: shippingMethod1.ID,
-		Name: sql.NullString{
-			String: util.RandomString(5),
-			Valid:  true,
-		},
-		Price: sql.NullString{
-			String: fmt.Sprint(util.RandomDecimal(0, 100)),
-			Valid:  true,
-		},
+		ID:    shippingMethod1.ID,
+		Name:  null.StringFrom(util.RandomString(5)),
+		Price: null.StringFrom(util.RandomDecimalString(1, 100)),
 	}
 
 	shippingMethod2, err := testQueires.UpdateShippingMethod(context.Background(), arg)
@@ -73,7 +67,7 @@ func TestDeleteShippingMethod(t *testing.T) {
 	shippingMethod2, err := testQueires.GetShippingMethod(context.Background(), shippingMethod1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shippingMethod2)
 
 }

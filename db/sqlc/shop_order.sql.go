@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createShopOrder = `-- name: CreateShopOrder :one
@@ -34,7 +35,7 @@ type CreateShopOrderParams struct {
 }
 
 func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error) {
-	row := q.db.QueryRowContext(ctx, createShopOrder,
+	row := q.db.QueryRow(ctx, createShopOrder,
 		arg.UserID,
 		arg.PaymentMethodID,
 		arg.ShippingAddressID,
@@ -63,7 +64,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteShopOrder(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteShopOrder, id)
+	_, err := q.db.Exec(ctx, deleteShopOrder, id)
 	return err
 }
 
@@ -73,7 +74,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error) {
-	row := q.db.QueryRowContext(ctx, getShopOrder, id)
+	row := q.db.QueryRow(ctx, getShopOrder, id)
 	var i ShopOrder
 	err := row.Scan(
 		&i.ID,
@@ -102,7 +103,7 @@ type ListShopOrdersParams struct {
 }
 
 func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error) {
-	rows, err := q.db.QueryContext(ctx, listShopOrders, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listShopOrders, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +126,6 @@ func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) 
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -148,17 +146,17 @@ RETURNING id, user_id, payment_method_id, shipping_address_id, order_total, ship
 `
 
 type UpdateShopOrderParams struct {
-	UserID            sql.NullInt64  `json:"user_id"`
-	PaymentMethodID   sql.NullInt64  `json:"payment_method_id"`
-	ShippingAddressID sql.NullInt64  `json:"shipping_address_id"`
-	OrderTotal        sql.NullString `json:"order_total"`
-	ShippingMethodID  sql.NullInt64  `json:"shipping_method_id"`
-	OrderStatusID     sql.NullInt64  `json:"order_status_id"`
-	ID                int64          `json:"id"`
+	UserID            null.Int    `json:"user_id"`
+	PaymentMethodID   null.Int    `json:"payment_method_id"`
+	ShippingAddressID null.Int    `json:"shipping_address_id"`
+	OrderTotal        null.String `json:"order_total"`
+	ShippingMethodID  null.Int    `json:"shipping_method_id"`
+	OrderStatusID     null.Int    `json:"order_status_id"`
+	ID                int64       `json:"id"`
 }
 
 func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error) {
-	row := q.db.QueryRowContext(ctx, updateShopOrder,
+	row := q.db.QueryRow(ctx, updateShopOrder,
 		arg.UserID,
 		arg.PaymentMethodID,
 		arg.ShippingAddressID,

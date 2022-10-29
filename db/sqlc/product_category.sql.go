@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createProductCategory = `-- name: CreateProductCategory :one
@@ -21,12 +22,12 @@ RETURNING id, parent_category_id, category_name
 `
 
 type CreateProductCategoryParams struct {
-	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
-	CategoryName     string        `json:"category_name"`
+	ParentCategoryID null.Int `json:"parent_category_id"`
+	CategoryName     string   `json:"category_name"`
 }
 
 func (q *Queries) CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (ProductCategory, error) {
-	row := q.db.QueryRowContext(ctx, createProductCategory, arg.ParentCategoryID, arg.CategoryName)
+	row := q.db.QueryRow(ctx, createProductCategory, arg.ParentCategoryID, arg.CategoryName)
 	var i ProductCategory
 	err := row.Scan(&i.ID, &i.ParentCategoryID, &i.CategoryName)
 	return i, err
@@ -39,12 +40,12 @@ AND ( parent_category_id is NULL OR parent_category_id = $2 )
 `
 
 type DeleteProductCategoryParams struct {
-	ID               int64         `json:"id"`
-	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
+	ID               int64    `json:"id"`
+	ParentCategoryID null.Int `json:"parent_category_id"`
 }
 
 func (q *Queries) DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error {
-	_, err := q.db.ExecContext(ctx, deleteProductCategory, arg.ID, arg.ParentCategoryID)
+	_, err := q.db.Exec(ctx, deleteProductCategory, arg.ID, arg.ParentCategoryID)
 	return err
 }
 
@@ -54,7 +55,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProductCategory(ctx context.Context, id int64) (ProductCategory, error) {
-	row := q.db.QueryRowContext(ctx, getProductCategory, id)
+	row := q.db.QueryRow(ctx, getProductCategory, id)
 	var i ProductCategory
 	err := row.Scan(&i.ID, &i.ParentCategoryID, &i.CategoryName)
 	return i, err
@@ -68,12 +69,12 @@ LIMIT 1
 `
 
 type GetProductCategoryByParentParams struct {
-	ID               int64         `json:"id"`
-	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
+	ID               int64    `json:"id"`
+	ParentCategoryID null.Int `json:"parent_category_id"`
 }
 
 func (q *Queries) GetProductCategoryByParent(ctx context.Context, arg GetProductCategoryByParentParams) (ProductCategory, error) {
-	row := q.db.QueryRowContext(ctx, getProductCategoryByParent, arg.ID, arg.ParentCategoryID)
+	row := q.db.QueryRow(ctx, getProductCategoryByParent, arg.ID, arg.ParentCategoryID)
 	var i ProductCategory
 	err := row.Scan(&i.ID, &i.ParentCategoryID, &i.CategoryName)
 	return i, err
@@ -92,7 +93,7 @@ type ListProductCategoriesParams struct {
 }
 
 func (q *Queries) ListProductCategories(ctx context.Context, arg ListProductCategoriesParams) ([]ProductCategory, error) {
-	rows, err := q.db.QueryContext(ctx, listProductCategories, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProductCategories, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +105,6 @@ func (q *Queries) ListProductCategories(ctx context.Context, arg ListProductCate
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -123,13 +121,13 @@ OFFSET $3
 `
 
 type ListProductCategoriesByParentParams struct {
-	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
-	Limit            int32         `json:"limit"`
-	Offset           int32         `json:"offset"`
+	ParentCategoryID null.Int `json:"parent_category_id"`
+	Limit            int32    `json:"limit"`
+	Offset           int32    `json:"offset"`
 }
 
 func (q *Queries) ListProductCategoriesByParent(ctx context.Context, arg ListProductCategoriesByParentParams) ([]ProductCategory, error) {
-	rows, err := q.db.QueryContext(ctx, listProductCategoriesByParent, arg.ParentCategoryID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProductCategoriesByParent, arg.ParentCategoryID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -141,9 +139,6 @@ func (q *Queries) ListProductCategoriesByParent(ctx context.Context, arg ListPro
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -161,13 +156,13 @@ RETURNING id, parent_category_id, category_name
 `
 
 type UpdateProductCategoryParams struct {
-	CategoryName     string        `json:"category_name"`
-	ID               int64         `json:"id"`
-	ParentCategoryID sql.NullInt64 `json:"parent_category_id"`
+	CategoryName     string   `json:"category_name"`
+	ID               int64    `json:"id"`
+	ParentCategoryID null.Int `json:"parent_category_id"`
 }
 
 func (q *Queries) UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) (ProductCategory, error) {
-	row := q.db.QueryRowContext(ctx, updateProductCategory, arg.CategoryName, arg.ID, arg.ParentCategoryID)
+	row := q.db.QueryRow(ctx, updateProductCategory, arg.CategoryName, arg.ID, arg.ParentCategoryID)
 	var i ProductCategory
 	err := row.Scan(&i.ID, &i.ParentCategoryID, &i.CategoryName)
 	return i, err

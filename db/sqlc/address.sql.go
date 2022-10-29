@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createAddress = `-- name: CreateAddress :one
@@ -28,7 +29,7 @@ type CreateAddressParams struct {
 }
 
 func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error) {
-	row := q.db.QueryRowContext(ctx, createAddress, arg.AddressLine, arg.Region, arg.City)
+	row := q.db.QueryRow(ctx, createAddress, arg.AddressLine, arg.Region, arg.City)
 	var i Address
 	err := row.Scan(
 		&i.ID,
@@ -47,7 +48,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteAddress(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteAddress, id)
+	_, err := q.db.Exec(ctx, deleteAddress, id)
 	return err
 }
 
@@ -58,7 +59,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetAddress(ctx context.Context, id int64) (Address, error) {
-	row := q.db.QueryRowContext(ctx, getAddress, id)
+	row := q.db.QueryRow(ctx, getAddress, id)
 	var i Address
 	err := row.Scan(
 		&i.ID,
@@ -78,7 +79,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetAddressByCity(ctx context.Context, city string) (Address, error) {
-	row := q.db.QueryRowContext(ctx, getAddressByCity, city)
+	row := q.db.QueryRow(ctx, getAddressByCity, city)
 	var i Address
 	err := row.Scan(
 		&i.ID,
@@ -106,7 +107,7 @@ type ListAddressesByCityParams struct {
 }
 
 func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error) {
-	rows, err := q.db.QueryContext(ctx, listAddressesByCity, arg.City, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAddressesByCity, arg.City, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -126,9 +127,6 @@ func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCi
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -146,14 +144,14 @@ RETURNING id, address_line, region, city, created_at, updated_at
 `
 
 type UpdateAddressParams struct {
-	AddressLine sql.NullString `json:"address_line"`
-	Region      sql.NullString `json:"region"`
-	City        sql.NullString `json:"city"`
-	ID          int64          `json:"id"`
+	AddressLine null.String `json:"address_line"`
+	Region      null.String `json:"region"`
+	City        null.String `json:"city"`
+	ID          int64       `json:"id"`
 }
 
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error) {
-	row := q.db.QueryRowContext(ctx, updateAddress,
+	row := q.db.QueryRow(ctx, updateAddress,
 		arg.AddressLine,
 		arg.Region,
 		arg.City,

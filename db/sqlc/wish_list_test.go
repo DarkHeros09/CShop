@@ -2,9 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,13 +37,10 @@ func TestGetWishList(t *testing.T) {
 
 func TestUpdateWishList(t *testing.T) {
 	wishList1 := createRandomWishList(t)
-	user := createRandomUser(t)
+	// user := createRandomUser(t)
 	arg := UpdateWishListParams{
-		UserID: sql.NullInt64{
-			Int64: user.ID,
-			Valid: false,
-		},
-		ID: wishList1.ID,
+		UserID: null.IntFromPtr(&wishList1.UserID),
+		ID:     wishList1.ID,
 	}
 
 	wishList2, err := testQueires.UpdateWishList(context.Background(), arg)
@@ -62,7 +60,7 @@ func TestDeleteWishList(t *testing.T) {
 	wishList2, err := testQueires.GetWishList(context.Background(), wishList1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, wishList2)
 
 }

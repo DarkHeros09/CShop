@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,11 +35,8 @@ func TestGetOrderStatus(t *testing.T) {
 func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 	orderStatus1 := createRandomOrderStatus(t)
 	arg := UpdateOrderStatusParams{
-		ID: orderStatus1.ID,
-		Status: sql.NullString{
-			String: util.RandomString(5),
-			Valid:  true,
-		},
+		ID:     orderStatus1.ID,
+		Status: null.StringFrom(util.RandomString(5)),
 	}
 
 	orderStatus2, err := testQueires.UpdateOrderStatus(context.Background(), arg)
@@ -58,7 +56,7 @@ func TestDeleteOrderStatus(t *testing.T) {
 	orderStatus2, err := testQueires.GetOrderStatus(context.Background(), orderStatus1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, orderStatus2)
 
 }

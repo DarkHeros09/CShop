@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -76,11 +77,8 @@ func TestUpdateUser(t *testing.T) {
 	user1 := createRandomUser(t)
 
 	arg := UpdateUserParams{
-		ID: user1.ID,
-		Telephone: sql.NullInt32{
-			Int32: int32(util.RandomInt(0, 1000000)),
-			Valid: true,
-		},
+		ID:        user1.ID,
+		Telephone: null.IntFrom(util.RandomInt(0, 1000000)),
 	}
 
 	user2, err := testQueires.UpdateUser(context.Background(), arg)
@@ -91,7 +89,7 @@ func TestUpdateUser(t *testing.T) {
 	require.Equal(t, user1.ID, user2.ID)
 	require.Equal(t, user1.Email, user2.Email)
 	require.Equal(t, user1.Password, user2.Password)
-	require.Equal(t, arg.Telephone.Int32, user2.Telephone)
+	require.Equal(t, int32(arg.Telephone.Int64), user2.Telephone)
 	require.Equal(t, user1.CreatedAt, user2.CreatedAt, time.Second)
 	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
@@ -105,7 +103,7 @@ func TestDeleteUser(t *testing.T) {
 	user2, err := testQueires.GetUser(context.Background(), user1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, user2)
 }
 

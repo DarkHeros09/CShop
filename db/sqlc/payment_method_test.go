@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,12 +50,9 @@ func TestGetPaymentMethod(t *testing.T) {
 func TestUpdatePaymentMethodIsDefaultAndProvider(t *testing.T) {
 	paymentMethod1 := createRandomPaymentMethod(t)
 	arg := UpdatePaymentMethodParams{
-		UserID:        sql.NullInt64{},
-		PaymentTypeID: sql.NullInt32{},
-		Provider: sql.NullString{
-			String: util.RandomString(5),
-			Valid:  true,
-		},
+		UserID:        null.Int{},
+		PaymentTypeID: null.Int{},
+		Provider:      null.StringFrom(util.RandomString(5)),
 
 		ID: paymentMethod1.ID,
 	}
@@ -79,7 +77,7 @@ func TestDeletePaymentMethod(t *testing.T) {
 	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), paymentMethod1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, paymentMethod2)
 
 }

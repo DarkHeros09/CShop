@@ -2,13 +2,12 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"log"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
@@ -76,7 +75,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   50,
 				ProductImage: util.RandomString(5),
-				Price:        fmt.Sprint(util.RandomMoney()),
+				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
 			if err != nil {
@@ -105,11 +104,9 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserAddress: UserAddress{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
-					DefaultAddress: sql.NullInt64{
-						Int64: userAddress.AddressID,
-					},
+					UserID:         userAddress.UserID,
+					AddressID:      userAddress.AddressID,
+					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,
@@ -242,7 +239,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   4,
 				ProductImage: util.RandomString(5),
-				Price:        fmt.Sprint(util.RandomMoney()),
+				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
 			if err != nil {
@@ -271,11 +268,9 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserAddress: UserAddress{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
-					DefaultAddress: sql.NullInt64{
-						Int64: userAddress.AddressID,
-					},
+					UserID:         userAddress.UserID,
+					AddressID:      userAddress.AddressID,
+					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,
@@ -381,7 +376,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   0,
 				ProductImage: util.RandomString(5),
-				Price:        fmt.Sprint(util.RandomMoney()),
+				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
 			if err != nil {
@@ -410,11 +405,9 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserAddress: UserAddress{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
-					DefaultAddress: sql.NullInt64{
-						Int64: userAddress.AddressID,
-					},
+					UserID:         userAddress.UserID,
+					AddressID:      userAddress.AddressID,
+					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
 				},
 				PaymentMethod: PaymentMethod{
 					ID:            paymentMethod.ID,

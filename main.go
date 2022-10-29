@@ -1,13 +1,13 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 
 	"github.com/cshop/v3/api"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v4"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	conn, err := pgx.Connect(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}

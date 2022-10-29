@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createShoppingCart = `-- name: CreateShoppingCart :one
@@ -20,7 +21,7 @@ RETURNING id, user_id, created_at, updated_at
 `
 
 func (q *Queries) CreateShoppingCart(ctx context.Context, userID int64) (ShoppingCart, error) {
-	row := q.db.QueryRowContext(ctx, createShoppingCart, userID)
+	row := q.db.QueryRow(ctx, createShoppingCart, userID)
 	var i ShoppingCart
 	err := row.Scan(
 		&i.ID,
@@ -37,7 +38,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteShoppingCart(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteShoppingCart, id)
+	_, err := q.db.Exec(ctx, deleteShoppingCart, id)
 	return err
 }
 
@@ -47,7 +48,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, error) {
-	row := q.db.QueryRowContext(ctx, getShoppingCart, id)
+	row := q.db.QueryRow(ctx, getShoppingCart, id)
 	var i ShoppingCart
 	err := row.Scan(
 		&i.ID,
@@ -71,7 +72,7 @@ type ListShoppingCartsParams struct {
 }
 
 func (q *Queries) ListShoppingCarts(ctx context.Context, arg ListShoppingCartsParams) ([]ShoppingCart, error) {
-	rows, err := q.db.QueryContext(ctx, listShoppingCarts, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listShoppingCarts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +90,6 @@ func (q *Queries) ListShoppingCarts(ctx context.Context, arg ListShoppingCartsPa
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -107,12 +105,12 @@ RETURNING id, user_id, created_at, updated_at
 `
 
 type UpdateShoppingCartParams struct {
-	UserID sql.NullInt64 `json:"user_id"`
-	ID     int64         `json:"id"`
+	UserID null.Int `json:"user_id"`
+	ID     int64    `json:"id"`
 }
 
 func (q *Queries) UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) (ShoppingCart, error) {
-	row := q.db.QueryRowContext(ctx, updateShoppingCart, arg.UserID, arg.ID)
+	row := q.db.QueryRow(ctx, updateShoppingCart, arg.UserID, arg.ID)
 	var i ShoppingCart
 	err := row.Scan(
 		&i.ID,

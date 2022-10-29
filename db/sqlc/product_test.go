@@ -2,11 +2,12 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,15 +63,12 @@ func TestGetProduct(t *testing.T) {
 func TestUpdateProductName(t *testing.T) {
 	product1 := createRandomProduct(t)
 	arg := UpdateProductParams{
-		ID:         product1.ID,
-		CategoryID: sql.NullInt64{},
-		Name: sql.NullString{
-			String: util.RandomString(5),
-			Valid:  true,
-		},
-		Description:  sql.NullString{},
-		ProductImage: sql.NullString{},
-		Active:       sql.NullBool{},
+		ID:           product1.ID,
+		CategoryID:   null.Int{},
+		Name:         null.StringFrom(util.RandomString(5)),
+		Description:  null.String{},
+		ProductImage: null.String{},
+		Active:       null.Bool{},
 	}
 
 	product2, err := testQueires.UpdateProduct(context.Background(), arg)
@@ -93,18 +91,12 @@ func TestUpdateProductCategoryAndActive(t *testing.T) {
 	product1 := createRandomProduct(t)
 	category := createRandomProductCategoryParent(t)
 	arg := UpdateProductParams{
-		ID: product1.ID,
-		CategoryID: sql.NullInt64{
-			Int64: category.ParentCategoryID.Int64,
-			Valid: true,
-		},
-		Name:         sql.NullString{},
-		Description:  sql.NullString{},
-		ProductImage: sql.NullString{},
-		Active: sql.NullBool{
-			Bool:  !product1.Active,
-			Valid: true,
-		},
+		ID:           product1.ID,
+		CategoryID:   null.IntFromPtr(&category.ParentCategoryID.Int64),
+		Name:         null.String{},
+		Description:  null.String{},
+		ProductImage: null.String{},
+		Active:       null.BoolFrom(!product1.Active),
 	}
 
 	product2, err := testQueires.UpdateProduct(context.Background(), arg)
@@ -132,7 +124,7 @@ func TestDeleteProduct(t *testing.T) {
 	product2, err := testQueires.GetProduct(context.Background(), product1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, product2)
 
 }

@@ -21,9 +21,14 @@ func RandomInt(min, max int64) int64 {
 }
 
 // Random generate a random interger between min and max
-func RandomDecimal(min, max float64) string {
+func RandomDecimalString(min, max float64) string {
 	rF64 := min + rand.Float64()*(max-min)
 	return decimal.NewFromFloat(rF64).StringFixedBank(2)
+}
+
+func RandomDecimal(min, max float64) decimal.Decimal {
+	rF64 := min + rand.Float64()*(max-min)
+	return decimal.NewFromFloat(rF64)
 }
 
 func RandomString(n int) string {

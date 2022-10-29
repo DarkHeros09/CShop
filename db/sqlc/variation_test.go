@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,15 +46,9 @@ func TestUpdateVariationNameAndCategoryID(t *testing.T) {
 	variation1 := createRandomVariation(t)
 	category := createRandomProductCategory(t)
 	arg := UpdateVariationParams{
-		ID: variation1.ID,
-		Name: sql.NullString{
-			String: util.RandomString(5),
-			Valid:  true,
-		},
-		CategoryID: sql.NullInt64{
-			Int64: category.ID,
-			Valid: true,
-		},
+		ID:         variation1.ID,
+		Name:       null.StringFrom(util.RandomString(5)),
+		CategoryID: null.IntFromPtr(&category.ID),
 	}
 
 	variation2, err := testQueires.UpdateVariation(context.Background(), arg)
@@ -74,7 +69,7 @@ func TestDeleteVariation(t *testing.T) {
 	variation2, err := testQueires.GetVariation(context.Background(), variation1.CategoryID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, variation2)
 
 }

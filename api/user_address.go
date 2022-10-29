@@ -1,15 +1,15 @@
 package api
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
-	"gopkg.in/guregu/null.v4"
+	"github.com/guregu/null"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 )
 
 type createUserAddressRequest struct {
@@ -54,13 +54,13 @@ func (server *Server) createUserAddress(ctx *gin.Context) {
 		AddressLine:    req.AddressLine,
 		Region:         req.Region,
 		City:           req.City,
-		DefaultAddress: req.DefaultAddress.NullInt64,
+		DefaultAddress: req.DefaultAddress,
 	}
 
 	userAddress, err := server.store.CreateUserAddressWithAddress(ctx, arg1)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
@@ -105,7 +105,7 @@ func (server *Server) getUserAddress(ctx *gin.Context) {
 	}
 	userAddress, err := server.store.GetUserAddressWithAddress(ctx, arg)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -145,7 +145,7 @@ func (server *Server) listUserAddresses(ctx *gin.Context) {
 	}
 	userAddresses, err := server.store.ListUserAddresses(ctx, arg)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -167,12 +167,12 @@ func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddr
 }
 
 type updateUserAddressRequest struct {
-	UserID         int64  `uri:"user_id" binding:"required,min=1"`
-	AddressID      int64  `json:"address_id" binding:"required,min=1"`
-	AddressLine    string `json:"address_line" binding:"omitempty,required"`
-	City           string `json:"city" binding:"omitempty,required"`
-	Region         string `json:"region" binding:"omitempty,required"`
-	DefaultAddress int64  `json:"default_address" binding:"omitempty,required,min=1"`
+	UserID         int64    `uri:"user_id" binding:"required,min=1"`
+	AddressID      int64    `json:"address_id" binding:"required,min=1"`
+	AddressLine    string   `json:"address_line" binding:"omitempty,required"`
+	City           string   `json:"city" binding:"omitempty,required"`
+	Region         string   `json:"region" binding:"omitempty,required"`
+	DefaultAddress null.Int `json:"default_address" binding:"omitempty,required,min=1"`
 }
 
 func (server *Server) updateUserAddress(ctx *gin.Context) {
@@ -185,18 +185,15 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 		return
 	}
 	arg1 := db.UpdateUserAddressParams{
-		UserID:    authPayload.UserID,
-		AddressID: req.AddressID,
-		DefaultAddress: sql.NullInt64{
-			Int64: req.DefaultAddress,
-			Valid: req.DefaultAddress != 0,
-		},
+		UserID:         authPayload.UserID,
+		AddressID:      req.AddressID,
+		DefaultAddress: req.DefaultAddress,
 	}
 
 	userAddress, err := server.store.UpdateUserAddress(ctx, arg1)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
@@ -213,24 +210,15 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 	}
 
 	arg2 := db.UpdateAddressParams{
-		AddressLine: sql.NullString{
-			String: req.AddressLine,
-			Valid:  req.AddressLine != "",
-		},
-		Region: sql.NullString{
-			String: req.Region,
-			Valid:  req.Region != "",
-		},
-		City: sql.NullString{
-			String: req.City,
-			Valid:  req.City != "",
-		},
-		ID: userAddress.AddressID,
+		AddressLine: null.StringFromPtr(&req.AddressLine),
+		Region:      null.StringFromPtr(&req.Region),
+		City:        null.StringFromPtr(&req.City),
+		ID:          userAddress.AddressID,
 	}
 
 	address, err := server.store.UpdateAddress(ctx, arg2)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
@@ -264,13 +252,13 @@ func (server *Server) deleteUserAddress(ctx *gin.Context) {
 
 	err := server.store.DeleteUserAddress(ctx, arg1)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
-		} else if err == sql.ErrNoRows {
+		} else if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}

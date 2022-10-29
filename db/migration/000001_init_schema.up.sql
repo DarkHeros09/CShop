@@ -114,7 +114,7 @@ CREATE TABLE "shop_order_item" (
   "product_item_id" bigint UNIQUE NOT NULL,
   "order_id" bigint NOT NULL,
   "quantity" int NOT NULL DEFAULT 0,
-  "price" decimal NOT NULL,
+  "price" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -125,7 +125,7 @@ CREATE TABLE "product_item" (
   "product_sku" bigint NOT NULL,
   "qty_in_stock" int NOT NULL,
   "product_image" varchar NOT NULL,
-  "price" decimal NOT NULL,
+  "price" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -192,7 +192,7 @@ CREATE TABLE "shop_order" (
   "user_id" bigint NOT NULL,
   "payment_method_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,
-  "order_total" decimal NOT NULL,
+  "order_total" varchar NOT NULL,
   "shipping_method_id" bigint NOT NULL,
   "order_status_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -209,7 +209,7 @@ CREATE TABLE "order_status" (
 CREATE TABLE "shipping_method" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
-  "price" decimal NOT NULL
+  "price" varchar NOT NULL
 );
 
 CREATE INDEX ON "user" ("username");

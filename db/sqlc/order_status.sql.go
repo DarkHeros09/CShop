@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createOrderStatus = `-- name: CreateOrderStatus :one
@@ -20,7 +21,7 @@ RETURNING id, status, created_at, updated_at
 `
 
 func (q *Queries) CreateOrderStatus(ctx context.Context, status string) (OrderStatus, error) {
-	row := q.db.QueryRowContext(ctx, createOrderStatus, status)
+	row := q.db.QueryRow(ctx, createOrderStatus, status)
 	var i OrderStatus
 	err := row.Scan(
 		&i.ID,
@@ -37,7 +38,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteOrderStatus(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteOrderStatus, id)
+	_, err := q.db.Exec(ctx, deleteOrderStatus, id)
 	return err
 }
 
@@ -47,7 +48,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error) {
-	row := q.db.QueryRowContext(ctx, getOrderStatus, id)
+	row := q.db.QueryRow(ctx, getOrderStatus, id)
 	var i OrderStatus
 	err := row.Scan(
 		&i.ID,
@@ -71,7 +72,7 @@ type ListOrderStatusesParams struct {
 }
 
 func (q *Queries) ListOrderStatuses(ctx context.Context, arg ListOrderStatusesParams) ([]OrderStatus, error) {
-	rows, err := q.db.QueryContext(ctx, listOrderStatuses, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listOrderStatuses, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +90,6 @@ func (q *Queries) ListOrderStatuses(ctx context.Context, arg ListOrderStatusesPa
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -107,12 +105,12 @@ RETURNING id, status, created_at, updated_at
 `
 
 type UpdateOrderStatusParams struct {
-	Status sql.NullString `json:"status"`
-	ID     int64          `json:"id"`
+	Status null.String `json:"status"`
+	ID     int64       `json:"id"`
 }
 
 func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (OrderStatus, error) {
-	row := q.db.QueryRowContext(ctx, updateOrderStatus, arg.Status, arg.ID)
+	row := q.db.QueryRow(ctx, updateOrderStatus, arg.Status, arg.ID)
 	var i OrderStatus
 	err := row.Scan(
 		&i.ID,

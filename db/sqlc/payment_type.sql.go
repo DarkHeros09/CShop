@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createPaymentType = `-- name: CreatePaymentType :one
@@ -20,7 +21,7 @@ RETURNING id, value
 `
 
 func (q *Queries) CreatePaymentType(ctx context.Context, value string) (PaymentType, error) {
-	row := q.db.QueryRowContext(ctx, createPaymentType, value)
+	row := q.db.QueryRow(ctx, createPaymentType, value)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value)
 	return i, err
@@ -32,7 +33,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeletePaymentType(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deletePaymentType, id)
+	_, err := q.db.Exec(ctx, deletePaymentType, id)
 	return err
 }
 
@@ -42,7 +43,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPaymentType(ctx context.Context, id int64) (PaymentType, error) {
-	row := q.db.QueryRowContext(ctx, getPaymentType, id)
+	row := q.db.QueryRow(ctx, getPaymentType, id)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value)
 	return i, err
@@ -61,7 +62,7 @@ type ListPaymentTypesParams struct {
 }
 
 func (q *Queries) ListPaymentTypes(ctx context.Context, arg ListPaymentTypesParams) ([]PaymentType, error) {
-	rows, err := q.db.QueryContext(ctx, listPaymentTypes, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listPaymentTypes, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +74,6 @@ func (q *Queries) ListPaymentTypes(ctx context.Context, arg ListPaymentTypesPara
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -92,12 +90,12 @@ RETURNING id, value
 `
 
 type UpdatePaymentTypeParams struct {
-	Value sql.NullString `json:"value"`
-	ID    int64          `json:"id"`
+	Value null.String `json:"value"`
+	ID    int64       `json:"id"`
 }
 
 func (q *Queries) UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error) {
-	row := q.db.QueryRowContext(ctx, updatePaymentType, arg.Value, arg.ID)
+	row := q.db.QueryRow(ctx, updatePaymentType, arg.Value, arg.ID)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value)
 	return i, err

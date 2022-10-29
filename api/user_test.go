@@ -2,7 +2,6 @@ package api
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,9 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goccy/go-reflect"
-
 	"github.com/goccy/go-json"
+	"github.com/goccy/go-reflect"
+	"github.com/guregu/null"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
@@ -20,7 +21,6 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 
@@ -105,7 +105,7 @@ func TestCreateUserAPI(t *testing.T) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.User{}, sql.ErrConnDone)
+					Return(db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -128,7 +128,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
-					Times(1).Return(db.User{}, &pq.Error{Code: "23505"})
+					Times(1).Return(db.User{}, &pgconn.PgError{Code: "23505", Message: "unique_violation"})
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -271,7 +271,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, sql.ErrNoRows)
+					Return(db.User{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -303,7 +303,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, sql.ErrConnDone)
+					Return(db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -431,7 +431,7 @@ func TestGetUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(db.User{}, sql.ErrNoRows)
+					Return(db.User{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -447,7 +447,7 @@ func TestGetUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(db.User{}, sql.ErrConnDone)
+					Return(db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -518,20 +518,16 @@ func TestUpdateUserAPI(t *testing.T) {
 			name:   "OK",
 			UserID: user.ID,
 			body: gin.H{
-				"id":              user.ID,
-				"telephone":       user.Telephone,
-				"default_payment": user.DefaultPayment.Int64,
+				"id":        user.ID,
+				"telephone": user.Telephone,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateUserParams{
-					ID: user.ID,
-					Telephone: sql.NullInt32{
-						Int32: user.Telephone,
-						Valid: user.Telephone != 0,
-					},
+					ID:        user.ID,
+					Telephone: null.IntFrom(int64(user.Telephone)),
 				}
 
 				store.EXPECT().
@@ -572,16 +568,13 @@ func TestUpdateUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateUserParams{
-					ID: user.ID,
-					Telephone: sql.NullInt32{
-						Int32: user.Telephone,
-						Valid: true,
-					},
+					ID:        user.ID,
+					Telephone: null.IntFrom(int64(user.Telephone)),
 				}
 				store.EXPECT().
 					UpdateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.User{}, sql.ErrConnDone)
+					Return(db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -725,7 +718,7 @@ func TestListUsersAPI(t *testing.T) {
 				store.EXPECT().
 					ListUsers(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.User{}, sql.ErrConnDone)
+					Return([]db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -859,7 +852,7 @@ func TestDeleteUserAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(sql.ErrNoRows)
+					Return(pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -878,7 +871,7 @@ func TestDeleteUserAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(sql.ErrConnDone)
+					Return(pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)

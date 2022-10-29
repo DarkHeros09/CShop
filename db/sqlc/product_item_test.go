@@ -2,12 +2,12 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +18,7 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		ProductSku:   util.RandomInt(100, 300),
 		QtyInStock:   int32(util.RandomInt(0, 100)),
 		ProductImage: util.RandomString(5),
-		Price:        fmt.Sprint(util.RandomMoney()),
+		Price:        util.RandomDecimalString(1, 100),
 		Active:       true,
 	}
 
@@ -64,22 +64,13 @@ func TestGetProductItem(t *testing.T) {
 func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
 	arg := UpdateProductItemParams{
-		ProductID:  sql.NullInt64{},
-		ProductSku: sql.NullInt64{},
-		QtyInStock: sql.NullInt32{
-			Int32: int32(util.RandomInt(5, 90)),
-			Valid: true,
-		},
-		ProductImage: sql.NullString{},
-		Price: sql.NullString{
-			String: fmt.Sprint(util.RandomMoney()),
-			Valid:  true,
-		},
-		Active: sql.NullBool{
-			Bool:  !productItem1.Active,
-			Valid: true,
-		},
-		ID: productItem1.ID,
+		ProductID:    null.Int{},
+		ProductSku:   null.Int{},
+		QtyInStock:   null.IntFrom(util.RandomInt(5, 90)),
+		ProductImage: null.String{},
+		Price:        null.StringFrom(util.RandomDecimalString(1, 100)),
+		Active:       null.BoolFrom(!productItem1.Active),
+		ID:           productItem1.ID,
 	}
 
 	productItem2, err := testQueires.UpdateProductItem(context.Background(), arg)
@@ -107,7 +98,7 @@ func TestDeleteProductItem(t *testing.T) {
 	productItem2, err := testQueires.GetProductItem(context.Background(), productItem1.ID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, productItem2)
 
 }

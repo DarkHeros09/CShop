@@ -2,10 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null"
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,8 +48,8 @@ func TestGetProductPromotion(t *testing.T) {
 func TestUpdateProductPromotionActive(t *testing.T) {
 	productPromotion1 := createRandomProductPromotion(t)
 	arg := UpdateProductPromotionParams{
-		PromotionID: sql.NullInt64{},
-		Active:      sql.NullBool{Bool: !productPromotion1.Active, Valid: true},
+		PromotionID: null.Int{},
+		Active:      null.BoolFrom(!productPromotion1.Active),
 		ProductID:   productPromotion1.ProductID,
 	}
 
@@ -70,7 +71,7 @@ func TestDeleteProductPromotion(t *testing.T) {
 	productPromotion2, err := testQueires.GetProductPromotion(context.Background(), productPromotion1.ProductID)
 
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, productPromotion2)
 
 }

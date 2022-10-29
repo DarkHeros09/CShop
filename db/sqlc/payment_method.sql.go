@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createPaymentMethod = `-- name: CreatePaymentMethod :one
@@ -28,7 +29,7 @@ type CreatePaymentMethodParams struct {
 }
 
 func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (PaymentMethod, error) {
-	row := q.db.QueryRowContext(ctx, createPaymentMethod, arg.UserID, arg.PaymentTypeID, arg.Provider)
+	row := q.db.QueryRow(ctx, createPaymentMethod, arg.UserID, arg.PaymentTypeID, arg.Provider)
 	var i PaymentMethod
 	err := row.Scan(
 		&i.ID,
@@ -46,7 +47,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeletePaymentMethod(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deletePaymentMethod, id)
+	_, err := q.db.Exec(ctx, deletePaymentMethod, id)
 	return err
 }
 
@@ -56,7 +57,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPaymentMethod(ctx context.Context, id int64) (PaymentMethod, error) {
-	row := q.db.QueryRowContext(ctx, getPaymentMethod, id)
+	row := q.db.QueryRow(ctx, getPaymentMethod, id)
 	var i PaymentMethod
 	err := row.Scan(
 		&i.ID,
@@ -81,7 +82,7 @@ type ListPaymentMethodsParams struct {
 }
 
 func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]PaymentMethod, error) {
-	rows, err := q.db.QueryContext(ctx, listPaymentMethods, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listPaymentMethods, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +101,6 @@ func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethods
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -120,14 +118,14 @@ RETURNING id, user_id, payment_type_id, provider, is_default
 `
 
 type UpdatePaymentMethodParams struct {
-	UserID        sql.NullInt64  `json:"user_id"`
-	PaymentTypeID sql.NullInt32  `json:"payment_type_id"`
-	Provider      sql.NullString `json:"provider"`
-	ID            int64          `json:"id"`
+	UserID        null.Int    `json:"user_id"`
+	PaymentTypeID null.Int    `json:"payment_type_id"`
+	Provider      null.String `json:"provider"`
+	ID            int64       `json:"id"`
 }
 
 func (q *Queries) UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMethodParams) (PaymentMethod, error) {
-	row := q.db.QueryRowContext(ctx, updatePaymentMethod,
+	row := q.db.QueryRow(ctx, updatePaymentMethod,
 		arg.UserID,
 		arg.PaymentTypeID,
 		arg.Provider,

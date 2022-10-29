@@ -7,7 +7,8 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/guregu/null"
 )
 
 const createShopOrderItem = `-- name: CreateShopOrderItem :one
@@ -30,7 +31,7 @@ type CreateShopOrderItemParams struct {
 }
 
 func (q *Queries) CreateShopOrderItem(ctx context.Context, arg CreateShopOrderItemParams) (ShopOrderItem, error) {
-	row := q.db.QueryRowContext(ctx, createShopOrderItem,
+	row := q.db.QueryRow(ctx, createShopOrderItem,
 		arg.ProductItemID,
 		arg.OrderID,
 		arg.Quantity,
@@ -55,7 +56,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeleteShopOrderItem(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteShopOrderItem, id)
+	_, err := q.db.Exec(ctx, deleteShopOrderItem, id)
 	return err
 }
 
@@ -65,7 +66,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetShopOrderItem(ctx context.Context, id int64) (ShopOrderItem, error) {
-	row := q.db.QueryRowContext(ctx, getShopOrderItem, id)
+	row := q.db.QueryRow(ctx, getShopOrderItem, id)
 	var i ShopOrderItem
 	err := row.Scan(
 		&i.ID,
@@ -92,7 +93,7 @@ type ListShopOrderItemsParams struct {
 }
 
 func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItemsParams) ([]ShopOrderItem, error) {
-	rows, err := q.db.QueryContext(ctx, listShopOrderItems, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listShopOrderItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +113,6 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -129,7 +127,7 @@ ORDER BY id
 `
 
 func (q *Queries) ListShopOrderItemsByOrderID(ctx context.Context, orderID int64) ([]ShopOrderItem, error) {
-	rows, err := q.db.QueryContext(ctx, listShopOrderItemsByOrderID, orderID)
+	rows, err := q.db.Query(ctx, listShopOrderItemsByOrderID, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,9 +147,6 @@ func (q *Queries) ListShopOrderItemsByOrderID(ctx context.Context, orderID int64
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -171,15 +166,15 @@ RETURNING id, product_item_id, order_id, quantity, price, created_at, updated_at
 `
 
 type UpdateShopOrderItemParams struct {
-	ProductItemID sql.NullInt64  `json:"product_item_id"`
-	OrderID       sql.NullInt64  `json:"order_id"`
-	Quantity      sql.NullInt32  `json:"quantity"`
-	Price         sql.NullString `json:"price"`
-	ID            int64          `json:"id"`
+	ProductItemID null.Int    `json:"product_item_id"`
+	OrderID       null.Int    `json:"order_id"`
+	Quantity      null.Int    `json:"quantity"`
+	Price         null.String `json:"price"`
+	ID            int64       `json:"id"`
 }
 
 func (q *Queries) UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderItemParams) (ShopOrderItem, error) {
-	row := q.db.QueryRowContext(ctx, updateShopOrderItem,
+	row := q.db.QueryRow(ctx, updateShopOrderItem,
 		arg.ProductItemID,
 		arg.OrderID,
 		arg.Quantity,

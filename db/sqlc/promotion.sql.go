@@ -7,8 +7,9 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
+
+	"github.com/guregu/null"
 )
 
 const createPromotion = `-- name: CreatePromotion :one
@@ -35,7 +36,7 @@ type CreatePromotionParams struct {
 }
 
 func (q *Queries) CreatePromotion(ctx context.Context, arg CreatePromotionParams) (Promotion, error) {
-	row := q.db.QueryRowContext(ctx, createPromotion,
+	row := q.db.QueryRow(ctx, createPromotion,
 		arg.Name,
 		arg.Description,
 		arg.DiscountRate,
@@ -62,7 +63,7 @@ WHERE id = $1
 `
 
 func (q *Queries) DeletePromotion(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deletePromotion, id)
+	_, err := q.db.Exec(ctx, deletePromotion, id)
 	return err
 }
 
@@ -72,7 +73,7 @@ WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPromotion(ctx context.Context, id int64) (Promotion, error) {
-	row := q.db.QueryRowContext(ctx, getPromotion, id)
+	row := q.db.QueryRow(ctx, getPromotion, id)
 	var i Promotion
 	err := row.Scan(
 		&i.ID,
@@ -99,7 +100,7 @@ type ListPromotionsParams struct {
 }
 
 func (q *Queries) ListPromotions(ctx context.Context, arg ListPromotionsParams) ([]Promotion, error) {
-	rows, err := q.db.QueryContext(ctx, listPromotions, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listPromotions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +120,6 @@ func (q *Queries) ListPromotions(ctx context.Context, arg ListPromotionsParams) 
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -143,17 +141,17 @@ RETURNING id, name, description, discount_rate, active, start_date, end_date
 `
 
 type UpdatePromotionParams struct {
-	Name         sql.NullString `json:"name"`
-	Description  sql.NullString `json:"description"`
-	DiscountRate sql.NullInt32  `json:"discount_rate"`
-	Active       sql.NullBool   `json:"active"`
-	StartDate    sql.NullTime   `json:"start_date"`
-	EndDate      sql.NullTime   `json:"end_date"`
-	ID           int64          `json:"id"`
+	Name         null.String `json:"name"`
+	Description  null.String `json:"description"`
+	DiscountRate null.Int    `json:"discount_rate"`
+	Active       null.Bool   `json:"active"`
+	StartDate    null.Time   `json:"start_date"`
+	EndDate      null.Time   `json:"end_date"`
+	ID           int64       `json:"id"`
 }
 
 func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error) {
-	row := q.db.QueryRowContext(ctx, updatePromotion,
+	row := q.db.QueryRow(ctx, updatePromotion,
 		arg.Name,
 		arg.Description,
 		arg.DiscountRate,
