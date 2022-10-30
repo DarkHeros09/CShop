@@ -30,7 +30,7 @@ CREATE TABLE "user" (
 
 CREATE TABLE "user_session" (
   "id" uuid UNIQUE PRIMARY KEY NOT NULL,
-  "user_id" bigint UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
   "refresh_token" varchar NOT NULL,
   "user_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE "address" (
 
 CREATE TABLE "user_address" (
   "user_id" bigint NOT NULL,
-  "address_id" bigint UNIQUE NOT NULL,
+  "address_id" bigint NOT NULL,
   "default_address" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -58,7 +58,7 @@ CREATE TABLE "user_address" (
 
 CREATE TABLE "user_review" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "user_id" bigint UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
   "ordered_product_id" bigint UNIQUE NOT NULL,
   "rating_value" int NOT NULL DEFAULT 0,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -67,8 +67,8 @@ CREATE TABLE "user_review" (
 
 CREATE TABLE "payment_method" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "user_id" bigint UNIQUE NOT NULL,
-  "payment_type_id" int UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
+  "payment_type_id" int NOT NULL,
   "provider" varchar NOT NULL,
   "is_default" boolean NOT NULL DEFAULT false
 );
@@ -80,7 +80,7 @@ CREATE TABLE "payment_type" (
 
 CREATE TABLE "shopping_cart" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "user_id" bigint UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -88,7 +88,7 @@ CREATE TABLE "shopping_cart" (
 CREATE TABLE "shopping_cart_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "shopping_cart_id" bigint NOT NULL,
-  "product_item_id" bigint UNIQUE NOT NULL,
+  "product_item_id" bigint NOT NULL,
   "qty" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -96,7 +96,7 @@ CREATE TABLE "shopping_cart_item" (
 
 CREATE TABLE "wish_list" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "user_id" bigint UNIQUE NOT NULL,
+  "user_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -104,14 +104,14 @@ CREATE TABLE "wish_list" (
 CREATE TABLE "wish_list_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "wish_list_id" bigint NOT NULL,
-  "product_item_id" bigint UNIQUE NOT NULL,
+  "product_item_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE "shop_order_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "product_item_id" bigint UNIQUE NOT NULL,
+  "product_item_id" bigint NOT NULL,
   "order_id" bigint NOT NULL,
   "quantity" int NOT NULL DEFAULT 0,
   "price" varchar NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE "product_item" (
 
 CREATE TABLE "product" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "category_id" bigint UNIQUE NOT NULL,
+  "category_id" bigint NOT NULL,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
   "product_image" varchar NOT NULL,
@@ -143,7 +143,7 @@ CREATE TABLE "product" (
 );
 
 CREATE TABLE "product_promotion" (
-  "product_id" bigint UNIQUE NOT NULL,
+  "product_id" bigint NOT NULL,
   "promotion_id" bigint UNIQUE NOT NULL,
   "active" boolean NOT NULL DEFAULT false
 );
@@ -172,19 +172,19 @@ CREATE TABLE "category_promotion" (
 
 CREATE TABLE "variation" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "category_id" bigint UNIQUE NOT NULL,
+  "category_id" bigint NOT NULL,
   "name" varchar NOT NULL
 );
 
 CREATE TABLE "variation_option" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "variation_id" bigint UNIQUE NOT NULL,
+  "variation_id" bigint NOT NULL,
   "value" varchar NOT NULL
 );
 
 CREATE TABLE "product_configuration" (
-  "product_item_id" bigint UNIQUE NOT NULL,
-  "variation_option_id" bigint UNIQUE NOT NULL
+  "product_item_id" bigint NOT NULL,
+  "variation_option_id" bigint NOT NULL
 );
 
 CREATE TABLE "shop_order" (

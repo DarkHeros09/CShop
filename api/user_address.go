@@ -12,7 +12,10 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+//////////////* Create API //////////////
+
 type createUserAddressRequest struct {
+	UserID         int64    `json:"user_id" binding:"required,min=1"`
 	AddressLine    string   `json:"address_line" binding:"required"`
 	Region         string   `json:"region" binding:"required"`
 	City           string   `json:"city" binding:"required"`
@@ -42,10 +45,15 @@ func newUserAddressResponseForCreate(address db.CreateUserAddressWithAddressRow)
 func (server *Server) createUserAddress(ctx *gin.Context) {
 	var req createUserAddressRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != req.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
@@ -86,6 +94,8 @@ func newUserAddressResponseForGet(address db.GetUserAddressWithAddressRow) userA
 	}
 }
 
+//////////////* Get API //////////////
+
 type getUserAddressRequest struct {
 	AddressID int64 `uri:"id" binding:"required,min=1"`
 }
@@ -93,12 +103,13 @@ type getUserAddressRequest struct {
 func (server *Server) getUserAddress(ctx *gin.Context) {
 	var req getUserAddressRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+
 	arg := db.GetUserAddressWithAddressParams{
 		UserID:    authPayload.UserID,
 		AddressID: req.AddressID,
@@ -123,6 +134,8 @@ func (server *Server) getUserAddress(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, rsp)
 }
+
+//////////////* List API //////////////
 
 type listUserAddressesRequest struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
@@ -155,6 +168,19 @@ func (server *Server) listUserAddresses(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, userAddresses)
 }
 
+// ////////////* UPDATE API //////////////
+type updateUserAddressUriRequest struct {
+	UserID int64 `uri:"user_id" binding:"required,min=1"`
+}
+
+type updateUserAddressJsonRequest struct {
+	AddressID      int64    `json:"address_id" binding:"required,min=1"`
+	AddressLine    string   `json:"address_line" binding:"omitempty,required"`
+	City           string   `json:"city" binding:"omitempty,required"`
+	Region         string   `json:"region" binding:"omitempty,required"`
+	DefaultAddress null.Int `json:"default_address" binding:"omitempty,required,min=1"`
+}
+
 func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddress) userAddressResponse {
 	return userAddressResponse{
 		UserID:         userAddress.UserID,
@@ -166,24 +192,26 @@ func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddr
 	}
 }
 
-type updateUserAddressRequest struct {
-	UserID         int64    `uri:"user_id" binding:"required,min=1"`
-	AddressID      int64    `json:"address_id" binding:"required,min=1"`
-	AddressLine    string   `json:"address_line" binding:"omitempty,required"`
-	City           string   `json:"city" binding:"omitempty,required"`
-	Region         string   `json:"region" binding:"omitempty,required"`
-	DefaultAddress null.Int `json:"default_address" binding:"omitempty,required,min=1"`
-}
-
 func (server *Server) updateUserAddress(ctx *gin.Context) {
-	var req updateUserAddressRequest
+	var uri updateUserAddressUriRequest
+	var req updateUserAddressJsonRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != uri.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	arg1 := db.UpdateUserAddressParams{
 		UserID:         authPayload.UserID,
 		AddressID:      req.AddressID,
@@ -200,12 +228,6 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 			}
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	if userAddress.UserID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
@@ -231,23 +253,38 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
-type deleteUserAddressRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+// ////////////* Delete API //////////////
+type deleteUserAddressUriRequest struct {
+	UserID int64 `uri:"user_id" binding:"required,min=1"`
+}
+
+type deleteUserAddressJsonRequest struct {
+	AddressID int64 `json:"address_id" binding:"required,min=1"`
 }
 
 func (server *Server) deleteUserAddress(ctx *gin.Context) {
-	var req deleteUserAddressRequest
+	var uri deleteUserAddressUriRequest
+	var req deleteUserAddressJsonRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != uri.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	arg1 := db.DeleteUserAddressParams{
-		UserID:    authPayload.UserID,
-		AddressID: req.ID,
+		UserID:    uri.UserID,
+		AddressID: req.AddressID,
 	}
 
 	err := server.store.DeleteUserAddress(ctx, arg1)

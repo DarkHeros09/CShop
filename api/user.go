@@ -15,6 +15,8 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+//////////////* Create API //////////////
+
 type createUserRequest struct {
 	Username  string `json:"username" binding:"required,alphanum"`
 	Email     string `json:"email" binding:"required,email"`
@@ -75,6 +77,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 	rsp := newUserResponse(user)
 	ctx.JSON(http.StatusOK, rsp)
 }
+
+//////////////* Reset Password API //////////////
 
 type resetPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`
@@ -139,6 +143,8 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 
 }
 
+//////////////* Get API //////////////
+
 type getUserRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
@@ -170,6 +176,8 @@ func (server *Server) getUser(ctx *gin.Context) {
 	rsp := newUserResponse(user)
 	ctx.JSON(http.StatusOK, rsp)
 }
+
+//////////////* List API //////////////
 
 type listUsersRequest struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
@@ -209,21 +217,30 @@ func (server *Server) listUsers(ctx *gin.Context) {
 
 }
 
-type updateUserRequest struct {
-	ID             int64    `uri:"id" binding:"required,min=1"`
+//////////////* Update API //////////////
+
+type updateUserUriRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+type updateUserJsonRequest struct {
 	Telephone      int64    `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
 	DefaultPayment null.Int `json:"default_payment"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
-	var req updateUserRequest
+	var uri updateUserUriRequest
+	var req updateUserJsonRequest
 
-	if err := ctx.BindJSON(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if req.ID != authPayload.UserID {
+	if uri.ID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
@@ -252,6 +269,8 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
+//////////////* Delete API //////////////
+
 type deleteUserRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
@@ -259,7 +278,7 @@ type deleteUserRequest struct {
 func (server *Server) deleteUser(ctx *gin.Context) {
 	var req deleteUserRequest
 
-	if err := ctx.BindJSON(&req); err != nil {
+	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -288,6 +307,8 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{})
 }
+
+//////////////* Login API //////////////
 
 type loginUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
