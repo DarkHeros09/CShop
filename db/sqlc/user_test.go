@@ -43,6 +43,37 @@ func TestCreateUser(t *testing.T) {
 	createRandomUser(t)
 }
 
+func TestCreateUserWithCart(t *testing.T) {
+	hashedPassword, err := util.HashPassword(util.RandomString(6))
+	require.NoError(t, err)
+	require.NotEmpty(t, hashedPassword)
+
+	arg := CreateUserWithCartParams{
+		Username:  util.RandomUser(),
+		Email:     util.RandomEmail(),
+		Password:  hashedPassword,
+		Telephone: int32(util.RandomInt(0, 1000000)),
+	}
+
+	user, err := testQueires.CreateUserWithCart(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+
+	require.Equal(t, arg.Username, user.Username)
+	require.Equal(t, arg.Email, user.Email)
+	require.Equal(t, arg.Password, user.Password)
+	require.Equal(t, arg.Telephone, user.Telephone)
+
+	require.NotZero(t, user.ID)
+	require.NotZero(t, user.CreatedAt)
+	require.True(t, user.UpdatedAt.IsZero())
+
+	shoppingCart, err := testQueires.GetShoppingCartByUserID(context.Background(), user.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, shoppingCart)
+
+}
+
 func TestGetUser(t *testing.T) {
 	user1 := createRandomUser(t)
 	user2, err := testQueires.GetUser(context.Background(), user1.ID)

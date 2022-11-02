@@ -34,6 +34,7 @@ type Querier interface {
 	CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error)
 	CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error)
 	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error)
+	CreateUserWithCart(ctx context.Context, arg CreateUserWithCartParams) (CreateUserWithCartRow, error)
 	CreateVariation(ctx context.Context, arg CreateVariationParams) (Variation, error)
 	CreateVariationOption(ctx context.Context, arg CreateVariationOptionParams) (VariationOption, error)
 	CreateWishList(ctx context.Context, userID int64) (WishList, error)
@@ -56,7 +57,8 @@ type Querier interface {
 	DeleteShopOrder(ctx context.Context, id int64) error
 	DeleteShopOrderItem(ctx context.Context, id int64) error
 	DeleteShoppingCart(ctx context.Context, id int64) error
-	DeleteShoppingCartItem(ctx context.Context, id int64) error
+	DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error
+	DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	// -- name: UpdateUserAddressWithAddress :one
 	// WITH t1 AS (
@@ -111,7 +113,9 @@ type Querier interface {
 	GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
 	GetShopOrderItem(ctx context.Context, id int64) (ShopOrderItem, error)
 	GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, error)
+	GetShoppingCartByUserID(ctx context.Context, userID int64) (ShoppingCart, error)
 	GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCartItem, error)
+	GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) (GetShoppingCartItemByUserIDCartIDRow, error)
 	GetUser(ctx context.Context, id int64) (User, error)
 	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
 	GetUserAddressWithAddress(ctx context.Context, arg GetUserAddressWithAddressParams) (GetUserAddressWithAddressRow, error)
@@ -142,6 +146,7 @@ type Querier interface {
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
 	ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error)
 	ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error)
+	ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error)
 	ListShoppingCarts(ctx context.Context, arg ListShoppingCartsParams) ([]ShoppingCart, error)
 	ListUserAddresses(ctx context.Context, arg ListUserAddressesParams) ([]UserAddress, error)
 	ListUserReviews(ctx context.Context, arg ListUserReviewsParams) ([]UserReview, error)
@@ -168,7 +173,7 @@ type Querier interface {
 	UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error)
 	UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderItemParams) (ShopOrderItem, error)
 	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) (ShoppingCart, error)
-	UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (ShoppingCartItem, error)
+	UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (UpdateShoppingCartItemRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)

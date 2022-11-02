@@ -59,6 +59,23 @@ func (q *Queries) GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, 
 	return i, err
 }
 
+const getShoppingCartByUserID = `-- name: GetShoppingCartByUserID :one
+SELECT id, user_id, created_at, updated_at FROM "shopping_cart"
+WHERE user_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetShoppingCartByUserID(ctx context.Context, userID int64) (ShoppingCart, error) {
+	row := q.db.QueryRow(ctx, getShoppingCartByUserID, userID)
+	var i ShoppingCart
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listShoppingCarts = `-- name: ListShoppingCarts :many
 SELECT id, user_id, created_at, updated_at FROM "shopping_cart"
 ORDER BY id

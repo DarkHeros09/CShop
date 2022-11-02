@@ -170,7 +170,7 @@ func (server *Server) listUserAddresses(ctx *gin.Context) {
 
 // ////////////* UPDATE API //////////////
 type updateUserAddressUriRequest struct {
-	UserID int64 `uri:"user_id" binding:"required,min=1"`
+	UserID int64 `uri:"user-id" binding:"required,min=1"`
 }
 
 type updateUserAddressJsonRequest struct {
@@ -212,17 +212,17 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 		return
 	}
 
-	arg1 := db.UpdateUserAddressParams{
+	arg := db.UpdateUserAddressParams{
 		UserID:         authPayload.UserID,
 		AddressID:      req.AddressID,
 		DefaultAddress: req.DefaultAddress,
 	}
 
-	userAddress, err := server.store.UpdateUserAddress(ctx, arg1)
+	userAddress, err := server.store.UpdateUserAddress(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "unique_violation":
+			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
@@ -255,7 +255,7 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 
 // ////////////* Delete API //////////////
 type deleteUserAddressUriRequest struct {
-	UserID int64 `uri:"user_id" binding:"required,min=1"`
+	UserID int64 `uri:"user-id" binding:"required,min=1"`
 }
 
 type deleteUserAddressJsonRequest struct {

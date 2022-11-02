@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/guregu/null"
 )
@@ -43,12 +44,35 @@ func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShopping
 }
 
 const deleteShoppingCartItem = `-- name: DeleteShoppingCartItem :exec
-DELETE FROM "shopping_cart_item"
-WHERE id = $1
+WITH t1 AS (
+  SELECT id FROM "shopping_cart" AS sc
+  WHERE sc.user_id = $2
+)
+DELETE FROM "shopping_cart_item" AS sci
+WHERE sci.id = $1
+AND sci.shopping_cart_id = (SELECT id FROM t1)
 `
 
-func (q *Queries) DeleteShoppingCartItem(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteShoppingCartItem, id)
+type DeleteShoppingCartItemParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error {
+	_, err := q.db.Exec(ctx, deleteShoppingCartItem, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteShoppingCartItemAllByUser = `-- name: DeleteShoppingCartItemAllByUser :exec
+WITH t1 AS(
+  SELECT id FROM shopping_cart WHERE user_id = $1
+)
+DELETE FROM "shopping_cart_item"
+WHERE shopping_cart_id = (SELECT id FROM t1)
+`
+
+func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) error {
+	_, err := q.db.Exec(ctx, deleteShoppingCartItemAllByUser, userID)
 	return err
 }
 
@@ -67,6 +91,44 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCa
 		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getShoppingCartItemByUserIDCartID = `-- name: GetShoppingCartItemByUserIDCartID :one
+SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.qty, sci.created_at, sci.updated_at, sc.user_id
+FROM "shopping_cart_item" AS sci
+LEFT JOIN "shopping_cart" AS sc ON sc.id = sci.shopping_cart_id
+WHERE sc.user_id = $1
+AND sci.shopping_cart_id = $2
+`
+
+type GetShoppingCartItemByUserIDCartIDParams struct {
+	UserID         int64 `json:"user_id"`
+	ShoppingCartID int64 `json:"shopping_cart_id"`
+}
+
+type GetShoppingCartItemByUserIDCartIDRow struct {
+	ID             int64     `json:"id"`
+	ShoppingCartID int64     `json:"shopping_cart_id"`
+	ProductItemID  int64     `json:"product_item_id"`
+	Qty            int32     `json:"qty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	UserID         null.Int  `json:"user_id"`
+}
+
+func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) (GetShoppingCartItemByUserIDCartIDRow, error) {
+	row := q.db.QueryRow(ctx, getShoppingCartItemByUserIDCartID, arg.UserID, arg.ShoppingCartID)
+	var i GetShoppingCartItemByUserIDCartIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.ShoppingCartID,
+		&i.ProductItemID,
+		&i.Qty,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -143,31 +205,90 @@ func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCar
 	return items, nil
 }
 
+const listShoppingCartItemsByUserID = `-- name: ListShoppingCartItemsByUserID :many
+SELECT sc.user_id, sci.id, sci.shopping_cart_id, sci.product_item_id, sci.qty, sci.created_at, sci.updated_at
+FROM "shopping_cart" AS sc
+LEFT JOIN "shopping_cart_item" AS sci ON sci.shopping_cart_id = sc.id
+WHERE sc.user_id = $1
+`
+
+type ListShoppingCartItemsByUserIDRow struct {
+	UserID         int64     `json:"user_id"`
+	ID             null.Int  `json:"id"`
+	ShoppingCartID null.Int  `json:"shopping_cart_id"`
+	ProductItemID  null.Int  `json:"product_item_id"`
+	Qty            null.Int  `json:"qty"`
+	CreatedAt      null.Time `json:"created_at"`
+	UpdatedAt      null.Time `json:"updated_at"`
+}
+
+func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error) {
+	rows, err := q.db.Query(ctx, listShoppingCartItemsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListShoppingCartItemsByUserIDRow{}
+	for rows.Next() {
+		var i ListShoppingCartItemsByUserIDRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.ID,
+			&i.ShoppingCartID,
+			&i.ProductItemID,
+			&i.Qty,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateShoppingCartItem = `-- name: UpdateShoppingCartItem :one
-UPDATE "shopping_cart_item"
+WITH t1 AS (
+  SELECT user_id FROM "shopping_cart" AS sc
+  WHERE sc.id = $4
+)
+
+UPDATE "shopping_cart_item" AS sci
 SET 
-shopping_cart_id = COALESCE($1,shopping_cart_id),
-product_item_id = COALESCE($2,product_item_id),
-qty = COALESCE($3,qty)
-WHERE id = $4
-RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
+product_item_id = COALESCE($1,product_item_id),
+qty = COALESCE($2,qty)
+WHERE sci.id = $3
+RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at, (SELECT user_id FROM t1)
 `
 
 type UpdateShoppingCartItemParams struct {
-	ShoppingCartID null.Int `json:"shopping_cart_id"`
 	ProductItemID  null.Int `json:"product_item_id"`
 	Qty            null.Int `json:"qty"`
 	ID             int64    `json:"id"`
+	ShoppingCartID int64    `json:"shopping_cart_id"`
 }
 
-func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (ShoppingCartItem, error) {
+type UpdateShoppingCartItemRow struct {
+	ID             int64     `json:"id"`
+	ShoppingCartID int64     `json:"shopping_cart_id"`
+	ProductItemID  int64     `json:"product_item_id"`
+	Qty            int32     `json:"qty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	UserID         int64     `json:"user_id"`
+}
+
+func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (UpdateShoppingCartItemRow, error) {
 	row := q.db.QueryRow(ctx, updateShoppingCartItem,
-		arg.ShoppingCartID,
 		arg.ProductItemID,
 		arg.Qty,
 		arg.ID,
+		arg.ShoppingCartID,
 	)
-	var i ShoppingCartItem
+	var i UpdateShoppingCartItemRow
 	err := row.Scan(
 		&i.ID,
 		&i.ShoppingCartID,
@@ -175,6 +296,7 @@ func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShopping
 		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
 	)
 	return i, err
 }

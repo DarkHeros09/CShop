@@ -66,7 +66,7 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 	arg := UpdateProductItemParams{
 		ProductID:    null.Int{},
 		ProductSku:   null.Int{},
-		QtyInStock:   null.IntFrom(util.RandomInt(5, 90)),
+		QtyInStock:   null.IntFrom(util.RandomInt(1, 500)),
 		ProductImage: null.String{},
 		Price:        null.StringFrom(util.RandomDecimalString(1, 100)),
 		Active:       null.BoolFrom(!productItem1.Active),

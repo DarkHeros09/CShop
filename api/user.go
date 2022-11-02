@@ -40,6 +40,15 @@ func newUserResponse(user db.User) userResponse {
 	}
 }
 
+func newUserWithCartResponse(user db.CreateUserWithCartRow) userResponse {
+	return userResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Telephone: user.Telephone,
+	}
+}
+
 func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 
@@ -54,18 +63,18 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.CreateUserParams{
+	arg := db.CreateUserWithCartParams{
 		Username:  req.Username,
 		Email:     req.Email,
 		Password:  hashedPassword,
 		Telephone: req.Telephone,
 	}
 
-	user, err := server.store.CreateUser(ctx, arg)
+	user, err := server.store.CreateUserWithCart(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "unique_violation":
+			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
@@ -74,7 +83,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	rsp := newUserResponse(user)
+	rsp := newUserWithCartResponse(user)
 	ctx.JSON(http.StatusOK, rsp)
 }
 
@@ -129,7 +138,7 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "unique_violation":
+			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
@@ -256,7 +265,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "unique_violation":
+			case "foreign_key_violation", "unique_violation":
 				ctx.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}

@@ -60,8 +60,16 @@ func (server *Server) setupRouter() {
 	userRoutes.POST("/users/addresses", server.createUserAddress)            //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/addresses/:id", server.getUserAddress)            //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/addresses", server.listUserAddresses)             //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/addresses/:user_id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/addresses/:user_id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/addresses/:user-id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/addresses/:user-id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
+
+	userRoutes.POST("/shopping-cart-items", server.createShoppingCartItem)                          //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/shopping-cart-items/:shopping-cart-id", server.getShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/shopping-cart-items", server.listShoppingCartItems)                            //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/shopping-cart-items/:shopping-cart-id", server.updateShoppingCartItem)         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/shopping-cart-items/:shopping-cart-item-id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/shopping-cart-items/delete-all", server.deleteShoppingCartItemAllByUser)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/shopping-cart-items/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
 
 	server.router = router
 

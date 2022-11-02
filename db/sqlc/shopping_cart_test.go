@@ -35,6 +35,16 @@ func TestGetShoppingCart(t *testing.T) {
 	require.Equal(t, shoppingCart1.UserID, shoppingCart2.UserID)
 }
 
+func TestGetShoppingCartByUser(t *testing.T) {
+	shoppingCart1 := createRandomShoppingCart(t)
+
+	shoppingCart2, err := testQueires.GetShoppingCartByUserID(context.Background(), shoppingCart1.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, shoppingCart2)
+
+	require.Equal(t, shoppingCart1.UserID, shoppingCart2.UserID)
+}
+
 func TestUpdateShoppingCart(t *testing.T) {
 	shoppingCart1 := createRandomShoppingCart(t)
 	// user := createRandomUser(t)

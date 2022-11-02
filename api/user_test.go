@@ -25,12 +25,12 @@ import (
 )
 
 type eqCreateUserParamsMatcher struct {
-	arg      db.CreateUserParams
+	arg      db.CreateUserWithCartParams
 	password string
 }
 
 func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
-	arg, ok := x.(db.CreateUserParams)
+	arg, ok := x.(db.CreateUserWithCartParams)
 	if !ok {
 		return false
 	}
@@ -48,12 +48,12 @@ func (e eqCreateUserParamsMatcher) String() string {
 	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
 }
 
-func EqCreateUserParamsMatcher(arg db.CreateUserParams, password string) gomock.Matcher {
+func EqCreateUserParamsMatcher(arg db.CreateUserWithCartParams, password string) gomock.Matcher {
 	return eqCreateUserParamsMatcher{arg, password}
 }
 
 func TestCreateUserAPI(t *testing.T) {
-	user, password := randomUser(t)
+	user, password := randomUserWithCart(t)
 
 	testCases := []struct {
 		name          string
@@ -71,20 +71,20 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
 					Return(user, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUser(t, recorder.Body, user)
+				requireBodyMatchUserForCreate(t, recorder.Body, user)
 			},
 		},
 		{
@@ -96,16 +96,16 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(db.CreateUserWithCartRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -120,15 +120,15 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
-					Times(1).Return(db.User{}, &pgconn.PgError{Code: "23505", Message: "unique_violation"})
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					Times(1).Return(db.CreateUserWithCartRow{}, &pgconn.PgError{Code: "23505", Message: "unique_violation"})
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -143,14 +143,14 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -167,14 +167,14 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -190,14 +190,14 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserParams{
+				arg := db.CreateUserWithCartParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUser(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -947,6 +947,22 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
+func randomUserWithCart(t *testing.T) (user db.CreateUserWithCartRow, password string) {
+	password = util.RandomString(6)
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.CreateUserWithCartRow{
+		ID:        util.RandomMoney(),
+		Username:  util.RandomUser(),
+		Password:  hashedPassword,
+		Telephone: int32(util.RandomInt(910000000, 929999999)),
+
+		Email: util.RandomEmail(),
+	}
+	return
+}
+
 func randomSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
@@ -968,6 +984,20 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.NoError(t, err)
 
 	var gotUser db.User
+	err = json.Unmarshal(data, &gotUser)
+
+	require.NoError(t, err)
+	require.Equal(t, user.Username, gotUser.Username)
+	require.Equal(t, user.Telephone, gotUser.Telephone)
+	require.Equal(t, user.Email, gotUser.Email)
+	require.Empty(t, gotUser.Password)
+}
+
+func requireBodyMatchUserForCreate(t *testing.T, body *bytes.Buffer, user db.CreateUserWithCartRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotUser db.CreateUserWithCartRow
 	err = json.Unmarshal(data, &gotUser)
 
 	require.NoError(t, err)

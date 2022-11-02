@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/guregu/null"
 )
@@ -41,6 +42,69 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.DefaultPayment,
 	)
 	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.Telephone,
+		&i.DefaultPayment,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createUserWithCart = `-- name: CreateUserWithCart :one
+WITH t1 AS(
+INSERT INTO "user" (
+  username,
+  email,
+  password,
+  telephone,
+  default_payment
+) VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING id, username, email, password, telephone, default_payment, created_at, updated_at
+),
+t2 AS(
+  INSERT INTO "shopping_cart" (
+  user_id
+) VALUES ((Select id from t1))
+)
+
+SELECT id, username, email, password, telephone, default_payment, created_at, updated_at FROM t1
+`
+
+type CreateUserWithCartParams struct {
+	Username       string   `json:"username"`
+	Email          string   `json:"email"`
+	Password       string   `json:"password"`
+	Telephone      int32    `json:"telephone"`
+	DefaultPayment null.Int `json:"default_payment"`
+}
+
+type CreateUserWithCartRow struct {
+	ID             int64     `json:"id"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	Password       string    `json:"password"`
+	Telephone      int32     `json:"telephone"`
+	DefaultPayment null.Int  `json:"default_payment"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+func (q *Queries) CreateUserWithCart(ctx context.Context, arg CreateUserWithCartParams) (CreateUserWithCartRow, error) {
+	row := q.db.QueryRow(ctx, createUserWithCart,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+		arg.Telephone,
+		arg.DefaultPayment,
+	)
+	var i CreateUserWithCartRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,

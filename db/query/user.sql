@@ -10,6 +10,27 @@ INSERT INTO "user" (
 )
 RETURNING *;
 
+-- name: CreateUserWithCart :one
+WITH t1 AS(
+INSERT INTO "user" (
+  username,
+  email,
+  password,
+  telephone,
+  default_payment
+) VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING *
+),
+t2 AS(
+  INSERT INTO "shopping_cart" (
+  user_id
+) VALUES ((Select id from t1))
+)
+
+SELECT * FROM t1;
+
 -- name: GetUser :one
 SELECT * FROM "user"
 WHERE id = $1 LIMIT 1;

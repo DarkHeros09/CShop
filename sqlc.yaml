@@ -18,6 +18,10 @@ sql:
           go_type: "github.com/guregu/null.Int"
           nullable: true
 
+        - db_type: "bigserial"
+          go_type: "github.com/guregu/null.Int"
+          nullable: true
+
         - db_type: "pg_catalog.int4"
           go_type: "github.com/guregu/null.Int"
           nullable: true

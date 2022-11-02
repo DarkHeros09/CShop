@@ -173,6 +173,15 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.Equal(t, listShoppingCartItem[i].ProductItemID, finishedShopOrderItem.ProductItemID)
 			require.Equal(t, listShoppingCartItem[i].Qty, finishedShopOrderItem.Quantity)
 		}
+
+		arg1 := GetShoppingCartItemByUserIDCartIDParams{
+			UserID:         shoppingCart.UserID,
+			ShoppingCartID: shoppingCart.ID,
+		}
+
+		DeletedShopCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
+		require.Error(t, err)
+		require.Empty(t, DeletedShopCartItem)
 	}
 }
 
