@@ -24,7 +24,7 @@ RETURNING id, user_id, payment_type_id, provider, is_default
 
 type CreatePaymentMethodParams struct {
 	UserID        int64  `json:"user_id"`
-	PaymentTypeID int32  `json:"payment_type_id"`
+	PaymentTypeID int64  `json:"payment_type_id"`
 	Provider      string `json:"provider"`
 }
 
@@ -41,23 +41,45 @@ func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMeth
 	return i, err
 }
 
-const deletePaymentMethod = `-- name: DeletePaymentMethod :exec
+const deletePaymentMethod = `-- name: DeletePaymentMethod :one
 DELETE FROM "payment_method"
 WHERE id = $1
+AND user_id = $2
+RETURNING id, user_id, payment_type_id, provider, is_default
 `
 
-func (q *Queries) DeletePaymentMethod(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deletePaymentMethod, id)
-	return err
+type DeletePaymentMethodParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) DeletePaymentMethod(ctx context.Context, arg DeletePaymentMethodParams) (PaymentMethod, error) {
+	row := q.db.QueryRow(ctx, deletePaymentMethod, arg.ID, arg.UserID)
+	var i PaymentMethod
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.PaymentTypeID,
+		&i.Provider,
+		&i.IsDefault,
+	)
+	return i, err
 }
 
 const getPaymentMethod = `-- name: GetPaymentMethod :one
 SELECT id, user_id, payment_type_id, provider, is_default FROM "payment_method"
-WHERE id = $1 LIMIT 1
+WHERE id = $1 
+AND user_id = $2
+LIMIT 1
 `
 
-func (q *Queries) GetPaymentMethod(ctx context.Context, id int64) (PaymentMethod, error) {
-	row := q.db.QueryRow(ctx, getPaymentMethod, id)
+type GetPaymentMethodParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error) {
+	row := q.db.QueryRow(ctx, getPaymentMethod, arg.ID, arg.UserID)
 	var i PaymentMethod
 	err := row.Scan(
 		&i.ID,
@@ -71,6 +93,7 @@ func (q *Queries) GetPaymentMethod(ctx context.Context, id int64) (PaymentMethod
 
 const listPaymentMethods = `-- name: ListPaymentMethods :many
 SELECT id, user_id, payment_type_id, provider, is_default FROM "payment_method"
+WHERE user_id = $3
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -79,10 +102,11 @@ OFFSET $2
 type ListPaymentMethodsParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
+	UserID int64 `json:"user_id"`
 }
 
 func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]PaymentMethod, error) {
-	rows, err := q.db.Query(ctx, listPaymentMethods, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listPaymentMethods, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}

@@ -45,7 +45,7 @@ type Querier interface {
 	DeleteAdminTypeByType(ctx context.Context, adminType string) error
 	DeleteCategoryPromotion(ctx context.Context, categoryID int64) error
 	DeleteOrderStatus(ctx context.Context, id int64) error
-	DeletePaymentMethod(ctx context.Context, id int64) error
+	DeletePaymentMethod(ctx context.Context, arg DeletePaymentMethodParams) (PaymentMethod, error)
 	DeletePaymentType(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error
@@ -58,8 +58,8 @@ type Querier interface {
 	DeleteShopOrderItem(ctx context.Context, id int64) error
 	DeleteShoppingCart(ctx context.Context, id int64) error
 	DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error
-	DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) error
-	DeleteUser(ctx context.Context, id int64) error
+	DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) ([]ShoppingCartItem, error)
+	DeleteUser(ctx context.Context, id int64) (User, error)
 	// -- name: UpdateUserAddressWithAddress :one
 	// WITH t1 AS (
 	//     UPDATE "address" as a
@@ -86,7 +86,7 @@ type Querier interface {
 	// address_line,
 	// region,
 	// city From t1,t2;
-	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) error
+	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (UserAddress, error)
 	DeleteUserReview(ctx context.Context, id int64) error
 	DeleteVariation(ctx context.Context, id int64) error
 	DeleteVariationOption(ctx context.Context, id int64) error
@@ -99,7 +99,7 @@ type Querier interface {
 	GetAdminType(ctx context.Context, id int64) (AdminType, error)
 	GetCategoryPromotion(ctx context.Context, categoryID int64) (CategoryPromotion, error)
 	GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error)
-	GetPaymentMethod(ctx context.Context, id int64) (PaymentMethod, error)
+	GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error)
 	GetPaymentType(ctx context.Context, id int64) (PaymentType, error)
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductCategory(ctx context.Context, id int64) (ProductCategory, error)

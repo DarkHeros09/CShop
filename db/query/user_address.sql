@@ -40,12 +40,12 @@ default_address,
 address_line,
 region,
 city 
-From t1, t2; 
+FROM t1, t2; 
 
 -- name: GetUserAddress :one
 SELECT * FROM "user_address"
 WHERE user_id = $1
-And address_id = $2
+AND address_id = $2
 LIMIT 1;
 
 -- name: GetUserAddressWithAddress :one
@@ -68,7 +68,7 @@ UPDATE "user_address"
 SET 
 default_address = $1
 WHERE user_id = $2
-And address_id = $3
+AND address_id = $3
 RETURNING *;
 
 -- -- name: UpdateUserAddressWithAddress :one
@@ -100,7 +100,8 @@ RETURNING *;
 -- region,
 -- city From t1,t2;
 
--- name: DeleteUserAddress :exec
+-- name: DeleteUserAddress :one
 DELETE FROM "user_address"
 WHERE user_id = $1
-And address_id = $2;
+AND address_id = $2
+RETURNING *;

@@ -127,15 +127,17 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	user1 := createRandomUser(t)
 
-	err := testQueires.DeleteUser(context.Background(), user1.ID)
+	user2, err := testQueires.DeleteUser(context.Background(), user1.ID)
 
 	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+	require.Equal(t, user1, user2)
 
-	user2, err := testQueires.GetUser(context.Background(), user1.ID)
+	user3, err := testQueires.DeleteUser(context.Background(), user1.ID)
 
 	require.Error(t, err)
+	require.Empty(t, user3)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
-	require.Empty(t, user2)
 }
 
 func TestListUsers(t *testing.T) {

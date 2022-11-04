@@ -21,11 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateUserAddessAPI(t *testing.T) {
-	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
-	userAddressWithAddress := createRandomUserAddressWithAddress(t, userAddress, address)
+func TestCreatePaymentMethodAPI(t *testing.T) {
+	user, _ := randomPMUser(t)
+	paymentType := createRandomPaymentType(t)
+	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -37,46 +36,43 @@ func TestCreateUserAddessAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"user_id":      user.ID,
-				"address_line": address.AddressLine,
-				"region":       address.Region,
-				"city":         address.City,
+				"user_id":           user.ID,
+				"payment_method_id": paymentMethod.ID,
+				"provider":          paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateUserAddressWithAddressParams{
-					AddressLine: address.AddressLine,
-					Region:      address.Region,
-					City:        address.City,
-					UserID:      user.ID,
+				arg := db.CreatePaymentMethodParams{
+					UserID:        user.ID,
+					PaymentTypeID: paymentMethod.ID,
+					Provider:      paymentMethod.Provider,
 				}
 
 				store.EXPECT().
-					CreateUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					CreatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddressWithAddress, nil)
+					Return(paymentMethod, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddressForCreate(t, recorder.Body, userAddressWithAddress)
+				requireBodyMatchPaymentMethod(t, recorder.Body, paymentMethod)
 			},
 		},
 		{
 			name: "NoAuthorization",
 			body: gin.H{
-				"user_id":      user.ID,
-				"address_line": address.AddressLine,
-				"region":       address.Region,
-				"city":         address.City,
+				"user_id":           user.ID,
+				"payment_method_id": paymentMethod.ID,
+				"provider":          paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					CreatePaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -86,26 +82,24 @@ func TestCreateUserAddessAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"user_id":      user.ID,
-				"address_line": address.AddressLine,
-				"region":       address.Region,
-				"city":         address.City,
+				"user_id":           user.ID,
+				"payment_method_id": paymentMethod.ID,
+				"provider":          paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserAddressWithAddressParams{
-					AddressLine: address.AddressLine,
-					Region:      address.Region,
-					City:        address.City,
-					UserID:      user.ID,
+				arg := db.CreatePaymentMethodParams{
+					UserID:        user.ID,
+					PaymentTypeID: paymentMethod.ID,
+					Provider:      paymentMethod.Provider,
 				}
 
 				store.EXPECT().
-					CreateUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					CreatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.CreateUserAddressWithAddressRow{}, pgx.ErrTxClosed)
+					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -114,17 +108,16 @@ func TestCreateUserAddessAPI(t *testing.T) {
 		{
 			name: "InvalidUserID",
 			body: gin.H{
-				"user_id":      0,
-				"address_line": address.AddressLine,
-				"region":       address.Region,
-				"city":         address.City,
+				"user_id":           0,
+				"payment_method_id": paymentMethod.ID,
+				"provider":          paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					CreatePaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -149,7 +142,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/addresses"
+			url := "/users/payment-method"
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -160,11 +153,10 @@ func TestCreateUserAddessAPI(t *testing.T) {
 	}
 }
 
-func TestGetUserAddressAPI(t *testing.T) {
-	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
-	userAddressWithAddress := createRandomUserAddressWithAddressForGet(t, userAddress, address)
+func TestGetPaymentMethodAPI(t *testing.T) {
+	user, _ := randomPMUser(t)
+	paymentType := createRandomPaymentType(t)
+	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -176,39 +168,39 @@ func TestGetUserAddressAPI(t *testing.T) {
 	}{
 		{
 			name: "OK",
-			ID:   userAddress.AddressID,
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetPaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddressWithAddress, nil)
+					Return(paymentMethod, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddressForGet(t, recorder.Body, userAddressWithAddress)
+				requireBodyMatchPaymentMethod(t, recorder.Body, paymentMethod)
 			},
 		},
 		{
 			name: "NoAuthorization",
-			ID:   userAddress.AddressID,
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					GetPaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -217,19 +209,22 @@ func TestGetUserAddressAPI(t *testing.T) {
 		},
 		{
 			name: "NotFound",
-			ID:   userAddress.AddressID,
+			ID:   paymentMethod.ID,
+			body: gin.H{
+				"user_id": paymentMethod.UserID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetPaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrNoRows)
+					Return(db.PaymentMethod{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -237,19 +232,22 @@ func TestGetUserAddressAPI(t *testing.T) {
 		},
 		{
 			name: "InternalError",
-			ID:   userAddress.AddressID,
+			ID:   paymentMethod.ID,
+			body: gin.H{
+				"user_id": paymentMethod.UserID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetPaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrTxClosed)
+					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -258,12 +256,15 @@ func TestGetUserAddressAPI(t *testing.T) {
 		{
 			name: "InvalidID",
 			ID:   0,
+			body: gin.H{
+				"user_id": paymentMethod.UserID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					GetPaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -291,7 +292,7 @@ func TestGetUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.ID)
+			url := fmt.Sprintf("/users/payment-method/%d", tc.ID)
 			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -305,18 +306,16 @@ func TestGetUserAddressAPI(t *testing.T) {
 
 }
 
-func TestListUsersAddressAPI(t *testing.T) {
+func TestListPaymentMethodAPI(t *testing.T) {
 	n := 5
-	userAddresses := make([]db.UserAddress, n)
-	user, _ := randomUAUser(t)
-	address1 := createRandomAddress(t)
-	address2 := createRandomAddress(t)
-	address3 := createRandomAddress(t)
-	userAddress1 := createRandomUserAddress(t, user, address1)
-	userAddress2 := createRandomUserAddress(t, user, address2)
-	userAddress3 := createRandomUserAddress(t, user, address3)
+	paymentMethods := make([]db.PaymentMethod, n)
+	user, _ := randomPMUser(t)
+	paymentType := createRandomPaymentType(t)
+	paymentMethod1 := createRandomPaymentMethod(t, user, paymentType)
+	paymentMethod2 := createRandomPaymentMethod(t, user, paymentType)
+	paymentMethod3 := createRandomPaymentMethod(t, user, paymentType)
 
-	userAddresses = append(userAddresses, userAddress1, userAddress2, userAddress3)
+	paymentMethods = append(paymentMethods, paymentMethod1, paymentMethod2, paymentMethod3)
 
 	type Query struct {
 		pageID   int
@@ -340,20 +339,20 @@ func TestListUsersAddressAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListUserAddressesParams{
+				arg := db.ListPaymentMethodsParams{
 					UserID: user.ID,
 					Limit:  int32(n),
 					Offset: 0,
 				}
 
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Eq(arg)).
+					ListPaymentMethods(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddresses, nil)
+					Return(paymentMethods, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddresses(t, recorder.Body, userAddresses)
+				requireBodyMatchPaymentMethodss(t, recorder.Body, paymentMethods)
 			},
 		},
 		{
@@ -367,9 +366,9 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
+					ListPaymentMethods(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.UserAddress{}, pgx.ErrTxClosed)
+					Return([]db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -386,7 +385,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
+					ListPaymentMethods(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -404,7 +403,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
+					ListPaymentMethods(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -425,7 +424,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := "/users/addresses"
+			url := "/users/payment-method"
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -442,80 +441,61 @@ func TestListUsersAddressAPI(t *testing.T) {
 	}
 }
 
-func TestUpdateUserAddressAPI(t *testing.T) {
-	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
+func TestUpdatePaymentMethodAPI(t *testing.T) {
+	user, _ := randomPMUser(t)
+	paymentType := createRandomPaymentType(t)
+	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
 
 	testCases := []struct {
 		name          string
-		UserID        int64
+		ID            int64
 		body          gin.H
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:   "OK",
-			UserID: user.ID,
+			name: "OK",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"user_id":         paymentMethod.UserID,
+				"payment_type_id": paymentMethod.PaymentTypeID,
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.UpdateUserAddressParams{
-					DefaultAddress: null.IntFromPtr(userAddress.DefaultAddress.Ptr()),
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
+				arg := db.UpdatePaymentMethodParams{
+					UserID:        null.IntFromPtr(&paymentMethod.UserID),
+					PaymentTypeID: null.IntFromPtr(&paymentMethod.PaymentTypeID),
+					Provider:      null.StringFrom("new address"),
+					ID:            paymentMethod.ID,
 				}
 
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Eq(arg)).
+					UpdatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddress, nil)
-
-				arg1 := db.UpdateAddressParams{
-					AddressLine: null.StringFrom("new address"),
-					Region:      null.StringFrom("new region"),
-					City:        null.StringFrom("new city"),
-					ID:          userAddress.AddressID,
-				}
-
-				store.EXPECT().
-					UpdateAddress(gomock.Any(), gomock.Eq(arg1)).
-					Times(1).
-					Return(address, nil)
+					Return(paymentMethod, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			UserID: user.ID,
+			name: "NoAuthorization",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"user_id":         paymentMethod.UserID,
+				"payment_type_id": paymentMethod.PaymentTypeID,
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Any()).
-					Times(0)
-
-				store.EXPECT().
-					UpdateAddress(gomock.Any(), gomock.Any()).
+					UpdatePaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -523,66 +503,55 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: user.ID,
+			name: "InternalError",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"user_id":         paymentMethod.UserID,
+				"payment_type_id": paymentMethod.PaymentTypeID,
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateUserAddressParams{
-					DefaultAddress: null.IntFromPtr(userAddress.DefaultAddress.Ptr()),
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
+				arg := db.UpdatePaymentMethodParams{
+					UserID:        null.IntFromPtr(&paymentMethod.UserID),
+					PaymentTypeID: null.IntFromPtr(&paymentMethod.PaymentTypeID),
+					Provider:      null.StringFrom("new address"),
+					ID:            paymentMethod.ID,
 				}
 
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Eq(arg)).
+					UpdatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrTxClosed)
-
-				arg1 := db.UpdateAddressParams{
-					AddressLine: null.StringFrom("new address"),
-					Region:      null.StringFrom("new region"),
-					City:        null.StringFrom("new city"),
-					ID:          userAddress.AddressID,
-				}
-
-				store.EXPECT().
-					UpdateAddress(gomock.Any(), gomock.Eq(arg1)).
-					Times(0)
+					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 		{
-			name:   "InvalidUserID",
-			UserID: 0,
+			name: "InvalidUserID",
+			ID:   paymentMethod.ID,
+			body: gin.H{
+				"user_id":         0,
+				"payment_type_id": paymentMethod.PaymentTypeID,
+				"provider":        "new address",
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Any()).
+					UpdatePaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 
-				store.EXPECT().
-					UpdateAddress(gomock.Any(), gomock.Any()).
-					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 	}
-
 	for i := range testCases {
 		tc := testCases[i]
 
@@ -599,7 +568,7 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.UserID)
+			url := fmt.Sprintf("/users/payment-method/%d", tc.ID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -608,103 +577,106 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			tc.checkResponse(t, recorder)
 		})
 	}
+
 }
 
-func TestDeleteUserAddressAPI(t *testing.T) {
-	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
+func TestDeletePaymentMethodAPI(t *testing.T) {
+	user, _ := randomPMUser(t)
+	paymentType := createRandomPaymentType(t)
+	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
 
 	testCases := []struct {
 		name          string
-		UserID        int64
+		ID            int64
 		body          gin.H
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:   "OK",
-			UserID: userAddress.UserID,
+			name: "OK",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.DeletePaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
 
 				store.EXPECT().
-					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
+					DeletePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddress, nil)
+					Return(paymentMethod, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
 		{
-			name:   "NotFound",
-			UserID: userAddress.UserID,
+			name: "NotFound",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.DeletePaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
+
 				store.EXPECT().
-					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
+					DeletePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrNoRows)
+					Return(db.PaymentMethod{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: userAddress.UserID,
+			name: "InternalError",
+			ID:   paymentMethod.ID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.DeletePaymentMethodParams{
+					ID:     paymentMethod.ID,
+					UserID: paymentMethod.UserID,
 				}
+
 				store.EXPECT().
-					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
+					DeletePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrTxClosed)
+					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 		{
-			name:   "InvalidID",
-			UserID: 0,
+			name: "InvalidID",
+			ID:   0,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": paymentMethod.UserID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteUserAddress(gomock.Any(), gomock.Any()).
+					DeletePaymentMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -733,7 +705,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.UserID)
+			url := fmt.Sprintf("/users/payment-method/%d", tc.ID)
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -747,7 +719,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 
 }
 
-func randomUAUser(t *testing.T) (user db.User, password string) {
+func randomPMUser(t *testing.T) (user db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
@@ -762,83 +734,45 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomAddress(t *testing.T) (address db.Address) {
-	address = db.Address{
-		ID:          util.RandomMoney(),
-		AddressLine: util.RandomUser(),
-		Region:      util.RandomUser(),
-		City:        util.RandomUser(),
+func createRandomPaymentMethod(t *testing.T, user db.User, paymentType db.PaymentType) (paymentMethod db.PaymentMethod) {
+	paymentMethod = db.PaymentMethod{
+		ID:            util.RandomMoney(),
+		UserID:        user.ID,
+		PaymentTypeID: paymentType.ID,
+		Provider:      util.RandomUser(),
+		IsDefault:     util.RandomBool(),
+	}
+	return
+}
+func createRandomPaymentType(t *testing.T) (paymentType db.PaymentType) {
+	paymentType = db.PaymentType{
+		ID:    util.RandomMoney(),
+		Value: util.RandomUser(),
 	}
 	return
 }
 
-func createRandomUserAddress(t *testing.T, user db.User, address db.Address) (userAddress db.UserAddress) {
-	userAddress = db.UserAddress{
-		DefaultAddress: null.IntFromPtr(&address.ID),
-		UserID:         user.ID,
-		AddressID:      address.ID,
-	}
-	return
-}
-
-func createRandomUserAddressWithAddress(t *testing.T, userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.CreateUserAddressWithAddressRow) {
-	userAddressWithAddress = db.CreateUserAddressWithAddressRow{
-		UserID:      userAddress.UserID,
-		AddressID:   userAddress.AddressID,
-		AddressLine: address.AddressLine,
-		Region:      address.Region,
-		City:        address.City,
-	}
-	return
-}
-
-func createRandomUserAddressWithAddressForGet(t *testing.T, userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.GetUserAddressWithAddressRow) {
-	userAddressWithAddress = db.GetUserAddressWithAddressRow{
-		UserID:      userAddress.UserID,
-		AddressID:   userAddress.AddressID,
-		AddressLine: address.AddressLine,
-		Region:      address.Region,
-		City:        address.City,
-	}
-	return
-}
-
-func requireBodyMatchUserAddressForCreate(t *testing.T, body *bytes.Buffer, userAddress db.CreateUserAddressWithAddressRow) {
+func requireBodyMatchPaymentMethod(t *testing.T, body *bytes.Buffer, paymentMethod db.PaymentMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserAddress db.CreateUserAddressWithAddressRow
-	err = json.Unmarshal(data, &gotUserAddress)
+	var gotPaymentMethod db.PaymentMethod
+	err = json.Unmarshal(data, &gotPaymentMethod)
 
 	require.NoError(t, err)
-	require.Equal(t, userAddress.UserID, gotUserAddress.UserID)
-	require.Equal(t, userAddress.AddressID, gotUserAddress.AddressID)
-	require.Equal(t, userAddress.AddressLine, gotUserAddress.AddressLine)
-	require.Equal(t, userAddress.Region, gotUserAddress.Region)
-	require.Equal(t, userAddress.City, gotUserAddress.City)
+	require.Equal(t, paymentMethod.UserID, gotPaymentMethod.UserID)
+	require.Equal(t, paymentMethod.ID, gotPaymentMethod.ID)
+	require.Equal(t, paymentMethod.PaymentTypeID, gotPaymentMethod.PaymentTypeID)
+	require.Equal(t, paymentMethod.IsDefault, gotPaymentMethod.IsDefault)
+	require.Equal(t, paymentMethod.Provider, gotPaymentMethod.Provider)
 }
 
-func requireBodyMatchUserAddressForGet(t *testing.T, body *bytes.Buffer, userAddress db.GetUserAddressWithAddressRow) {
+func requireBodyMatchPaymentMethodss(t *testing.T, body *bytes.Buffer, paymentMethods []db.PaymentMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserAddress db.CreateUserAddressWithAddressRow
-	err = json.Unmarshal(data, &gotUserAddress)
-
+	var gotPaymentMethods []db.PaymentMethod
+	err = json.Unmarshal(data, &gotPaymentMethods)
 	require.NoError(t, err)
-	require.Equal(t, userAddress.UserID, gotUserAddress.UserID)
-	require.Equal(t, userAddress.AddressID, gotUserAddress.AddressID)
-	require.Equal(t, userAddress.AddressLine, gotUserAddress.AddressLine)
-	require.Equal(t, userAddress.Region, gotUserAddress.Region)
-	require.Equal(t, userAddress.City, gotUserAddress.City)
-}
-
-func requireBodyMatchUserAddresses(t *testing.T, body *bytes.Buffer, userAddresses []db.UserAddress) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
-
-	var gotUserAddresses []db.UserAddress
-	err = json.Unmarshal(data, &gotUserAddresses)
-	require.NoError(t, err)
-	require.Equal(t, userAddresses, gotUserAddresses)
+	require.Equal(t, paymentMethods, gotPaymentMethods)
 }

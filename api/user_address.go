@@ -57,7 +57,7 @@ func (server *Server) createUserAddress(ctx *gin.Context) {
 		return
 	}
 
-	arg1 := db.CreateUserAddressWithAddressParams{
+	arg := db.CreateUserAddressWithAddressParams{
 		UserID:         authPayload.UserID,
 		AddressLine:    req.AddressLine,
 		Region:         req.Region,
@@ -65,7 +65,7 @@ func (server *Server) createUserAddress(ctx *gin.Context) {
 		DefaultAddress: req.DefaultAddress,
 	}
 
-	userAddress, err := server.store.CreateUserAddressWithAddress(ctx, arg1)
+	userAddress, err := server.store.CreateUserAddressWithAddress(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -83,6 +83,8 @@ func (server *Server) createUserAddress(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
+//////////////* Get API //////////////
+
 func newUserAddressResponseForGet(address db.GetUserAddressWithAddressRow) userAddressResponse {
 	return userAddressResponse{
 		UserID:         address.UserID,
@@ -93,8 +95,6 @@ func newUserAddressResponseForGet(address db.GetUserAddressWithAddressRow) userA
 		City:           address.City,
 	}
 }
-
-//////////////* Get API //////////////
 
 type getUserAddressRequest struct {
 	AddressID int64 `uri:"id" binding:"required,min=1"`
@@ -212,13 +212,13 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.UpdateUserAddressParams{
+	arg1 := db.UpdateUserAddressParams{
 		UserID:         authPayload.UserID,
 		AddressID:      req.AddressID,
 		DefaultAddress: req.DefaultAddress,
 	}
 
-	userAddress, err := server.store.UpdateUserAddress(ctx, arg)
+	userAddress, err := server.store.UpdateUserAddress(ctx, arg1)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -282,12 +282,12 @@ func (server *Server) deleteUserAddress(ctx *gin.Context) {
 		return
 	}
 
-	arg1 := db.DeleteUserAddressParams{
+	arg := db.DeleteUserAddressParams{
 		UserID:    uri.UserID,
 		AddressID: req.AddressID,
 	}
 
-	err := server.store.DeleteUserAddress(ctx, arg1)
+	_, err := server.store.DeleteUserAddress(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

@@ -275,7 +275,7 @@ func (server *Server) deleteShoppingCartItemAllByUser(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteShoppingCartItemAllByUser(ctx, authPayload.UserID)
+	_, err := server.store.DeleteShoppingCartItemAllByUser(ctx, authPayload.UserID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

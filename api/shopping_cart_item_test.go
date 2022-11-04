@@ -160,7 +160,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/shopping-cart-items"
+			url := "/users/cart"
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -289,7 +289,7 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/shopping-cart-items/%d", tc.ShoppingCartID)
+			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartID)
 			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -409,7 +409,7 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/shopping-cart-items"
+			url := "/users/cart"
 			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -548,7 +548,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/shopping-cart-items/%d", tc.ShoppingCartID)
+			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -684,7 +684,7 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/shopping-cart-items/%d", tc.ShoppingCartItemID)
+			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartItemID)
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -701,7 +701,10 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
 	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItemForUpdate(t, shoppingCart)
+	shoppingCartItem := createRandomShoppingCartItem(t, shoppingCart)
+
+	var shoppingCartItemList []db.ShoppingCartItem
+	shoppingCartItemList = append(shoppingCartItemList, shoppingCartItem)
 
 	testCases := []struct {
 		name          string
@@ -721,9 +724,9 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCartItem.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
 					Times(1).
-					Return(nil)
+					Return(shoppingCartItemList, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -740,9 +743,9 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCartItem.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
 					Times(1).
-					Return(pgx.ErrNoRows)
+					Return([]db.ShoppingCartItem{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -759,9 +762,9 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCartItem.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
 					Times(1).
-					Return(pgx.ErrTxClosed)
+					Return([]db.ShoppingCartItem{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -806,7 +809,7 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/shopping-cart-items/delete-all"
+			url := "/users/cart/delete-all"
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -826,7 +829,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 	userAddress := createRandomUserAddress(t, user, address)
 	shoppingCart := createRandomShoppingCart(t, user)
 	shippingMethod := createRandomShippingMethod(t)
-	paymentMethod := createRandomPaymentMethod(t, user)
+	paymentMethod := createRandomPaymentMethodUA(t, user)
 	orderStatus := createRandomOrderStatus(t)
 	orderTotal := util.RandomDecimalString(1, 100)
 	finishedPurchase := createRandomFinishedPurchase(t)
@@ -1018,7 +1021,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/shopping-cart-items/purchase"
+			url := "/users/cart/purchase"
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -1061,11 +1064,11 @@ func createRandomShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart) (s
 	}
 	return
 }
-func createRandomPaymentMethod(t *testing.T, user db.User) (paymentMethod db.PaymentMethod) {
+func createRandomPaymentMethodUA(t *testing.T, user db.User) (paymentMethod db.PaymentMethod) {
 	paymentMethod = db.PaymentMethod{
 		ID:            util.RandomMoney(),
 		UserID:        user.ID,
-		PaymentTypeID: int32(util.RandomMoney()),
+		PaymentTypeID: util.RandomMoney(),
 		Provider:      util.RandomUser(),
 		IsDefault:     util.RandomBool(),
 	}

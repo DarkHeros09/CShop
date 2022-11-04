@@ -73,7 +73,7 @@ default_address,
 address_line,
 region,
 city 
-From t1, t2
+FROM t1, t2
 `
 
 type CreateUserAddressWithAddressParams struct {
@@ -113,13 +113,14 @@ func (q *Queries) CreateUserAddressWithAddress(ctx context.Context, arg CreateUs
 	return i, err
 }
 
-const deleteUserAddress = `-- name: DeleteUserAddress :exec
+const deleteUserAddress = `-- name: DeleteUserAddress :one
    
 	
 
 DELETE FROM "user_address"
 WHERE user_id = $1
-And address_id = $2
+AND address_id = $2
+RETURNING user_id, address_id, default_address, created_at, updated_at
 `
 
 type DeleteUserAddressParams struct {
@@ -155,15 +156,23 @@ type DeleteUserAddressParams struct {
 // address_line,
 // region,
 // city From t1,t2;
-func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) error {
-	_, err := q.db.Exec(ctx, deleteUserAddress, arg.UserID, arg.AddressID)
-	return err
+func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (UserAddress, error) {
+	row := q.db.QueryRow(ctx, deleteUserAddress, arg.UserID, arg.AddressID)
+	var i UserAddress
+	err := row.Scan(
+		&i.UserID,
+		&i.AddressID,
+		&i.DefaultAddress,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getUserAddress = `-- name: GetUserAddress :one
 SELECT user_id, address_id, default_address, created_at, updated_at FROM "user_address"
 WHERE user_id = $1
-And address_id = $2
+AND address_id = $2
 LIMIT 1
 `
 
@@ -267,7 +276,7 @@ UPDATE "user_address"
 SET 
 default_address = $1
 WHERE user_id = $2
-And address_id = $3
+AND address_id = $3
 RETURNING user_id, address_id, default_address, created_at, updated_at
 `
 

@@ -122,25 +122,21 @@ func TestUpdateUserAddress(t *testing.T) {
 }
 
 func TestDeleteUserAddress(t *testing.T) {
-	useraddress1 := createRandomUserAddress(t)
+	userAddress1 := createRandomUserAddress(t)
 	arg := DeleteUserAddressParams{
-		UserID:    useraddress1.UserID,
-		AddressID: useraddress1.AddressID,
+		UserID:    userAddress1.UserID,
+		AddressID: userAddress1.AddressID,
 	}
-	err := testQueires.DeleteUserAddress(context.Background(), arg)
+	userAddress2, err := testQueires.DeleteUserAddress(context.Background(), arg)
 
 	require.NoError(t, err)
+	require.NotEmpty(t, userAddress2)
 
-	arg1 := GetUserAddressParams{
-		UserID:    useraddress1.UserID,
-		AddressID: useraddress1.AddressID,
-	}
-	useraddress2, err := testQueires.GetUserAddress(context.Background(), arg1)
+	userAddress3, err := testQueires.DeleteUserAddress(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
-	require.Empty(t, useraddress2)
-
+	require.Empty(t, userAddress3)
 }
 
 func TestListUserAddresses(t *testing.T) {

@@ -58,9 +58,10 @@ DELETE FROM "shopping_cart_item" AS sci
 WHERE sci.id = sqlc.arg(id)
 AND sci.shopping_cart_id = (SELECT id FROM t1); 
 
--- name: DeleteShoppingCartItemAllByUser :exec
+-- name: DeleteShoppingCartItemAllByUser :many
 WITH t1 AS(
-  SELECT id FROM shopping_cart WHERE user_id = $1
+  SELECT id FROM "shopping_cart" WHERE user_id = $1
 )
 DELETE FROM "shopping_cart_item"
-WHERE shopping_cart_id = (SELECT id FROM t1);
+WHERE shopping_cart_id = (SELECT id FROM t1)
+RETURNING *;

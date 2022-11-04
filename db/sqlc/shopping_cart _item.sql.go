@@ -63,17 +63,40 @@ func (q *Queries) DeleteShoppingCartItem(ctx context.Context, arg DeleteShopping
 	return err
 }
 
-const deleteShoppingCartItemAllByUser = `-- name: DeleteShoppingCartItemAllByUser :exec
+const deleteShoppingCartItemAllByUser = `-- name: DeleteShoppingCartItemAllByUser :many
 WITH t1 AS(
-  SELECT id FROM shopping_cart WHERE user_id = $1
+  SELECT id FROM "shopping_cart" WHERE user_id = $1
 )
 DELETE FROM "shopping_cart_item"
 WHERE shopping_cart_id = (SELECT id FROM t1)
+RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
 `
 
-func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) error {
-	_, err := q.db.Exec(ctx, deleteShoppingCartItemAllByUser, userID)
-	return err
+func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) ([]ShoppingCartItem, error) {
+	rows, err := q.db.Query(ctx, deleteShoppingCartItemAllByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ShoppingCartItem{}
+	for rows.Next() {
+		var i ShoppingCartItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.ShoppingCartID,
+			&i.ProductItemID,
+			&i.Qty,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getShoppingCartItem = `-- name: GetShoppingCartItem :one

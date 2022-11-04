@@ -184,15 +184,12 @@ func TestDeleteALLShoppingCartItemes(t *testing.T) {
 		testQueires.CreateShoppingCartItem(context.Background(), arg)
 	}
 
-	err := testQueires.DeleteShoppingCartItemAllByUser(context.Background(), shoppingCart.UserID)
+	shoppingCartItem1, err := testQueires.DeleteShoppingCartItemAllByUser(context.Background(), shoppingCart.UserID)
 	require.NoError(t, err)
+	require.NotEmpty(t, shoppingCartItem1)
 
-	arg1 := GetShoppingCartItemByUserIDCartIDParams{
-		UserID:         shoppingCart.UserID,
-		ShoppingCartID: shoppingCart.ID,
-	}
-
-	shoppingCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
-	require.Error(t, err)
-	require.Empty(t, shoppingCartItem)
+	shoppingCartItem2, err := testQueires.DeleteShoppingCartItemAllByUser(context.Background(), shoppingCart.UserID)
+	// require.Error(t, err)
+	require.Empty(t, shoppingCartItem2)
+	// require.EqualError(t, err, pgx.ErrNoRows.Error())
 }

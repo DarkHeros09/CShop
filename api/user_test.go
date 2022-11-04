@@ -816,7 +816,7 @@ func TestDeleteUserAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(nil)
+					Return(user, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -850,9 +850,9 @@ func TestDeleteUserAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteUser(gomock.Any(), gomock.Eq(user.ID)).
+					DeleteUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(pgx.ErrNoRows)
+					Return(db.User{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -869,9 +869,9 @@ func TestDeleteUserAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteUser(gomock.Any(), gomock.Eq(user.ID)).
+					DeleteUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(pgx.ErrTxClosed)
+					Return(db.User{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)

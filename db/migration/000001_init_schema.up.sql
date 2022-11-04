@@ -68,7 +68,7 @@ CREATE TABLE "user_review" (
 CREATE TABLE "payment_method" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "user_id" bigint NOT NULL,
-  "payment_type_id" int NOT NULL,
+  "payment_type_id" bigint NOT NULL,
   "provider" varchar NOT NULL,
   "is_default" boolean NOT NULL DEFAULT false
 );

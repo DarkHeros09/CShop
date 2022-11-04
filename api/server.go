@@ -63,13 +63,19 @@ func (server *Server) setupRouter() {
 	userRoutes.PUT("/users/addresses/:user-id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/addresses/:user-id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
 
-	userRoutes.POST("/shopping-cart-items", server.createShoppingCartItem)                          //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/shopping-cart-items/:shopping-cart-id", server.getShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/shopping-cart-items", server.listShoppingCartItems)                            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/shopping-cart-items/:shopping-cart-id", server.updateShoppingCartItem)         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/shopping-cart-items/:shopping-cart-item-id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/shopping-cart-items/delete-all", server.deleteShoppingCartItemAllByUser)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/shopping-cart-items/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
+	userRoutes.POST("/users/cart", server.createShoppingCartItem)                          //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/cart/:shopping-cart-id", server.getShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/cart", server.listShoppingCartItems)                            //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/cart/:shopping-cart-id", server.updateShoppingCartItem)         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/cart/:shopping-cart-item-id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/cart/delete-all", server.deleteShoppingCartItemAllByUser)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/cart/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
+
+	userRoutes.POST("/users/payment-method", server.createPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/payment-method/:id", server.getPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/payment-method", server.listPaymentMethodes)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/payment-method/:id", server.updatePaymentMethod)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/payment-method/:id", server.deletePaymentMethod) //* Finished With tests (token and changed response... No Etag)
 
 	server.router = router
 

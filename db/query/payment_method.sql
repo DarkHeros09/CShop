@@ -10,10 +10,13 @@ RETURNING *;
 
 -- name: GetPaymentMethod :one
 SELECT * FROM "payment_method"
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 
+AND user_id = $2
+LIMIT 1;
 
 -- name: ListPaymentMethods :many
 SELECT * FROM "payment_method"
+WHERE user_id = $3
 ORDER BY id
 LIMIT $1
 OFFSET $2;
@@ -27,6 +30,8 @@ provider = COALESCE(sqlc.narg(provider),provider)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
--- name: DeletePaymentMethod :exec
+-- name: DeletePaymentMethod :one
 DELETE FROM "payment_method"
-WHERE id = $1;
+WHERE id = $1
+AND user_id = $2
+RETURNING *;

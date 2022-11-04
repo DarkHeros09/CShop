@@ -15,7 +15,7 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 	paymentType := createRandomPaymentType(t)
 	arg := CreatePaymentMethodParams{
 		UserID:        user1.ID,
-		PaymentTypeID: int32(paymentType.ID),
+		PaymentTypeID: paymentType.ID,
 		Provider:      util.RandomString(5),
 	}
 	paymentMethod, err := testQueires.CreatePaymentMethod(context.Background(), arg)
@@ -36,7 +36,12 @@ func TestCreatePaymentMethod(t *testing.T) {
 func TestGetPaymentMethod(t *testing.T) {
 	paymentMethod1 := createRandomPaymentMethod(t)
 
-	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), paymentMethod1.ID)
+	arg := GetPaymentMethodParams{
+		ID:     paymentMethod1.ID,
+		UserID: paymentMethod1.UserID,
+	}
+
+	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, paymentMethod2)
 
@@ -70,25 +75,40 @@ func TestUpdatePaymentMethodIsDefaultAndProvider(t *testing.T) {
 func TestDeletePaymentMethod(t *testing.T) {
 	paymentMethod1 := createRandomPaymentMethod(t)
 
-	err := testQueires.DeletePaymentMethod(context.Background(), paymentMethod1.ID)
+	arg := DeletePaymentMethodParams{
+		ID:     paymentMethod1.ID,
+		UserID: paymentMethod1.UserID,
+	}
+
+	paymentMethod2, err := testQueires.DeletePaymentMethod(context.Background(), arg)
 
 	require.NoError(t, err)
+	require.NotEmpty(t, paymentMethod2)
 
-	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), paymentMethod1.ID)
+	paymentMethod3, err := testQueires.DeletePaymentMethod(context.Background(), arg)
 
 	require.Error(t, err)
+	require.Empty(t, paymentMethod3)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
-	require.Empty(t, paymentMethod2)
 
 }
 
 func TestListPaymentMethods(t *testing.T) {
+	user := createRandomUser(t)
+
 	for i := 0; i < 10; i++ {
-		createRandomPaymentMethod(t)
+		paymentType := createRandomPaymentType(t)
+		arg := CreatePaymentMethodParams{
+			UserID:        user.ID,
+			PaymentTypeID: paymentType.ID,
+			Provider:      util.RandomString(5),
+		}
+		testQueires.CreatePaymentMethod(context.Background(), arg)
 	}
 	arg := ListPaymentMethodsParams{
 		Limit:  5,
 		Offset: 0,
+		UserID: user.ID,
 	}
 
 	PaymentMethods, err := testQueires.ListPaymentMethods(context.Background(), arg)

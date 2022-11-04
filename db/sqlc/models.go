@@ -57,7 +57,7 @@ type OrderStatus struct {
 type PaymentMethod struct {
 	ID            int64  `json:"id"`
 	UserID        int64  `json:"user_id"`
-	PaymentTypeID int32  `json:"payment_type_id"`
+	PaymentTypeID int64  `json:"payment_type_id"`
 	Provider      string `json:"provider"`
 	IsDefault     bool   `json:"is_default"`
 }

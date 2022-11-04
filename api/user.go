@@ -298,7 +298,7 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
-	err := server.store.DeleteUser(ctx, req.ID)
+	_, err := server.store.DeleteUser(ctx, req.ID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

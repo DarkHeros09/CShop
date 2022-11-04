@@ -56,6 +56,7 @@ default_payment = COALESCE(sqlc.narg(default_payment),default_payment)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
--- name: DeleteUser :exec
+-- name: DeleteUser :one
 DELETE FROM "user"
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;

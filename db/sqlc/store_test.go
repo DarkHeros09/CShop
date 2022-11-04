@@ -55,7 +55,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 
 		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
-			PaymentTypeID: int32(paymentType.ID),
+			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
 		})
 		if err != nil {
@@ -228,7 +228,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 
 		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
-			PaymentTypeID: int32(paymentType.ID),
+			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
 		})
 		if err != nil {
@@ -365,7 +365,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 
 		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
-			PaymentTypeID: int32(paymentType.ID),
+			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
 		})
 		if err != nil {

@@ -541,11 +541,12 @@ func (mr *MockStoreMockRecorder) DeleteOrderStatus(arg0, arg1 interface{}) *gomo
 }
 
 // DeletePaymentMethod mocks base method.
-func (m *MockStore) DeletePaymentMethod(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeletePaymentMethod(arg0 context.Context, arg1 db.DeletePaymentMethodParams) (db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePaymentMethod", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(db.PaymentMethod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeletePaymentMethod indicates an expected call of DeletePaymentMethod.
@@ -723,11 +724,12 @@ func (mr *MockStoreMockRecorder) DeleteShoppingCartItem(arg0, arg1 interface{}) 
 }
 
 // DeleteShoppingCartItemAllByUser mocks base method.
-func (m *MockStore) DeleteShoppingCartItemAllByUser(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeleteShoppingCartItemAllByUser(arg0 context.Context, arg1 int64) ([]db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteShoppingCartItemAllByUser", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].([]db.ShoppingCartItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteShoppingCartItemAllByUser indicates an expected call of DeleteShoppingCartItemAllByUser.
@@ -737,11 +739,12 @@ func (mr *MockStoreMockRecorder) DeleteShoppingCartItemAllByUser(arg0, arg1 inte
 }
 
 // DeleteUser mocks base method.
-func (m *MockStore) DeleteUser(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeleteUser(arg0 context.Context, arg1 int64) (db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
@@ -751,11 +754,12 @@ func (mr *MockStoreMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call
 }
 
 // DeleteUserAddress mocks base method.
-func (m *MockStore) DeleteUserAddress(arg0 context.Context, arg1 db.DeleteUserAddressParams) error {
+func (m *MockStore) DeleteUserAddress(arg0 context.Context, arg1 db.DeleteUserAddressParams) (db.UserAddress, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUserAddress", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(db.UserAddress)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteUserAddress indicates an expected call of DeleteUserAddress.
@@ -955,7 +959,7 @@ func (mr *MockStoreMockRecorder) GetOrderStatus(arg0, arg1 interface{}) *gomock.
 }
 
 // GetPaymentMethod mocks base method.
-func (m *MockStore) GetPaymentMethod(arg0 context.Context, arg1 int64) (db.PaymentMethod, error) {
+func (m *MockStore) GetPaymentMethod(arg0 context.Context, arg1 db.GetPaymentMethodParams) (db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaymentMethod", arg0, arg1)
 	ret0, _ := ret[0].(db.PaymentMethod)

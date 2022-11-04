@@ -135,7 +135,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				return err
 			}
 		}
-		err = q.DeleteShoppingCartItemAllByUser(ctx, arg.UserAddress.UserID)
+		_, err = q.DeleteShoppingCartItemAllByUser(ctx, arg.UserAddress.UserID)
 		if err != nil {
 			return err
 		}
