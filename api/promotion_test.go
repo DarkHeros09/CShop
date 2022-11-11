@@ -761,8 +761,8 @@ func randomPromotion() db.Promotion {
 		Description:  util.RandomUser(),
 		DiscountRate: util.RandomInt(1, 1000),
 		Active:       util.RandomBool(),
-		StartDate:    time.Now().Truncate(0),
-		EndDate:      time.Now().Truncate(0),
+		StartDate:    time.Now().Truncate(0).Local().UTC(),
+		EndDate:      time.Now().Truncate(0).Local().UTC(),
 	}
 }
 
