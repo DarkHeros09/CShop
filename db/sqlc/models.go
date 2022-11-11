@@ -116,7 +116,7 @@ type Promotion struct {
 	ID           int64  `json:"id"`
 	Name         string `json:"name"`
 	Description  string `json:"description"`
-	DiscountRate int32  `json:"discount_rate"`
+	DiscountRate int64  `json:"discount_rate"`
 	// default is false
 	Active    bool      `json:"active"`
 	StartDate time.Time `json:"start_date"`

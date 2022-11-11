@@ -158,7 +158,7 @@ CREATE TABLE "promotion" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
-  "discount_rate" int NOT NULL,
+  "discount_rate" bigint NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
   "start_date" timestamptz NOT NULL,
   "end_date" timestamptz NOT NULL

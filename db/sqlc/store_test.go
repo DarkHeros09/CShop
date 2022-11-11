@@ -135,53 +135,53 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			errs <- err
 			results <- result
 		}()
-	}
 
-	// check results
-	var resultList []FinishedPurchaseTxResult
-	// time.Sleep(1 * time.Second)
-	for i := 0; i < n; i++ {
-		err := <-errs
-		require.NoError(t, err)
+		// check results
+		var resultList []FinishedPurchaseTxResult
+		// time.Sleep(1 * time.Second)
+		for i := 0; i < n; i++ {
+			err := <-errs
+			require.NoError(t, err)
 
-		result := <-results
-		require.NotEmpty(t, result)
-		resultList = append(resultList, result)
-		// check finishedPurchase/ ShopOrder
-		finishedShopOrder := resultList[i].ShopOrder
-		require.NotEmpty(t, finishedShopOrder)
-		require.Equal(t, listUsersAddress[i].UserID, finishedShopOrder.UserID)
-		require.Equal(t, listUsersAddress[i].AddressID, finishedShopOrder.ShippingAddressID)
-		require.Equal(t, listPaymentMethod[i].ID, finishedShopOrder.PaymentMethodID)
-		require.Equal(t, listShippingMethod[i].ID, finishedShopOrder.ShippingMethodID)
-		require.Equal(t, listOrderStatus[i].ID, finishedShopOrder.OrderStatusID)
+			result := <-results
+			require.NotEmpty(t, result)
+			resultList = append(resultList, result)
+			// check finishedPurchase/ ShopOrder
+			finishedShopOrder := resultList[i].ShopOrder
+			require.NotEmpty(t, finishedShopOrder)
+			require.Equal(t, listUsersAddress[i].UserID, finishedShopOrder.UserID)
+			require.Equal(t, listUsersAddress[i].AddressID, finishedShopOrder.ShippingAddressID)
+			require.Equal(t, listPaymentMethod[i].ID, finishedShopOrder.PaymentMethodID)
+			require.Equal(t, listShippingMethod[i].ID, finishedShopOrder.ShippingMethodID)
+			require.Equal(t, listOrderStatus[i].ID, finishedShopOrder.OrderStatusID)
 
-		_, err = testQueires.GetShopOrder(context.Background(), finishedShopOrder.ID)
-		require.NoError(t, err)
+			_, err = testQueires.GetShopOrder(context.Background(), finishedShopOrder.ID)
+			require.NoError(t, err)
 
-		// check ProductItem Updated Quantity
-		newProductItem := resultList[i].UpdatedProductItem
-		require.NotEmpty(t, newProductItem)
-		require.NotEqual(t, listProductItem[i].QtyInStock, newProductItem.QtyInStock)
-		require.Equal(t, listProductItem[i].QtyInStock-listShoppingCartItem[i].Qty, newProductItem.QtyInStock)
+			// check ProductItem Updated Quantity
+			newProductItem := resultList[i].UpdatedProductItem
+			require.NotEmpty(t, newProductItem)
+			require.NotEqual(t, listProductItem[i].QtyInStock, newProductItem.QtyInStock)
+			require.Equal(t, listProductItem[i].QtyInStock-listShoppingCartItem[i].Qty, newProductItem.QtyInStock)
 
-		//check ShoppingCart, and ShopOrder
-		finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), finishedShopOrder.ID)
-		require.NotEmpty(t, finishedShopOrderItems)
-		require.NoError(t, err)
-		for _, finishedShopOrderItem := range finishedShopOrderItems {
-			require.Equal(t, listShoppingCartItem[i].ProductItemID, finishedShopOrderItem.ProductItemID)
-			require.Equal(t, listShoppingCartItem[i].Qty, finishedShopOrderItem.Quantity)
+			//check ShoppingCart, and ShopOrder
+			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), finishedShopOrder.ID)
+			require.NotEmpty(t, finishedShopOrderItems)
+			require.NoError(t, err)
+			for _, finishedShopOrderItem := range finishedShopOrderItems {
+				require.Equal(t, listShoppingCartItem[i].ProductItemID, finishedShopOrderItem.ProductItemID)
+				require.Equal(t, listShoppingCartItem[i].Qty, finishedShopOrderItem.Quantity)
+			}
+
+			arg1 := GetShoppingCartItemByUserIDCartIDParams{
+				UserID:         shoppingCart.UserID,
+				ShoppingCartID: shoppingCart.ID,
+			}
+
+			DeletedShopCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
+			require.Error(t, err)
+			require.Empty(t, DeletedShopCartItem)
 		}
-
-		arg1 := GetShoppingCartItemByUserIDCartIDParams{
-			UserID:         shoppingCart.UserID,
-			ShoppingCartID: shoppingCart.ID,
-		}
-
-		DeletedShopCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
-		require.Error(t, err)
-		require.Empty(t, DeletedShopCartItem)
 	}
 }
 

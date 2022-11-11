@@ -77,6 +77,60 @@ func (server *Server) setupRouter() {
 	userRoutes.PUT("/users/payment-method/:id", server.updatePaymentMethod)    //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/payment-method/:id", server.deletePaymentMethod) //* Finished With tests (token and changed response... No Etag)
 
+	adminRoutes.POST("/products", server.createProduct)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/products/:id", server.getProduct)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/products", server.listProducts)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/products/:id", server.updateProduct)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/products/:id", server.deleteProduct) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/promotions", server.createPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/promotions/:id", server.getPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/promotions", server.listPromotions)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/promotions/:id", server.updatePromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/promotions/:id", server.deletePromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/product-categories", server.createProductCategory)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-categories/:id", server.getProductCategory)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-categories", server.listProductCategories)             //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/product-categories/:id", server.updateProductCategory)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/product-categories/:id", server.deleteProductCategory) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/product-promotions", server.createProductPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-promotions/:id", server.getProductPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-promotions", server.listProductPromotions)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/product-promotions/:id", server.updateProductPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/product-promotions/:id", server.deleteProductPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/category-promotions", server.createCategoryPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/category-promotions/:id", server.getCategoryPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/category-promotions", server.listCategoryPromotions)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/category-promotions/:id", server.updateCategoryPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/category-promotions/:id", server.deleteCategoryPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/variations", server.createVariation)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/variations/:id", server.getVariation)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/variations", server.listVariations)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/variations/:id", server.updateVariation)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/variations/:id", server.deleteVariation) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/variation-options", server.createVariationOption)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/variation-options/:id", server.getVariationOption)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/variation-options", server.listVariationOptions)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/variation-options/:id", server.updateVariationOption)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/variation-options/:id", server.deleteVariationOption) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/product-items", server.createProductItem)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-items/:id", server.getProductItem)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-items", server.listProductItems)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/product-items/:id", server.updateProductItem)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/product-items/:id", server.deleteProductItem) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRoutes.POST("/product-configurations", server.createProductConfiguration)                    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-configurations/:product-item-id", server.getProductConfiguration)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-configurations", server.listProductConfigurations)                           //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/product-configurations/:product-item-id", server.updateProductConfiguration)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/product-configurations/:product-item-id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
 	server.router = router
 
 }

@@ -233,7 +233,7 @@ type updateUserUriRequest struct {
 }
 type updateUserJsonRequest struct {
 	Telephone      int64    `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
-	DefaultPayment null.Int `json:"default_payment"`
+	DefaultPayment null.Int `json:"default_payment" binding:"omitempty,required"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {

@@ -15,7 +15,7 @@ func createRandomPromotion(t *testing.T) Promotion {
 	arg := CreatePromotionParams{
 		Name:         util.RandomString(6),
 		Description:  util.RandomString(6),
-		DiscountRate: int32(util.RandomInt(1, 90)),
+		DiscountRate: util.RandomInt(1, 90),
 		Active:       util.RandomBool(),
 		StartDate:    util.RandomStartDate(),
 		EndDate:      util.RandomEndDate(),

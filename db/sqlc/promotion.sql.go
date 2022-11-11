@@ -29,7 +29,7 @@ RETURNING id, name, description, discount_rate, active, start_date, end_date
 type CreatePromotionParams struct {
 	Name         string    `json:"name"`
 	Description  string    `json:"description"`
-	DiscountRate int32     `json:"discount_rate"`
+	DiscountRate int64     `json:"discount_rate"`
 	Active       bool      `json:"active"`
 	StartDate    time.Time `json:"start_date"`
 	EndDate      time.Time `json:"end_date"`

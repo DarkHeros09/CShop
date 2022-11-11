@@ -49,12 +49,17 @@ func RandomUser() string {
 
 // RandomMoney generates a random amount of money
 func RandomMoney() int64 {
-	return RandomInt(0, 1000)
+	return RandomInt(1, 1000)
 }
 
 // RandomEmail generates a random email
 func RandomEmail() string {
 	return fmt.Sprintf("%s@email.com", RandomString(6))
+}
+
+// RandomEmail generates a random email
+func RandomURL() string {
+	return fmt.Sprintf("https://%s.com/%s", RandomString(6), RandomString(5))
 }
 
 /*
