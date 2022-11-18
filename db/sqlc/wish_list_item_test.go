@@ -45,9 +45,10 @@ func TestGetWishListItem(t *testing.T) {
 func TestUpdateWishListItem(t *testing.T) {
 	wishList := createRandomWishList(t)
 	wishListItem1 := createRandomWishListItem(t)
+	newProduct := createRandomProductItem(t)
 	arg := UpdateWishListItemParams{
 		WishListID:    wishList.ID,
-		ProductItemID: null.IntFrom(22),
+		ProductItemID: null.IntFrom(newProduct.ID),
 		ID:            wishListItem1.ID,
 	}
 
