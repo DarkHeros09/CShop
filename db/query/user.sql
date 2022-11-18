@@ -10,7 +10,7 @@ INSERT INTO "user" (
 )
 RETURNING *;
 
--- name: CreateUserWithCart :one
+-- name: CreateUserWithCartAndWishList :one
 WITH t1 AS(
 INSERT INTO "user" (
   username,
@@ -26,6 +26,11 @@ RETURNING *
 t2 AS(
   INSERT INTO "shopping_cart" (
   user_id
+) VALUES ((Select id from t1))
+),
+t3 AS(
+  INSERT INTO "wish_list" (
+    user_id
 ) VALUES ((Select id from t1))
 )
 

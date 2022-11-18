@@ -13,6 +13,14 @@ RETURNING *;
 SELECT * FROM "shop_order_item"
 WHERE id = $1 LIMIT 1;
 
+-- name: GetShopOrderItemByUserIDOrderID :one
+SELECT soi.*, so.user_id
+FROM "shop_order_item" AS soi
+LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
+WHERE so.user_id = $1
+AND soi.order_id = $2 
+LIMIT 1;
+
 -- name: ListShopOrderItems :many
 SELECT * FROM "shop_order_item"
 ORDER BY id
@@ -22,7 +30,23 @@ OFFSET $2;
 -- name: ListShopOrderItemsByOrderID :many
 SELECT * FROM "shop_order_item"
 WHERE order_id = $1
-ORDER BY id;
+ORDER BY id
+LIMIT $2
+OFFSET $3;
+
+-- name: ListShopOrderItemsByUserID :many
+SELECT so.user_id, soi.* 
+FROM "shop_order" AS so
+LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
+WHERE so.user_id = $3
+ORDER BY id
+LIMIT $1
+OFFSET $2;
+
+-- -- name: ListShopOrderItemsByOrderID :many
+-- SELECT * FROM "shop_order_item"
+-- WHERE order_id = $1
+-- ORDER BY id;
 
 -- name: UpdateShopOrderItem :one
 UPDATE "shop_order_item"

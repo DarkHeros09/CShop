@@ -25,12 +25,12 @@ import (
 )
 
 type eqCreateUserParamsMatcher struct {
-	arg      db.CreateUserWithCartParams
+	arg      db.CreateUserWithCartAndWishListParams
 	password string
 }
 
 func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
-	arg, ok := x.(db.CreateUserWithCartParams)
+	arg, ok := x.(db.CreateUserWithCartAndWishListParams)
 	if !ok {
 		return false
 	}
@@ -48,12 +48,12 @@ func (e eqCreateUserParamsMatcher) String() string {
 	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
 }
 
-func EqCreateUserParamsMatcher(arg db.CreateUserWithCartParams, password string) gomock.Matcher {
+func EqCreateUserParamsMatcher(arg db.CreateUserWithCartAndWishListParams, password string) gomock.Matcher {
 	return eqCreateUserParamsMatcher{arg, password}
 }
 
 func TestCreateUserAPI(t *testing.T) {
-	user, password := randomUserWithCart(t)
+	user, password := randomUserWithCartAndWishList(t)
 
 	testCases := []struct {
 		name          string
@@ -71,14 +71,14 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -96,16 +96,16 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.CreateUserWithCartRow{}, pgx.ErrTxClosed)
+					Return(db.CreateUserWithCartAndWishListRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -120,15 +120,15 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
-					Times(1).Return(db.CreateUserWithCartRow{}, &pgconn.PgError{Code: "23505", Message: "unique_violation"})
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					Times(1).Return(db.CreateUserWithCartAndWishListRow{}, &pgconn.PgError{Code: "23505", Message: "unique_violation"})
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -143,14 +143,14 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -167,14 +167,14 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -190,14 +190,14 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateUserWithCartParams{
+				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
 					Telephone: user.Telephone,
 				}
 
 				store.EXPECT().
-					CreateUserWithCart(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
+					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -947,12 +947,12 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func randomUserWithCart(t *testing.T) (user db.CreateUserWithCartRow, password string) {
+func randomUserWithCartAndWishList(t *testing.T) (user db.CreateUserWithCartAndWishListRow, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.CreateUserWithCartRow{
+	user = db.CreateUserWithCartAndWishListRow{
 		ID:        util.RandomMoney(),
 		Username:  util.RandomUser(),
 		Password:  hashedPassword,
@@ -993,11 +993,11 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Empty(t, gotUser.Password)
 }
 
-func requireBodyMatchUserForCreate(t *testing.T, body *bytes.Buffer, user db.CreateUserWithCartRow) {
+func requireBodyMatchUserForCreate(t *testing.T, body *bytes.Buffer, user db.CreateUserWithCartAndWishListRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUser db.CreateUserWithCartRow
+	var gotUser db.CreateUserWithCartAndWishListRow
 	err = json.Unmarshal(data, &gotUser)
 
 	require.NoError(t, err)

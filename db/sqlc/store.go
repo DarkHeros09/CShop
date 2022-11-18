@@ -86,14 +86,14 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			return err
 		}
 
-		for _, shopCartItem := range shopCartItems {
+		for i := 0; i < len(shopCartItems); i++ {
 
-			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItem.ProductItemID)
+			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItems[i].ProductItemID)
 			if err != nil {
 				return err
 			}
 
-			if productItem.QtyInStock <= shopCartItem.Qty && productItem.QtyInStock > 0 {
+			if productItem.QtyInStock <= shopCartItems[i].Qty && productItem.QtyInStock > 0 {
 				return errors.New("Not Enough Qty in Stock")
 			}
 
@@ -115,20 +115,20 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 
 			result.UpdatedProductItem, err = q.UpdateProductItem(ctx, UpdateProductItemParams{
 				ProductID:    null.IntFromPtr(&productItem.ProductID),
-				ProductSku:   null.Int{},
-				QtyInStock:   null.IntFrom(int64(productItem.QtyInStock - shopCartItem.Qty)),
-				ProductImage: null.String{},
-				Price:        null.String{},
-				Active:       null.Bool{},
+				ProductSku:   null.IntFromPtr(&productItem.ProductSku),
+				QtyInStock:   null.IntFrom(int64(productItem.QtyInStock - shopCartItems[i].Qty)),
+				ProductImage: null.StringFromPtr(&productItem.ProductImage),
+				Price:        null.StringFromPtr(&productItem.Price),
+				Active:       null.BoolFromPtr(&productItem.Active),
 				ID:           productItem.ID,
 			})
 			if err != nil {
 				return err
 			}
 			result.ShopOrderItem, err = q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
-				ProductItemID: shopCartItem.ProductItemID,
+				ProductItemID: shopCartItems[i].ProductItemID,
 				OrderID:       result.ShopOrder.ID,
-				Quantity:      shopCartItem.Qty,
+				Quantity:      shopCartItems[i].Qty,
 				Price:         productItem.Price,
 			})
 			if err != nil {

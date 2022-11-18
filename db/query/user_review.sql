@@ -10,10 +10,13 @@ RETURNING *;
 
 -- name: GetUserReview :one
 SELECT * FROM "user_review"
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 
+AND user_id = $2
+LIMIT 1;
 
 -- name: ListUserReviews :many
 SELECT * FROM "user_review"
+WHERE user_id = $3
 ORDER BY id
 LIMIT $1
 OFFSET $2;
@@ -27,6 +30,8 @@ rating_value = COALESCE(sqlc.narg(rating_value),rating_value)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
--- name: DeleteUserReview :exec
+-- name: DeleteUserReview :one
 DELETE FROM "user_review"
-WHERE id = $1;
+WHERE id = $1
+And user_id =$2
+RETURNING *;

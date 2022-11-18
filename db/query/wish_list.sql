@@ -10,6 +10,10 @@ RETURNING *;
 SELECT * FROM "wish_list"
 WHERE id = $1 LIMIT 1;
 
+-- name: GetWishListByUserID :one
+SELECT * FROM "wish_list"
+WHERE user_id = $1 LIMIT 1;
+
 -- name: ListWishLists :many
 SELECT * FROM "wish_list"
 ORDER BY id

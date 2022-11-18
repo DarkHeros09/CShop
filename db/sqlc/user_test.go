@@ -48,14 +48,14 @@ func TestCreateUserWithCart(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, hashedPassword)
 
-	arg := CreateUserWithCartParams{
+	arg := CreateUserWithCartAndWishListParams{
 		Username:  util.RandomUser(),
 		Email:     util.RandomEmail(),
 		Password:  hashedPassword,
 		Telephone: int32(util.RandomInt(0, 1000000)),
 	}
 
-	user, err := testQueires.CreateUserWithCart(context.Background(), arg)
+	user, err := testQueires.CreateUserWithCartAndWishList(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 

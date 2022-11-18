@@ -11,8 +11,25 @@ RETURNING *;
 SELECT * FROM "shipping_method"
 WHERE id = $1 LIMIT 1;
 
+-- name: GetShippingMethodByUserID :one
+SELECT sm.*, so.user_id
+FROM "shipping_method" AS sm
+LEFT JOIN "shop_order" AS so ON so.shipping_method_id = sm.id
+WHERE so.user_id = $1
+AND sm.id = $2
+LIMIT 1;
+
 -- name: ListShippingMethods :many
 SELECT * FROM "shipping_method"
+ORDER BY id
+LIMIT $1
+OFFSET $2;
+
+-- name: ListShippingMethodsByUserID :many
+SELECT sm.*, so.user_id
+FROM "shipping_method" AS sm
+LEFT JOIN "shop_order" AS so ON so.shipping_method_id = sm.id
+WHERE so.user_id = $3
 ORDER BY id
 LIMIT $1
 OFFSET $2;

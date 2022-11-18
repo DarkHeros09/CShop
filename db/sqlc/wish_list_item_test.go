@@ -46,8 +46,8 @@ func TestUpdateWishListItem(t *testing.T) {
 	wishList := createRandomWishList(t)
 	wishListItem1 := createRandomWishListItem(t)
 	arg := UpdateWishListItemParams{
-		WishListID:    null.IntFromPtr(&wishList.ID),
-		ProductItemID: null.Int{},
+		WishListID:    wishList.ID,
+		ProductItemID: null.IntFrom(22),
 		ID:            wishListItem1.ID,
 	}
 
@@ -55,14 +55,22 @@ func TestUpdateWishListItem(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, wishListItem2)
 
-	require.NotEqual(t, wishListItem1.WishListID, wishListItem2.WishListID)
-	require.Equal(t, wishListItem1.ProductItemID, wishListItem2.ProductItemID)
+	require.Equal(t, wishListItem1.WishListID, wishListItem2.WishListID)
+	require.NotEqual(t, wishListItem1.ProductItemID, wishListItem2.ProductItemID)
 }
 
 func TestDeleteWishListItem(t *testing.T) {
 	wishListItem1 := createRandomWishListItem(t)
 
-	err := testQueires.DeleteWishListItem(context.Background(), wishListItem1.ID)
+	wishList, err := testQueires.GetWishList(context.Background(), wishListItem1.WishListID)
+	require.NoError(t, err)
+
+	arg := DeleteWishListItemParams{
+		ID:     wishListItem1.ID,
+		UserID: wishList.UserID,
+	}
+
+	err = testQueires.DeleteWishListItem(context.Background(), arg)
 
 	require.NoError(t, err)
 

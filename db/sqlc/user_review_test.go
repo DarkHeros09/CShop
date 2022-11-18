@@ -34,7 +34,12 @@ func TestCreateUserReview(t *testing.T) {
 
 func TestGetUserReview(t *testing.T) {
 	userReview1 := createRandomUserReview(t)
-	userReview2, err := testQueires.GetUserReview(context.Background(), userReview1.ID)
+
+	arg := GetUserReviewParams{
+		ID:     userReview1.ID,
+		UserID: userReview1.UserID,
+	}
+	userReview2, err := testQueires.GetUserReview(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userReview2)
@@ -66,11 +71,20 @@ func TestUpdateUserReviewRating(t *testing.T) {
 
 func TestDeleteUserReview(t *testing.T) {
 	userReview1 := createRandomUserReview(t)
-	err := testQueires.DeleteUserReview(context.Background(), userReview1.ID)
+
+	arg1 := DeleteUserReviewParams{
+		ID:     userReview1.ID,
+		UserID: userReview1.UserID,
+	}
+	_, err := testQueires.DeleteUserReview(context.Background(), arg1)
 
 	require.NoError(t, err)
 
-	userReview2, err := testQueires.GetUserReview(context.Background(), userReview1.ID)
+	arg := GetUserReviewParams{
+		ID:     userReview1.ID,
+		UserID: userReview1.UserID,
+	}
+	userReview2, err := testQueires.GetUserReview(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -79,21 +93,26 @@ func TestDeleteUserReview(t *testing.T) {
 }
 
 func TestListUserReviews(t *testing.T) {
+	var lastUserReview UserReview
 	for i := 0; i < 10; i++ {
-		createRandomUserReview(t)
+		lastUserReview = createRandomUserReview(t)
 	}
 	arg := ListUserReviewsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
+		UserID: lastUserReview.UserID,
 	}
 
-	UserReviews, err := testQueires.ListUserReviews(context.Background(), arg)
+	userReviews, err := testQueires.ListUserReviews(context.Background(), arg)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, UserReviews)
+	require.NotEmpty(t, userReviews)
 
-	for _, UserReview := range UserReviews {
-		require.NotEmpty(t, UserReview)
+	for _, userReview := range userReviews {
+		require.Equal(t, userReview.ID, userReviews[len(userReviews)-1].ID)
+		require.Equal(t, userReview.OrderedProductID, userReviews[len(userReviews)-1].OrderedProductID)
+		require.Equal(t, userReview.RatingValue, userReviews[len(userReviews)-1].RatingValue)
+		require.Equal(t, userReview.UserID, userReviews[len(userReviews)-1].UserID)
 	}
 
 }

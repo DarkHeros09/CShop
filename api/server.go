@@ -63,6 +63,12 @@ func (server *Server) setupRouter() {
 	userRoutes.PUT("/users/addresses/:user-id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/addresses/:user-id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
 
+	userRoutes.POST("/users/reviews", server.createUserReview)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/reviews/:id", server.getUserReview)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/reviews", server.listUserReviews)         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/reviews/:id", server.updateUserReview)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/reviews/:id", server.deleteUserReview) //* Finished With tests (token and changed response... No Etag)
+
 	userRoutes.POST("/users/cart", server.createShoppingCartItem)                          //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/cart/:shopping-cart-id", server.getShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/cart", server.listShoppingCartItems)                            //* Finished With tests (token and changed response... No Etag)
@@ -70,6 +76,13 @@ func (server *Server) setupRouter() {
 	userRoutes.DELETE("/users/cart/:shopping-cart-item-id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/cart/delete-all", server.deleteShoppingCartItemAllByUser)    //* Finished With tests (token and changed response... No Etag)
 	userRoutes.PUT("/users/cart/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
+
+	userRoutes.POST("/users/wish-list", server.createWishListItem)                       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/wish-list/:wish-list-id", server.getWishListItem)             //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/wish-list", server.listWishListItems)                         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/wish-list/:wish-list-id", server.updateWishListItem)          //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/wish-list/:wish-list-item-id", server.deleteWishListItem)  //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/wish-list/delete-all", server.deleteWishListItemAllByUser) //* Finished With tests (token and changed response... No Etag)
 
 	userRoutes.POST("/users/payment-method", server.createPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/payment-method/:id", server.getPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
@@ -130,6 +143,21 @@ func (server *Server) setupRouter() {
 	router.GET("/product-configurations", server.listProductConfigurations)                           //? no auth required # Finished With tests (token and changed response.)
 	adminRoutes.PUT("/product-configurations/:product-item-id", server.updateProductConfiguration)    //! Admin Only # Finished With tests (token and changed response... No Etag)
 	adminRoutes.DELETE("/product-configurations/:product-item-id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	userRoutes.GET("/users/shop-order/:shop-order-id", server.getShopOrderItem) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/shop-order", server.listShopOrderItems)              //* Finished With tests (token and changed response... No Etag)
+
+	userRoutes.POST("/users/order-status", server.createOrderStatus)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/order-status/:id", server.getOrderStatus)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/order-status", server.listOrderStatuses)         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/order-status/:id", server.updateOrderStatus)     //* Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/users/order-status/:id", server.deleteOrderStatus) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	userRoutes.POST("/users/shipping-method", server.createShippingMethod)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/shipping-method/:id", server.getShippingMethod)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/shipping-method", server.listShippingMethodes)         //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/shipping-method/:id", server.updateShippingMethod)     //* Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/users/shipping-method/:id", server.deleteShippingMethod) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
 	server.router = router
 

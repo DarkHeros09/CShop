@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// func TestSize(t *testing.T) {
+// 	println(unsafe.Sizeof(PaymentMethod{}))
+// }
+
 func TestFinishedPurchaseTx(t *testing.T) {
 	store := NewStore(testDB)
 
@@ -139,7 +143,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		// check results
 		var resultList []FinishedPurchaseTxResult
 		// time.Sleep(1 * time.Second)
-		for i := 0; i < n; i++ {
+		for z := 0; z < n; z++ {
 			err := <-errs
 			require.NoError(t, err)
 
@@ -147,13 +151,13 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NotEmpty(t, result)
 			resultList = append(resultList, result)
 			// check finishedPurchase/ ShopOrder
-			finishedShopOrder := resultList[i].ShopOrder
+			finishedShopOrder := resultList[z].ShopOrder
 			require.NotEmpty(t, finishedShopOrder)
-			require.Equal(t, listUsersAddress[i].UserID, finishedShopOrder.UserID)
-			require.Equal(t, listUsersAddress[i].AddressID, finishedShopOrder.ShippingAddressID)
-			require.Equal(t, listPaymentMethod[i].ID, finishedShopOrder.PaymentMethodID)
-			require.Equal(t, listShippingMethod[i].ID, finishedShopOrder.ShippingMethodID)
-			require.Equal(t, listOrderStatus[i].ID, finishedShopOrder.OrderStatusID)
+			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
+			require.Equal(t, listUsersAddress[z].AddressID, finishedShopOrder.ShippingAddressID)
+			require.Equal(t, listPaymentMethod[z].ID, finishedShopOrder.PaymentMethodID)
+			require.Equal(t, listShippingMethod[z].ID, finishedShopOrder.ShippingMethodID)
+			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID)
 
 			_, err = testQueires.GetShopOrder(context.Background(), finishedShopOrder.ID)
 			require.NoError(t, err)
@@ -161,16 +165,21 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			// check ProductItem Updated Quantity
 			newProductItem := resultList[i].UpdatedProductItem
 			require.NotEmpty(t, newProductItem)
-			require.NotEqual(t, listProductItem[i].QtyInStock, newProductItem.QtyInStock)
-			require.Equal(t, listProductItem[i].QtyInStock-listShoppingCartItem[i].Qty, newProductItem.QtyInStock)
+			require.NotEqual(t, listProductItem[z].QtyInStock, newProductItem.QtyInStock)
+			require.Equal(t, listProductItem[z].QtyInStock-listShoppingCartItem[z].Qty, newProductItem.QtyInStock)
 
 			//check ShoppingCart, and ShopOrder
-			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), finishedShopOrder.ID)
+			argF := ListShopOrderItemsByOrderIDParams{
+				OrderID: finishedShopOrder.ID,
+				Limit:   10,
+				Offset:  0,
+			}
+			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), argF)
 			require.NotEmpty(t, finishedShopOrderItems)
 			require.NoError(t, err)
-			for _, finishedShopOrderItem := range finishedShopOrderItems {
-				require.Equal(t, listShoppingCartItem[i].ProductItemID, finishedShopOrderItem.ProductItemID)
-				require.Equal(t, listShoppingCartItem[i].Qty, finishedShopOrderItem.Quantity)
+			for y := 0; y < len(finishedShopOrderItems); y++ {
+				require.Equal(t, listShoppingCartItem[z].ProductItemID, finishedShopOrderItems[y].ProductItemID)
+				require.Equal(t, listShoppingCartItem[z].Qty, finishedShopOrderItems[y].Quantity)
 			}
 
 			arg1 := GetShoppingCartItemByUserIDCartIDParams{

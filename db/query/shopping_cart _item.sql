@@ -17,7 +17,8 @@ SELECT sci.*, sc.user_id
 FROM "shopping_cart_item" AS sci
 LEFT JOIN "shopping_cart" AS sc ON sc.id = sci.shopping_cart_id
 WHERE sc.user_id = $1
-AND sci.shopping_cart_id = $2;
+AND sci.shopping_cart_id = $2
+LIMIT 1;
 
 -- name: ListShoppingCartItems :many
 SELECT * FROM "shopping_cart_item"

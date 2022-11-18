@@ -40,7 +40,7 @@ func newUserResponse(user db.User) userResponse {
 	}
 }
 
-func newUserWithCartResponse(user db.CreateUserWithCartRow) userResponse {
+func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userResponse {
 	return userResponse{
 		ID:        user.ID,
 		Username:  user.Username,
@@ -63,14 +63,14 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.CreateUserWithCartParams{
+	arg := db.CreateUserWithCartAndWishListParams{
 		Username:  req.Username,
 		Email:     req.Email,
 		Password:  hashedPassword,
 		Telephone: req.Telephone,
 	}
 
-	user, err := server.store.CreateUserWithCart(ctx, arg)
+	user, err := server.store.CreateUserWithCartAndWishList(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
