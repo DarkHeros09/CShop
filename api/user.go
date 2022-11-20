@@ -232,8 +232,8 @@ type updateUserUriRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
 type updateUserJsonRequest struct {
-	Telephone      int64    `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
-	DefaultPayment null.Int `json:"default_payment" binding:"omitempty,required"`
+	Telephone      int64 `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
+	DefaultPayment int64 `json:"default_payment" binding:"omitempty,required"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
@@ -258,7 +258,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	arg := db.UpdateUserParams{
 		ID:             authPayload.UserID,
 		Telephone:      null.IntFromPtr(&req.Telephone),
-		DefaultPayment: req.DefaultPayment,
+		DefaultPayment: null.IntFromPtr(&req.DefaultPayment),
 	}
 
 	user, err := server.store.UpdateUser(ctx, arg)

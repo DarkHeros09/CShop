@@ -170,15 +170,15 @@ func (server *Server) listUserAddresses(ctx *gin.Context) {
 
 // ////////////* UPDATE API //////////////
 type updateUserAddressUriRequest struct {
-	UserID int64 `uri:"user-id" binding:"required,min=1"`
+	AddressID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type updateUserAddressJsonRequest struct {
-	AddressID      int64    `json:"address_id" binding:"required,min=1"`
-	AddressLine    string   `json:"address_line" binding:"omitempty,required"`
-	City           string   `json:"city" binding:"omitempty,required"`
-	Region         string   `json:"region" binding:"omitempty,required"`
-	DefaultAddress null.Int `json:"default_address" binding:"omitempty,required,min=1"`
+	UserID         int64  `json:"user_id" binding:"required,min=1"`
+	AddressLine    string `json:"address_line" binding:"omitempty,required"`
+	City           string `json:"city" binding:"omitempty,required"`
+	Region         string `json:"region" binding:"omitempty,required"`
+	DefaultAddress int64  `json:"default_address" binding:"omitempty,required,min=1"`
 }
 
 func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddress) userAddressResponse {
@@ -206,7 +206,7 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != uri.UserID {
+	if authPayload.UserID != req.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
@@ -214,8 +214,8 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 
 	arg1 := db.UpdateUserAddressParams{
 		UserID:         authPayload.UserID,
-		AddressID:      req.AddressID,
-		DefaultAddress: req.DefaultAddress,
+		AddressID:      uri.AddressID,
+		DefaultAddress: null.IntFromPtr(&req.DefaultAddress),
 	}
 
 	userAddress, err := server.store.UpdateUserAddress(ctx, arg1)
@@ -255,11 +255,11 @@ func (server *Server) updateUserAddress(ctx *gin.Context) {
 
 // ////////////* Delete API //////////////
 type deleteUserAddressUriRequest struct {
-	UserID int64 `uri:"user-id" binding:"required,min=1"`
+	AddressID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type deleteUserAddressJsonRequest struct {
-	AddressID int64 `json:"address_id" binding:"required,min=1"`
+	UserID int64 `json:"user_id" binding:"required,min=1"`
 }
 
 func (server *Server) deleteUserAddress(ctx *gin.Context) {
@@ -276,15 +276,15 @@ func (server *Server) deleteUserAddress(ctx *gin.Context) {
 	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != uri.UserID {
+	if authPayload.UserID != req.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
 	arg := db.DeleteUserAddressParams{
-		UserID:    uri.UserID,
-		AddressID: req.AddressID,
+		UserID:    authPayload.UserID,
+		AddressID: uri.AddressID,
 	}
 
 	_, err := server.store.DeleteUserAddress(ctx, arg)

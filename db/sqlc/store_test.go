@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"log"
+	"sync"
 	"testing"
 	"time"
 
@@ -46,6 +47,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 
 	errs := make(chan error)
 	results := make(chan FinishedPurchaseTxResult)
+	var lock sync.Mutex
 
 	for i := 0; i < n; i++ {
 		userAddress = createRandomUserAddress(t)
@@ -106,6 +108,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			time.Sleep(3 * time.Second)
 		}
 		go func() {
+			lock.Lock()
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserAddress: UserAddress{
 					UserID:         userAddress.UserID,
@@ -138,6 +141,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			// time.Sleep(1 * time.Second)
 			errs <- err
 			results <- result
+			lock.Unlock()
 		}()
 
 		// check results
@@ -163,7 +167,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NoError(t, err)
 
 			// check ProductItem Updated Quantity
-			newProductItem := resultList[i].UpdatedProductItem
+			newProductItem := resultList[z].UpdatedProductItem
 			require.NotEmpty(t, newProductItem)
 			require.NotEqual(t, listProductItem[z].QtyInStock, newProductItem.QtyInStock)
 			require.Equal(t, listProductItem[z].QtyInStock-listShoppingCartItem[z].Qty, newProductItem.QtyInStock)
@@ -177,6 +181,8 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), argF)
 			require.NotEmpty(t, finishedShopOrderItems)
 			require.NoError(t, err)
+			println(len(finishedShopOrderItems))
+			println(len(listShoppingCartItem))
 			for y := 0; y < len(finishedShopOrderItems); y++ {
 				require.Equal(t, listShoppingCartItem[z].ProductItemID, finishedShopOrderItems[y].ProductItemID)
 				require.Equal(t, listShoppingCartItem[z].Qty, finishedShopOrderItems[y].Quantity)

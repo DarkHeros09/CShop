@@ -57,11 +57,11 @@ func (server *Server) setupRouter() {
 	userRoutes.PUT("/users/:id", server.updateUser)     //* Finished With tests (token and changed response... No Etag)
 	adminRoutes.DELETE("/users/:id", server.deleteUser) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	userRoutes.POST("/users/addresses", server.createUserAddress)            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/addresses/:id", server.getUserAddress)            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/addresses", server.listUserAddresses)             //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/addresses/:user-id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/addresses/:user-id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.POST("/users/addresses", server.createUserAddress)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/addresses/:id", server.getUserAddress)       //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/addresses", server.listUserAddresses)        //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/addresses/:id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
+	userRoutes.DELETE("/users/addresses/:id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
 
 	userRoutes.POST("/users/reviews", server.createUserReview)       //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/reviews/:id", server.getUserReview)       //* Finished With tests (token and changed response... No Etag)

@@ -449,18 +449,18 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		UserID        int64
+		AddressID     int64
 		body          gin.H
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:   "OK",
-			UserID: user.ID,
+			name:      "OK",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
+				"user_id":         user.ID,
+				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
 				"city":            "new city",
@@ -498,11 +498,11 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			UserID: user.ID,
+			name:      "NoAuthorization",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
+				"user_id":         user.ID,
+				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
 				"city":            "new city",
@@ -523,11 +523,11 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: user.ID,
+			name:      "InternalError",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id":      userAddress.AddressID,
-				"default_address": userAddress.DefaultAddress,
+				"user_id":         user.ID,
+				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
 				"city":            "new city",
@@ -563,8 +563,8 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InvalidUserID",
-			UserID: 0,
+			name:      "InvalidUserID",
+			AddressID: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -599,7 +599,7 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.UserID)
+			url := fmt.Sprintf("/users/addresses/%d", tc.AddressID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -617,17 +617,17 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		UserID        int64
+		AddressID     int64
 		body          gin.H
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:   "OK",
-			UserID: userAddress.UserID,
+			name:      "OK",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": user.ID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -648,10 +648,10 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NotFound",
-			UserID: userAddress.UserID,
+			name:      "NotFound",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": user.ID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -671,10 +671,10 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: userAddress.UserID,
+			name:      "InternalError",
+			AddressID: userAddress.AddressID,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": user.ID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -694,10 +694,10 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InvalidID",
-			UserID: 0,
+			name:      "InvalidID",
+			AddressID: 0,
 			body: gin.H{
-				"address_id": userAddress.AddressID,
+				"user_id": user.ID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -733,7 +733,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.UserID)
+			url := fmt.Sprintf("/users/addresses/%d", tc.AddressID)
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

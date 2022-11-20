@@ -518,16 +518,17 @@ func TestUpdateUserAPI(t *testing.T) {
 			name:   "OK",
 			UserID: user.ID,
 			body: gin.H{
-				"id":        user.ID,
-				"telephone": user.Telephone,
+				"telephone":       user.Telephone,
+				"default_payment": user.DefaultPayment,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateUserParams{
-					ID:        user.ID,
-					Telephone: null.IntFrom(int64(user.Telephone)),
+					ID:             user.ID,
+					Telephone:      null.IntFrom(int64(user.Telephone)),
+					DefaultPayment: null.IntFrom(user.DefaultPayment.Int64),
 				}
 
 				store.EXPECT().
@@ -543,7 +544,7 @@ func TestUpdateUserAPI(t *testing.T) {
 			name:   "NoAuthorization",
 			UserID: user.ID,
 			body: gin.H{
-				"id": user.ID,
+				"telephone": user.Telephone,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -560,16 +561,17 @@ func TestUpdateUserAPI(t *testing.T) {
 			name:   "InternalError",
 			UserID: user.ID,
 			body: gin.H{
-				"id":        user.ID,
-				"telephone": user.Telephone,
+				"telephone":       user.Telephone,
+				"default_payment": user.DefaultPayment,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateUserParams{
-					ID:        user.ID,
-					Telephone: null.IntFrom(int64(user.Telephone)),
+					ID:             user.ID,
+					Telephone:      null.IntFrom(int64(user.Telephone)),
+					DefaultPayment: null.IntFrom(user.DefaultPayment.Int64),
 				}
 				store.EXPECT().
 					UpdateUser(gomock.Any(), gomock.Eq(arg)).

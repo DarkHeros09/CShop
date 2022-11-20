@@ -150,7 +150,7 @@ type updateUserReviewUriRequest struct {
 }
 
 type updateUserReviewJsonRequest struct {
-	UserID           int64 `json:"user_id" binding:"omitempty,required,min=1"`
+	UserID           int64 `json:"user_id" binding:"required,min=1"`
 	OrderedProductID int64 `json:"ordered_product_id" binding:"omitempty,required,min=1"`
 	RatingValue      int64 `json:"rating_value" binding:"omitempty,required,min=0,max=5"`
 }
@@ -176,7 +176,7 @@ func (server *Server) updateUserReview(ctx *gin.Context) {
 	}
 
 	arg1 := db.UpdateUserReviewParams{
-		UserID:           null.IntFromPtr(&authPayload.UserID),
+		UserID:           authPayload.UserID,
 		OrderedProductID: null.IntFromPtr(&req.OrderedProductID),
 		RatingValue:      null.IntFromPtr(&req.RatingValue),
 		ID:               uri.ID,

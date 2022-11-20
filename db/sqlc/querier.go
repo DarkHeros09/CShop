@@ -51,7 +51,7 @@ type Querier interface {
 	DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error
 	DeleteProductConfiguration(ctx context.Context, productItemID int64) error
 	DeleteProductItem(ctx context.Context, id int64) error
-	DeleteProductPromotion(ctx context.Context, productID int64) error
+	DeleteProductPromotion(ctx context.Context, arg DeleteProductPromotionParams) error
 	DeletePromotion(ctx context.Context, id int64) error
 	DeleteShippingMethod(ctx context.Context, id int64) error
 	DeleteShopOrder(ctx context.Context, id int64) error
@@ -109,7 +109,7 @@ type Querier interface {
 	GetProductConfiguration(ctx context.Context, productItemID int64) (ProductConfiguration, error)
 	GetProductItem(ctx context.Context, id int64) (ProductItem, error)
 	GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error)
-	GetProductPromotion(ctx context.Context, productID int64) (ProductPromotion, error)
+	GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error)
 	GetPromotion(ctx context.Context, id int64) (Promotion, error)
 	GetShippingMethod(ctx context.Context, id int64) (ShippingMethod, error)
 	GetShippingMethodByUserID(ctx context.Context, arg GetShippingMethodByUserIDParams) (GetShippingMethodByUserIDRow, error)

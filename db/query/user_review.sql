@@ -24,10 +24,10 @@ OFFSET $2;
 -- name: UpdateUserReview :one
 UPDATE "user_review"
 SET 
-user_id = COALESCE(sqlc.narg(user_id),user_id),
 ordered_product_id = COALESCE(sqlc.narg(ordered_product_id),ordered_product_id),
 rating_value = COALESCE(sqlc.narg(rating_value),rating_value)
 WHERE id = sqlc.arg(id)
+AND user_id = sqlc.arg(user_id)
 RETURNING *;
 
 -- name: DeleteUserReview :one

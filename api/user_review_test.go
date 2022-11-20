@@ -464,7 +464,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.UpdateUserReviewParams{
-					UserID:           null.IntFrom(userReview.UserID),
+					UserID:           userReview.UserID,
 					OrderedProductID: null.IntFrom(userReview.OrderedProductID),
 					RatingValue:      null.IntFrom(3),
 					ID:               userReview.ID,
@@ -513,7 +513,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateUserReviewParams{
-					UserID:           null.IntFrom(userReview.UserID),
+					UserID:           userReview.UserID,
 					OrderedProductID: null.IntFrom(userReview.OrderedProductID),
 					RatingValue:      null.IntFrom(3),
 					ID:               userReview.ID,

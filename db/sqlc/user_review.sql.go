@@ -138,26 +138,26 @@ func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams
 const updateUserReview = `-- name: UpdateUserReview :one
 UPDATE "user_review"
 SET 
-user_id = COALESCE($1,user_id),
-ordered_product_id = COALESCE($2,ordered_product_id),
-rating_value = COALESCE($3,rating_value)
-WHERE id = $4
+ordered_product_id = COALESCE($1,ordered_product_id),
+rating_value = COALESCE($2,rating_value)
+WHERE id = $3
+AND user_id = $4
 RETURNING id, user_id, ordered_product_id, rating_value, created_at, updated_at
 `
 
 type UpdateUserReviewParams struct {
-	UserID           null.Int `json:"user_id"`
 	OrderedProductID null.Int `json:"ordered_product_id"`
 	RatingValue      null.Int `json:"rating_value"`
 	ID               int64    `json:"id"`
+	UserID           int64    `json:"user_id"`
 }
 
 func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error) {
 	row := q.db.QueryRow(ctx, updateUserReview,
-		arg.UserID,
 		arg.OrderedProductID,
 		arg.RatingValue,
 		arg.ID,
+		arg.UserID,
 	)
 	var i UserReview
 	err := row.Scan(

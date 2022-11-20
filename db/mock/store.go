@@ -626,7 +626,7 @@ func (mr *MockStoreMockRecorder) DeleteProductItem(arg0, arg1 interface{}) *gomo
 }
 
 // DeleteProductPromotion mocks base method.
-func (m *MockStore) DeleteProductPromotion(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeleteProductPromotion(arg0 context.Context, arg1 db.DeleteProductPromotionParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProductPromotion", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1110,7 +1110,7 @@ func (mr *MockStoreMockRecorder) GetProductItemForUpdate(arg0, arg1 interface{})
 }
 
 // GetProductPromotion mocks base method.
-func (m *MockStore) GetProductPromotion(arg0 context.Context, arg1 int64) (db.ProductPromotion, error) {
+func (m *MockStore) GetProductPromotion(arg0 context.Context, arg1 db.GetProductPromotionParams) (db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductPromotion", arg0, arg1)
 	ret0, _ := ret[0].(db.ProductPromotion)

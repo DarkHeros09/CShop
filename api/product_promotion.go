@@ -59,19 +59,34 @@ func (server *Server) createProductPromotion(ctx *gin.Context) {
 
 //////////////* Get API //////////////
 
-type getProductPromotionRequest struct {
+type getProductPromotionUriRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
-func (server *Server) getProductPromotion(ctx *gin.Context) {
-	var req getProductPromotionRequest
+type getProductPromotionJsonRequest struct {
+	ProductID int64 `json:"product_id" binding:"required,min=1"`
+}
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
+func (server *Server) getProductPromotion(ctx *gin.Context) {
+	var uri getProductPromotionUriRequest
+	var req getProductPromotionJsonRequest
+
+	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	productPromotion, err := server.store.GetProductPromotion(ctx, req.ID)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.GetProductPromotionParams{
+		ProductID:   req.ProductID,
+		PromotionID: uri.ID,
+	}
+
+	productPromotion, err := server.store.GetProductPromotion(ctx, arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -130,13 +145,12 @@ func (server *Server) listProductPromotions(ctx *gin.Context) {
 //////////////* Update API //////////////
 
 type updateProductPromotionUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+	PromotionID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type updateProductPromotionJsonRequest struct {
-	ProductID   int64 `json:"product_id" binding:"omitempty,required,min=1"`
-	PromotionID int64 `json:"promotion_id" binding:"omitempty,required,min=1"`
-	Active      bool  `json:"active" binding:"omitempty,required,boolean"`
+	ProductID int64 `json:"product_id" binding:"required,min=1"`
+	Active    bool  `json:"active" binding:"omitempty,required,boolean"`
 }
 
 func (server *Server) updateProductPromotion(ctx *gin.Context) {
@@ -162,7 +176,7 @@ func (server *Server) updateProductPromotion(ctx *gin.Context) {
 
 	arg := db.UpdateProductPromotionParams{
 		ProductID:   req.ProductID,
-		PromotionID: null.IntFromPtr(&req.PromotionID),
+		PromotionID: uri.PromotionID,
 		Active:      null.BoolFromPtr(&req.Active),
 	}
 
@@ -183,12 +197,16 @@ func (server *Server) updateProductPromotion(ctx *gin.Context) {
 
 //////////////* Delete API //////////////
 
-type deleteProductPromotionRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteProductPromotionUriRequest struct {
+	PromotionID int64 `uri:"id" binding:"required,min=1"`
+}
+type deleteProductPromotionJsonRequest struct {
+	ProductID int64 `json:"product_id" binding:"required,min=1"`
 }
 
 func (server *Server) deleteProductPromotion(ctx *gin.Context) {
-	var req deleteProductPromotionRequest
+	var uri deleteProductPromotionUriRequest
+	var req deleteProductPromotionJsonRequest
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
@@ -197,12 +215,22 @@ func (server *Server) deleteProductPromotion(ctx *gin.Context) {
 		return
 	}
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	err := server.store.DeleteProductPromotion(ctx, req.ID)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.DeleteProductPromotionParams{
+		ProductID:   req.ProductID,
+		PromotionID: uri.PromotionID,
+	}
+
+	err := server.store.DeleteProductPromotion(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

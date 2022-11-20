@@ -26,61 +26,90 @@ func TestGetProductPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		productID     int64
+		promotionID   int64
+		body          gin.H
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:      "OK",
-			productID: productPromotion.ProductID,
+			name:        "OK",
+			promotionID: productPromotion.PromotionID,
+			body: gin.H{
+				"product_id": productPromotion.ProductID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
+
 				store.EXPECT().
-					GetProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					GetProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(productPromotion, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				requireBodyMatchProductPromotion(t, recorder.Body, productPromotion)
 			},
 		},
 
 		{
-			name:      "NotFound",
-			productID: productPromotion.ProductID,
+			name:        "NotFound",
+			promotionID: productPromotion.PromotionID,
+			body: gin.H{
+				"product_id": productPromotion.ProductID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
+
 				store.EXPECT().
-					GetProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					GetProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 		{
-			name:      "InternalError",
-			productID: productPromotion.ProductID,
+			name:        "InternalError",
+			promotionID: productPromotion.PromotionID,
+			body: gin.H{
+				"product_id": productPromotion.ProductID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
+
 				store.EXPECT().
-					GetProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					GetProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 		{
-			name:      "InvalidID",
-			productID: 0,
+			name:        "InvalidID",
+			promotionID: 0,
+			body: gin.H{
+				"product_id": productPromotion.ProductID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+
 				store.EXPECT().
 					GetProductPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -101,13 +130,13 @@ func TestGetProductPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/product-promotions/%d", tc.productID)
+			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)
 			//check response
-			tc.checkResponse(t, recorder)
+			tc.checkResponse(recorder)
 		})
 
 	}
@@ -386,25 +415,24 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		productID     int64
+		promotionID   int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:      "OK",
-			productID: productPromotion.ProductID,
+			name:        "OK",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+				"product_id": productPromotion.ProductID,
+				"active":     productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductPromotionParams{
-					PromotionID: null.IntFromPtr(&productPromotion.PromotionID),
+					PromotionID: productPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&productPromotion.Active),
 					ProductID:   productPromotion.ProductID,
 				}
@@ -419,19 +447,18 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "Unauthorized",
-			productID: productPromotion.ProductID,
+			name:        "Unauthorized",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+				"product_id": productPromotion.ProductID,
+				"active":     productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductPromotionParams{
-					PromotionID: null.IntFromPtr(&productPromotion.PromotionID),
+					PromotionID: productPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&productPromotion.Active),
 					ProductID:   productPromotion.ProductID,
 				}
@@ -445,18 +472,17 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "NoAuthorization",
-			productID: productPromotion.ProductID,
+			name:        "NoAuthorization",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+				"product_id": productPromotion.ProductID,
+				"active":     productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductPromotionParams{
-					PromotionID: null.IntFromPtr(&productPromotion.PromotionID),
+					PromotionID: productPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&productPromotion.Active),
 					ProductID:   productPromotion.ProductID,
 				}
@@ -470,19 +496,18 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "InternalError",
-			productID: productPromotion.ProductID,
+			name:        "InternalError",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+				"product_id": productPromotion.ProductID,
+				"active":     productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductPromotionParams{
-					PromotionID: null.IntFromPtr(&productPromotion.PromotionID),
+					PromotionID: productPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&productPromotion.Active),
 					ProductID:   productPromotion.ProductID,
 				}
@@ -496,8 +521,8 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "InvalidID",
-			productID: 0,
+			name:        "InvalidID",
+			promotionID: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -528,7 +553,7 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-promotions/%d", tc.productID)
+			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -546,23 +571,27 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		productID     int64
+		promotionID   int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:      "OK",
-			productID: productPromotion.ProductID,
+			name:        "OK",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"id": productPromotion.ProductID,
+				"product_id": productPromotion.ProductID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(nil)
 			},
@@ -571,17 +600,21 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "Unauthorized",
-			productID: productPromotion.ProductID,
+			name:        "Unauthorized",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"id": productPromotion.ProductID,
+				"product_id": productPromotion.ProductID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -589,16 +622,20 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "NoAuthorization",
-			productID: productPromotion.ProductID,
+			name:        "NoAuthorization",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"id": productPromotion.ProductID,
+				"product_id": productPromotion.ProductID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -606,17 +643,21 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "NotFound",
-			productID: productPromotion.ProductID,
+			name:        "NotFound",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"id": productPromotion.ProductID,
+				"product_id": productPromotion.ProductID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
@@ -625,17 +666,21 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "InternalError",
-			productID: productPromotion.ProductID,
+			name:        "InternalError",
+			promotionID: productPromotion.PromotionID,
 			body: gin.H{
-				"id": productPromotion.ProductID,
+				"product_id": productPromotion.ProductID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductPromotionParams{
+					ProductID:   productPromotion.ProductID,
+					PromotionID: productPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteProductPromotion(gomock.Any(), gomock.Eq(productPromotion.ProductID)).
+					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
@@ -644,10 +689,10 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "InvalidID",
-			productID: 0,
+			name:        "InvalidID",
+			promotionID: 0,
 			body: gin.H{
-				"id": 0,
+				"product_id": 0,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -683,7 +728,7 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-promotions/%d", tc.productID)
+			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -728,7 +773,9 @@ func requireBodyMatchProductPromotion(t *testing.T, body *bytes.Buffer, productP
 	var gotProductPromotion db.ProductPromotion
 	err = json.Unmarshal(data, &gotProductPromotion)
 	require.NoError(t, err)
-	require.Equal(t, productPromotion, gotProductPromotion)
+	require.Equal(t, productPromotion.ProductID, gotProductPromotion.ProductID)
+	require.Equal(t, productPromotion.PromotionID, gotProductPromotion.PromotionID)
+	require.Equal(t, productPromotion.Active, gotProductPromotion.Active)
 }
 
 func requireBodyMatchProductPromotions(t *testing.T, body *bytes.Buffer, productPromotions []db.ProductPromotion) {

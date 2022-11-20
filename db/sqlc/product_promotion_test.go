@@ -35,7 +35,12 @@ func TestCreateProductPromotion(t *testing.T) {
 
 func TestGetProductPromotion(t *testing.T) {
 	productPromotion1 := createRandomProductPromotion(t)
-	productPromotion2, err := testQueires.GetProductPromotion(context.Background(), productPromotion1.ProductID)
+
+	arg := GetProductPromotionParams{
+		ProductID:   productPromotion1.ProductID,
+		PromotionID: productPromotion1.PromotionID,
+	}
+	productPromotion2, err := testQueires.GetProductPromotion(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productPromotion2)
@@ -48,7 +53,7 @@ func TestGetProductPromotion(t *testing.T) {
 func TestUpdateProductPromotionActive(t *testing.T) {
 	productPromotion1 := createRandomProductPromotion(t)
 	arg := UpdateProductPromotionParams{
-		PromotionID: null.Int{},
+		PromotionID: productPromotion1.PromotionID,
 		Active:      null.BoolFrom(!productPromotion1.Active),
 		ProductID:   productPromotion1.ProductID,
 	}
@@ -64,11 +69,19 @@ func TestUpdateProductPromotionActive(t *testing.T) {
 
 func TestDeleteProductPromotion(t *testing.T) {
 	productPromotion1 := createRandomProductPromotion(t)
-	err := testQueires.DeleteProductPromotion(context.Background(), productPromotion1.ProductID)
+	arg := DeleteProductPromotionParams{
+		ProductID:   productPromotion1.ProductID,
+		PromotionID: productPromotion1.PromotionID,
+	}
+	err := testQueires.DeleteProductPromotion(context.Background(), arg)
 
 	require.NoError(t, err)
 
-	productPromotion2, err := testQueires.GetProductPromotion(context.Background(), productPromotion1.ProductID)
+	arg1 := GetProductPromotionParams{
+		ProductID:   productPromotion1.ProductID,
+		PromotionID: productPromotion1.PromotionID,
+	}
+	productPromotion2, err := testQueires.GetProductPromotion(context.Background(), arg1)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

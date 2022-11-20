@@ -53,7 +53,7 @@ func TestGetUserReview(t *testing.T) {
 func TestUpdateUserReviewRating(t *testing.T) {
 	userReview1 := createRandomUserReview(t)
 	arg := UpdateUserReviewParams{
-		UserID:           null.Int{},
+		UserID:           userReview1.UserID,
 		OrderedProductID: null.Int{},
 		RatingValue:      null.IntFrom(0),
 		ID:               userReview1.ID,
