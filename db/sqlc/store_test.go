@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
 
 // func TestSize(t *testing.T) {
-// 	println(unsafe.Sizeof(PaymentMethod{}))
+// 	println(unsafe.Sizeof(FinishedPurchaseTxParams{}))
 // }
 
 func TestFinishedPurchaseTx(t *testing.T) {
@@ -110,33 +109,13 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		go func() {
 			lock.Lock()
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
-				UserAddress: UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				PaymentMethod: PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      util.RandomString(5),
-					IsDefault:     true,
-				},
-				ShoppingCart: ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-
-				ShippingMethod: ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				OrderStatus: OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				OrderTotal: totalPrice,
+				UserID:           userAddress.UserID,
+				UserAddressID:    userAddress.AddressID,
+				PaymentMethodID:  paymentMethod.ID,
+				ShoppingCartID:   shoppingCart.ID,
+				ShippingMethodID: shippingMethod.ID,
+				OrderStatusID:    orderStatus.ID,
+				OrderTotal:       totalPrice,
 			})
 			// time.Sleep(1 * time.Second)
 			errs <- err
@@ -155,7 +134,9 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NotEmpty(t, result)
 			resultList = append(resultList, result)
 			// check finishedPurchase/ ShopOrder
-			finishedShopOrder := resultList[z].ShopOrder
+			finishedShopOrderID := resultList[z].ShopOrderID
+			require.NotEmpty(t, finishedShopOrderID)
+			finishedShopOrder, err := testQueires.GetShopOrder(context.Background(), finishedShopOrderID)
 			require.NotEmpty(t, finishedShopOrder)
 			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
 			require.Equal(t, listUsersAddress[z].AddressID, finishedShopOrder.ShippingAddressID)
@@ -167,7 +148,9 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NoError(t, err)
 
 			// check ProductItem Updated Quantity
-			newProductItem := resultList[z].UpdatedProductItem
+			newProductItemID := resultList[z].UpdatedProductItemID
+			require.NotEmpty(t, newProductItemID)
+			newProductItem, err := testQueires.GetProductItem(context.Background(), newProductItemID)
 			require.NotEmpty(t, newProductItem)
 			require.NotEqual(t, listProductItem[z].QtyInStock, newProductItem.QtyInStock)
 			require.Equal(t, listProductItem[z].QtyInStock-listShoppingCartItem[z].Qty, newProductItem.QtyInStock)
@@ -291,33 +274,13 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		}
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
-				UserAddress: UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				PaymentMethod: PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      util.RandomString(5),
-					IsDefault:     true,
-				},
-				ShoppingCart: ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-
-				ShippingMethod: ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				OrderStatus: OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				OrderTotal: totalPrice,
+				UserID:           userAddress.UserID,
+				UserAddressID:    userAddress.AddressID,
+				PaymentMethodID:  paymentMethod.ID,
+				ShoppingCartID:   shoppingCart.ID,
+				ShippingMethodID: shippingMethod.ID,
+				OrderStatusID:    orderStatus.ID,
+				OrderTotal:       totalPrice,
 			})
 			// time.Sleep(1 * time.Second)
 			errs <- err
@@ -428,33 +391,13 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		}
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
-				UserAddress: UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				PaymentMethod: PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      util.RandomString(5),
-					IsDefault:     true,
-				},
-				ShoppingCart: ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-
-				ShippingMethod: ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				OrderStatus: OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				OrderTotal: totalPrice,
+				UserID:           userAddress.UserID,
+				UserAddressID:    userAddress.AddressID,
+				PaymentMethodID:  paymentMethod.ID,
+				ShoppingCartID:   shoppingCart.ID,
+				ShippingMethodID: shippingMethod.ID,
+				OrderStatusID:    orderStatus.ID,
+				OrderTotal:       totalPrice,
 			})
 			// time.Sleep(1 * time.Second)
 			errs <- err

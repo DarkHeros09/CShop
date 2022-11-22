@@ -43,7 +43,7 @@ type Querier interface {
 	DeleteAdmin(ctx context.Context, id int64) error
 	DeleteAdminTypeByID(ctx context.Context, id int64) error
 	DeleteAdminTypeByType(ctx context.Context, adminType string) error
-	DeleteCategoryPromotion(ctx context.Context, categoryID int64) error
+	DeleteCategoryPromotion(ctx context.Context, arg DeleteCategoryPromotionParams) error
 	DeleteOrderStatus(ctx context.Context, id int64) error
 	DeletePaymentMethod(ctx context.Context, arg DeletePaymentMethodParams) (PaymentMethod, error)
 	DeletePaymentType(ctx context.Context, id int64) error
@@ -98,7 +98,7 @@ type Querier interface {
 	GetAdmin(ctx context.Context, id int64) (Admin, error)
 	GetAdminByEmail(ctx context.Context, email string) (Admin, error)
 	GetAdminType(ctx context.Context, id int64) (AdminType, error)
-	GetCategoryPromotion(ctx context.Context, categoryID int64) (CategoryPromotion, error)
+	GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error)
 	GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error)
 	GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatusByUserIDParams) (GetOrderStatusByUserIDRow, error)
 	GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error)

@@ -52,20 +52,20 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction
 type FinishedPurchaseTxParams struct {
-	UserAddress    UserAddress    `json:"user_address"`
-	PaymentMethod  PaymentMethod  `json:"payment_method"`
-	ShoppingCart   ShoppingCart   `json:"shopping_cart"`
-	ShippingMethod ShippingMethod `json:"shipping_method"`
-	OrderStatus    OrderStatus    `json:"order_status"`
-	OrderTotal     string         `json:"order_total"`
+	UserID           int64  `json:"user_id"`
+	UserAddressID    int64  `json:"user_address_id"`
+	PaymentMethodID  int64  `json:"payment_method_id"`
+	ShoppingCartID   int64  `json:"shopping_cart_id"`
+	ShippingMethodID int64  `json:"shipping_method_id"`
+	OrderStatusID    int64  `json:"order_status_id"`
+	OrderTotal       string `json:"order_total"`
 }
 
 // FinishedPurchaseTxResult is the result of the purchase transaction
 type FinishedPurchaseTxResult struct {
-	UpdatedProductItem ProductItem   `json:"product_item"`
-	OrderStatus        OrderStatus   `json:"order_status"`
-	ShopOrder          ShopOrder     `json:"shop_order"`
-	ShopOrderItem      ShopOrderItem `json:"shop_order_item"`
+	UpdatedProductItemID int64 `json:"product_item_id"`
+	ShopOrderID          int64 `json:"shop_order_id"`
+	ShopOrderItemID      int64 `json:"shop_order_item_id"`
 }
 
 /*
@@ -81,7 +81,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 
-		shopCartItems, err := q.ListShoppingCartItemsByCartID(ctx, arg.ShoppingCart.ID)
+		shopCartItems, err := q.ListShoppingCartItemsByCartID(ctx, arg.ShoppingCartID)
 		if err != nil {
 			return err
 		}
@@ -101,41 +101,41 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				return errors.New("Stock is Empty")
 			}
 
-			result.ShopOrder, err = q.CreateShopOrder(ctx, CreateShopOrderParams{
-				UserID:            arg.UserAddress.UserID,
-				PaymentMethodID:   arg.PaymentMethod.ID,
-				ShippingAddressID: arg.UserAddress.AddressID,
+			createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
+				UserID:            arg.UserID,
+				PaymentMethodID:   arg.PaymentMethodID,
+				ShippingAddressID: arg.UserAddressID,
 				OrderTotal:        arg.OrderTotal,
-				ShippingMethodID:  arg.ShippingMethod.ID,
-				OrderStatusID:     arg.OrderStatus.ID,
+				ShippingMethodID:  arg.ShippingMethodID,
+				OrderStatusID:     arg.OrderStatusID,
 			})
 			if err != nil {
 				return err
 			}
+			result.ShopOrderID = createdShopOrder.ID
 
-			result.UpdatedProductItem, err = q.UpdateProductItem(ctx, UpdateProductItemParams{
-				ProductID:    null.IntFromPtr(&productItem.ProductID),
-				ProductSku:   null.IntFromPtr(&productItem.ProductSku),
-				QtyInStock:   null.IntFrom(int64(productItem.QtyInStock - shopCartItems[i].Qty)),
-				ProductImage: null.StringFromPtr(&productItem.ProductImage),
-				Price:        null.StringFromPtr(&productItem.Price),
-				Active:       null.BoolFromPtr(&productItem.Active),
-				ID:           productItem.ID,
+			updatedProductItem, err := q.UpdateProductItem(ctx, UpdateProductItemParams{
+				ID:         productItem.ID,
+				ProductID:  productItem.ProductID,
+				QtyInStock: null.IntFrom(int64(productItem.QtyInStock - shopCartItems[i].Qty)),
 			})
 			if err != nil {
 				return err
 			}
-			result.ShopOrderItem, err = q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
+			result.UpdatedProductItemID = updatedProductItem.ID
+
+			createdShopOrderItem, err := q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
 				ProductItemID: shopCartItems[i].ProductItemID,
-				OrderID:       result.ShopOrder.ID,
+				OrderID:       createdShopOrder.ID,
 				Quantity:      shopCartItems[i].Qty,
 				Price:         productItem.Price,
 			})
 			if err != nil {
 				return err
 			}
+			result.ShopOrderItemID = createdShopOrderItem.ID
 		}
-		_, err = q.DeleteShoppingCartItemAllByUser(ctx, arg.UserAddress.UserID)
+		_, err = q.DeleteShoppingCartItemAllByUser(ctx, arg.UserID)
 		if err != nil {
 			return err
 		}

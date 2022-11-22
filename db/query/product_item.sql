@@ -29,13 +29,13 @@ OFFSET $2;
 -- name: UpdateProductItem :one
 UPDATE "product_item"
 SET
-product_id = COALESCE(sqlc.narg(product_id),product_id),
 product_sku = COALESCE(sqlc.narg(product_sku),product_sku),
 qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
 product_image = COALESCE(sqlc.narg(product_image),product_image),
 price = COALESCE(sqlc.narg(price),price),
 active = COALESCE(sqlc.narg(active),active)
 WHERE id = sqlc.arg(id)
+AND product_id = sqlc.arg(product_id)
 RETURNING *;
 
 -- name: DeleteProductItem :exec

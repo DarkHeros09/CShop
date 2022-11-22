@@ -297,12 +297,13 @@ func (server *Server) deleteShoppingCartItemAllByUser(ctx *gin.Context) {
 // ////////////* Finish Purshase API //////////////
 
 type finishPurshaseJsonRequest struct {
-	UserAddress    db.UserAddress    `json:"user_address" binding:"required"`
-	PaymentMethod  db.PaymentMethod  `json:"payment_method" binding:"required"`
-	ShoppingCart   db.ShoppingCart   `json:"shopping_cart" binding:"required"`
-	ShippingMethod db.ShippingMethod `json:"shipping_method" binding:"required"`
-	OrderStatus    db.OrderStatus    `json:"order_status" binding:"required"`
-	OrderTotal     string            `json:"order_total" binding:"required"`
+	UserID           int64  `json:"user_id" binding:"required,min=1"`
+	UserAddressID    int64  `json:"user_address_id" binding:"required,min=1"`
+	PaymentMethodID  int64  `json:"payment_method_id" binding:"required,min=1"`
+	ShoppingCartID   int64  `json:"shopping_cart_id" binding:"required,min=1"`
+	ShippingMethodID int64  `json:"shipping_method_id" binding:"required,min=1"`
+	OrderStatusID    int64  `json:"order_status_id" binding:"required,min=1"`
+	OrderTotal       string `json:"order_total" binding:"required"`
 }
 
 func (server *Server) finishPurchase(ctx *gin.Context) {
@@ -314,39 +315,20 @@ func (server *Server) finishPurchase(ctx *gin.Context) {
 	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserAddress.UserID {
+	if authPayload.UserID != req.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
 	arg := db.FinishedPurchaseTxParams{
-		UserAddress: db.UserAddress{
-			UserID:         req.UserAddress.UserID,
-			AddressID:      req.UserAddress.AddressID,
-			DefaultAddress: null.IntFromPtr(&req.UserAddress.DefaultAddress.Int64),
-		},
-		PaymentMethod: db.PaymentMethod{
-			ID:            req.PaymentMethod.ID,
-			UserID:        req.PaymentMethod.UserID,
-			PaymentTypeID: req.PaymentMethod.PaymentTypeID,
-			Provider:      req.PaymentMethod.Provider,
-			IsDefault:     req.PaymentMethod.IsDefault,
-		},
-		ShoppingCart: db.ShoppingCart{
-			ID:     req.ShoppingCart.ID,
-			UserID: req.ShoppingCart.UserID,
-		},
-		ShippingMethod: db.ShippingMethod{
-			ID:    req.ShippingMethod.ID,
-			Name:  req.ShippingMethod.Name,
-			Price: req.ShippingMethod.Price,
-		},
-		OrderStatus: db.OrderStatus{
-			ID:     req.OrderStatus.ID,
-			Status: req.OrderStatus.Status,
-		},
-		OrderTotal: req.OrderTotal,
+		UserID:           authPayload.UserID,
+		UserAddressID:    req.UserAddressID,
+		PaymentMethodID:  req.PaymentMethodID,
+		ShoppingCartID:   req.ShoppingCartID,
+		ShippingMethodID: req.ShippingMethodID,
+		OrderStatusID:    req.OrderStatusID,
+		OrderTotal:       req.OrderTotal,
 	}
 
 	finishedPurchase, err := server.store.FinishedPurchaseTx(ctx, arg)

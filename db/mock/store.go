@@ -513,7 +513,7 @@ func (mr *MockStoreMockRecorder) DeleteAdminTypeByType(arg0, arg1 interface{}) *
 }
 
 // DeleteCategoryPromotion mocks base method.
-func (m *MockStore) DeleteCategoryPromotion(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeleteCategoryPromotion(arg0 context.Context, arg1 db.DeleteCategoryPromotionParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteCategoryPromotion", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -945,7 +945,7 @@ func (mr *MockStoreMockRecorder) GetAdminType(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // GetCategoryPromotion mocks base method.
-func (m *MockStore) GetCategoryPromotion(arg0 context.Context, arg1 int64) (db.CategoryPromotion, error) {
+func (m *MockStore) GetCategoryPromotion(arg0 context.Context, arg1 db.GetCategoryPromotionParams) (db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCategoryPromotion", arg0, arg1)
 	ret0, _ := ret[0].(db.CategoryPromotion)

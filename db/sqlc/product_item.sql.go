@@ -158,35 +158,35 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 const updateProductItem = `-- name: UpdateProductItem :one
 UPDATE "product_item"
 SET
-product_id = COALESCE($1,product_id),
-product_sku = COALESCE($2,product_sku),
-qty_in_stock = COALESCE($3,qty_in_stock),
-product_image = COALESCE($4,product_image),
-price = COALESCE($5,price),
-active = COALESCE($6,active)
-WHERE id = $7
+product_sku = COALESCE($1,product_sku),
+qty_in_stock = COALESCE($2,qty_in_stock),
+product_image = COALESCE($3,product_image),
+price = COALESCE($4,price),
+active = COALESCE($5,active)
+WHERE id = $6
+AND product_id = $7
 RETURNING id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at
 `
 
 type UpdateProductItemParams struct {
-	ProductID    null.Int    `json:"product_id"`
 	ProductSku   null.Int    `json:"product_sku"`
 	QtyInStock   null.Int    `json:"qty_in_stock"`
 	ProductImage null.String `json:"product_image"`
 	Price        null.String `json:"price"`
 	Active       null.Bool   `json:"active"`
 	ID           int64       `json:"id"`
+	ProductID    int64       `json:"product_id"`
 }
 
 func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, updateProductItem,
-		arg.ProductID,
 		arg.ProductSku,
 		arg.QtyInStock,
 		arg.ProductImage,
 		arg.Price,
 		arg.Active,
 		arg.ID,
+		arg.ProductID,
 	)
 	var i ProductItem
 	err := row.Scan(

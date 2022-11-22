@@ -60,7 +60,7 @@ func (server *Server) createProductPromotion(ctx *gin.Context) {
 //////////////* Get API //////////////
 
 type getProductPromotionUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+	PromotionID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type getProductPromotionJsonRequest struct {
@@ -68,8 +68,8 @@ type getProductPromotionJsonRequest struct {
 }
 
 func (server *Server) getProductPromotion(ctx *gin.Context) {
-	var uri getProductPromotionUriRequest
-	var req getProductPromotionJsonRequest
+	uri := &getProductPromotionUriRequest{}
+	req := &getProductPromotionJsonRequest{}
 
 	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -83,7 +83,7 @@ func (server *Server) getProductPromotion(ctx *gin.Context) {
 
 	arg := db.GetProductPromotionParams{
 		ProductID:   req.ProductID,
-		PromotionID: uri.ID,
+		PromotionID: uri.PromotionID,
 	}
 
 	productPromotion, err := server.store.GetProductPromotion(ctx, arg)

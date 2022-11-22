@@ -844,32 +844,13 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"user_address": db.UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				"payment_method": db.PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      paymentMethod.Provider,
-					IsDefault:     paymentMethod.IsDefault,
-				},
-				"shopping_cart": db.ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-				"shipping_method": db.ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				"order_status": db.OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				"order_total": orderTotal,
+				"user_id":            userAddress.UserID,
+				"user_address_id":    userAddress.AddressID,
+				"payment_method_id":  paymentMethod.ID,
+				"shopping_cart_id":   shoppingCart.ID,
+				"shipping_method_id": shippingMethod.ID,
+				"order_status_id":    orderStatus.ID,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -877,12 +858,13 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.FinishedPurchaseTxParams{
-					UserAddress:    userAddress,
-					PaymentMethod:  paymentMethod,
-					ShoppingCart:   shoppingCart,
-					ShippingMethod: shippingMethod,
-					OrderStatus:    orderStatus,
-					OrderTotal:     orderTotal,
+					UserID:           user.ID,
+					UserAddressID:    userAddress.AddressID,
+					PaymentMethodID:  paymentMethod.ID,
+					ShoppingCartID:   shoppingCart.ID,
+					ShippingMethodID: shippingMethod.ID,
+					OrderStatusID:    orderStatus.ID,
+					OrderTotal:       orderTotal,
 				}
 
 				store.EXPECT().
@@ -897,32 +879,13 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 		{
 			name: "NoAuthorization",
 			body: gin.H{
-				"user_address": db.UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				"payment_method": db.PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      paymentMethod.Provider,
-					IsDefault:     paymentMethod.IsDefault,
-				},
-				"shopping_cart": db.ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-				"shipping_method": db.ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				"order_status": db.OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				"order_total": orderTotal,
+				"user_id":            userAddress.UserID,
+				"user_address_id":    userAddress.AddressID,
+				"payment_method_id":  paymentMethod.ID,
+				"shopping_cart_id":   shoppingCart.ID,
+				"shipping_method_id": shippingMethod.ID,
+				"order_status_id":    orderStatus.ID,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -938,44 +901,26 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"user_address": db.UserAddress{
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress.DefaultAddress.Int64),
-				},
-				"payment_method": db.PaymentMethod{
-					ID:            paymentMethod.ID,
-					UserID:        paymentMethod.UserID,
-					PaymentTypeID: paymentMethod.PaymentTypeID,
-					Provider:      paymentMethod.Provider,
-					IsDefault:     paymentMethod.IsDefault,
-				},
-				"shopping_cart": db.ShoppingCart{
-					ID:     shoppingCart.ID,
-					UserID: shoppingCart.UserID,
-				},
-				"shipping_method": db.ShippingMethod{
-					ID:    shippingMethod.ID,
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
-				},
-				"order_status": db.OrderStatus{
-					ID:     orderStatus.ID,
-					Status: orderStatus.Status,
-				},
-				"order_total": orderTotal,
+				"user_id":            userAddress.UserID,
+				"user_address_id":    userAddress.AddressID,
+				"payment_method_id":  paymentMethod.ID,
+				"shopping_cart_id":   shoppingCart.ID,
+				"shipping_method_id": shippingMethod.ID,
+				"order_status_id":    orderStatus.ID,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.FinishedPurchaseTxParams{
-					UserAddress:    userAddress,
-					PaymentMethod:  paymentMethod,
-					ShoppingCart:   shoppingCart,
-					ShippingMethod: shippingMethod,
-					OrderStatus:    orderStatus,
-					OrderTotal:     orderTotal,
+					UserID:           user.ID,
+					UserAddressID:    userAddress.AddressID,
+					PaymentMethodID:  paymentMethod.ID,
+					ShoppingCartID:   shoppingCart.ID,
+					ShippingMethodID: shippingMethod.ID,
+					OrderStatusID:    orderStatus.ID,
+					OrderTotal:       orderTotal,
 				}
 
 				store.EXPECT().
@@ -1094,35 +1039,9 @@ func createRandomOrderStatus(t *testing.T) (orderStatus db.OrderStatus) {
 
 func createRandomFinishedPurchase(t *testing.T) (finishedPurchase db.FinishedPurchaseTxResult) {
 	finishedPurchase = db.FinishedPurchaseTxResult{
-		UpdatedProductItem: db.ProductItem{
-			ID:           util.RandomMoney(),
-			ProductID:    util.RandomMoney(),
-			ProductSku:   util.RandomMoney(),
-			QtyInStock:   int32(util.RandomMoney()),
-			ProductImage: util.RandomUser(),
-			Price:        util.RandomDecimalString(1, 100),
-			Active:       util.RandomBool(),
-		},
-		OrderStatus: db.OrderStatus{
-			ID:     util.RandomMoney(),
-			Status: util.RandomUser(),
-		},
-		ShopOrder: db.ShopOrder{
-			ID:                util.RandomMoney(),
-			UserID:            util.RandomMoney(),
-			PaymentMethodID:   util.RandomMoney(),
-			ShippingAddressID: util.RandomMoney(),
-			OrderTotal:        util.RandomDecimalString(1, 100),
-			ShippingMethodID:  util.RandomMoney(),
-			OrderStatusID:     util.RandomMoney(),
-		},
-		ShopOrderItem: db.ShopOrderItem{
-			ID:            util.RandomMoney(),
-			ProductItemID: util.RandomMoney(),
-			OrderID:       util.RandomMoney(),
-			Quantity:      int32(util.RandomMoney()),
-			Price:         util.RandomDecimalString(1, 100),
-		},
+		UpdatedProductItemID: util.RandomMoney(),
+		ShopOrderID:          util.RandomMoney(),
+		ShopOrderItemID:      util.RandomMoney(),
 	}
 	return
 }

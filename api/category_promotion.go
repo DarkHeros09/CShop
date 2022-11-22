@@ -59,19 +59,33 @@ func (server *Server) createCategoryPromotion(ctx *gin.Context) {
 
 //////////////* Get API //////////////
 
-type getCategoryPromotionRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getCategoryPromotionUriRequest struct {
+	PromotionID int64 `uri:"id" binding:"required,min=1"`
+}
+type getCategoryPromotionJsonRequest struct {
+	CategoryID int64 `json:"category_id" binding:"required,min=1"`
 }
 
 func (server *Server) getCategoryPromotion(ctx *gin.Context) {
-	var req getCategoryPromotionRequest
+	var uri getCategoryPromotionUriRequest
+	var req getCategoryPromotionJsonRequest
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	categoryPromotion, err := server.store.GetCategoryPromotion(ctx, req.ID)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.GetCategoryPromotionParams{
+		CategoryID:  req.CategoryID,
+		PromotionID: uri.PromotionID,
+	}
+
+	categoryPromotion, err := server.store.GetCategoryPromotion(ctx, arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -162,7 +176,7 @@ func (server *Server) updateCategoryPromotion(ctx *gin.Context) {
 
 	arg := db.UpdateCategoryPromotionParams{
 		CategoryID:  req.CategoryID,
-		PromotionID: null.IntFromPtr(&req.PromotionID),
+		PromotionID: req.PromotionID,
 		Active:      null.BoolFromPtr(&req.Active),
 	}
 
@@ -183,12 +197,16 @@ func (server *Server) updateCategoryPromotion(ctx *gin.Context) {
 
 //////////////* Delete API //////////////
 
-type deleteCategoryPromotionRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteCategoryPromotionUriRequest struct {
+	PromotionID int64 `uri:"id" binding:"required,min=1"`
+}
+type deleteCategoryPromotionJsonRequest struct {
+	CategoryID int64 `json:"category_id" binding:"required,min=1"`
 }
 
 func (server *Server) deleteCategoryPromotion(ctx *gin.Context) {
-	var req deleteCategoryPromotionRequest
+	var uri deleteCategoryPromotionUriRequest
+	var req deleteCategoryPromotionJsonRequest
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
@@ -197,12 +215,22 @@ func (server *Server) deleteCategoryPromotion(ctx *gin.Context) {
 		return
 	}
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&uri); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	err := server.store.DeleteCategoryPromotion(ctx, req.ID)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.DeleteCategoryPromotionParams{
+		CategoryID:  req.CategoryID,
+		PromotionID: uri.PromotionID,
+	}
+
+	err := server.store.DeleteCategoryPromotion(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

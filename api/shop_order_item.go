@@ -13,7 +13,7 @@ import (
 //////////////* Get API //////////////
 
 type getShopOrderItemUriRequest struct {
-	ShopOrderID int64 `uri:"shop-order-id" binding:"required,min=1"`
+	ShopOrderID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type getShopOrderItemJsonRequest struct {

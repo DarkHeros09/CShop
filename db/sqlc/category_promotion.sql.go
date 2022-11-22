@@ -38,20 +38,34 @@ func (q *Queries) CreateCategoryPromotion(ctx context.Context, arg CreateCategor
 const deleteCategoryPromotion = `-- name: DeleteCategoryPromotion :exec
 DELETE FROM "category_promotion"
 WHERE category_id = $1
+AND promotion_id = $2
+RETURNING category_id, promotion_id, active
 `
 
-func (q *Queries) DeleteCategoryPromotion(ctx context.Context, categoryID int64) error {
-	_, err := q.db.Exec(ctx, deleteCategoryPromotion, categoryID)
+type DeleteCategoryPromotionParams struct {
+	CategoryID  int64 `json:"category_id"`
+	PromotionID int64 `json:"promotion_id"`
+}
+
+func (q *Queries) DeleteCategoryPromotion(ctx context.Context, arg DeleteCategoryPromotionParams) error {
+	_, err := q.db.Exec(ctx, deleteCategoryPromotion, arg.CategoryID, arg.PromotionID)
 	return err
 }
 
 const getCategoryPromotion = `-- name: GetCategoryPromotion :one
 SELECT category_id, promotion_id, active FROM "category_promotion"
-WHERE category_id = $1 LIMIT 1
+WHERE category_id = $1
+AND promotion_id = $2 
+LIMIT 1
 `
 
-func (q *Queries) GetCategoryPromotion(ctx context.Context, categoryID int64) (CategoryPromotion, error) {
-	row := q.db.QueryRow(ctx, getCategoryPromotion, categoryID)
+type GetCategoryPromotionParams struct {
+	CategoryID  int64 `json:"category_id"`
+	PromotionID int64 `json:"promotion_id"`
+}
+
+func (q *Queries) GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error) {
+	row := q.db.QueryRow(ctx, getCategoryPromotion, arg.CategoryID, arg.PromotionID)
 	var i CategoryPromotion
 	err := row.Scan(&i.CategoryID, &i.PromotionID, &i.Active)
 	return i, err
@@ -92,20 +106,20 @@ func (q *Queries) ListCategoryPromotions(ctx context.Context, arg ListCategoryPr
 const updateCategoryPromotion = `-- name: UpdateCategoryPromotion :one
 UPDATE "category_promotion"
 SET
-promotion_id = COALESCE($1,promotion_id),
-active = COALESCE($2,active)
-WHERE category_id = $3
+active = COALESCE($1,active)
+WHERE category_id = $2
+AND promotion_id = $3
 RETURNING category_id, promotion_id, active
 `
 
 type UpdateCategoryPromotionParams struct {
-	PromotionID null.Int  `json:"promotion_id"`
 	Active      null.Bool `json:"active"`
 	CategoryID  int64     `json:"category_id"`
+	PromotionID int64     `json:"promotion_id"`
 }
 
 func (q *Queries) UpdateCategoryPromotion(ctx context.Context, arg UpdateCategoryPromotionParams) (CategoryPromotion, error) {
-	row := q.db.QueryRow(ctx, updateCategoryPromotion, arg.PromotionID, arg.Active, arg.CategoryID)
+	row := q.db.QueryRow(ctx, updateCategoryPromotion, arg.Active, arg.CategoryID, arg.PromotionID)
 	var i CategoryPromotion
 	err := row.Scan(&i.CategoryID, &i.PromotionID, &i.Active)
 	return i, err

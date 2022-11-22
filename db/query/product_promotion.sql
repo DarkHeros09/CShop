@@ -10,8 +10,8 @@ RETURNING *;
 
 -- name: GetProductPromotion :one
 SELECT * FROM "product_promotion"
-WHERE product_id = sqlc.arg(product_id)
-AND promotion_id = sqlc.arg(promotion_id)
+WHERE product_id = $1
+AND promotion_id = $2
 LIMIT 1;
 
 -- name: ListProductPromotions :many

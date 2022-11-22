@@ -68,7 +68,7 @@ func (server *Server) createWishListItem(ctx *gin.Context) {
 //////////////* Get API //////////////
 
 type getWishListItemUriRequest struct {
-	WishListID int64 `uri:"wish-list-id" binding:"required,min=1"`
+	WishListID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type getWishListItemJsonRequest struct {
@@ -146,7 +146,7 @@ func (server *Server) listWishListItems(ctx *gin.Context) {
 
 // ////////////* UPDATE API //////////////
 type updateWishListItemUriRequest struct {
-	WishListID int64 `uri:"wish-list-id" binding:"required,min=1"`
+	WishListID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type updateWishListItemJsonRequest struct {

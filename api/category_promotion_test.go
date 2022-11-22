@@ -27,15 +27,23 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		CategoryID    int64
+		body          gin.H
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:       "OK",
-			CategoryID: categoryPromotion.CategoryID,
+			CategoryID: categoryPromotion.PromotionID,
+			body: gin.H{
+				"category_id": categoryPromotion.CategoryID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					GetCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					GetCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(categoryPromotion, nil)
 			},
@@ -47,10 +55,17 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 
 		{
 			name:       "NotFound",
-			CategoryID: categoryPromotion.CategoryID,
+			CategoryID: categoryPromotion.PromotionID,
+			body: gin.H{
+				"category_id": categoryPromotion.CategoryID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					GetCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					GetCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrNoRows)
 			},
@@ -60,10 +75,17 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 		},
 		{
 			name:       "InternalError",
-			CategoryID: categoryPromotion.CategoryID,
+			CategoryID: categoryPromotion.PromotionID,
+			body: gin.H{
+				"category_id": categoryPromotion.CategoryID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					GetCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					GetCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
@@ -74,6 +96,9 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 		{
 			name:       "InvalidID",
 			CategoryID: 0,
+			body: gin.H{
+				"category_id": categoryPromotion.CategoryID,
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetCategoryPromotion(gomock.Any(), gomock.Any()).
@@ -101,8 +126,12 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
 			url := fmt.Sprintf("/category-promotions/%d", tc.CategoryID)
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)
@@ -404,7 +433,7 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateCategoryPromotionParams{
-					PromotionID: null.IntFromPtr(&categoryPromotion.PromotionID),
+					PromotionID: categoryPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&categoryPromotion.Active),
 					CategoryID:  categoryPromotion.CategoryID,
 				}
@@ -431,7 +460,7 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateCategoryPromotionParams{
-					PromotionID: null.IntFromPtr(&categoryPromotion.PromotionID),
+					PromotionID: categoryPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&categoryPromotion.Active),
 					CategoryID:  categoryPromotion.CategoryID,
 				}
@@ -456,7 +485,7 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateCategoryPromotionParams{
-					PromotionID: null.IntFromPtr(&categoryPromotion.PromotionID),
+					PromotionID: categoryPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&categoryPromotion.Active),
 					CategoryID:  categoryPromotion.CategoryID,
 				}
@@ -482,7 +511,7 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateCategoryPromotionParams{
-					PromotionID: null.IntFromPtr(&categoryPromotion.PromotionID),
+					PromotionID: categoryPromotion.PromotionID,
 					Active:      null.BoolFromPtr(&categoryPromotion.Active),
 					CategoryID:  categoryPromotion.CategoryID,
 				}
@@ -546,23 +575,27 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		CategoryID    int64
+		PromotionID   int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:       "OK",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "OK",
+			PromotionID: categoryPromotion.PromotionID,
 			body: gin.H{
-				"id": categoryPromotion.CategoryID,
+				"category_id": categoryPromotion.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(nil)
 			},
@@ -571,17 +604,21 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:       "Unauthorized",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "Unauthorized",
+			PromotionID: categoryPromotion.PromotionID,
 			body: gin.H{
-				"id": categoryPromotion.CategoryID,
+				"category_id": categoryPromotion.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -589,16 +626,20 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:       "NoAuthorization",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "NoAuthorization",
+			PromotionID: categoryPromotion.PromotionID,
 			body: gin.H{
-				"id": categoryPromotion.CategoryID,
+				"category_id": categoryPromotion.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -606,17 +647,21 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:       "NotFound",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "NotFound",
+			PromotionID: categoryPromotion.PromotionID,
 			body: gin.H{
-				"id": categoryPromotion.CategoryID,
+				"category_id": categoryPromotion.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
@@ -625,17 +670,21 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:       "InternalError",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "InternalError",
+			PromotionID: categoryPromotion.PromotionID,
 			body: gin.H{
-				"id": categoryPromotion.CategoryID,
+				"category_id": categoryPromotion.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteCategoryPromotionParams{
+					CategoryID:  categoryPromotion.CategoryID,
+					PromotionID: categoryPromotion.PromotionID,
+				}
 				store.EXPECT().
-					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(categoryPromotion.CategoryID)).
+					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
@@ -644,10 +693,10 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:       "InvalidID",
-			CategoryID: 0,
+			name:        "InvalidID",
+			PromotionID: 0,
 			body: gin.H{
-				"id": 0,
+				"category_id": 0,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -683,7 +732,7 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/category-promotions/%d", tc.CategoryID)
+			url := fmt.Sprintf("/category-promotions/%d", tc.PromotionID)
 			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

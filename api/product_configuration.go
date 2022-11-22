@@ -58,7 +58,7 @@ func (server *Server) createProductConfiguration(ctx *gin.Context) {
 //////////////* Get API //////////////
 
 type getProductConfigurationRequest struct {
-	ProductItemID int64 `uri:"product-item-id" binding:"required,min=1"`
+	ProductItemID int64 `uri:"id" binding:"required,min=1"`
 }
 
 func (server *Server) getProductConfiguration(ctx *gin.Context) {
@@ -128,7 +128,7 @@ func (server *Server) listProductConfigurations(ctx *gin.Context) {
 //////////////* Update API //////////////
 
 type updateProductConfigurationUriRequest struct {
-	ProductItemID int64 `uri:"product-item-id" binding:"required,min=1"`
+	ProductItemID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type updateProductConfigurationJsonRequest struct {
@@ -179,7 +179,7 @@ func (server *Server) updateProductConfiguration(ctx *gin.Context) {
 //////////////* Delete API //////////////
 
 type deleteProductConfigurationRequest struct {
-	ProductItemID int64 `uri:"product-item-id" binding:"required,min=1"`
+	ProductItemID int64 `uri:"id" binding:"required,min=1"`
 }
 
 func (server *Server) deleteProductConfiguration(ctx *gin.Context) {

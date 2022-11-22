@@ -35,7 +35,12 @@ func TestCreateCategoryPromotion(t *testing.T) {
 
 func TestGetCategoryPromotion(t *testing.T) {
 	CategoryPromotion1 := createRandomCategoryPromotion(t)
-	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), CategoryPromotion1.CategoryID)
+
+	arg := GetCategoryPromotionParams{
+		CategoryID:  CategoryPromotion1.CategoryID,
+		PromotionID: CategoryPromotion1.PromotionID,
+	}
+	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, CategoryPromotion2)
@@ -48,7 +53,7 @@ func TestGetCategoryPromotion(t *testing.T) {
 func TestUpdateCategoryPromotionActive(t *testing.T) {
 	CategoryPromotion1 := createRandomCategoryPromotion(t)
 	arg := UpdateCategoryPromotionParams{
-		PromotionID: null.Int{},
+		PromotionID: CategoryPromotion1.PromotionID,
 		Active:      null.BoolFrom(!CategoryPromotion1.Active),
 		CategoryID:  CategoryPromotion1.CategoryID,
 	}
@@ -64,11 +69,20 @@ func TestUpdateCategoryPromotionActive(t *testing.T) {
 
 func TestDeleteCategoryPromotion(t *testing.T) {
 	CategoryPromotion1 := createRandomCategoryPromotion(t)
-	err := testQueires.DeleteCategoryPromotion(context.Background(), CategoryPromotion1.CategoryID)
+	arg1 := DeleteCategoryPromotionParams{
+		CategoryID:  CategoryPromotion1.CategoryID,
+		PromotionID: CategoryPromotion1.PromotionID,
+	}
+	err := testQueires.DeleteCategoryPromotion(context.Background(), arg1)
 
 	require.NoError(t, err)
 
-	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), CategoryPromotion1.CategoryID)
+	arg := GetCategoryPromotionParams{
+		CategoryID:  CategoryPromotion1.CategoryID,
+		PromotionID: CategoryPromotion1.PromotionID,
+	}
+
+	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

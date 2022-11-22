@@ -78,9 +78,9 @@ func (server *Server) setupRouter() {
 	userRoutes.PUT("/users/cart/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
 
 	userRoutes.POST("/users/wish-list", server.createWishListItem)                       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/wish-list/:wish-list-id", server.getWishListItem)             //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/wish-list/:id", server.getWishListItem)                       //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/wish-list", server.listWishListItems)                         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/wish-list/:wish-list-id", server.updateWishListItem)          //* Finished With tests (token and changed response... No Etag)
+	userRoutes.PUT("/users/wish-list/:id", server.updateWishListItem)                    //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/wish-list/:wish-list-item-id", server.deleteWishListItem)  //* Finished With tests (token and changed response... No Etag)
 	userRoutes.DELETE("/users/wish-list/delete-all", server.deleteWishListItemAllByUser) //* Finished With tests (token and changed response... No Etag)
 
@@ -138,14 +138,14 @@ func (server *Server) setupRouter() {
 	adminRoutes.PUT("/product-items/:id", server.updateProductItem)    //! Admin Only # Finished With tests (token and changed response... No Etag)
 	adminRoutes.DELETE("/product-items/:id", server.deleteProductItem) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/product-configurations", server.createProductConfiguration)                    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-configurations/:product-item-id", server.getProductConfiguration)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-configurations", server.listProductConfigurations)                           //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/product-configurations/:product-item-id", server.updateProductConfiguration)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/product-configurations/:product-item-id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.POST("/product-configurations", server.createProductConfiguration)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-configurations/:id", server.getProductConfiguration)            //? no auth required # Finished With tests (token and changed response... No Etag)
+	router.GET("/product-configurations", server.listProductConfigurations)              //? no auth required # Finished With tests (token and changed response.)
+	adminRoutes.PUT("/product-configurations/:id", server.updateProductConfiguration)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRoutes.DELETE("/product-configurations/:id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	userRoutes.GET("/users/shop-order/:shop-order-id", server.getShopOrderItem) //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/shop-order", server.listShopOrderItems)              //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/shop-order/:id", server.getShopOrderItem) //* Finished With tests (token and changed response... No Etag)
+	userRoutes.GET("/users/shop-order", server.listShopOrderItems)   //* Finished With tests (token and changed response... No Etag)
 
 	userRoutes.POST("/users/order-status", server.createOrderStatus)        //* Finished With tests (token and changed response... No Etag)
 	userRoutes.GET("/users/order-status/:id", server.getOrderStatus)        //* Finished With tests (token and changed response... No Etag)

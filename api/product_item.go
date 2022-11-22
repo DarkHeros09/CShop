@@ -140,7 +140,7 @@ type updateProductItemUriRequest struct {
 }
 
 type updateProductItemJsonRequest struct {
-	ProductID    int64  `json:"product_id" binding:"omitempty,omitempty,required,min=1"`
+	ProductID    int64  `json:"product_id" binding:"required,min=1"`
 	ProductSKU   int64  `json:"product_sku" binding:"omitempty,required"`
 	QtyInStock   int64  `json:"qty_in_stock" binding:"omitempty,required"`
 	ProductImage string `json:"product_image" binding:"omitempty,required,url"`
@@ -170,13 +170,13 @@ func (server *Server) updateProductItem(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateProductItemParams{
-		ProductID:    null.IntFromPtr(&req.ProductID),
+		ID:           uri.ID,
+		ProductID:    req.ProductID,
 		ProductSku:   null.IntFromPtr(&req.ProductSKU),
 		QtyInStock:   null.IntFromPtr(&req.QtyInStock),
 		ProductImage: null.StringFromPtr(&req.ProductImage),
 		Price:        null.StringFromPtr(&req.Price),
 		Active:       null.BoolFromPtr(&req.Active),
-		ID:           uri.ID,
 	}
 
 	productItem, err := server.store.UpdateProductItem(ctx, arg)

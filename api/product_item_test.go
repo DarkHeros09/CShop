@@ -425,7 +425,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductItemParams{
-					ProductID:    null.IntFrom(productItem.ProductID),
+					ProductID:    productItem.ProductID,
 					ProductSku:   null.IntFrom(productItem.ProductSku),
 					QtyInStock:   null.IntFrom(int64(productItem.QtyInStock)),
 					ProductImage: null.StringFrom(productItem.ProductImage),
@@ -459,7 +459,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductItemParams{
-					ProductID:    null.IntFrom(productItem.ProductID),
+					ProductID:    productItem.ProductID,
 					ProductSku:   null.IntFrom(productItem.ProductSku),
 					QtyInStock:   null.IntFrom(int64(productItem.QtyInStock)),
 					ProductImage: null.StringFrom(productItem.ProductImage),
@@ -491,7 +491,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductItemParams{
-					ProductID:    null.IntFrom(productItem.ProductID),
+					ProductID:    productItem.ProductID,
 					ProductSku:   null.IntFrom(productItem.ProductSku),
 					QtyInStock:   null.IntFrom(int64(productItem.QtyInStock)),
 					ProductImage: null.StringFrom(productItem.ProductImage),
@@ -524,7 +524,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductItemParams{
-					ProductID:    null.IntFrom(productItem.ProductID),
+					ProductID:    productItem.ProductID,
 					ProductSku:   null.IntFrom(productItem.ProductSku),
 					QtyInStock:   null.IntFrom(int64(productItem.QtyInStock)),
 					ProductImage: null.StringFrom(productItem.ProductImage),
