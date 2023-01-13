@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -28,26 +27,24 @@ func TestCreateWishListItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
+		UserID        int64
+		WishListID    int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:       "OK",
+			UserID:     user.ID,
+			WishListID: wishList.ID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetWishListByUserID(gomock.Any(), gomock.Eq(user.ID)).
-					Times(1).
-					Return(wishList, nil)
 
 				arg := db.CreateWishListItemParams{
 					WishListID:    wishListItem.WishListID,
@@ -59,47 +56,41 @@ func TestCreateWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(wishListItem, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchWishListItem(t, recorder.Body, wishListItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchWishListItem(t, rsp.Body, wishListItem)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:       "NoAuthorization",
+			UserID:     user.ID,
+			WishListID: wishList.ID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetWishListByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
 
 				store.EXPECT().
 					CreateWishListItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:       "InternalError",
+			UserID:     user.ID,
+			WishListID: wishList.ID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetWishListByUserID(gomock.Any(), gomock.Eq(user.ID)).
-					Times(1).
-					Return(db.WishList{}, pgx.ErrTxClosed)
 
 				arg := db.CreateWishListItemParams{
 					WishListID:    wishListItem.WishListID,
@@ -108,32 +99,31 @@ func TestCreateWishListItemAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateWishListItem(gomock.Any(), gomock.Eq(arg)).
-					Times(0)
+					Times(1).
+					Return(db.WishListItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			body: gin.H{
-				"user_id":         0,
+			name:       "InvalidUserID",
+			UserID:     0,
+			WishListID: wishList.ID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetWishListByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
 
 				store.EXPECT().
 					CreateWishListItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -148,19 +138,22 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/wish-list"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -171,19 +164,19 @@ func TestGetWishListItemAPI(t *testing.T) {
 	wishListItem := createRandomWishListItemForGet(t, wishList)
 
 	testCases := []struct {
-		name          string
-		WishListID    int64
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		name           string
+		WishListID     int64
+		WishListItemID int64
+		UserID         int64
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs     func(store *mockdb.MockStore)
+		checkResponse  func(rsp *http.Response)
 	}{
 		{
-			name:       "OK",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:           "OK",
+			WishListID:     wishList.ID,
+			WishListItemID: wishListItem.ID,
+			UserID:         user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -192,6 +185,7 @@ func TestGetWishListItemAPI(t *testing.T) {
 				arg := db.GetWishListItemByUserIDCartIDParams{
 					UserID:     user.ID,
 					WishListID: wishList.ID,
+					ID:         wishListItem.ID,
 				}
 
 				store.EXPECT().
@@ -200,17 +194,16 @@ func TestGetWishListItemAPI(t *testing.T) {
 					Return(wishListItem, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchWishListItemForGet(t, recorder.Body, wishListItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchWishListItemForGet(t, rsp.Body, wishListItem)
 			},
 		},
 		{
-			name:       "NoAuthorization",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:           "NoAuthorization",
+			WishListID:     wishList.ID,
+			UserID:         user.ID,
+			WishListItemID: wishListItem.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -218,16 +211,15 @@ func TestGetWishListItemAPI(t *testing.T) {
 					GetWishListItemByUserIDCartID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InternalError",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:           "InternalError",
+			WishListID:     wishList.ID,
+			UserID:         user.ID,
+			WishListItemID: wishListItem.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -235,24 +227,24 @@ func TestGetWishListItemAPI(t *testing.T) {
 				arg := db.GetWishListItemByUserIDCartIDParams{
 					UserID:     user.ID,
 					WishListID: wishList.ID,
+					ID:         wishListItem.ID,
 				}
 
 				store.EXPECT().
 					GetWishListItemByUserIDCartID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetWishListItemByUserIDCartIDRow{}, pgx.ErrTxClosed)
+					Return(db.WishListItem{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InvalidUserID",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"user_id": 0,
-			},
+			name:           "InvalidUserID",
+			WishListID:     wishList.ID,
+			UserID:         0,
+			WishListItemID: wishListItem.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -261,8 +253,8 @@ func TestGetWishListItemAPI(t *testing.T) {
 					GetWishListItemByUserIDCartID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -277,23 +269,23 @@ func TestGetWishListItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/wish-list/%d", tc.WishListID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
 
+// ! not query
 func TestListWishListItemAPI(t *testing.T) {
 	user, _ := randomWLIUser(t)
 	wishList := createRandomWishList(t, user)
@@ -306,16 +298,16 @@ func TestListWishListItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		UserID        int64
+		WishID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "OK",
+			UserID: user.ID,
+			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -327,16 +319,15 @@ func TestListWishListItemAPI(t *testing.T) {
 					Return(wishListItems, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchListWishListItem(t, recorder.Body, wishListItems)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListWishListItem(t, rsp.Body, wishListItems)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "NoAuthorization",
+			UserID: user.ID,
+			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -344,15 +335,14 @@ func TestListWishListItemAPI(t *testing.T) {
 					ListWishListItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InternalError",
+			UserID: user.ID,
+			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -364,15 +354,14 @@ func TestListWishListItemAPI(t *testing.T) {
 					Return([]db.ListWishListItemsByUserIDRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			body: gin.H{
-				"user_id": 0,
-			},
+			name:   "InvalidUserID",
+			UserID: 0,
+			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -381,8 +370,8 @@ func TestListWishListItemAPI(t *testing.T) {
 					ListWishListItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -397,19 +386,18 @@ func TestListWishListItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := "/users/wish-list"
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -420,19 +408,21 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 	wishListItem := createRandomWishListItemForUpdate(t, wishList)
 
 	testCases := []struct {
-		name          string
-		WishListID    int64
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name           string
+		UserID         int64
+		WishListID     int64
+		WishListItemID int64
+		body           fiber.Map
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs     func(store *mockdb.MockStore)
+		checkResponse  func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:       "OK",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"id":              wishListItem.ID,
-				"user_id":         wishList.UserID,
+			name:           "OK",
+			WishListID:     wishList.ID,
+			WishListItemID: wishListItem.ID,
+			UserID:         wishList.UserID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -451,16 +441,16 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(wishListItem, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "NoAuthorization",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"id":              wishListItem.ID,
-				"user_id":         wishList.UserID,
+			name:           "NoAuthorization",
+			WishListID:     wishList.ID,
+			WishListItemID: wishListItem.ID,
+			UserID:         wishList.UserID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -470,16 +460,16 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 					UpdateWishListItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InternalError",
-			WishListID: wishList.ID,
-			body: gin.H{
-				"id":              wishListItem.ID,
-				"user_id":         wishList.UserID,
+			name:           "InternalError",
+			WishListID:     wishList.ID,
+			WishListItemID: wishListItem.ID,
+			UserID:         wishList.UserID,
+			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -495,16 +485,18 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateWishListItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UpdateWishListItemRow{}, pgx.ErrTxClosed)
+					Return(db.WishListItem{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InvalidCartID",
-			WishListID: 0,
+			name:           "InvalidWishListID",
+			WishListID:     0,
+			WishListItemID: wishListItem.ID,
+			UserID:         wishList.UserID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -514,8 +506,8 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -530,19 +522,22 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/wish-list/%d", tc.WishListID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -555,24 +550,24 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 	testCases := []struct {
 		name           string
 		WishListItemID int64
-		body           gin.H
+		UserID         int64
+		WishListID     int64
 		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub      func(store *mockdb.MockStore)
-		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse  func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:           "OK",
 			WishListItemID: wishListItem.ID,
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			UserID:         wishList.UserID,
+			WishListID:     wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteWishListItemParams{
-					ID:     wishListItem.ID,
-					UserID: wishListItem.UserID,
+					ID:         wishListItem.ID,
+					WishListID: wishList.ID,
 				}
 
 				store.EXPECT().
@@ -580,23 +575,22 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:           "NotFound",
 			WishListItemID: wishListItem.ID,
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			UserID:         wishList.UserID,
+			WishListID:     wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteWishListItemParams{
-					ID:     wishListItem.ID,
-					UserID: wishListItem.UserID,
+					ID:         wishListItem.ID,
+					WishListID: wishList.ID,
 				}
 
 				store.EXPECT().
@@ -604,23 +598,22 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:           "InternalError",
 			WishListItemID: wishListItem.ID,
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			UserID:         wishList.UserID,
+			WishListID:     wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteWishListItemParams{
-					ID:     wishListItem.ID,
-					UserID: wishListItem.UserID,
+					ID:         wishListItem.ID,
+					WishListID: wishList.ID,
 				}
 
 				store.EXPECT().
@@ -628,16 +621,15 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:           "InvalidID",
 			WishListItemID: 0,
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			UserID:         wishList.UserID,
+			WishListID:     wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -647,8 +639,8 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -666,27 +658,25 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/wish-list/%d", tc.WishListItemID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
 
 }
 
-func TestDeleteWishListItemAllByUserAPI(t *testing.T) {
+func TestDeleteWishListItemAllAPI(t *testing.T) {
 	user, _ := randomWLIUser(t)
 	wishList := createRandomWishList(t, user)
 	wishListItem := createRandomWishListItem(t, wishList)
@@ -696,73 +686,70 @@ func TestDeleteWishListItemAllByUserAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		UserID        int64
+		WishListID    int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			name:       "OK",
+			UserID:     wishList.UserID,
+			WishListID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteWishListItemAllByUser(gomock.Any(), gomock.Eq(wishList.UserID)).
+					DeleteWishListItemAll(gomock.Any(), gomock.Eq(wishList.ID)).
 					Times(1).
 					Return(wishListItemList, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			name:       "NotFound",
+			UserID:     wishList.UserID,
+			WishListID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteWishListItemAllByUser(gomock.Any(), gomock.Eq(wishList.UserID)).
+					DeleteWishListItemAll(gomock.Any(), gomock.Eq(wishList.ID)).
 					Times(1).
 					Return([]db.WishListItem{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id": wishList.UserID,
-			},
+			name:       "InternalError",
+			UserID:     wishList.UserID,
+			WishListID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					DeleteWishListItemAllByUser(gomock.Any(), gomock.Eq(wishList.UserID)).
+					DeleteWishListItemAll(gomock.Any(), gomock.Eq(wishList.ID)).
 					Times(1).
 					Return([]db.WishListItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
-				"user_id": 0,
-			},
+			name:       "InvalidID",
+			UserID:     0,
+			WishListID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -772,8 +759,8 @@ func TestDeleteWishListItemAllByUserAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -791,20 +778,18 @@ func TestDeleteWishListItemAllByUserAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := "/users/wish-list/delete-all"
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -843,22 +828,20 @@ func createRandomWishListItem(t *testing.T, wishList db.WishList) (wishListItem 
 	return
 }
 
-func createRandomWishListItemForGet(t *testing.T, wishList db.WishList) (wishListItem db.GetWishListItemByUserIDCartIDRow) {
-	wishListItem = db.GetWishListItemByUserIDCartIDRow{
+func createRandomWishListItemForGet(t *testing.T, wishList db.WishList) (wishListItem db.WishListItem) {
+	wishListItem = db.WishListItem{
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
-		UserID:        null.IntFrom(wishList.UserID),
 	}
 	return
 }
 
-func createRandomWishListItemForUpdate(t *testing.T, wishList db.WishList) (wishListItem db.UpdateWishListItemRow) {
-	wishListItem = db.UpdateWishListItemRow{
+func createRandomWishListItemForUpdate(t *testing.T, wishList db.WishList) (wishListItem db.WishListItem) {
+	wishListItem = db.WishListItem{
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
-		UserID:        wishList.UserID,
 	}
 	return
 }
@@ -874,7 +857,7 @@ func createRandomListWishListItem(t *testing.T, wishList db.WishList) (wishListI
 	return
 }
 
-func requireBodyMatchWishListItem(t *testing.T, body *bytes.Buffer, wishListItem db.WishListItem) {
+func requireBodyMatchWishListItem(t *testing.T, body io.ReadCloser, wishListItem db.WishListItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -888,11 +871,11 @@ func requireBodyMatchWishListItem(t *testing.T, body *bytes.Buffer, wishListItem
 	require.Equal(t, wishListItem.CreatedAt, gotWishListItem.CreatedAt)
 }
 
-func requireBodyMatchWishListItemForGet(t *testing.T, body *bytes.Buffer, wishListItem db.GetWishListItemByUserIDCartIDRow) {
+func requireBodyMatchWishListItemForGet(t *testing.T, body io.ReadCloser, wishListItem db.WishListItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotWishListItem db.GetWishListItemByUserIDCartIDRow
+	var gotWishListItem db.WishListItem
 	err = json.Unmarshal(data, &gotWishListItem)
 
 	require.NoError(t, err)
@@ -900,10 +883,9 @@ func requireBodyMatchWishListItemForGet(t *testing.T, body *bytes.Buffer, wishLi
 	require.Equal(t, wishListItem.WishListID, gotWishListItem.WishListID)
 	require.Equal(t, wishListItem.ProductItemID, gotWishListItem.ProductItemID)
 	require.Equal(t, wishListItem.CreatedAt, gotWishListItem.CreatedAt)
-	require.Equal(t, wishListItem.UserID, gotWishListItem.UserID)
 }
 
-func requireBodyMatchListWishListItem(t *testing.T, body *bytes.Buffer, WishListItem []db.ListWishListItemsByUserIDRow) {
+func requireBodyMatchListWishListItem(t *testing.T, body io.ReadCloser, WishListItem []db.ListWishListItemsByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

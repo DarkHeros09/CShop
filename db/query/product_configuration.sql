@@ -9,7 +9,9 @@ RETURNING *;
 
 -- name: GetProductConfiguration :one
 SELECT * FROM "product_configuration"
-WHERE product_item_id = $1 LIMIT 1;
+WHERE product_item_id = $1 
+AND variation_option_id = $2
+LIMIT 1;
 
 -- name: ListProductConfigurations :many
 SELECT * FROM "product_configuration"
@@ -26,4 +28,5 @@ RETURNING *;
 
 -- name: DeleteProductConfiguration :exec
 DELETE FROM "product_configuration"
-WHERE product_item_id = $1;
+WHERE product_item_id = $1
+AND variation_option_id = $2;

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -27,15 +26,16 @@ func TestCreateUserReviewAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
-			body: gin.H{
-				"user_id":            user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       userReview.RatingValue,
 			},
@@ -55,15 +55,15 @@ func TestCreateUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(userReview, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserReview(t, recorder.Body, userReview)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserReview(t, rsp.Body, userReview)
 			},
 		},
 		{
 			name: "NoAuthorization",
-			body: gin.H{
-				"user_id":            user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       userReview.RatingValue,
 			},
@@ -74,14 +74,14 @@ func TestCreateUserReviewAPI(t *testing.T) {
 					CreateUserReview(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InternalError",
-			body: gin.H{
-				"user_id":            user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       userReview.RatingValue,
 			},
@@ -100,14 +100,14 @@ func TestCreateUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserReview{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidUserID",
-			body: gin.H{
-				"user_id":            0,
+			ID:   0,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       userReview.RatingValue,
 			},
@@ -119,8 +119,8 @@ func TestCreateUserReviewAPI(t *testing.T) {
 					CreateUserReview(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -135,19 +135,22 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/reviews"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/reviews", tc.ID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -159,17 +162,15 @@ func TestGetUserReviewAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id": userReview.UserID,
-			},
+			name:   "OK",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -183,17 +184,15 @@ func TestGetUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(userReview, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserReview(t, recorder.Body, userReview)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserReview(t, rsp.Body, userReview)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id": userReview.UserID,
-			},
+			name:   "NoAuthorization",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -201,16 +200,14 @@ func TestGetUserReviewAPI(t *testing.T) {
 					GetUserReview(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id": userReview.UserID,
-			},
+			name:   "NotFound",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -224,16 +221,14 @@ func TestGetUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserReview{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id": userReview.UserID,
-			},
+			name:   "InternalError",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -247,16 +242,14 @@ func TestGetUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserReview{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			ID:   0,
-			body: gin.H{
-				"user_id": userReview.UserID,
-			},
+			name:   "InvalidID",
+			ID:     0,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -266,8 +259,8 @@ func TestGetUserReviewAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -284,20 +277,18 @@ func TestGetUserReviewAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/reviews/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -322,12 +313,14 @@ func TestListUsersReviewAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		query         Query
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -347,13 +340,14 @@ func TestListUsersReviewAPI(t *testing.T) {
 					Times(1).
 					Return(userReviews, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserReviews(t, recorder.Body, userReviews)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserReviews(t, rsp.Body, userReviews)
 			},
 		},
 		{
 			name: "InternalError",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -367,12 +361,13 @@ func TestListUsersReviewAPI(t *testing.T) {
 					Times(1).
 					Return([]db.UserReview{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidPageID",
+			ID:   user.ID,
 			query: Query{
 				pageID:   -1,
 				pageSize: n,
@@ -385,12 +380,13 @@ func TestListUsersReviewAPI(t *testing.T) {
 					ListUserReviews(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidPageSize",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: 100000,
@@ -403,8 +399,8 @@ func TestListUsersReviewAPI(t *testing.T) {
 					ListUserReviews(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -419,10 +415,10 @@ func TestListUsersReviewAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
-			url := "/users/reviews"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/users/%d/reviews", tc.ID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -432,8 +428,11 @@ func TestListUsersReviewAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -445,16 +444,17 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		UserID        int64
+		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id":            userReview.UserID,
+			name:   "OK",
+			ID:     userReview.ID,
+			UserID: userReview.UserID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       3,
 			},
@@ -476,15 +476,15 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 					Return(userReview, nil)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id":            userReview.UserID,
+			name:   "NoAuthorization",
+			ID:     userReview.ID,
+			UserID: userReview.UserID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       3,
 			},
@@ -496,15 +496,15 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id":            userReview.UserID,
+			name:   "InternalError",
+			ID:     userReview.ID,
+			UserID: userReview.UserID,
+			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
 				"rating_value":       3,
 			},
@@ -525,13 +525,14 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 					Return(db.UserReview{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			ID:   0,
+			name:   "InvalidUserID",
+			ID:     0,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -541,8 +542,8 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -557,19 +558,22 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/reviews/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -581,17 +585,15 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   userReview.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "OK",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -606,16 +608,14 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(userReview, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			ID:   userReview.UserID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "NotFound",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -629,16 +629,14 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserReview{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   userReview.UserID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InternalError",
+			ID:     userReview.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -652,16 +650,14 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserReview{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			ID:   0,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InvalidID",
+			ID:     0,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -671,8 +667,8 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -690,20 +686,18 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/reviews/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -735,7 +729,7 @@ func createRandomUserReview(t *testing.T, user db.User) (userReview db.UserRevie
 	return
 }
 
-func requireBodyMatchUserReview(t *testing.T, body *bytes.Buffer, userReview db.UserReview) {
+func requireBodyMatchUserReview(t *testing.T, body io.ReadCloser, userReview db.UserReview) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -749,7 +743,7 @@ func requireBodyMatchUserReview(t *testing.T, body *bytes.Buffer, userReview db.
 	require.Equal(t, userReview.RatingValue, gotUserReview.RatingValue)
 }
 
-func requireBodyMatchUserReviews(t *testing.T, body *bytes.Buffer, userReviews []db.UserReview) {
+func requireBodyMatchUserReviews(t *testing.T, body io.ReadCloser, userReviews []db.UserReview) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

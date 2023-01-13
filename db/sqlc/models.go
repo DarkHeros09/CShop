@@ -137,7 +137,7 @@ type ShopOrder struct {
 	ShippingAddressID int64     `json:"shipping_address_id"`
 	OrderTotal        string    `json:"order_total"`
 	ShippingMethodID  int64     `json:"shipping_method_id"`
-	OrderStatusID     int64     `json:"order_status_id"`
+	OrderStatusID     null.Int  `json:"order_status_id"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }

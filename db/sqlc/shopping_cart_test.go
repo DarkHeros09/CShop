@@ -38,7 +38,12 @@ func TestGetShoppingCart(t *testing.T) {
 func TestGetShoppingCartByUser(t *testing.T) {
 	shoppingCart1 := createRandomShoppingCart(t)
 
-	shoppingCart2, err := testQueires.GetShoppingCartByUserID(context.Background(), shoppingCart1.UserID)
+	arg := GetShoppingCartByUserIDCartIDParams{
+		UserID: shoppingCart1.UserID,
+		ID:     shoppingCart1.ID,
+	}
+
+	shoppingCart2, err := testQueires.GetShoppingCartByUserIDCartID(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart2)
 

@@ -68,7 +68,12 @@ func TestCreateUserWithCart(t *testing.T) {
 	require.NotZero(t, user.CreatedAt)
 	require.True(t, user.UpdatedAt.IsZero())
 
-	shoppingCart, err := testQueires.GetShoppingCartByUserID(context.Background(), user.ID)
+	arg1 := GetShoppingCartByUserIDCartIDParams{
+		UserID: user.ID,
+		ID:     user.ShoppingCartID,
+	}
+
+	shoppingCart, err := testQueires.GetShoppingCartByUserIDCartID(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart)
 

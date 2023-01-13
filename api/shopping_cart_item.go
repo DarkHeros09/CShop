@@ -2,11 +2,11 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -14,338 +14,394 @@ import (
 
 //////////////* Create API //////////////
 
+type createShoppingCartItemParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+}
 type createShoppingCartItemRequest struct {
-	UserID        int64 `json:"user_id" binding:"required,min=1"`
-	ProductItemID int64 `json:"product_item_id" binding:"required,min=1"`
-	QTY           int32 `json:"qty" binding:"required,min=1"`
+	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
+	QTY           int32 `json:"qty" validate:"required,min=1"`
 }
 
-func (server *Server) createShoppingCartItem(ctx *gin.Context) {
+func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
+	var params createShoppingCartItemParamsRequest
 	var req createShoppingCartItemRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	shoppingCart, err := server.store.GetShoppingCartByUserID(ctx, req.UserID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != shoppingCart.UserID {
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateShoppingCartItemParams{
-		ShoppingCartID: shoppingCart.ID,
+		ShoppingCartID: params.ShoppingCartID,
 		ProductItemID:  req.ProductItemID,
 		Qty:            req.QTY,
 	}
 
-	shoppingCartItem, err := server.store.CreateShoppingCartItem(ctx, arg)
+	shoppingCartItem, err := server.store.CreateShoppingCartItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, shoppingCartItem)
+	ctx.Status(fiber.StatusOK).JSON(shoppingCartItem)
+	return nil
 }
 
-//////////////* Get API //////////////
-
-type getShoppingCartItemUriRequest struct {
-	ShoppingCartID int64 `uri:"shopping-cart-id" binding:"required,min=1"`
+// ////////////* Get API //////////////
+type getShoppingCartItemParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
 }
 
-type getShoppingCartItemJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
+	var params getShoppingCartItemParamsRequest
 
-func (server *Server) getShoppingCartItem(ctx *gin.Context) {
-	var uri getShoppingCartItemUriRequest
-	var req getShoppingCartItemJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetShoppingCartItemByUserIDCartIDParams{
-		UserID:         req.UserID,
-		ShoppingCartID: uri.ShoppingCartID,
+		UserID:         params.UserID,
+		ShoppingCartID: params.ShoppingCartID,
 	}
 
-	shoppingCartItem, err := server.store.GetShoppingCartItemByUserIDCartID(ctx, arg)
+	shoppingCartItem, err := server.store.GetShoppingCartItemByUserIDCartID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != shoppingCartItem.UserID.Int64 {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-	ctx.JSON(http.StatusOK, shoppingCartItem)
+	ctx.Status(fiber.StatusOK).JSON(shoppingCartItem)
+	return nil
 }
 
 //////////////* List API //////////////
 
-type listShoppingCartItemsRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
+type listShoppingCartItemsParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
-func (server *Server) listShoppingCartItems(ctx *gin.Context) {
-	var req listShoppingCartItemsRequest
+func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
+	var params listShoppingCartItemsParamsRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
-	ShoppingCartItems, err := server.store.ListShoppingCartItemsByUserID(ctx, authPayload.UserID)
+	shoppingCartItems, err := server.store.ListShoppingCartItemsByUserID(ctx.Context(), authPayload.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, ShoppingCartItems)
+	ctx.Status(fiber.StatusOK).JSON(shoppingCartItems)
+	return nil
 }
 
 // ////////////* UPDATE API //////////////
-type updateShoppingCartItemUriRequest struct {
-	ShoppingCartID int64 `uri:"shopping-cart-id" binding:"required,min=1"`
+type updateShoppingCartItemParamsRequest struct {
+	UserID             int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID     int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartItemID int64 `params:"item_id" validate:"required,min=1"`
 }
 
 type updateShoppingCartItemJsonRequest struct {
-	ID            int64 `json:"id" binding:"required,min=1"`
-	UserID        int64 `json:"user_id" binding:"required,min=1"`
-	ProductItemID int64 `json:"product_item_id" binding:"omitempty,required"`
-	QTY           int64 `json:"qty" binding:"omitempty,required"`
+	ProductItemID int64 `json:"product_item_id" validate:"omitempty,required"`
+	QTY           int64 `json:"qty" validate:"omitempty,required"`
 }
 
-func (server *Server) updateShoppingCartItem(ctx *gin.Context) {
-	var uri updateShoppingCartItemUriRequest
+func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
+	var params updateShoppingCartItemParamsRequest
 	var req updateShoppingCartItemJsonRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateShoppingCartItemParams{
-		ID:             req.ID,
-		ShoppingCartID: uri.ShoppingCartID,
+		ID:             params.ShoppingCartItemID,
+		ShoppingCartID: params.ShoppingCartID,
 		ProductItemID:  null.IntFromPtr(&req.ProductItemID),
 		Qty:            null.IntFromPtr(&req.QTY),
 	}
 
-	shoppingCart, err := server.store.UpdateShoppingCartItem(ctx, arg)
+	shoppingCart, err := server.store.UpdateShoppingCartItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, shoppingCart)
+	ctx.Status(fiber.StatusOK).JSON(shoppingCart)
+	return nil
 }
 
 // ////////////* Delete API //////////////
-type deleteShoppingCartItemUriRequest struct {
-	ShoppingCartItemID int64 `uri:"shopping-cart-item-id" binding:"required,min=1"`
+type deleteShoppingCartItemParamsRequest struct {
+	UserID             int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID     int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartItemID int64 `params:"item_id" validate:"required,min=1"`
 }
 
-type deleteShoppingCartItemJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
+	var params deleteShoppingCartItemParamsRequest
 
-func (server *Server) deleteShoppingCartItem(ctx *gin.Context) {
-	var uri deleteShoppingCartItemUriRequest
-	var req deleteShoppingCartItemJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.DeleteShoppingCartItemParams{
-		ID:     uri.ShoppingCartItemID,
-		UserID: authPayload.UserID,
+		UserID:             authPayload.UserID,
+		ShoppingCartID:     params.ShoppingCartID,
+		ShoppingCartItemID: params.ShoppingCartItemID,
 	}
 
-	err := server.store.DeleteShoppingCartItem(ctx, arg)
+	err := server.store.DeleteShoppingCartItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }
 
 // ////////////* Delete All API //////////////
 
-type deleteShoppingCartItemAllJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
+type deleteShoppingCartItemAllParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShoppingCartItemAllByUser(ctx *gin.Context) {
-	var req deleteShoppingCartItemAllJsonRequest
+func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
+	var params deleteShoppingCartItemAllParamsRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	_, err := server.store.DeleteShoppingCartItemAllByUser(ctx, authPayload.UserID)
+	arg := db.DeleteShoppingCartItemAllByUserParams{
+		UserID:         params.UserID,
+		ShoppingCartID: params.ShoppingCartID,
+	}
+
+	_, err := server.store.DeleteShoppingCartItemAllByUser(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }
 
 // ////////////* Finish Purshase API //////////////
-
+type finishPurshaseParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+}
 type finishPurshaseJsonRequest struct {
-	UserID           int64  `json:"user_id" binding:"required,min=1"`
-	UserAddressID    int64  `json:"user_address_id" binding:"required,min=1"`
-	PaymentMethodID  int64  `json:"payment_method_id" binding:"required,min=1"`
-	ShoppingCartID   int64  `json:"shopping_cart_id" binding:"required,min=1"`
-	ShippingMethodID int64  `json:"shipping_method_id" binding:"required,min=1"`
-	OrderStatusID    int64  `json:"order_status_id" binding:"required,min=1"`
-	OrderTotal       string `json:"order_total" binding:"required"`
+	UserAddressID    int64  `json:"user_address_id" validate:"required,min=1"`
+	PaymentMethodID  int64  `json:"payment_method_id" validate:"required,min=1"`
+	ShippingMethodID int64  `json:"shipping_method_id" validate:"required,min=1"`
+	OrderStatusID    int64  `json:"order_status_id" validate:"required,min=1"`
+	OrderTotal       string `json:"order_total" validate:"required"`
 }
 
-func (server *Server) finishPurchase(ctx *gin.Context) {
+func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
+	var params finishPurshaseParamsRequest
 	var req finishPurshaseJsonRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.FinishedPurchaseTxParams{
 		UserID:           authPayload.UserID,
 		UserAddressID:    req.UserAddressID,
 		PaymentMethodID:  req.PaymentMethodID,
-		ShoppingCartID:   req.ShoppingCartID,
+		ShoppingCartID:   params.ShoppingCartID,
 		ShippingMethodID: req.ShippingMethodID,
 		OrderStatusID:    req.OrderStatusID,
 		OrderTotal:       req.OrderTotal,
 	}
 
-	finishedPurchase, err := server.store.FinishedPurchaseTx(ctx, arg)
+	finishedPurchase, err := server.store.FinishedPurchaseTx(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, finishedPurchase)
+	ctx.Status(fiber.StatusOK).JSON(finishedPurchase)
+	return nil
 }

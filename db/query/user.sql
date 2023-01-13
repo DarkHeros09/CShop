@@ -27,14 +27,16 @@ t2 AS(
   INSERT INTO "shopping_cart" (
   user_id
 ) VALUES ((Select id from t1))
+  RETURNING id
 ),
 t3 AS(
   INSERT INTO "wish_list" (
     user_id
 ) VALUES ((Select id from t1))
+  RETURNING id
 )
 
-SELECT * FROM t1;
+SELECT t1.*, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3;
 
 -- name: GetUser :one
 SELECT * FROM "user"

@@ -2,91 +2,98 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v4"
 )
 
 //////////////* Get API //////////////
 
-type getShopOrderItemUriRequest struct {
-	ShopOrderID int64 `uri:"id" binding:"required,min=1"`
+type getShopOrderItemParamsRequest struct {
+	UserID      int64 `params:"id" validate:"required,min=1"`
+	ShopOrderID int64 `params:"order_id" validate:"required,min=1"`
 }
 
-type getShopOrderItemJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) getShopOrderItem(ctx *fiber.Ctx) error {
+	var params getShopOrderItemParamsRequest
 
-func (server *Server) getShopOrderItem(ctx *gin.Context) {
-	var uri getShopOrderItemUriRequest
-	var req getShopOrderItemJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetShopOrderItemByUserIDOrderIDParams{
-		UserID:  req.UserID,
-		OrderID: uri.ShopOrderID,
+		UserID:  params.UserID,
+		OrderID: params.ShopOrderID,
 	}
 
-	shopOrderItem, err := server.store.GetShopOrderItemByUserIDOrderID(ctx, arg)
+	shopOrderItem, err := server.store.GetShopOrderItemByUserIDOrderID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != shopOrderItem.UserID.Int64 {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-	ctx.JSON(http.StatusOK, shopOrderItem)
+	ctx.Status(fiber.StatusOK).JSON(shopOrderItem)
+	return nil
 }
 
 //////////////* List API //////////////
 
+type listShopOrderItemsParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
+}
 type listShopOrderItemsQueryRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-type listShopOrderItemsJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
-
-func (server *Server) listShopOrderItems(ctx *gin.Context) {
+func (server *Server) listShopOrderItems(ctx *fiber.Ctx) error {
+	var params listShopOrderItemsParamsRequest
 	var query listShopOrderItemsQueryRequest
-	var req listShopOrderItemsJsonRequest
 
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.ListShopOrderItemsByUserIDParams{
@@ -94,14 +101,15 @@ func (server *Server) listShopOrderItems(ctx *gin.Context) {
 		Limit:  query.PageSize,
 		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	shopOrderItems, err := server.store.ListShopOrderItemsByUserID(ctx, arg)
+	shopOrderItems, err := server.store.ListShopOrderItemsByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, shopOrderItems)
+	ctx.Status(fiber.StatusOK).JSON(shopOrderItems)
+	return nil
 }

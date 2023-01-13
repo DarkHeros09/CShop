@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15.1-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: cshop
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile_Migrate
+    environment:
+      DB_SOURCE: postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
+    depends_on:
+      - postgres
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+    
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - migrate
+    environment:
+      GIN_MODE: release
+      DB_SOURCE: postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--"]
+    command: ["/app/main"]

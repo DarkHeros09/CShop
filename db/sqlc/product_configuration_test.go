@@ -32,7 +32,12 @@ func TestCreateProductConfiguration(t *testing.T) {
 
 func TestGetProductConfiguration(t *testing.T) {
 	productConfiguration1 := createRandomProductConfiguration(t)
-	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), productConfiguration1.ProductItemID)
+
+	arg := GetProductConfigurationParams{
+		ProductItemID:     productConfiguration1.ProductItemID,
+		VariationOptionID: productConfiguration1.VariationOptionID,
+	}
+	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productConfiguration2)
@@ -59,11 +64,18 @@ func TestUpdateProductConfiguration(t *testing.T) {
 
 func TestDeleteProductConfiguration(t *testing.T) {
 	productConfiguration1 := createRandomProductConfiguration(t)
-	err := testQueires.DeleteProductConfiguration(context.Background(), productConfiguration1.ProductItemID)
+	arg1 := DeleteProductConfigurationParams{
+		ProductItemID:     productConfiguration1.ProductItemID,
+		VariationOptionID: productConfiguration1.VariationOptionID,
+	}
+	err := testQueires.DeleteProductConfiguration(context.Background(), arg1)
 
 	require.NoError(t, err)
-
-	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), productConfiguration1.ProductItemID)
+	arg := GetProductConfigurationParams{
+		ProductItemID:     productConfiguration1.ProductItemID,
+		VariationOptionID: productConfiguration1.VariationOptionID,
+	}
+	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

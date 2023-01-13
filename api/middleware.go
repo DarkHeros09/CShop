@@ -3,11 +3,10 @@ package api
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 const (
@@ -16,28 +15,28 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
-func authMiddleware(tokenMaker token.Maker, admin bool) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
+func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		authorizationHeader := ctx.Get(authorizationHeaderKey)
 
 		if len(authorizationHeader) == 0 {
 			err := errors.New("authorization header is not provided")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+			return nil
 		}
 
 		fields := strings.Fields(authorizationHeader)
 		if len(fields) < 2 {
 			err := errors.New("invalid authorization header format")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+			return nil
 		}
 
 		authorizationType := strings.ToLower(fields[0])
 		if authorizationType != authorizationTypeBearer {
 			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+			return nil
 		}
 
 		accessToken := fields[1]
@@ -47,25 +46,26 @@ func authMiddleware(tokenMaker token.Maker, admin bool) gin.HandlerFunc {
 		if admin {
 			adminPayload, err = tokenMaker.VerifyTokenForAdmin(accessToken)
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+				return nil
 			}
 
-			ctx.Set(authorizationPayloadKey, adminPayload)
+			ctx.Locals(authorizationPayloadKey, adminPayload)
 			ctx.Next()
 		}
 
 		if !admin {
 			userPayload, err = tokenMaker.VerifyTokenForUser(accessToken)
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+				return nil
 			}
 
-			ctx.Set(authorizationPayloadKey, userPayload)
+			ctx.Locals(authorizationPayloadKey, userPayload)
 			ctx.Next()
 
 		}
 
+		return nil
 	}
 }

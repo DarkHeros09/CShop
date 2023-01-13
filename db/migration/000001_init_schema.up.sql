@@ -194,7 +194,7 @@ CREATE TABLE "shop_order" (
   "shipping_address_id" bigint NOT NULL,
   "order_total" varchar NOT NULL,
   "shipping_method_id" bigint NOT NULL,
-  "order_status_id" bigint NOT NULL,
+  "order_status_id" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -300,4 +300,4 @@ ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "add
 
 ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
 
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status_id") REFERENCES "order_status" ("id");
+ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status_id") REFERENCES "order_status" ("id") ON DELETE SET NULL;

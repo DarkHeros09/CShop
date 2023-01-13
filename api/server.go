@@ -1,26 +1,24 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 type Server struct {
 	config     util.Config
 	store      db.Store
 	tokenMaker token.Maker
-	router     *gin.Engine
+	router     *fiber.App
 }
 
 // NewServer creates a new HTTP server and setup routing.
@@ -37,164 +35,176 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	}
 
 	server.setupRouter()
-	go server.gracefullShutDown(server.router)
+	go server.gracefulShutdown()
 	return server, nil
 }
 
 func (server *Server) setupRouter() {
-	router := gin.Default()
+	app := fiber.New(
+		fiber.Config{
+			JSONEncoder: sonic.Marshal,
+			JSONDecoder: sonic.Unmarshal,
+		},
+	)
+	//* Users
+	app.Post("/api/v1/users", server.createUser)
+	app.Post("/api/v1/users/login", server.loginUser)
+	app.Post("/api/v1/users/reset-password", server.resetPassword)
 
-	router.POST("/users", server.createUser)
-	router.POST("/users/login", server.loginUser)
-	router.POST("/users/reset_password", server.resetPassword)
-	router.POST("/tokens/renew_access", server.renewAccessToken)
+	//* Tokens
+	app.Post("/api/v1/tokens/renew-access", server.renewAccessToken)
 
-	userRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker, false))
-	adminRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker, true))
+	//*Products
+	app.Get("/api/v1/products/:product_id", server.getProduct) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/products", server.listProducts)           //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.GET("/users/:id", server.getUser)        //* Finished With tests (token and changed response... No Etag)
-	adminRoutes.GET("/users", server.listUsers)         //! Admin Only # Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/:id", server.updateUser)     //* Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/users/:id", server.deleteUser) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	//*Promotions
+	app.Get("/api/v1/promotions/:promotion_id", server.getPromotion) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/promotions", server.listPromotions)             //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.POST("/users/addresses", server.createUserAddress)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/addresses/:id", server.getUserAddress)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/addresses", server.listUserAddresses)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/addresses/:id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/addresses/:id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
+	//* Product-Categories
+	app.Get("/api/v1/categories/:category_id", server.getProductCategory) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/categories", server.listProductCategories)           //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.POST("/users/reviews", server.createUserReview)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/reviews/:id", server.getUserReview)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/reviews", server.listUserReviews)         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/reviews/:id", server.updateUserReview)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/reviews/:id", server.deleteUserReview) //* Finished With tests (token and changed response... No Etag)
+	//* Products-Promotions
+	app.Get("/api/v1/product-promotions/:promotion_id/products/:product_id", server.getProductPromotion) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/product-promotions/products", server.listProductPromotions)                         //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.POST("/users/cart", server.createShoppingCartItem)                          //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/cart/:shopping-cart-id", server.getShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/cart", server.listShoppingCartItems)                            //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/cart/:shopping-cart-id", server.updateShoppingCartItem)         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/cart/:shopping-cart-item-id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/cart/delete-all", server.deleteShoppingCartItemAllByUser)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/cart/purchase", server.finishPurchase)                          //* Finished With tests (token and changed response... No Etag)
+	//* Category-Promotions
+	app.Get("/api/v1/category-promotions/:promotion_id/categories/:category_id", server.getCategoryPromotion) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/category-promotions/categories", server.listCategoryPromotions)                          //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.POST("/users/wish-list", server.createWishListItem)                       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/wish-list/:id", server.getWishListItem)                       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/wish-list", server.listWishListItems)                         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/wish-list/:id", server.updateWishListItem)                    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/wish-list/:wish-list-item-id", server.deleteWishListItem)  //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/wish-list/delete-all", server.deleteWishListItemAllByUser) //* Finished With tests (token and changed response... No Etag)
+	//* Variations
+	app.Get("/api/v1/variations/:variation_id", server.getVariation) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/variations", server.listVariations)             //? no auth required # Finished With tests (token and changed response.)
 
-	userRoutes.POST("/users/payment-method", server.createPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/payment-method/:id", server.getPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/payment-method", server.listPaymentMethodes)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/payment-method/:id", server.updatePaymentMethod)    //* Finished With tests (token and changed response... No Etag)
-	userRoutes.DELETE("/users/payment-method/:id", server.deletePaymentMethod) //* Finished With tests (token and changed response... No Etag)
+	//* Variation-Options
+	app.Get("/api/v1/variation-options/:id", server.getVariationOption) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/variation-options", server.listVariationOptions)   //? no auth required # Finished With tests (token and changed response.)
 
-	adminRoutes.POST("/products", server.createProduct)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/products/:id", server.getProduct)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/products", server.listProducts)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/products/:id", server.updateProduct)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/products/:id", server.deleteProduct) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	//* Product-Items
+	app.Get("/api/v1/product-items/:item_id", server.getProductItem) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/product-items", server.listProductItems)        //? no auth required # Finished With tests (token and changed response.)
 
-	adminRoutes.POST("/promotions", server.createPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/promotions/:id", server.getPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/promotions", server.listPromotions)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/promotions/:id", server.updatePromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/promotions/:id", server.deletePromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	//* Product-Configuration
+	app.Get("/api/v1/product-configurations/:item_id/variation-options/:variation_id", server.getProductConfiguration) //? no auth required # Finished With tests (token and changed response... No Etag)
+	app.Get("/api/v1/product-configurations/:item_id", server.listProductConfigurations)                               //? no auth required # Finished With tests (token and changed response.)
 
-	adminRoutes.POST("/product-categories", server.createProductCategory)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-categories/:id", server.getProductCategory)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-categories", server.listProductCategories)             //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/product-categories/:id", server.updateProductCategory)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/product-categories/:id", server.deleteProductCategory) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter := app.Group("/api/v1").Use(authMiddleware(server.tokenMaker, false))
+	adminRouter := app.Group("/api/admin/:admin_id/v1").Use(authMiddleware(server.tokenMaker, true))
 
-	adminRoutes.POST("/product-promotions", server.createProductPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-promotions/:id", server.getProductPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-promotions", server.listProductPromotions)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/product-promotions/:id", server.updateProductPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/product-promotions/:id", server.deleteProductPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id", server.getUser)        //* Finished With tests (token and changed response... No Etag)
+	adminRouter.Get("/users", server.listUsers)         //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id", server.updateUser)     //* Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/users/:id", server.deleteUser) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/category-promotions", server.createCategoryPromotion)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/category-promotions/:id", server.getCategoryPromotion)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/category-promotions", server.listCategoryPromotions)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/category-promotions/:id", server.updateCategoryPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/category-promotions/:id", server.deleteCategoryPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter.Post("/users/:id/addresses", server.createUserAddress)               //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/addresses/:address_id", server.getUserAddress)       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/addresses", server.listUserAddresses)                //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/addresses/:address_id", server.updateUserAddress)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/addresses/:address_id", server.deleteUserAddress) //* Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/variations", server.createVariation)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/variations/:id", server.getVariation)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/variations", server.listVariations)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/variations/:id", server.updateVariation)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/variations/:id", server.deleteVariation) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter.Post("/users/:id/reviews", server.createUserReview)              //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/reviews/:review_id", server.getUserReview)       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/reviews", server.listUserReviews)                //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/reviews/:review_id", server.updateUserReview)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/reviews/:review_id", server.deleteUserReview) //* Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/variation-options", server.createVariationOption)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/variation-options/:id", server.getVariationOption)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/variation-options", server.listVariationOptions)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/variation-options/:id", server.updateVariationOption)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/variation-options/:id", server.deleteVariationOption) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	//? /items is shoppingCartItems ID in the Table
+	userRouter.Post("/users/:id/carts/:cart_id/items", server.createShoppingCartItem)            //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/carts/:cart_id/items", server.getShoppingCartItem)                //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/carts/items", server.listShoppingCartItems)                       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/carts/:cart_id/items/:item_id", server.updateShoppingCartItem)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/carts/:cart_id/items/:item_id", server.deleteShoppingCartItem) //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/carts/:cart_id", server.deleteShoppingCartItemAllByUser)       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/carts/:cart_id/purchase", server.finishPurchase)                  //* Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/product-items", server.createProductItem)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-items/:id", server.getProductItem)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-items", server.listProductItems)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/product-items/:id", server.updateProductItem)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/product-items/:id", server.deleteProductItem) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	//? /items is WishListItems ID in the Table
+	userRouter.Post("/users/:id/wish-lists/:wish_id", server.createWishListItem)                  //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/wish-lists/:wish_id/items/:item_id", server.getWishListItem)       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/wish-lists/:wish_id", server.listWishListItems)                    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/wish-lists/:wish_id/items/:item_id", server.updateWishListItem)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/wish-lists/:wish_id/items/:item_id", server.deleteWishListItem) //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/wish-lists/:wish_id", server.deleteWishListItemAll)             //* Finished With tests (token and changed response... No Etag)
 
-	adminRoutes.POST("/product-configurations", server.createProductConfiguration)       //! Admin Only # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-configurations/:id", server.getProductConfiguration)            //? no auth required # Finished With tests (token and changed response... No Etag)
-	router.GET("/product-configurations", server.listProductConfigurations)              //? no auth required # Finished With tests (token and changed response.)
-	adminRoutes.PUT("/product-configurations/:id", server.updateProductConfiguration)    //! Admin Only # Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/product-configurations/:id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	userRouter.Post("/users/:id/payment-methods", server.createPaymentMethod)               //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/payment-methods/:payment_id", server.getPaymentMethod)       //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/payment-methods", server.listPaymentMethodes)                //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/payment-methods/:payment_id", server.updatePaymentMethod)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Delete("/users/:id/payment-methods/:payment_id", server.deletePaymentMethod) //* Finished With tests (token and changed response... No Etag)
 
-	userRoutes.GET("/users/shop-order/:id", server.getShopOrderItem) //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/shop-order", server.listShopOrderItems)   //* Finished With tests (token and changed response... No Etag)
+	adminRouter.Post("/products", server.createProduct)               //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/products/:product_id", server.updateProduct)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/products/:product_id", server.deleteProduct) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	userRoutes.POST("/users/order-status", server.createOrderStatus)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/order-status/:id", server.getOrderStatus)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/order-status", server.listOrderStatuses)         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/order-status/:id", server.updateOrderStatus)     //* Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/users/order-status/:id", server.deleteOrderStatus) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Post("/promotions", server.createPromotion)                 //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/promotions/:promotion_id", server.updatePromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/promotions/:promotion_id", server.deletePromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	userRoutes.POST("/users/shipping-method", server.createShippingMethod)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/shipping-method/:id", server.getShippingMethod)        //* Finished With tests (token and changed response... No Etag)
-	userRoutes.GET("/users/shipping-method", server.listShippingMethodes)         //* Finished With tests (token and changed response... No Etag)
-	userRoutes.PUT("/users/shipping-method/:id", server.updateShippingMethod)     //* Finished With tests (token and changed response... No Etag)
-	adminRoutes.DELETE("/users/shipping-method/:id", server.deleteShippingMethod) //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Post("/categories", server.createProductCategory)                //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/categories/:category_id", server.updateProductCategory)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/categories/:category_id", server.deleteProductCategory) //! Admin Only # Finished With tests (token and changed response... No Etag)
 
-	server.router = router
+	adminRouter.Post("/product-promotions/:promotion_id/products/:product_id", server.createProductPromotion)   //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/product-promotions/:promotion_id/products/:product_id", server.updateProductPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/product-promotions/:promotion_id/products/:product_id", server.deleteProductPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRouter.Post("/category-promotions/:promotion_id/categories/:category_id", server.createCategoryPromotion)   //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/category-promotions/:promotion_id/categories/:category_id", server.updateCategoryPromotion)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/category-promotions/:promotion_id/categories/:category_id", server.deleteCategoryPromotion) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRouter.Post("/variations", server.createVariation)                 //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/variations/:variation_id", server.updateVariation)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/variations/:variation_id", server.deleteVariation) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRouter.Post("/variation-options", server.createVariationOption)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/variation-options/:id", server.updateVariationOption)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/variation-options/:id", server.deleteVariationOption) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRouter.Post("/product-items", server.createProductItem)            //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/product-items/:item_id", server.updateProductItem)    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/product-items/:item_id", server.deleteProductItem) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	adminRouter.Post("/product-configurations/:item_id", server.createProductConfiguration)                                   //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Put("/product-configurations/:item_id", server.updateProductConfiguration)                                    //! Admin Only # Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/product-configurations/:item_id/variation-options/:variation_id", server.deleteProductConfiguration) //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	userRouter.Get("/users/:id/shop-orders/:order_id", server.getShopOrderItem) //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/shop-orders", server.listShopOrderItems)         //* Finished With tests (token and changed response... No Etag)
+
+	userRouter.Post("/users/:id/order-status", server.createOrderStatus)           //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/order-status/:status_id", server.getOrderStatus)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/order-status", server.listOrderStatuses)            //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/order-status/:status_id", server.updateOrderStatus) //* Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/order-status/:status_id", server.deleteOrderStatus)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	userRouter.Post("/users/:id/shipping-method", server.createShippingMethod)           //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/shipping-method/:method_id", server.getShippingMethod)    //* Finished With tests (token and changed response... No Etag)
+	userRouter.Get("/users/:id/shipping-method", server.listShippingMethodes)            //* Finished With tests (token and changed response... No Etag)
+	userRouter.Put("/users/:id/shipping-method/:method_id", server.updateShippingMethod) //* Finished With tests (token and changed response... No Etag)
+	adminRouter.Delete("/shipping-method/:method_id", server.deleteShippingMethod)       //! Admin Only # Finished With tests (token and changed response... No Etag)
+
+	server.router = app
 
 }
 
 // Start runs the HTTP server on a specific address
 func (server *Server) Start(address string) error {
-	return server.router.Run(address)
+	return server.router.Listen(address)
 }
 
-func errorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+func errorResponse(err error) fiber.Map {
+	return fiber.Map{"error": err.Error()}
 }
 
-func (server *Server) gracefullShutDown(router *gin.Engine) {
-	srv := &http.Server{
-		Addr:    server.config.ServerAddress,
-		Handler: router,
+func (server *Server) gracefulShutdown() {
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	<-done
+	log.Println("Shutdown server...")
+	if err := server.router.Shutdown(); err != nil {
+		log.Fatalf("Could not gracefully shutdown the server: %v\n", err)
 	}
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
-
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
-	}
-
-	log.Println("Server exiting")
 }

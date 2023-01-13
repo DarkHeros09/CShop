@@ -72,14 +72,16 @@ t2 AS(
   INSERT INTO "shopping_cart" (
   user_id
 ) VALUES ((Select id from t1))
+  RETURNING id
 ),
 t3 AS(
   INSERT INTO "wish_list" (
     user_id
 ) VALUES ((Select id from t1))
+  RETURNING id
 )
 
-SELECT id, username, email, password, telephone, default_payment, created_at, updated_at FROM t1
+SELECT t1.id, t1.username, t1.email, t1.password, t1.telephone, t1.default_payment, t1.created_at, t1.updated_at, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3
 `
 
 type CreateUserWithCartAndWishListParams struct {
@@ -99,6 +101,8 @@ type CreateUserWithCartAndWishListRow struct {
 	DefaultPayment null.Int  `json:"default_payment"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	ShoppingCartID int64     `json:"shopping_cart_id"`
+	WishListID     int64     `json:"wish_list_id"`
 }
 
 func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateUserWithCartAndWishListParams) (CreateUserWithCartAndWishListRow, error) {
@@ -119,6 +123,8 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ShoppingCartID,
+		&i.WishListID,
 	)
 	return i, err
 }

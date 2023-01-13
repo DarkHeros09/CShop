@@ -49,7 +49,7 @@ type Querier interface {
 	DeletePaymentType(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error
-	DeleteProductConfiguration(ctx context.Context, productItemID int64) error
+	DeleteProductConfiguration(ctx context.Context, arg DeleteProductConfigurationParams) error
 	DeleteProductItem(ctx context.Context, id int64) error
 	DeleteProductPromotion(ctx context.Context, arg DeleteProductPromotionParams) error
 	DeletePromotion(ctx context.Context, id int64) error
@@ -58,7 +58,7 @@ type Querier interface {
 	DeleteShopOrderItem(ctx context.Context, id int64) error
 	DeleteShoppingCart(ctx context.Context, id int64) error
 	DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error
-	DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) ([]ShoppingCartItem, error)
+	DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]ShoppingCartItem, error)
 	DeleteUser(ctx context.Context, id int64) (User, error)
 	// -- name: UpdateUserAddressWithAddress :one
 	// WITH t1 AS (
@@ -91,8 +91,15 @@ type Querier interface {
 	DeleteVariation(ctx context.Context, id int64) error
 	DeleteVariationOption(ctx context.Context, id int64) error
 	DeleteWishList(ctx context.Context, id int64) error
+	// WITH t1 AS (
+	//   SELECT id FROM "wish_list" AS wl
+	//   WHERE wl.user_id = sqlc.arg(user_id)
+	// )
 	DeleteWishListItem(ctx context.Context, arg DeleteWishListItemParams) error
-	DeleteWishListItemAllByUser(ctx context.Context, userID int64) ([]WishListItem, error)
+	// WITH t1 AS(
+	//   SELECT id FROM "wish_list" WHERE user_id = $1
+	// )
+	DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]WishListItem, error)
 	GetAddress(ctx context.Context, id int64) (Address, error)
 	GetAddressByCity(ctx context.Context, city string) (Address, error)
 	GetAdmin(ctx context.Context, id int64) (Admin, error)
@@ -106,7 +113,7 @@ type Querier interface {
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductCategory(ctx context.Context, id int64) (ProductCategory, error)
 	GetProductCategoryByParent(ctx context.Context, arg GetProductCategoryByParentParams) (ProductCategory, error)
-	GetProductConfiguration(ctx context.Context, productItemID int64) (ProductConfiguration, error)
+	GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (ProductConfiguration, error)
 	GetProductItem(ctx context.Context, id int64) (ProductItem, error)
 	GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error)
 	GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error)
@@ -117,7 +124,7 @@ type Querier interface {
 	GetShopOrderItem(ctx context.Context, id int64) (ShopOrderItem, error)
 	GetShopOrderItemByUserIDOrderID(ctx context.Context, arg GetShopOrderItemByUserIDOrderIDParams) (GetShopOrderItemByUserIDOrderIDRow, error)
 	GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, error)
-	GetShoppingCartByUserID(ctx context.Context, userID int64) (ShoppingCart, error)
+	GetShoppingCartByUserIDCartID(ctx context.Context, arg GetShoppingCartByUserIDCartIDParams) (ShoppingCart, error)
 	GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCartItem, error)
 	GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) (GetShoppingCartItemByUserIDCartIDRow, error)
 	GetUser(ctx context.Context, id int64) (User, error)
@@ -131,7 +138,7 @@ type Querier interface {
 	GetWishList(ctx context.Context, id int64) (WishList, error)
 	GetWishListByUserID(ctx context.Context, userID int64) (WishList, error)
 	GetWishListItem(ctx context.Context, id int64) (WishListItem, error)
-	GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (GetWishListItemByUserIDCartIDRow, error)
+	GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (WishListItem, error)
 	ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error)
 	ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error)
@@ -194,7 +201,11 @@ type Querier interface {
 	UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error)
 	UpdateVariationOption(ctx context.Context, arg UpdateVariationOptionParams) (VariationOption, error)
 	UpdateWishList(ctx context.Context, arg UpdateWishListParams) (WishList, error)
-	UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (UpdateWishListItemRow, error)
+	// WITH t1 AS (
+	//   SELECT user_id FROM "wish_list" AS wl
+	//   WHERE wl.id = sqlc.arg(wish_list_id)
+	// )
+	UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error)
 }
 
 var _ Querier = (*Queries)(nil)

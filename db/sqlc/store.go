@@ -107,7 +107,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				ShippingAddressID: arg.UserAddressID,
 				OrderTotal:        arg.OrderTotal,
 				ShippingMethodID:  arg.ShippingMethodID,
-				OrderStatusID:     arg.OrderStatusID,
+				OrderStatusID:     null.IntFrom(arg.OrderStatusID),
 			})
 			if err != nil {
 				return err
@@ -135,7 +135,10 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			}
 			result.ShopOrderItemID = createdShopOrderItem.ID
 		}
-		_, err = q.DeleteShoppingCartItemAllByUser(ctx, arg.UserID)
+		_, err = q.DeleteShoppingCartItemAllByUser(ctx, DeleteShoppingCartItemAllByUserParams{
+			UserID:         arg.UserID,
+			ShoppingCartID: arg.ShoppingCartID,
+		})
 		if err != nil {
 			return err
 		}

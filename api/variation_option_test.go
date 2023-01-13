@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -28,7 +27,7 @@ func TestGetVariationOptionAPI(t *testing.T) {
 		name              string
 		VariationOptionID int64
 		buildStub         func(store *mockdb.MockStore)
-		checkResponse     func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse     func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:              "OK",
@@ -39,9 +38,9 @@ func TestGetVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(variationOption, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchVariationOption(t, recorder.Body, variationOption)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchVariationOption(t, rsp.Body, variationOption)
 			},
 		},
 
@@ -54,8 +53,8 @@ func TestGetVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(db.VariationOption{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
@@ -67,8 +66,8 @@ func TestGetVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(db.VariationOption{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -80,8 +79,8 @@ func TestGetVariationOptionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -99,15 +98,17 @@ func TestGetVariationOptionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/variation-options/%d", tc.VariationOptionID)
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/variation-options/%d", tc.VariationOptionID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -119,16 +120,17 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 	variationOption := randomVariationOption()
 
 	testCases := []struct {
-		name              string
-		body              gin.H
-		VariationOptionID int64
-		setupAuth         func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs        func(store *mockdb.MockStore)
-		checkResponse     func(recoder *httptest.ResponseRecorder)
+		name          string
+		body          fiber.Map
+		AdminID       int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
+			name:    "OK",
+			AdminID: admin.ID,
+			body: fiber.Map{
 				"value":        variationOption.Value,
 				"variation_id": variationOption.VariationID,
 			},
@@ -146,14 +148,14 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(variationOption, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchVariationOption(t, recorder.Body, variationOption)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchVariationOption(t, rsp.Body, variationOption)
 			},
 		},
 		{
-			name:              "NoAuthorization",
-			VariationOptionID: variationOption.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -167,13 +169,17 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:              "Unauthorized",
-			VariationOptionID: variationOption.ID,
+			name:    "Unauthorized",
+			AdminID: admin.ID,
+			body: fiber.Map{
+				"value":        variationOption.Value,
+				"variation_id": variationOption.VariationID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
@@ -187,13 +193,14 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 					CreateVariationOption(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			body: fiber.Map{
 				"value":        variationOption.Value,
 				"variation_id": variationOption.VariationID,
 			},
@@ -206,13 +213,14 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(db.VariationOption{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
+			name:    "InvalidID",
+			AdminID: 0,
+			body: fiber.Map{
 				"id": "invalid",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -223,8 +231,8 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 					CreateVariationOption(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -239,19 +247,22 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/variation-options"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/variation-options", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -272,7 +283,7 @@ func TestListVariationOptionsAPI(t *testing.T) {
 		name          string
 		query         Query
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
@@ -291,9 +302,9 @@ func TestListVariationOptionsAPI(t *testing.T) {
 					Times(1).
 					Return(VariationOptions, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchVariationOptions(t, recorder.Body, VariationOptions)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchVariationOptions(t, rsp.Body, VariationOptions)
 			},
 		},
 		{
@@ -308,8 +319,8 @@ func TestListVariationOptionsAPI(t *testing.T) {
 					Times(1).
 					Return([]db.VariationOption{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -323,8 +334,8 @@ func TestListVariationOptionsAPI(t *testing.T) {
 					ListVariationOptions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
@@ -338,8 +349,8 @@ func TestListVariationOptionsAPI(t *testing.T) {
 					ListVariationOptions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -354,10 +365,10 @@ func TestListVariationOptionsAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := "/variation-options"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := "/api/v1/variation-options"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -366,8 +377,11 @@ func TestListVariationOptionsAPI(t *testing.T) {
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -378,16 +392,18 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name              string
-		body              gin.H
+		body              fiber.Map
 		VariationOptionID int64
+		AdminID           int64
 		setupAuth         func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs        func(store *mockdb.MockStore)
-		checkResponse     func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse     func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:              "OK",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
+			AdminID:           admin.ID,
+			body: fiber.Map{
 				"value":        "new name",
 				"variation_id": variationOption.VariationID,
 			},
@@ -406,14 +422,15 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(variationOption, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "Unauthorized",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
+			AdminID:           admin.ID,
+			body: fiber.Map{
 				"value":        "new name",
 				"variation_id": variationOption.VariationID,
 			},
@@ -431,14 +448,15 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 					UpdateVariationOption(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "NoAuthorization",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
+			AdminID:           admin.ID,
+			body: fiber.Map{
 				"value":        "new name",
 				"variation_id": variationOption.VariationID,
 			},
@@ -455,14 +473,15 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 					UpdateVariationOption(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "InternalError",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
+			AdminID:           admin.ID,
+			body: fiber.Map{
 				"value":        "new name",
 				"variation_id": variationOption.VariationID,
 			},
@@ -480,13 +499,14 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(db.VariationOption{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "InvalidID",
 			VariationOptionID: 0,
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -495,8 +515,8 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 					UpdateVariationOption(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -511,19 +531,22 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/variation-options/%d", tc.VariationOptionID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/variation-options/%d", tc.AdminID, tc.VariationOptionID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -534,18 +557,16 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name              string
-		body              gin.H
 		VariationOptionID int64
+		AdminID           int64
 		setupAuth         func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub         func(store *mockdb.MockStore)
-		checkResponse     func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse     func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:              "OK",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
-				"variation_id": variationOption.VariationID,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -556,17 +577,14 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "Unauthorized",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
-				"variation_id": variationOption.VariationID,
-				"id":           variationOption.ID,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
@@ -576,16 +594,14 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					DeleteVariationOption(gomock.Any(), gomock.Eq(variationOption.ID)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "NoAuthorization",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
-				"variation_id": variationOption.VariationID,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -594,16 +610,14 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					DeleteVariationOption(gomock.Any(), gomock.Eq(variationOption.ID)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "NotFound",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
-				"variation_id": variationOption.VariationID,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -614,16 +628,14 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "InternalError",
 			VariationOptionID: variationOption.ID,
-			body: gin.H{
-				"variation_id": variationOption.VariationID,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -634,16 +646,14 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:              "InvalidID",
 			VariationOptionID: 0,
-			body: gin.H{
-				"variation_id": 0,
-			},
+			AdminID:           admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -653,8 +663,8 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -672,20 +682,18 @@ func TestDeleteVariationOptionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/variation-options/%d", tc.VariationOptionID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/variation-options/%d", tc.AdminID, tc.VariationOptionID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -716,7 +724,7 @@ func randomVariationOption() db.VariationOption {
 	}
 }
 
-func requireBodyMatchVariationOption(t *testing.T, body *bytes.Buffer, VariationOption db.VariationOption) {
+func requireBodyMatchVariationOption(t *testing.T, body io.ReadCloser, VariationOption db.VariationOption) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -726,7 +734,7 @@ func requireBodyMatchVariationOption(t *testing.T, body *bytes.Buffer, Variation
 	require.Equal(t, VariationOption, gotVariationOption)
 }
 
-func requireBodyMatchVariationOptions(t *testing.T, body *bytes.Buffer, variationOptions []db.VariationOption) {
+func requireBodyMatchVariationOptions(t *testing.T, body io.ReadCloser, variationOptions []db.VariationOption) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

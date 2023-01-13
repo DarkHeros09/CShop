@@ -2,11 +2,11 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -14,278 +14,316 @@ import (
 
 //////////////* Create API //////////////
 
-type createWishListItemRequest struct {
-	UserID        int64 `json:"user_id" binding:"required,min=1"`
-	ProductItemID int64 `json:"product_item_id" binding:"required,min=1"`
+type createWishListItemParamsRequest struct {
+	UserID     int64 `params:"id" validate:"required,min=1"`
+	WishListID int64 `params:"wish_id" validate:"required,min=1"`
 }
 
-func (server *Server) createWishListItem(ctx *gin.Context) {
-	var req createWishListItemRequest
+type createWishListItemJsonRequest struct {
+	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
+}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
+	var params createWishListItemParamsRequest
+	var req createWishListItemJsonRequest
+
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	WishList, err := server.store.GetWishListByUserID(ctx, req.UserID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != WishList.UserID {
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateWishListItemParams{
-		WishListID:    WishList.ID,
+		WishListID:    params.WishListID,
 		ProductItemID: req.ProductItemID,
 	}
 
-	WishListItem, err := server.store.CreateWishListItem(ctx, arg)
+	wishListItem, err := server.store.CreateWishListItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, WishListItem)
+	ctx.Status(fiber.StatusOK).JSON(wishListItem)
+	return nil
 }
 
 //////////////* Get API //////////////
 
-type getWishListItemUriRequest struct {
-	WishListID int64 `uri:"id" binding:"required,min=1"`
+type getWishListItemParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
+	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
 }
 
-type getWishListItemJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
+	var params getWishListItemParamsRequest
 
-func (server *Server) getWishListItem(ctx *gin.Context) {
-	var uri getWishListItemUriRequest
-	var req getWishListItemJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetWishListItemByUserIDCartIDParams{
-		UserID:     req.UserID,
-		WishListID: uri.WishListID,
+		UserID:     authPayload.UserID,
+		ID:         params.WishListItemID,
+		WishListID: params.WishListID,
 	}
 
-	WishListItem, err := server.store.GetWishListItemByUserIDCartID(ctx, arg)
+	wishListItem, err := server.store.GetWishListItemByUserIDCartID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != WishListItem.UserID.Int64 {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-	ctx.JSON(http.StatusOK, WishListItem)
+	ctx.Status(fiber.StatusOK).JSON(wishListItem)
+	return nil
 }
 
 //////////////* List API //////////////
 
 type listWishListItemsRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
+	UserID     int64 `params:"id" validate:"required,min=1"`
+	WishListID int64 `params:"wish_id" validate:"required,min=1"`
 }
 
-func (server *Server) listWishListItems(ctx *gin.Context) {
-	var req listWishListItemsRequest
+func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
+	var params listWishListItemsRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
-	WishListItems, err := server.store.ListWishListItemsByUserID(ctx, authPayload.UserID)
+
+	wishListItems, err := server.store.ListWishListItemsByUserID(ctx.Context(), authPayload.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, WishListItems)
+	ctx.Status(fiber.StatusOK).JSON(wishListItems)
+	return nil
 }
 
 // ////////////* UPDATE API //////////////
-type updateWishListItemUriRequest struct {
-	WishListID int64 `uri:"id" binding:"required,min=1"`
+type updateWishListItemParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
+	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
 }
 
 type updateWishListItemJsonRequest struct {
-	ID            int64 `json:"id" binding:"required,min=1"`
-	UserID        int64 `json:"user_id" binding:"required,min=1"`
-	ProductItemID int64 `json:"product_item_id" binding:"omitempty,required"`
+	ProductItemID int64 `json:"product_item_id" validate:"omitempty,required"`
 }
 
-func (server *Server) updateWishListItem(ctx *gin.Context) {
-	var uri updateWishListItemUriRequest
+func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
+	var params updateWishListItemParamsRequest
 	var req updateWishListItemJsonRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateWishListItemParams{
-		ID:            req.ID,
-		WishListID:    uri.WishListID,
+		ID:            params.WishListItemID,
+		WishListID:    params.WishListID,
 		ProductItemID: null.IntFromPtr(&req.ProductItemID),
 	}
 
-	WishList, err := server.store.UpdateWishListItem(ctx, arg)
+	wishList, err := server.store.UpdateWishListItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, WishList)
+	ctx.Status(fiber.StatusOK).JSON(wishList)
+	return nil
 }
 
 // ////////////* Delete API //////////////
-type deleteWishListItemUriRequest struct {
-	WishListItemID int64 `uri:"wish-list-item-id" binding:"required,min=1"`
+type deleteWishListItemParamsRequest struct {
+	UserID         int64 `params:"id" validate:"required,min=1"`
+	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
+	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
 }
 
-type deleteWishListItemJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
+	var params deleteWishListItemParamsRequest
 
-func (server *Server) deleteWishListItem(ctx *gin.Context) {
-	var uri deleteWishListItemUriRequest
-	var req deleteWishListItemJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.DeleteWishListItemParams{
-		ID:     uri.WishListItemID,
-		UserID: authPayload.UserID,
+		ID:         params.WishListItemID,
+		WishListID: params.WishListID,
 	}
 
-	err := server.store.DeleteWishListItem(ctx, arg)
+	err := server.store.DeleteWishListItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }
 
 // ////////////* Delete All API //////////////
 
 type deleteWishListItemAllJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
+	UserID     int64 `params:"id" validate:"required,min=1"`
+	WishListID int64 `params:"wish_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteWishListItemAllByUser(ctx *gin.Context) {
-	var req deleteWishListItemAllJsonRequest
+func (server *Server) deleteWishListItemAll(ctx *fiber.Ctx) error {
+	var params deleteWishListItemAllJsonRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	_, err := server.store.DeleteWishListItemAllByUser(ctx, authPayload.UserID)
+	_, err := server.store.DeleteWishListItemAll(ctx.Context(), params.WishListID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }

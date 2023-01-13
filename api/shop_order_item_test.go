@@ -1,12 +1,10 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +12,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -29,17 +27,15 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ShopOrderID   int64
-		body          gin.H
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name:        "OK",
 			ShopOrderID: shopOrder.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:      user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -56,17 +52,15 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 					Return(shopOrderItem, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShopOrderItemForGet(t, recorder.Body, shopOrderItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShopOrderItemForGet(t, rsp.Body, shopOrderItem)
 			},
 		},
 		{
 			name:        "NoAuthorization",
 			ShopOrderID: shopOrder.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:      user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -74,16 +68,14 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InternalError",
 			ShopOrderID: shopOrder.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:      user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -99,16 +91,14 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 					Return(db.GetShopOrderItemByUserIDOrderIDRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InvalidUserID",
 			ShopOrderID: shopOrder.ID,
-			body: gin.H{
-				"user_id": 0,
-			},
+			UserID:      0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -117,8 +107,8 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -133,19 +123,18 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/shop-order/%d", tc.ShopOrderID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/shop-orders/%d", tc.UserID, tc.ShopOrderID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -168,10 +157,10 @@ func TestListShopOrderItemAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		query         Query
-		body          gin.H
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
@@ -179,9 +168,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 				pageID:   1,
 				pageSize: n,
 			},
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -199,9 +186,9 @@ func TestListShopOrderItemAPI(t *testing.T) {
 					Return(shopOrderItems, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchListShopOrderItem(t, recorder.Body, shopOrderItems)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListShopOrderItem(t, rsp.Body, shopOrderItems)
 			},
 		},
 		{
@@ -210,9 +197,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 				pageID:   1,
 				pageSize: n,
 			},
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -220,8 +205,8 @@ func TestListShopOrderItemAPI(t *testing.T) {
 					ListShopOrderItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
@@ -230,9 +215,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 				pageID:   1,
 				pageSize: n,
 			},
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -250,8 +233,8 @@ func TestListShopOrderItemAPI(t *testing.T) {
 					Return([]db.ListShopOrderItemsByUserIDRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -260,9 +243,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 				pageID:   1,
 				pageSize: n,
 			},
-			body: gin.H{
-				"user_id": 0,
-			},
+			UserID: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -271,8 +252,8 @@ func TestListShopOrderItemAPI(t *testing.T) {
 					ListShopOrderItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -287,14 +268,10 @@ func TestListShopOrderItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := "/users/shop-order"
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/shop-orders", tc.UserID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -304,8 +281,11 @@ func TestListShopOrderItemAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -333,7 +313,7 @@ func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) 
 		ShippingAddressID: util.RandomMoney(),
 		OrderTotal:        util.RandomDecimalString(1, 1000),
 		ShippingMethodID:  util.RandomMoney(),
-		OrderStatusID:     util.RandomMoney(),
+		OrderStatusID:     null.IntFrom(util.RandomMoney()),
 	}
 	return
 }
@@ -362,7 +342,7 @@ func createRandomListShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (ShopOr
 	return
 }
 
-func requireBodyMatchShopOrderItemForGet(t *testing.T, body *bytes.Buffer, ShopOrderItem db.GetShopOrderItemByUserIDOrderIDRow) {
+func requireBodyMatchShopOrderItemForGet(t *testing.T, body io.ReadCloser, ShopOrderItem db.GetShopOrderItemByUserIDOrderIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -379,7 +359,7 @@ func requireBodyMatchShopOrderItemForGet(t *testing.T, body *bytes.Buffer, ShopO
 	require.Equal(t, ShopOrderItem.UserID, gotShopOrderItem.UserID)
 }
 
-func requireBodyMatchListShopOrderItem(t *testing.T, body *bytes.Buffer, shopOrderItem []db.ListShopOrderItemsByUserIDRow) {
+func requireBodyMatchListShopOrderItem(t *testing.T, body io.ReadCloser, shopOrderItem []db.ListShopOrderItemsByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

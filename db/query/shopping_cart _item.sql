@@ -54,14 +54,17 @@ RETURNING *, (SELECT user_id FROM t1);
 WITH t1 AS (
   SELECT id FROM "shopping_cart" AS sc
   WHERE sc.user_id = sqlc.arg(user_id)
+  AND sc.id = sqlc.arg(shopping_cart_id)
 )
 DELETE FROM "shopping_cart_item" AS sci
-WHERE sci.id = sqlc.arg(id)
+WHERE sci.id = sqlc.arg(shopping_cart_item_id)
 AND sci.shopping_cart_id = (SELECT id FROM t1); 
 
 -- name: DeleteShoppingCartItemAllByUser :many
 WITH t1 AS(
-  SELECT id FROM "shopping_cart" WHERE user_id = $1
+  SELECT id FROM "shopping_cart" AS sc 
+  WHERE sc.user_id = sqlc.arg(user_id)
+  AND sc.id = sqlc.arg(shopping_cart_id)
 )
 DELETE FROM "shopping_cart_item"
 WHERE shopping_cart_id = (SELECT id FROM t1)

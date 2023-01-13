@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -28,7 +27,7 @@ func TestGetProductItemAPI(t *testing.T) {
 		name          string
 		productItemID int64
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:          "OK",
@@ -39,9 +38,9 @@ func TestGetProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(productItem, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductItem(t, recorder.Body, productItem)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductItem(t, rsp.Body, productItem)
 			},
 		},
 
@@ -54,8 +53,8 @@ func TestGetProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
@@ -67,8 +66,8 @@ func TestGetProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -80,8 +79,8 @@ func TestGetProductItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -99,15 +98,17 @@ func TestGetProductItemAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/product-items/%d", tc.productItemID)
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/product-items/%d", tc.productItemID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -120,15 +121,16 @@ func TestCreateProductItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
-		productItemID int64
+		body          fiber.Map
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
+			name:    "OK",
+			AdminID: admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -154,14 +156,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(productItem, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductItem(t, recorder.Body, productItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductItem(t, rsp.Body, productItem)
 			},
 		},
 		{
-			name:          "NoAuthorization",
-			productItemID: productItem.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -179,13 +181,21 @@ func TestCreateProductItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "Unauthorized",
-			productItemID: productItem.ID,
+			name:    "Unauthorized",
+			AdminID: admin.ID,
+			body: fiber.Map{
+				"product_id":    productItem.ProductID,
+				"product_sku":   productItem.ProductSku,
+				"qty_in_stock":  productItem.QtyInStock,
+				"product_image": productItem.ProductImage,
+				"price":         productItem.Price,
+				"active":        productItem.Active,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
@@ -203,13 +213,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 					CreateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -226,13 +237,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
+			name:    "InvalidID",
+			AdminID: admin.ID,
+			body: fiber.Map{
 				"product_id":    0,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -248,8 +260,8 @@ func TestCreateProductItemAPI(t *testing.T) {
 					CreateProductItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -264,19 +276,22 @@ func TestCreateProductItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/product-items"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-items", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -297,7 +312,7 @@ func TestListProductItemsAPI(t *testing.T) {
 		name          string
 		query         Query
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
@@ -316,9 +331,9 @@ func TestListProductItemsAPI(t *testing.T) {
 					Times(1).
 					Return(productItems, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductItems(t, recorder.Body, productItems)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductItems(t, rsp.Body, productItems)
 			},
 		},
 		{
@@ -333,8 +348,8 @@ func TestListProductItemsAPI(t *testing.T) {
 					Times(1).
 					Return([]db.ProductItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -348,8 +363,8 @@ func TestListProductItemsAPI(t *testing.T) {
 					ListProductItems(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
@@ -363,8 +378,8 @@ func TestListProductItemsAPI(t *testing.T) {
 					ListProductItems(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -379,10 +394,10 @@ func TestListProductItemsAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := "/product-items"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := "/api/v1/product-items"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -391,8 +406,11 @@ func TestListProductItemsAPI(t *testing.T) {
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -403,16 +421,18 @@ func TestUpdateProductItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
 		productItemID int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:          "OK",
 			productItemID: productItem.ID,
-			body: gin.H{
+			AdminID:       admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -439,14 +459,15 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(productItem, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "Unauthorized",
 			productItemID: productItem.ID,
-			body: gin.H{
+			AdminID:       admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -472,14 +493,15 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "NoAuthorization",
 			productItemID: productItem.ID,
-			body: gin.H{
+			AdminID:       admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -504,14 +526,15 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InternalError",
 			productItemID: productItem.ID,
-			body: gin.H{
+			AdminID:       admin.ID,
+			body: fiber.Map{
 				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
@@ -537,13 +560,14 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InvalidID",
 			productItemID: 0,
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -552,8 +576,8 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					UpdateProductItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -568,19 +592,22 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-items/%d", tc.productItemID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -591,18 +618,16 @@ func TestDeleteProductItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
 		productItemID int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:          "OK",
 			productItemID: productItem.ID,
-			body: gin.H{
-				"id": productItem.ID,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -612,16 +637,14 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "Unauthorized",
 			productItemID: productItem.ID,
-			body: gin.H{
-				"id": productItem.ID,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
@@ -630,16 +653,14 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					DeleteProductItem(gomock.Any(), gomock.Eq(productItem.ID)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "NoAuthorization",
 			productItemID: productItem.ID,
-			body: gin.H{
-				"id": productItem.ID,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -647,16 +668,14 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					DeleteProductItem(gomock.Any(), gomock.Eq(productItem.ID)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "NotFound",
 			productItemID: productItem.ID,
-			body: gin.H{
-				"id": productItem.ID,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -666,16 +685,14 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InternalError",
 			productItemID: productItem.ID,
-			body: gin.H{
-				"id": productItem.ID,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -685,16 +702,14 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InvalidID",
 			productItemID: 0,
-			body: gin.H{
-				"id": 0,
-			},
+			AdminID:       admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -704,8 +719,8 @@ func TestDeleteProductItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -723,20 +738,18 @@ func TestDeleteProductItemAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/product-items/%d", tc.productItemID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -771,7 +784,7 @@ func randomProductItem() db.ProductItem {
 	}
 }
 
-func requireBodyMatchProductItem(t *testing.T, body *bytes.Buffer, productItem db.ProductItem) {
+func requireBodyMatchProductItem(t *testing.T, body io.ReadCloser, productItem db.ProductItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -781,7 +794,7 @@ func requireBodyMatchProductItem(t *testing.T, body *bytes.Buffer, productItem d
 	require.Equal(t, productItem, gotProductItem)
 }
 
-func requireBodyMatchProductItems(t *testing.T, body *bytes.Buffer, productItems []db.ProductItem) {
+func requireBodyMatchProductItems(t *testing.T, body io.ReadCloser, productItems []db.ProductItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

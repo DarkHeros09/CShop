@@ -2,223 +2,282 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
 
-//////////////* Create API //////////////
-
-type createOrderStatusRequest struct {
-	Status string `json:"status" binding:"required"`
-	UserID int64  `json:"user_id" binding:"required,min=1"`
+// ////////////* Create API //////////////
+type createOrderStatusParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
-func (server *Server) createOrderStatus(ctx *gin.Context) {
-	var req createOrderStatusRequest
+type createOrderStatusJsonRequest struct {
+	Status string `json:"status" validate:"required"`
+}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
+	var params createOrderStatusParamsRequest
+	var req createOrderStatusJsonRequest
+
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	orderStatus, err := server.store.CreateOrderStatus(ctx, req.Status)
+	orderStatus, err := server.store.CreateOrderStatus(ctx.Context(), req.Status)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, orderStatus)
+	ctx.Status(fiber.StatusOK).JSON(orderStatus)
+	return nil
 }
 
 // //////////////* Get API //////////////
 
-type getOrderStatusUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getOrderStatusParamsRequest struct {
+	UserID   int64 `params:"id" validate:"required,min=1"`
+	StatusID int64 `params:"status_id" validate:"required,min=1"`
 }
 
-type getOrderStatusJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
+	var params getOrderStatusParamsRequest
 
-func (server *Server) getOrderStatus(ctx *gin.Context) {
-	var uri getOrderStatusUriRequest
-	var req getOrderStatusJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetOrderStatusByUserIDParams{
-		ID:     uri.ID,
-		UserID: req.UserID,
+		ID:     params.StatusID,
+		UserID: params.UserID,
 	}
 
-	orderStatus, err := server.store.GetOrderStatusByUserID(ctx, arg)
+	orderStatus, err := server.store.GetOrderStatusByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if orderStatus.UserID.Int64 != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, orderStatus)
+	ctx.Status(fiber.StatusOK).JSON(orderStatus)
+	return nil
 }
 
 // //////////////* List API //////////////
-
-type listOrderStatusesRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+type listOrderStatusParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
+}
+type listOrderStatusQueryRequest struct {
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listOrderStatuses(ctx *gin.Context) {
-	var req listOrderStatusesRequest
+func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
+	var params listOrderStatusParamsRequest
+	var query listOrderStatusQueryRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
 	arg := db.ListOrderStatusesByUserIDParams{
 		UserID: authPayload.UserID,
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	orderStatuses, err := server.store.ListOrderStatusesByUserID(ctx, arg)
+	orderStatuses, err := server.store.ListOrderStatusesByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, orderStatuses)
+	ctx.Status(fiber.StatusOK).JSON(orderStatuses)
+	return nil
 }
 
 // //////////////* UPDATE API ///////////////
-type updateOrderStatusUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type updateOrderStatusParamsRequest struct {
+	UserID   int64 `params:"id" validate:"required,min=1"`
+	StatusID int64 `params:"status_id" validate:"required,min=1"`
 }
 
 type updateOrderStatusJsonRequest struct {
-	UserID int64  `json:"user_id" binding:"required,min=1"`
-	Status string `json:"status" binding:"omitempty,required"`
+	Status string `json:"status" validate:"omitempty,required"`
 }
 
-func (server *Server) updateOrderStatus(ctx *gin.Context) {
-	var uri updateOrderStatusUriRequest
+func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
+	var params updateOrderStatusParamsRequest
 	var req updateOrderStatusJsonRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateOrderStatusParams{
 		Status: null.StringFromPtr(&req.Status),
-		ID:     uri.ID,
+		ID:     params.StatusID,
 	}
 
-	orderStatus, err := server.store.UpdateOrderStatus(ctx, arg)
+	orderStatus, err := server.store.UpdateOrderStatus(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, orderStatus)
+	ctx.Status(fiber.StatusOK).JSON(orderStatus)
+	return nil
 }
 
 // ////////////* Delete API //////////////
 
-type deleteOrderStatusUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteOrderStatusParamsRequest struct {
+	StatusID int64 `params:"status_id" validate:"required,min=1"`
+	AdminID  int64 `params:"admin_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteOrderStatus(ctx *gin.Context) {
-	var uri deleteOrderStatusUriRequest
+func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
+	var params deleteOrderStatusParamsRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	err := server.store.DeleteOrderStatus(ctx, uri.ID)
+	err := server.store.DeleteOrderStatus(ctx.Context(), params.StatusID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }

@@ -59,13 +59,20 @@ func (q *Queries) GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, 
 	return i, err
 }
 
-const getShoppingCartByUserID = `-- name: GetShoppingCartByUserID :one
+const getShoppingCartByUserIDCartID = `-- name: GetShoppingCartByUserIDCartID :one
 SELECT id, user_id, created_at, updated_at FROM "shopping_cart"
-WHERE user_id = $1 LIMIT 1
+WHERE user_id = $1
+AND id = $2
+LIMIT 1
 `
 
-func (q *Queries) GetShoppingCartByUserID(ctx context.Context, userID int64) (ShoppingCart, error) {
-	row := q.db.QueryRow(ctx, getShoppingCartByUserID, userID)
+type GetShoppingCartByUserIDCartIDParams struct {
+	UserID int64 `json:"user_id"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) GetShoppingCartByUserIDCartID(ctx context.Context, arg GetShoppingCartByUserIDCartIDParams) (ShoppingCart, error) {
+	row := q.db.QueryRow(ctx, getShoppingCartByUserIDCartID, arg.UserID, arg.ID)
 	var i ShoppingCart
 	err := row.Scan(
 		&i.ID,

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -27,16 +26,19 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 	shoppingCartItem := createRandomShoppingCartItem(t, shoppingCart)
 
 	testCases := []struct {
-		name          string
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		name           string
+		body           fiber.Map
+		UserID         int64
+		ShoppingCartID int64
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs     func(store *mockdb.MockStore)
+		checkResponse  func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:           "OK",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
@@ -44,11 +46,6 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetShoppingCartByUserID(gomock.Any(), gomock.Eq(user.ID)).
-					Times(1).
-					Return(shoppingCart, nil)
 
 				arg := db.CreateShoppingCartItemParams{
 					ShoppingCartID: shoppingCartItem.ShoppingCartID,
@@ -61,37 +58,38 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 					Times(1).
 					Return(shoppingCartItem, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShoppingCartItem(t, recorder.Body, shoppingCartItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShoppingCartItem(t, rsp.Body, shoppingCartItem)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:           "NoAuthorization",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetShoppingCartByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
 
 				store.EXPECT().
 					CreateShoppingCartItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id":         user.ID,
+			name:           "InternalError",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
@@ -99,11 +97,6 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetShoppingCartByUserID(gomock.Any(), gomock.Eq(user.ID)).
-					Times(1).
-					Return(db.ShoppingCart{}, pgx.ErrTxClosed)
 
 				arg := db.CreateShoppingCartItemParams{
 					ShoppingCartID: shoppingCartItem.ShoppingCartID,
@@ -113,16 +106,19 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateShoppingCartItem(gomock.Any(), gomock.Eq(arg)).
-					Times(0)
+					Times(1).
+					Return(db.ShoppingCartItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			body: gin.H{
-				"user_id":         0,
+			name:           "InvalidUserID",
+			UserID:         0,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
@@ -130,16 +126,13 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetShoppingCartByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
 
 				store.EXPECT().
 					CreateShoppingCartItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -154,19 +147,22 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/cart"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -178,18 +174,16 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name           string
+		UserID         int64
 		ShoppingCartID int64
-		body           gin.H
 		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs     func(store *mockdb.MockStore)
-		checkResponse  func(recoder *httptest.ResponseRecorder)
+		checkResponse  func(rsp *http.Response)
 	}{
 		{
 			name:           "OK",
 			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:         user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -206,17 +200,15 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 					Return(shoppingCartItem, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShoppingCartItemForGet(t, recorder.Body, shoppingCartItem)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShoppingCartItemForGet(t, rsp.Body, shoppingCartItem)
 			},
 		},
 		{
 			name:           "NoAuthorization",
 			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:         user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -224,16 +216,14 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 					GetShoppingCartItemByUserIDCartID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:           "InternalError",
 			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			UserID:         user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -249,16 +239,14 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 					Return(db.GetShoppingCartItemByUserIDCartIDRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:           "InvalidUserID",
 			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"user_id": 0,
-			},
+			UserID:         0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -267,8 +255,8 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 					GetShoppingCartItemByUserIDCartID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -283,19 +271,18 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -312,16 +299,14 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "OK",
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -333,16 +318,14 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 					Return(shoppingCartItems, nil)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchListShoppingCartItem(t, recorder.Body, shoppingCartItems)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListShoppingCartItem(t, rsp.Body, shoppingCartItems)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "NoAuthorization",
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -350,15 +333,13 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 					ListShoppingCartItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InternalError",
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -370,15 +351,13 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 					Return([]db.ListShoppingCartItemsByUserIDRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			body: gin.H{
-				"user_id": 0,
-			},
+			name:   "InvalidUserID",
+			UserID: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -387,8 +366,8 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 					ListShoppingCartItemsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -403,19 +382,18 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := "/users/cart"
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/items", tc.UserID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -427,19 +405,21 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 	qty := util.RandomMoney()
 
 	testCases := []struct {
-		name           string
-		ShoppingCartID int64
-		body           gin.H
-		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs     func(store *mockdb.MockStore)
-		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name               string
+		ShoppingCartID     int64
+		UserID             int64
+		ShoppingCartItemID int64
+		body               fiber.Map
+		setupAuth          func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs         func(store *mockdb.MockStore)
+		checkResponse      func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:           "OK",
-			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"id":              shoppingCartItem.ID,
-				"user_id":         shoppingCart.UserID,
+			name:               "OK",
+			ShoppingCartID:     shoppingCart.ID,
+			UserID:             user.ID,
+			ShoppingCartItemID: shoppingCartItem.ID,
+			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             qty,
 			},
@@ -460,16 +440,16 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 					Times(1).
 					Return(shoppingCartItem, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:           "NoAuthorization",
-			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"id":              shoppingCartItem.ID,
-				"user_id":         shoppingCart.UserID,
+			name:               "NoAuthorization",
+			ShoppingCartID:     shoppingCart.ID,
+			UserID:             user.ID,
+			ShoppingCartItemID: shoppingCartItem.ID,
+			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             qty,
 			},
@@ -480,16 +460,16 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 					UpdateShoppingCartItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:           "InternalError",
-			ShoppingCartID: shoppingCart.ID,
-			body: gin.H{
-				"id":              shoppingCartItem.ID,
-				"user_id":         shoppingCart.UserID,
+			name:               "InternalError",
+			ShoppingCartID:     shoppingCart.ID,
+			UserID:             user.ID,
+			ShoppingCartItemID: shoppingCartItem.ID,
+			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             qty,
 			},
@@ -510,8 +490,8 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 					Return(db.UpdateShoppingCartItemRow{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -526,8 +506,8 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -542,19 +522,22 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -567,24 +550,25 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 	testCases := []struct {
 		name               string
 		ShoppingCartItemID int64
-		body               gin.H
+		ShoppingCartID     int64
+		UserID             int64
 		setupAuth          func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub          func(store *mockdb.MockStore)
-		checkResponse      func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse      func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:               "OK",
 			ShoppingCartItemID: shoppingCartItem.ID,
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			UserID:             user.ID,
+			ShoppingCartID:     shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteShoppingCartItemParams{
-					ID:     shoppingCartItem.ID,
-					UserID: shoppingCartItem.UserID,
+					ShoppingCartItemID: shoppingCartItem.ID,
+					UserID:             shoppingCartItem.UserID,
+					ShoppingCartID:     shoppingCart.ID,
 				}
 
 				store.EXPECT().
@@ -592,23 +576,23 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:               "NotFound",
 			ShoppingCartItemID: shoppingCartItem.ID,
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			UserID:             user.ID,
+			ShoppingCartID:     shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteShoppingCartItemParams{
-					ID:     shoppingCartItem.ID,
-					UserID: shoppingCartItem.UserID,
+					ShoppingCartItemID: shoppingCartItem.ID,
+					UserID:             shoppingCartItem.UserID,
+					ShoppingCartID:     shoppingCart.ID,
 				}
 
 				store.EXPECT().
@@ -616,23 +600,23 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:               "InternalError",
 			ShoppingCartItemID: shoppingCartItem.ID,
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			UserID:             user.ID,
+			ShoppingCartID:     shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteShoppingCartItemParams{
-					ID:     shoppingCartItem.ID,
-					UserID: shoppingCartItem.UserID,
+					ShoppingCartItemID: shoppingCartItem.ID,
+					UserID:             shoppingCartItem.UserID,
+					ShoppingCartID:     shoppingCart.ID,
 				}
 
 				store.EXPECT().
@@ -640,16 +624,15 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:               "InvalidID",
 			ShoppingCartItemID: 0,
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			UserID:             user.ID,
+			ShoppingCartID:     shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -659,8 +642,8 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -678,20 +661,22 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
+			// // Marshal body data to JSON
+			// data, err := json.Marshal(tc.body)
+			// require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/cart/%d", tc.ShoppingCartItemID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -707,74 +692,81 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 	shoppingCartItemList = append(shoppingCartItemList, shoppingCartItem)
 
 	testCases := []struct {
-		name          string
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name           string
+		UserID         int64
+		ShoppingCartID int64
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStub      func(store *mockdb.MockStore)
+		checkResponse  func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			name:           "OK",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 
+				arg := db.DeleteShoppingCartItemAllByUserParams{
+					UserID:         user.ID,
+					ShoppingCartID: shoppingCart.ID,
+				}
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(shoppingCartItemList, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			name:           "NotFound",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-
+				arg := db.DeleteShoppingCartItemAllByUserParams{
+					UserID:         user.ID,
+					ShoppingCartID: shoppingCart.ID,
+				}
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return([]db.ShoppingCartItem{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id": shoppingCart.UserID,
-			},
+			name:           "InternalError",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-
+				arg := db.DeleteShoppingCartItemAllByUserParams{
+					UserID:         user.ID,
+					ShoppingCartID: shoppingCart.ID,
+				}
 				store.EXPECT().
-					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(shoppingCart.UserID)).
+					DeleteShoppingCartItemAllByUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return([]db.ShoppingCartItem{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
-				"user_id": 0,
-			},
+			name:           "InvalidID",
+			UserID:         0,
+			ShoppingCartID: shoppingCart.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -784,8 +776,8 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -803,20 +795,18 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := "/users/cart/delete-all"
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d", tc.UserID, tc.ShoppingCartID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -835,19 +825,23 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 	finishedPurchase := createRandomFinishedPurchase(t)
 
 	testCases := []struct {
-		name          string
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name           string
+		body           fiber.Map
+		UserID         int64
+		ShoppingCartID int64
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs     func(store *mockdb.MockStore)
+		checkResponse  func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"user_id":            userAddress.UserID,
-				"user_address_id":    userAddress.AddressID,
-				"payment_method_id":  paymentMethod.ID,
-				"shopping_cart_id":   shoppingCart.ID,
+			name:           "OK",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
+				"user_address_id":   userAddress.AddressID,
+				"payment_method_id": paymentMethod.ID,
+
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
 				"order_total":        orderTotal,
@@ -872,17 +866,19 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 					Times(1).
 					Return(finishedPurchase, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"user_id":            userAddress.UserID,
-				"user_address_id":    userAddress.AddressID,
-				"payment_method_id":  paymentMethod.ID,
-				"shopping_cart_id":   shoppingCart.ID,
+			name:           "NoAuthorization",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
+				"user_address_id":   userAddress.AddressID,
+				"payment_method_id": paymentMethod.ID,
+
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
 				"order_total":        orderTotal,
@@ -894,17 +890,19 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 					FinishedPurchaseTx(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"user_id":            userAddress.UserID,
-				"user_address_id":    userAddress.AddressID,
-				"payment_method_id":  paymentMethod.ID,
-				"shopping_cart_id":   shoppingCart.ID,
+			name:           "InternalError",
+			UserID:         user.ID,
+			ShoppingCartID: shoppingCart.ID,
+			body: fiber.Map{
+
+				"user_address_id":   userAddress.AddressID,
+				"payment_method_id": paymentMethod.ID,
+
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
 				"order_total":        orderTotal,
@@ -929,8 +927,8 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 					Return(db.FinishedPurchaseTxResult{}, pgx.ErrTxClosed)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -944,8 +942,8 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -960,19 +958,22 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/cart/purchase"
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/purchase", tc.UserID, tc.ShoppingCartID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -1080,7 +1081,7 @@ func createRandomListShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart
 	return
 }
 
-func requireBodyMatchShoppingCartItem(t *testing.T, body *bytes.Buffer, shoppingCartItem db.ShoppingCartItem) {
+func requireBodyMatchShoppingCartItem(t *testing.T, body io.ReadCloser, shoppingCartItem db.ShoppingCartItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -1095,7 +1096,7 @@ func requireBodyMatchShoppingCartItem(t *testing.T, body *bytes.Buffer, shopping
 	require.Equal(t, shoppingCartItem.CreatedAt, gotShoppingCartItem.CreatedAt)
 }
 
-func requireBodyMatchShoppingCartItemForGet(t *testing.T, body *bytes.Buffer, shoppingCartItem db.GetShoppingCartItemByUserIDCartIDRow) {
+func requireBodyMatchShoppingCartItemForGet(t *testing.T, body io.ReadCloser, shoppingCartItem db.GetShoppingCartItemByUserIDCartIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -1111,7 +1112,7 @@ func requireBodyMatchShoppingCartItemForGet(t *testing.T, body *bytes.Buffer, sh
 	require.Equal(t, shoppingCartItem.UserID, gotShoppingCartItem.UserID)
 }
 
-func requireBodyMatchListShoppingCartItem(t *testing.T, body *bytes.Buffer, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow) {
+func requireBodyMatchListShoppingCartItem(t *testing.T, body io.ReadCloser, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

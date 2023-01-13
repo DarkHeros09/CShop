@@ -10,9 +10,11 @@ RETURNING *;
 SELECT * FROM "shopping_cart"
 WHERE id = $1 LIMIT 1;
 
--- name: GetShoppingCartByUserID :one
+-- name: GetShoppingCartByUserIDCartID :one
 SELECT * FROM "shopping_cart"
-WHERE user_id = $1 LIMIT 1;
+WHERE user_id = $1
+AND id = $2
+LIMIT 1;
 
 -- name: ListShoppingCarts :many
 SELECT * FROM "shopping_cart"

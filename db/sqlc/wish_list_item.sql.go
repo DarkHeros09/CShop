@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"time"
 
 	"github.com/guregu/null"
 )
@@ -41,36 +40,40 @@ func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItem
 }
 
 const deleteWishListItem = `-- name: DeleteWishListItem :exec
-WITH t1 AS (
-  SELECT id FROM "wish_list" AS wl
-  WHERE wl.user_id = $2
-)
 DELETE FROM "wish_list_item" AS wli
 WHERE wli.id = $1
-AND wli.wish_list_id = (SELECT id FROM t1)
+AND wli.wish_list_id = $2
 `
 
 type DeleteWishListItemParams struct {
-	ID     int64 `json:"id"`
-	UserID int64 `json:"user_id"`
+	ID         int64 `json:"id"`
+	WishListID int64 `json:"wish_list_id"`
 }
 
+// WITH t1 AS (
+//
+//	SELECT id FROM "wish_list" AS wl
+//	WHERE wl.user_id = sqlc.arg(user_id)
+//
+// )
 func (q *Queries) DeleteWishListItem(ctx context.Context, arg DeleteWishListItemParams) error {
-	_, err := q.db.Exec(ctx, deleteWishListItem, arg.ID, arg.UserID)
+	_, err := q.db.Exec(ctx, deleteWishListItem, arg.ID, arg.WishListID)
 	return err
 }
 
-const deleteWishListItemAllByUser = `-- name: DeleteWishListItemAllByUser :many
-WITH t1 AS(
-  SELECT id FROM "wish_list" WHERE user_id = $1
-)
+const deleteWishListItemAll = `-- name: DeleteWishListItemAll :many
 DELETE FROM "wish_list_item"
-WHERE wish_list_id = (SELECT id FROM t1)
+WHERE wish_list_id = $1
 RETURNING id, wish_list_id, product_item_id, created_at, updated_at
 `
 
-func (q *Queries) DeleteWishListItemAllByUser(ctx context.Context, userID int64) ([]WishListItem, error) {
-	rows, err := q.db.Query(ctx, deleteWishListItemAllByUser, userID)
+// WITH t1 AS(
+//
+//	SELECT id FROM "wish_list" WHERE user_id = $1
+//
+// )
+func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]WishListItem, error) {
+	rows, err := q.db.Query(ctx, deleteWishListItemAll, wishListID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,38 +117,30 @@ func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, 
 }
 
 const getWishListItemByUserIDCartID = `-- name: GetWishListItemByUserIDCartID :one
-SELECT wli.id, wli.wish_list_id, wli.product_item_id, wli.created_at, wli.updated_at, wl.user_id
+SELECT wli.id, wli.wish_list_id, wli.product_item_id, wli.created_at, wli.updated_at
 FROM "wish_list_item" AS wli
 LEFT JOIN "wish_list" AS wl ON wl.id = wli.wish_list_id
 WHERE wl.user_id = $1
-AND wli.wish_list_id = $2
+AND wli.id = $2
+AND wli.wish_list_id = $3
 LIMIT 1
 `
 
 type GetWishListItemByUserIDCartIDParams struct {
 	UserID     int64 `json:"user_id"`
+	ID         int64 `json:"id"`
 	WishListID int64 `json:"wish_list_id"`
 }
 
-type GetWishListItemByUserIDCartIDRow struct {
-	ID            int64     `json:"id"`
-	WishListID    int64     `json:"wish_list_id"`
-	ProductItemID int64     `json:"product_item_id"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	UserID        null.Int  `json:"user_id"`
-}
-
-func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (GetWishListItemByUserIDCartIDRow, error) {
-	row := q.db.QueryRow(ctx, getWishListItemByUserIDCartID, arg.UserID, arg.WishListID)
-	var i GetWishListItemByUserIDCartIDRow
+func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (WishListItem, error) {
+	row := q.db.QueryRow(ctx, getWishListItemByUserIDCartID, arg.UserID, arg.ID, arg.WishListID)
+	var i WishListItem
 	err := row.Scan(
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UserID,
 	)
 	return i, err
 }
@@ -264,16 +259,13 @@ func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) (
 }
 
 const updateWishListItem = `-- name: UpdateWishListItem :one
-WITH t1 AS (
-  SELECT user_id FROM "wish_list" AS wl
-  WHERE wl.id = $3
-)
 
 UPDATE "wish_list_item" AS wli
 SET 
 product_item_id = COALESCE($1,product_item_id)
 WHERE wli.id = $2
-RETURNING id, wish_list_id, product_item_id, created_at, updated_at, (SELECT user_id FROM t1)
+AND wli.wish_list_id = $3
+RETURNING id, wish_list_id, product_item_id, created_at, updated_at
 `
 
 type UpdateWishListItemParams struct {
@@ -282,25 +274,21 @@ type UpdateWishListItemParams struct {
 	WishListID    int64    `json:"wish_list_id"`
 }
 
-type UpdateWishListItemRow struct {
-	ID            int64     `json:"id"`
-	WishListID    int64     `json:"wish_list_id"`
-	ProductItemID int64     `json:"product_item_id"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	UserID        int64     `json:"user_id"`
-}
-
-func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (UpdateWishListItemRow, error) {
+// WITH t1 AS (
+//
+//	SELECT user_id FROM "wish_list" AS wl
+//	WHERE wl.id = sqlc.arg(wish_list_id)
+//
+// )
+func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error) {
 	row := q.db.QueryRow(ctx, updateWishListItem, arg.ProductItemID, arg.ID, arg.WishListID)
-	var i UpdateWishListItemRow
+	var i WishListItem
 	err := row.Scan(
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.UserID,
 	)
 	return i, err
 }

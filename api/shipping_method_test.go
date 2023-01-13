@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -27,17 +26,18 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		UserID        int64
+		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"name":    shippingMethod.Name,
-				"price":   shippingMethod.Price,
-				"user_id": user.ID,
+			name:   "OK",
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  shippingMethod.Name,
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -54,17 +54,17 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(shippingMethod, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShippingMethod(t, recorder.Body, shippingMethod)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShippingMethod(t, rsp.Body, shippingMethod)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			body: gin.H{
-				"name":    shippingMethod.Name,
-				"price":   shippingMethod.Price,
-				"user_id": user.ID,
+			name:   "NoAuthorization",
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  shippingMethod.Name,
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -73,16 +73,16 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 					CreateShippingMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"name":    shippingMethod.Name,
-				"price":   shippingMethod.Price,
-				"user_id": user.ID,
+			name:   "InternalError",
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  shippingMethod.Name,
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -99,16 +99,16 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(db.ShippingMethod{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			body: gin.H{
-				"name":    0,
-				"price":   "",
-				"user_id": 0,
+			name:   "InvalidUserID",
+			UserID: 0,
+			body: fiber.Map{
+				"name":  0,
+				"price": "",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -118,8 +118,8 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 					CreateShippingMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -134,19 +134,22 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/shipping-method"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/shipping-method", tc.UserID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -158,17 +161,16 @@ func TestGetShippingMethodAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		UserID        int64
+		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "OK",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -182,17 +184,15 @@ func TestGetShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(shippingMethod, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShippingMethodForGet(t, recorder.Body, shippingMethod)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShippingMethodForGet(t, rsp.Body, shippingMethod)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "NoAuthorization",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -200,16 +200,14 @@ func TestGetShippingMethodAPI(t *testing.T) {
 					GetShippingMethodByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "NotFound",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -223,16 +221,14 @@ func TestGetShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(db.GetShippingMethodByUserIDRow{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InternalError",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -246,16 +242,14 @@ func TestGetShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(db.GetShippingMethodByUserIDRow{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			ID:   0,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			name:   "InvalidID",
+			ID:     0,
+			UserID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -265,8 +259,8 @@ func TestGetShippingMethodAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -283,20 +277,18 @@ func TestGetShippingMethodAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/shipping-method/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/shipping-method/%d", tc.UserID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -321,12 +313,14 @@ func TestListShippingMethodAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		query         Query
+		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
+			name:   "OK",
+			UserID: user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -346,13 +340,14 @@ func TestListShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(ShippingMethods, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchShippingMethods(t, recorder.Body, ShippingMethods)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShippingMethods(t, rsp.Body, ShippingMethods)
 			},
 		},
 		{
-			name: "InternalError",
+			name:   "InternalError",
+			UserID: user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -366,12 +361,13 @@ func TestListShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return([]db.ListShippingMethodsByUserIDRow{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidPageID",
+			name:   "InvalidPageID",
+			UserID: user.ID,
 			query: Query{
 				pageID:   -1,
 				pageSize: n,
@@ -384,12 +380,13 @@ func TestListShippingMethodAPI(t *testing.T) {
 					ListShippingMethodsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidPageSize",
+			name:   "InvalidPageSize",
+			UserID: user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: 100000,
@@ -402,8 +399,8 @@ func TestListShippingMethodAPI(t *testing.T) {
 					ListShippingMethodsByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -418,10 +415,10 @@ func TestListShippingMethodAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := "/users/shipping-method"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/users/%d/shipping-method", tc.UserID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -431,8 +428,11 @@ func TestListShippingMethodAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -444,18 +444,19 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		UserID        int64
+		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-				"name":    "new status",
-				"price":   shippingMethod.Price,
+			name:   "OK",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  "new status",
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -473,17 +474,17 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(shippingMethod, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-				"name":    "new status",
-				"price":   shippingMethod.Price,
+			name:   "NoAuthorization",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  "new status",
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -492,17 +493,17 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 					UpdateShippingMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": user.ID,
-				"name":    "new status",
-				"price":   shippingMethod.Price,
+			name:   "InternalError",
+			ID:     shippingMethod.ID,
+			UserID: user.ID,
+			body: fiber.Map{
+				"name":  "new status",
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -519,17 +520,17 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(db.ShippingMethod{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidUserID",
-			ID:   shippingMethod.ID,
-			body: gin.H{
-				"user_id": 0,
-				"name":    "new status",
-				"price":   shippingMethod.Price,
+			name:   "InvalidUserID",
+			ID:     shippingMethod.ID,
+			UserID: 0,
+			body: fiber.Map{
+				"name":  "new status",
+				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -540,8 +541,8 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -555,19 +556,22 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/shipping-method/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/shipping-method/%d", tc.UserID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 
@@ -580,15 +584,15 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   shippingMethod.ID,
-			body: gin.H{},
+			name:    "OK",
+			ID:      shippingMethod.ID,
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -599,14 +603,14 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			ID:   shippingMethod.ID,
-			body: gin.H{},
+			name:    "NotFound",
+			ID:      shippingMethod.ID,
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -617,14 +621,14 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   shippingMethod.ID,
-			body: gin.H{},
+			name:    "InternalError",
+			ID:      shippingMethod.ID,
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -635,14 +639,14 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			ID:   0,
-			body: gin.H{},
+			name:    "InvalidID",
+			ID:      0,
+			AdminID: admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -652,8 +656,8 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -671,20 +675,18 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/shipping-method/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/shipping-method/%d", tc.AdminID, tc.ID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -751,7 +753,7 @@ func createRandomShippingMethodForList(t *testing.T, user db.User) (ShippingMeth
 	return
 }
 
-func requireBodyMatchShippingMethod(t *testing.T, body *bytes.Buffer, shippingMethod db.ShippingMethod) {
+func requireBodyMatchShippingMethod(t *testing.T, body io.ReadCloser, shippingMethod db.ShippingMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -764,7 +766,7 @@ func requireBodyMatchShippingMethod(t *testing.T, body *bytes.Buffer, shippingMe
 	require.Equal(t, shippingMethod.Price, gotShippingMethod.Price)
 }
 
-func requireBodyMatchShippingMethodForGet(t *testing.T, body *bytes.Buffer, shippingMethod db.GetShippingMethodByUserIDRow) {
+func requireBodyMatchShippingMethodForGet(t *testing.T, body io.ReadCloser, shippingMethod db.GetShippingMethodByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -778,7 +780,7 @@ func requireBodyMatchShippingMethodForGet(t *testing.T, body *bytes.Buffer, ship
 	require.Equal(t, shippingMethod.UserID.Int64, gotShippingMethod.UserID.Int64)
 }
 
-func requireBodyMatchShippingMethods(t *testing.T, body *bytes.Buffer, shippingMethods []db.ListShippingMethodsByUserIDRow) {
+func requireBodyMatchShippingMethods(t *testing.T, body io.ReadCloser, shippingMethods []db.ListShippingMethodsByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

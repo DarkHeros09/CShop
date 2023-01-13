@@ -2,11 +2,11 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -14,25 +14,42 @@ import (
 
 //////////////* Create API //////////////
 
-type createShippingMethodRequest struct {
-	Name   string `json:"name" binding:"required"`
-	Price  string `json:"price" binding:"required"`
-	UserID int64  `json:"user_id" binding:"required,min=1"`
+type createShippingMethodParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
+}
+type createShippingMethodJsonRequest struct {
+	Name  string `json:"name" validate:"required"`
+	Price string `json:"price" validate:"required"`
 }
 
-func (server *Server) createShippingMethod(ctx *gin.Context) {
-	var req createShippingMethodRequest
+func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
+	var params createShippingMethodParamsRequest
+	var req createShippingMethodJsonRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateShippingMethodParams{
@@ -40,193 +57,233 @@ func (server *Server) createShippingMethod(ctx *gin.Context) {
 		Price: req.Price,
 	}
 
-	ShippingMethod, err := server.store.CreateShippingMethod(ctx, arg)
+	shippingMethod, err := server.store.CreateShippingMethod(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, ShippingMethod)
+	ctx.Status(fiber.StatusOK).JSON(shippingMethod)
+	return nil
 }
 
 // //////////////* Get API //////////////
 
-type getShippingMethodUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getShippingMethodParamsRequest struct {
+	UserID           int64 `params:"id" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
 }
 
-type getShippingMethodJsonRequest struct {
-	UserID int64 `json:"user_id" binding:"required,min=1"`
-}
+func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
+	var params getShippingMethodParamsRequest
 
-func (server *Server) getShippingMethod(ctx *gin.Context) {
-	var uri getShippingMethodUriRequest
-	var req getShippingMethodJsonRequest
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetShippingMethodByUserIDParams{
-		ID:     uri.ID,
-		UserID: req.UserID,
+		ID:     params.ShippingMethodID,
+		UserID: params.UserID,
 	}
 
-	ShippingMethod, err := server.store.GetShippingMethodByUserID(ctx, arg)
+	shippingMethod, err := server.store.GetShippingMethodByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if ShippingMethod.UserID.Int64 != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, ShippingMethod)
+	ctx.Status(fiber.StatusOK).JSON(shippingMethod)
+	return nil
 }
 
 // //////////////* List API //////////////
 
-type listShippingMethodesRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+type listShippingMethodesParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
+}
+type listShippingMethodesQueryRequest struct {
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShippingMethodes(ctx *gin.Context) {
-	var req listShippingMethodesRequest
+func (server *Server) listShippingMethodes(ctx *fiber.Ctx) error {
+	var params listShippingMethodesParamsRequest
+	var query listShippingMethodesQueryRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 	arg := db.ListShippingMethodsByUserIDParams{
 		UserID: authPayload.UserID,
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	ShippingMethodes, err := server.store.ListShippingMethodsByUserID(ctx, arg)
+	shippingMethodes, err := server.store.ListShippingMethodsByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, ShippingMethodes)
+	ctx.Status(fiber.StatusOK).JSON(shippingMethodes)
+	return nil
 }
 
 // //////////////* UPDATE API ///////////////
-type updateShippingMethodUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type updateShippingMethodParamsRequest struct {
+	UserID           int64 `params:"id" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
 }
 
 type updateShippingMethodJsonRequest struct {
-	UserID int64  `json:"user_id" binding:"required,min=1"`
-	Name   string `json:"name" binding:"omitempty,required"`
-	Price  string `json:"price" binding:"omitempty,required"`
+	Name  string `json:"name" validate:"omitempty,required"`
+	Price string `json:"price" validate:"omitempty,required"`
 }
 
-func (server *Server) updateShippingMethod(ctx *gin.Context) {
-	var uri updateShippingMethodUriRequest
+func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
+	var params updateShippingMethodParamsRequest
 	var req updateShippingMethodJsonRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != req.UserID {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateShippingMethodParams{
 		Name:  null.StringFromPtr(&req.Name),
 		Price: null.StringFromPtr(&req.Price),
-		ID:    uri.ID,
+		ID:    params.ShippingMethodID,
 	}
 
-	ShippingMethod, err := server.store.UpdateShippingMethod(ctx, arg)
+	shippingMethod, err := server.store.UpdateShippingMethod(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, ShippingMethod)
+	ctx.Status(fiber.StatusOK).JSON(shippingMethod)
+	return nil
 }
 
 // ////////////* Delete API //////////////
 
-type deleteShippingMethodUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteShippingMethodParamsRequest struct {
+	AdminID          int64 `params:"admin_id" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShippingMethod(ctx *gin.Context) {
-	var uri deleteShippingMethodUriRequest
+func (server *Server) deleteShippingMethod(ctx *fiber.Ctx) error {
+	var params deleteShippingMethodParamsRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	err := server.store.DeleteShippingMethod(ctx, uri.ID)
+	err := server.store.DeleteShippingMethod(ctx.Context(), params.ShippingMethodID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -25,63 +24,80 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 	productConfiguration := randomProductConfiguration()
 
 	testCases := []struct {
-		name          string
-		ProductItemID int64
-		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name              string
+		ProductItemID     int64
+		VariationOptionID int64
+		buildStub         func(store *mockdb.MockStore)
+		checkResponse     func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:          "OK",
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "OK",
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 				store.EXPECT().
-					GetProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					GetProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(productConfiguration, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductConfiguration(t, recorder.Body, productConfiguration)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductConfiguration(t, rsp.Body, productConfiguration)
 			},
 		},
 
 		{
-			name:          "NotFound",
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "NotFound",
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 				store.EXPECT().
-					GetProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					GetProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ProductConfiguration{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "InternalError",
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "InternalError",
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.GetProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 				store.EXPECT().
-					GetProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					GetProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "InvalidID",
-			ProductItemID: 0,
+			name:              "InvalidID",
+			ProductItemID:     0,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetProductConfiguration(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -99,15 +115,17 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/product-configurations/%d", tc.ProductItemID)
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/product-configurations/%d/variation-options/%d", tc.ProductItemID, tc.VariationOptionID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -120,16 +138,19 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
+		AdminID       int64
+		ProductItemID int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"product_item_id":     productConfiguration.ProductItemID,
-				"variation_option_id": productConfiguration.VariationOptionID,
+			name:          "OK",
+			AdminID:       admin.ID,
+			ProductItemID: productConfiguration.ProductItemID,
+			body: fiber.Map{
+				"variation_id": productConfiguration.VariationOptionID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -145,13 +166,15 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 					Times(1).
 					Return(productConfiguration, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductConfiguration(t, recorder.Body, productConfiguration)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductConfiguration(t, rsp.Body, productConfiguration)
 			},
 		},
 		{
-			name: "NoAuthorization",
+			name:          "NoAuthorization",
+			AdminID:       admin.ID,
+			ProductItemID: productConfiguration.ProductItemID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -165,12 +188,17 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "Unauthorized",
+			name:          "Unauthorized",
+			AdminID:       admin.ID,
+			ProductItemID: productConfiguration.ProductItemID,
+			body: fiber.Map{
+				"variation_id": productConfiguration.VariationOptionID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
@@ -184,15 +212,16 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 					CreateProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"product_item_id":     productConfiguration.ProductItemID,
-				"variation_option_id": productConfiguration.VariationOptionID,
+			name:          "InternalError",
+			AdminID:       admin.ID,
+			ProductItemID: productConfiguration.ProductItemID,
+			body: fiber.Map{
+				"variation_id": productConfiguration.VariationOptionID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -203,15 +232,16 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
-				"product_item_id":     0,
-				"variation_option_id": productConfiguration.VariationOptionID,
+			name:          "InvalidID",
+			AdminID:       admin.ID,
+			ProductItemID: 0,
+			body: fiber.Map{
+				"variation_id": productConfiguration.VariationOptionID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -221,8 +251,8 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 					CreateProductConfiguration(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -237,137 +267,147 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/product-configurations"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
 
 func TestListProductConfigurationsAPI(t *testing.T) {
 	n := 5
-	productConfigurations := make([]db.ProductConfiguration, n)
-	for i := 0; i < n; i++ {
-		productConfigurations[i] = randomProductConfiguration()
-	}
-
 	type Query struct {
 		pageID   int
 		pageSize int
 	}
+	productConfigurations := make([]db.ProductConfiguration, n)
+	for i := 0; i < n; i++ {
+		productConfigurations[i] = randomProductConfiguration()
+		testCases := []struct {
+			name          string
+			query         Query
+			ProductItemID int64
+			buildStubs    func(store *mockdb.MockStore)
+			checkResponse func(rsp *http.Response)
+		}{
+			{
+				name:          "OK",
+				ProductItemID: productConfigurations[i].ProductItemID,
+				query: Query{
+					pageID:   1,
+					pageSize: n,
+				},
+				buildStubs: func(store *mockdb.MockStore) {
+					arg := db.ListProductConfigurationsParams{
+						Limit:  int32(n),
+						Offset: 0,
+					}
 
-	testCases := []struct {
-		name          string
-		query         Query
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
-	}{
-		{
-			name: "OK",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
+					store.EXPECT().
+						ListProductConfigurations(gomock.Any(), gomock.Eq(arg)).
+						Times(1).
+						Return(productConfigurations, nil)
+				},
+				checkResponse: func(rsp *http.Response) {
+					require.Equal(t, http.StatusOK, rsp.StatusCode)
+					requireBodyMatchProductConfigurations(t, rsp.Body, productConfigurations)
+				},
 			},
-			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListProductConfigurationsParams{
-					Limit:  int32(n),
-					Offset: 0,
-				}
+			{
+				name:          "InternalError",
+				ProductItemID: productConfigurations[i].ProductItemID,
+				query: Query{
+					pageID:   1,
+					pageSize: n,
+				},
+				buildStubs: func(store *mockdb.MockStore) {
+					store.EXPECT().
+						ListProductConfigurations(gomock.Any(), gomock.Any()).
+						Times(1).
+						Return([]db.ProductConfiguration{}, pgx.ErrTxClosed)
+				},
+				checkResponse: func(rsp *http.Response) {
+					require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+				},
+			},
+			{
+				name:          "InvalidPageID",
+				ProductItemID: productConfigurations[i].ProductItemID,
+				query: Query{
+					pageID:   -1,
+					pageSize: n,
+				},
+				buildStubs: func(store *mockdb.MockStore) {
+					store.EXPECT().
+						ListProductConfigurations(gomock.Any(), gomock.Any()).
+						Times(0)
+				},
+				checkResponse: func(rsp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+				},
+			},
+			{
+				name:          "InvalidPageSize",
+				ProductItemID: productConfigurations[i].ProductItemID,
+				query: Query{
+					pageID:   1,
+					pageSize: 100000,
+				},
+				buildStubs: func(store *mockdb.MockStore) {
+					store.EXPECT().
+						ListProductConfigurations(gomock.Any(), gomock.Any()).
+						Times(0)
+				},
+				checkResponse: func(rsp *http.Response) {
+					require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+				},
+			},
+		}
 
-				store.EXPECT().
-					ListProductConfigurations(gomock.Any(), gomock.Eq(arg)).
-					Times(1).
-					Return(productConfigurations, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductConfigurations(t, recorder.Body, productConfigurations)
-			},
-		},
-		{
-			name: "InternalError",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductConfigurations(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return([]db.ProductConfiguration{}, pgx.ErrTxClosed)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-		{
-			name: "InvalidPageID",
-			query: Query{
-				pageID:   -1,
-				pageSize: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductConfigurations(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
-			name: "InvalidPageSize",
-			query: Query{
-				pageID:   1,
-				pageSize: 100000,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductConfigurations(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
+		for i := range testCases {
+			tc := testCases[i]
+
+			t.Run(tc.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+
+				store := mockdb.NewMockStore(ctrl)
+				tc.buildStubs(store)
+
+				server := newTestServer(t, store)
+				//recorder := httptest.NewRecorder()
+
+				url := fmt.Sprintf("/api/v1/product-configurations/%d", tc.ProductItemID)
+				request, err := http.NewRequest(fiber.MethodGet, url, nil)
+				require.NoError(t, err)
+
+				// Add query parameters to request URL
+				q := request.URL.Query()
+				q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
+				q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+				request.URL.RawQuery = q.Encode()
+
+				request.Header.Set("Content-Type", "application/json")
+
+				rsp, err := server.router.Test(request)
+				require.NoError(t, err)
+				tc.checkResponse(rsp)
+			})
+		}
 	}
 
-	for i := range testCases {
-		tc := testCases[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-
-			store := mockdb.NewMockStore(ctrl)
-			tc.buildStubs(store)
-
-			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
-
-			url := "/product-configurations"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
-			require.NoError(t, err)
-
-			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
-			request.URL.RawQuery = q.Encode()
-
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
-		})
-	}
 }
 
 func TestUpdateProductConfigurationAPI(t *testing.T) {
@@ -377,17 +417,19 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
 		ProductItemID int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:          "OK",
 			ProductItemID: productConfiguration.ProductItemID,
-			body: gin.H{
-				"variation_option_id": updatedOption,
+			AdminID:       admin.ID,
+			body: fiber.Map{
+				"variation_id": updatedOption,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -403,15 +445,16 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 					Times(1).
 					Return(productConfiguration, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "Unauthorized",
 			ProductItemID: productConfiguration.ProductItemID,
-			body: gin.H{
-				"variation_option_id": updatedOption,
+			AdminID:       admin.ID,
+			body: fiber.Map{
+				"variation_id": updatedOption,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
@@ -426,15 +469,16 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 					UpdateProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "NoAuthorization",
 			ProductItemID: productConfiguration.ProductItemID,
-			body: gin.H{
-				"variation_option_id": updatedOption,
+			AdminID:       admin.ID,
+			body: fiber.Map{
+				"variation_id": updatedOption,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -448,15 +492,16 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 					UpdateProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InternalError",
 			ProductItemID: productConfiguration.ProductItemID,
-			body: gin.H{
-				"variation_option_id": updatedOption,
+			AdminID:       admin.ID,
+			body: fiber.Map{
+				"variation_id": updatedOption,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -471,13 +516,17 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:          "InvalidID",
 			ProductItemID: 0,
+			AdminID:       admin.ID,
+			body: fiber.Map{
+				"variation_id": updatedOption,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -486,8 +535,8 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 					UpdateProductConfiguration(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -502,19 +551,22 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-configurations/%d", tc.ProductItemID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -524,104 +576,131 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 	productConfiguration := randomProductConfiguration()
 
 	testCases := []struct {
-		name          string
-		ProductItemID int64
-		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name              string
+		AdminID           int64
+		ProductItemID     int64
+		VariationOptionID int64
+		setupAuth         func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStub         func(store *mockdb.MockStore)
+		checkResponse     func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:          "OK",
-			body:          gin.H{},
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "OK",
+			AdminID:           admin.ID,
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 
 				store.EXPECT().
-					DeleteProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					DeleteProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "Unauthorized",
-			ProductItemID: productConfiguration.ProductItemID,
-			body:          gin.H{},
+			name:              "Unauthorized",
+			AdminID:           admin.ID,
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 
 				store.EXPECT().
-					DeleteProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					DeleteProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "NoAuthorization",
-			body:          gin.H{},
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "NoAuthorization",
+			AdminID:           admin.ID,
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
+
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
-
+				arg := db.DeleteProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 				store.EXPECT().
-					DeleteProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					DeleteProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "NotFound",
-			body:          gin.H{},
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "NotFound",
+			AdminID:           admin.ID,
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 
 				store.EXPECT().
-					DeleteProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					DeleteProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "InternalError",
-			body:          gin.H{},
-			ProductItemID: productConfiguration.ProductItemID,
+			name:              "InternalError",
+			AdminID:           admin.ID,
+			ProductItemID:     productConfiguration.ProductItemID,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteProductConfigurationParams{
+					ProductItemID:     productConfiguration.ProductItemID,
+					VariationOptionID: productConfiguration.VariationOptionID,
+				}
 
 				store.EXPECT().
-					DeleteProductConfiguration(gomock.Any(), gomock.Eq(productConfiguration.ProductItemID)).
+					DeleteProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:          "InvalidID",
-			ProductItemID: 0,
-			body:          gin.H{},
+			name:              "InvalidID",
+			AdminID:           admin.ID,
+			ProductItemID:     0,
+			VariationOptionID: productConfiguration.VariationOptionID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -631,8 +710,8 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -650,20 +729,18 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/product-configurations/%d", tc.ProductItemID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d/variation-options/%d", tc.AdminID, tc.ProductItemID, tc.VariationOptionID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -693,7 +770,7 @@ func randomProductConfiguration() db.ProductConfiguration {
 	}
 }
 
-func requireBodyMatchProductConfiguration(t *testing.T, body *bytes.Buffer, productConfiguration db.ProductConfiguration) {
+func requireBodyMatchProductConfiguration(t *testing.T, body io.ReadCloser, productConfiguration db.ProductConfiguration) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -703,7 +780,7 @@ func requireBodyMatchProductConfiguration(t *testing.T, body *bytes.Buffer, prod
 	require.Equal(t, productConfiguration, gotProductConfiguration)
 }
 
-func requireBodyMatchProductConfigurations(t *testing.T, body *bytes.Buffer, ProductConfigurations []db.ProductConfiguration) {
+func requireBodyMatchProductConfigurations(t *testing.T, body io.ReadCloser, ProductConfigurations []db.ProductConfiguration) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

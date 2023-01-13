@@ -2,11 +2,11 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -14,237 +14,261 @@ import (
 
 //////////////* Create API //////////////
 
-type createCategoryPromotionRequest struct {
-	CategoryID  int64 `json:"category_id" binding:"required,min=1"`
-	PromotionID int64 `json:"promotion_id" binding:"required,min=1"`
-	Active      bool  `json:"active" binding:"boolean"`
+type createCategoryPromotionParamsRequest struct {
+	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
+	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
+	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
 }
 
-func (server *Server) createCategoryPromotion(ctx *gin.Context) {
-	var req createCategoryPromotionRequest
+type createCategoryPromotionJsonRequest struct {
+	Active bool `json:"active" validate:"boolean"`
+}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
-		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
+	var params createCategoryPromotionParamsRequest
+	var req createCategoryPromotionJsonRequest
+
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateCategoryPromotionParams{
-		CategoryID:  req.CategoryID,
-		PromotionID: req.PromotionID,
+		CategoryID:  params.CategoryID,
+		PromotionID: params.PromotionID,
 		Active:      req.Active,
 	}
 
-	categoryPromotion, err := server.store.CreateCategoryPromotion(ctx, arg)
+	categoryPromotion, err := server.store.CreateCategoryPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, categoryPromotion)
+	ctx.Status(fiber.StatusOK).JSON(categoryPromotion)
+	return nil
 }
 
 //////////////* Get API //////////////
 
-type getCategoryPromotionUriRequest struct {
-	PromotionID int64 `uri:"id" binding:"required,min=1"`
-}
-type getCategoryPromotionJsonRequest struct {
-	CategoryID int64 `json:"category_id" binding:"required,min=1"`
+type getCategoryPromotionParamsRequest struct {
+	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
 }
 
-func (server *Server) getCategoryPromotion(ctx *gin.Context) {
-	var uri getCategoryPromotionUriRequest
-	var req getCategoryPromotionJsonRequest
+func (server *Server) getCategoryPromotion(ctx *fiber.Ctx) error {
+	var params getCategoryPromotionParamsRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.GetCategoryPromotionParams{
-		CategoryID:  req.CategoryID,
-		PromotionID: uri.PromotionID,
+		CategoryID:  params.CategoryID,
+		PromotionID: params.PromotionID,
 	}
 
-	categoryPromotion, err := server.store.GetCategoryPromotion(ctx, arg)
+	categoryPromotion, err := server.store.GetCategoryPromotion(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, categoryPromotion)
+	ctx.Status(fiber.StatusOK).JSON(categoryPromotion)
+	return nil
 }
 
 //////////////* List API //////////////
 
-type listCategoryPromotionsRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+type listCategoryPromotionsQueryRequest struct {
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listCategoryPromotions(ctx *gin.Context) {
-	var req listCategoryPromotionsRequest
+func (server *Server) listCategoryPromotions(ctx *fiber.Ctx) error {
+	var query listCategoryPromotionsQueryRequest
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.ListCategoryPromotionsParams{
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	CategoryPromotions, err := server.store.ListCategoryPromotions(ctx, arg)
+	CategoryPromotions, err := server.store.ListCategoryPromotions(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	// requestETag := ctx.GetHeader("If-None-Match")
-	// generatedETag := etag.Generate([]byte(fmt.Sprint(CategoryPromotions)), true)
-
-	// if requestETag == generatedETag {
-	// 	ctx.JSON(http.StatusNotModified, nil)
-
-	// } else {
-	// 	ctx.Header("ETag", generatedETag)
-	// 	ctx.JSON(http.StatusOK, CategoryPromotions)
-	// }
-
-	ctx.JSON(http.StatusOK, CategoryPromotions)
+	ctx.Status(fiber.StatusOK).JSON(CategoryPromotions)
+	return nil
 
 }
 
 //////////////* Update API //////////////
 
-type updateCategoryPromotionUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type updateCategoryPromotionParamsRequest struct {
+	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
+	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
+	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
 }
 
 type updateCategoryPromotionJsonRequest struct {
-	CategoryID  int64 `json:"category_id" binding:"omitempty,required,min=1"`
-	PromotionID int64 `json:"promotion_id" binding:"omitempty,required,min=1"`
-	Active      bool  `json:"active" binding:"omitempty,required,boolean"`
+	Active bool `json:"active" validate:"omitempty,required,boolean"`
 }
 
-func (server *Server) updateCategoryPromotion(ctx *gin.Context) {
-	var uri updateCategoryPromotionUriRequest
+func (server *Server) updateCategoryPromotion(ctx *fiber.Ctx) error {
+	var params updateCategoryPromotionParamsRequest
 	var req updateCategoryPromotionJsonRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateCategoryPromotionParams{
-		CategoryID:  req.CategoryID,
-		PromotionID: req.PromotionID,
+		CategoryID:  params.CategoryID,
+		PromotionID: params.PromotionID,
 		Active:      null.BoolFromPtr(&req.Active),
 	}
 
-	categoryPromotion, err := server.store.UpdateCategoryPromotion(ctx, arg)
+	categoryPromotion, err := server.store.UpdateCategoryPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, categoryPromotion)
+	ctx.Status(fiber.StatusOK).JSON(categoryPromotion)
+	return nil
 }
 
 //////////////* Delete API //////////////
 
-type deleteCategoryPromotionUriRequest struct {
-	PromotionID int64 `uri:"id" binding:"required,min=1"`
-}
-type deleteCategoryPromotionJsonRequest struct {
-	CategoryID int64 `json:"category_id" binding:"required,min=1"`
+type deleteCategoryPromotionParamsRequest struct {
+	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
+	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteCategoryPromotion(ctx *gin.Context) {
-	var uri deleteCategoryPromotionUriRequest
-	var req deleteCategoryPromotionJsonRequest
+func (server *Server) deleteCategoryPromotion(ctx *fiber.Ctx) error {
+	var params deleteCategoryPromotionParamsRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.DeleteCategoryPromotionParams{
-		CategoryID:  req.CategoryID,
-		PromotionID: uri.PromotionID,
+		CategoryID:  params.CategoryID,
+		PromotionID: params.PromotionID,
 	}
 
-	err := server.store.DeleteCategoryPromotion(ctx, arg)
+	err := server.store.DeleteCategoryPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }

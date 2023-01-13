@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -29,15 +28,16 @@ func TestCreateUserAddessAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
-			body: gin.H{
-				"user_id":      user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -59,15 +59,15 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					Times(1).
 					Return(userAddressWithAddress, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddressForCreate(t, recorder.Body, userAddressWithAddress)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserAddressForCreate(t, rsp.Body, userAddressWithAddress)
 			},
 		},
 		{
 			name: "NoAuthorization",
-			body: gin.H{
-				"user_id":      user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -79,14 +79,14 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					CreateUserAddressWithAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InternalError",
-			body: gin.H{
-				"user_id":      user.ID,
+			ID:   user.ID,
+			body: fiber.Map{
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -107,14 +107,14 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					Times(1).
 					Return(db.CreateUserAddressWithAddressRow{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidUserID",
-			body: gin.H{
-				"user_id":      0,
+			ID:   0,
+			body: fiber.Map{
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -127,8 +127,8 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					CreateUserAddressWithAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -143,19 +143,22 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/users/addresses"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/addresses", tc.ID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -169,17 +172,15 @@ func TestGetUserAddressAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
-		body          gin.H
+		AddressID     int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			ID:   userAddress.AddressID,
-			body: gin.H{
-				"id": userAddress.AddressID,
-			},
+			name:      "OK",
+			ID:        user.ID,
+			AddressID: userAddress.AddressID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -193,17 +194,15 @@ func TestGetUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(userAddressWithAddress, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddressForGet(t, recorder.Body, userAddressWithAddress)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserAddressForGet(t, rsp.Body, userAddressWithAddress)
 			},
 		},
 		{
-			name: "NoAuthorization",
-			ID:   userAddress.AddressID,
-			body: gin.H{
-				"id": userAddress.AddressID,
-			},
+			name:      "NoAuthorization",
+			AddressID: userAddress.AddressID,
+			ID:        user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -211,13 +210,14 @@ func TestGetUserAddressAPI(t *testing.T) {
 					GetUserAddressWithAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "NotFound",
-			ID:   userAddress.AddressID,
+			name:      "NotFound",
+			ID:        user.ID,
+			AddressID: userAddress.AddressID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -231,13 +231,14 @@ func TestGetUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			ID:   userAddress.AddressID,
+			name:      "InternalError",
+			ID:        user.ID,
+			AddressID: userAddress.AddressID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -251,13 +252,14 @@ func TestGetUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			ID:   0,
+			name:      "InvalidID",
+			ID:        0,
+			AddressID: 0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -267,8 +269,8 @@ func TestGetUserAddressAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -285,20 +287,19 @@ func TestGetUserAddressAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/addresses/%d", tc.ID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request, -1)
+			require.NoError(t, err)
 			//check response
-			tc.checkResponse(t, recorder)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -326,12 +327,14 @@ func TestListUsersAddressAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		query         Query
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name: "OK",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -351,13 +354,14 @@ func TestListUsersAddressAPI(t *testing.T) {
 					Times(1).
 					Return(userAddresses, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUserAddresses(t, recorder.Body, userAddresses)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchUserAddresses(t, rsp.Body, userAddresses)
 			},
 		},
 		{
 			name: "InternalError",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: n,
@@ -371,12 +375,13 @@ func TestListUsersAddressAPI(t *testing.T) {
 					Times(1).
 					Return([]db.UserAddress{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidPageID",
+			ID:   user.ID,
 			query: Query{
 				pageID:   -1,
 				pageSize: n,
@@ -389,12 +394,13 @@ func TestListUsersAddressAPI(t *testing.T) {
 					ListUserAddresses(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
 			name: "InvalidPageSize",
+			ID:   user.ID,
 			query: Query{
 				pageID:   1,
 				pageSize: 100000,
@@ -407,8 +413,8 @@ func TestListUsersAddressAPI(t *testing.T) {
 					ListUserAddresses(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -423,10 +429,10 @@ func TestListUsersAddressAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
-			url := "/users/addresses"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := fmt.Sprintf("/api/v1/users/%d/addresses", tc.ID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -436,8 +442,11 @@ func TestListUsersAddressAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request, -1)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -450,16 +459,17 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		AddressID     int64
-		body          gin.H
+		body          fiber.Map
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:      "OK",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id":         user.ID,
+			ID:        user.ID,
+			body: fiber.Map{
 				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
@@ -493,15 +503,16 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(address, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "NoAuthorization",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id":         user.ID,
+			ID:        user.ID,
+			body: fiber.Map{
+
 				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
@@ -518,15 +529,16 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 					UpdateAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "InternalError",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id":         user.ID,
+			ID:        user.ID,
+			body: fiber.Map{
+
 				"default_address": userAddress.DefaultAddress.Int64,
 				"address_line":    "new address",
 				"region":          "new region",
@@ -558,13 +570,14 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 					UpdateAddress(gomock.Any(), gomock.Eq(arg1)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "InvalidUserID",
 			AddressID: 0,
+			ID:        user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -577,8 +590,8 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 					UpdateAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -593,19 +606,22 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/users/addresses/%d", tc.AddressID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -618,17 +634,16 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		AddressID     int64
-		body          gin.H
+		ID            int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:      "OK",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			ID:        user.ID,
+
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -643,16 +658,15 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(userAddress, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "NotFound",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			ID:        user.ID,
+
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -666,16 +680,15 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserAddress{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "InternalError",
 			AddressID: userAddress.AddressID,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+			ID:        user.ID,
+
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -689,16 +702,15 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 					Times(1).
 					Return(db.UserAddress{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:      "InvalidID",
 			AddressID: 0,
-			body: gin.H{
-				"user_id": user.ID,
-			},
+
+			ID: user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -708,8 +720,8 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -727,20 +739,19 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			// //recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/users/addresses/%d", tc.AddressID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
 			//check response
-			tc.checkResponse(t, recorder)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -803,7 +814,7 @@ func createRandomUserAddressWithAddressForGet(t *testing.T, userAddress db.UserA
 	return
 }
 
-func requireBodyMatchUserAddressForCreate(t *testing.T, body *bytes.Buffer, userAddress db.CreateUserAddressWithAddressRow) {
+func requireBodyMatchUserAddressForCreate(t *testing.T, body io.ReadCloser, userAddress db.CreateUserAddressWithAddressRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -818,7 +829,7 @@ func requireBodyMatchUserAddressForCreate(t *testing.T, body *bytes.Buffer, user
 	require.Equal(t, userAddress.City, gotUserAddress.City)
 }
 
-func requireBodyMatchUserAddressForGet(t *testing.T, body *bytes.Buffer, userAddress db.GetUserAddressWithAddressRow) {
+func requireBodyMatchUserAddressForGet(t *testing.T, body io.ReadCloser, userAddress db.GetUserAddressWithAddressRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -833,7 +844,7 @@ func requireBodyMatchUserAddressForGet(t *testing.T, body *bytes.Buffer, userAdd
 	require.Equal(t, userAddress.City, gotUserAddress.City)
 }
 
-func requireBodyMatchUserAddresses(t *testing.T, body *bytes.Buffer, userAddresses []db.UserAddress) {
+func requireBodyMatchUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []db.UserAddress) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

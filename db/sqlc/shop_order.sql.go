@@ -26,12 +26,12 @@ RETURNING id, user_id, payment_method_id, shipping_address_id, order_total, ship
 `
 
 type CreateShopOrderParams struct {
-	UserID            int64  `json:"user_id"`
-	PaymentMethodID   int64  `json:"payment_method_id"`
-	ShippingAddressID int64  `json:"shipping_address_id"`
-	OrderTotal        string `json:"order_total"`
-	ShippingMethodID  int64  `json:"shipping_method_id"`
-	OrderStatusID     int64  `json:"order_status_id"`
+	UserID            int64    `json:"user_id"`
+	PaymentMethodID   int64    `json:"payment_method_id"`
+	ShippingAddressID int64    `json:"shipping_address_id"`
+	OrderTotal        string   `json:"order_total"`
+	ShippingMethodID  int64    `json:"shipping_method_id"`
+	OrderStatusID     null.Int `json:"order_status_id"`
 }
 
 func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error) {

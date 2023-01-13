@@ -22,7 +22,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
-		OrderStatusID:     orderStatus.ID,
+		OrderStatusID:     null.IntFromPtr(&orderStatus.ID),
 	}
 
 	shopOrder, err := testQueires.CreateShopOrder(context.Background(), arg)

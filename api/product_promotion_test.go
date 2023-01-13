@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -26,18 +25,17 @@ func TestGetProductPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		promotionID   int64
-		body          gin.H
+		PromotionID   int64
+		ProductID     int64
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(recorder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name:        "OK",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
 			buildStub: func(store *mockdb.MockStore) {
+
 				arg := db.GetProductPromotionParams{
 					ProductID:   productPromotion.ProductID,
 					PromotionID: productPromotion.PromotionID,
@@ -48,18 +46,16 @@ func TestGetProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(productPromotion, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductPromotion(t, recorder.Body, productPromotion)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductPromotion(t, rsp.Body, productPromotion)
 			},
 		},
 
 		{
 			name:        "NotFound",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetProductPromotionParams{
 					ProductID:   productPromotion.ProductID,
@@ -71,16 +67,14 @@ func TestGetProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InternalError",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetProductPromotionParams{
 					ProductID:   productPromotion.ProductID,
@@ -92,16 +86,14 @@ func TestGetProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InvalidID",
-			promotionID: 0,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: 0,
+			ProductID:   productPromotion.ProductID,
 			buildStub: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
@@ -109,8 +101,8 @@ func TestGetProductPromotionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -128,19 +120,18 @@ func TestGetProductPromotionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
+			url := fmt.Sprintf("/api/v1/product-promotions/%d/products/%d", tc.PromotionID, tc.ProductID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
-			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
 
-			server.router.ServeHTTP(recorder, request)
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
 			//check response
-			tc.checkResponse(recorder)
+			tc.checkResponse(rsp)
 		})
 
 	}
@@ -153,18 +144,21 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
-		productID     int64
+		body          fiber.Map
+		ProductID     int64
+		PromotionID   int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+			name:        "OK",
+			ProductID:   productPromotion.ProductID,
+			PromotionID: productPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -181,14 +175,16 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(productPromotion, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductPromotion(t, recorder.Body, productPromotion)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductPromotion(t, rsp.Body, productPromotion)
 			},
 		},
 		{
-			name:      "NoAuthorization",
-			productID: productPromotion.ProductID,
+			name:        "NoAuthorization",
+			ProductID:   productPromotion.ProductID,
+			PromotionID: productPromotion.PromotionID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -203,13 +199,15 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:      "Unauthorized",
-			productID: productPromotion.ProductID,
+			name:        "Unauthorized",
+			ProductID:   productPromotion.ProductID,
+			PromotionID: productPromotion.PromotionID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
@@ -224,16 +222,17 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 					CreateProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"product_id":   productPromotion.ProductID,
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+			name:        "InternalError",
+			ProductID:   productPromotion.ProductID,
+			PromotionID: productPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -244,16 +243,17 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
-				"product_id":   "invalid",
-				"promotion_id": productPromotion.PromotionID,
-				"active":       productPromotion.Active,
+			name:        "InvalidID",
+			ProductID:   0,
+			PromotionID: productPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -263,8 +263,8 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 					CreateProductPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -279,19 +279,22 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/product-promotions"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -312,7 +315,7 @@ func TestListProductPromotionsAPI(t *testing.T) {
 		name          string
 		query         Query
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
@@ -331,9 +334,9 @@ func TestListProductPromotionsAPI(t *testing.T) {
 					Times(1).
 					Return(productPromotions, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchProductPromotions(t, recorder.Body, productPromotions)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductPromotions(t, rsp.Body, productPromotions)
 			},
 		},
 		{
@@ -348,8 +351,8 @@ func TestListProductPromotionsAPI(t *testing.T) {
 					Times(1).
 					Return([]db.ProductPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -363,8 +366,8 @@ func TestListProductPromotionsAPI(t *testing.T) {
 					ListProductPromotions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
@@ -378,8 +381,8 @@ func TestListProductPromotionsAPI(t *testing.T) {
 					ListProductPromotions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -394,10 +397,10 @@ func TestListProductPromotionsAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := "/product-promotions"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := "/api/v1/product-promotions/products"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -406,8 +409,11 @@ func TestListProductPromotionsAPI(t *testing.T) {
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -418,18 +424,21 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
-		promotionID   int64
+		body          fiber.Map
+		PromotionID   int64
+		ProductID     int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:        "OK",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-				"active":     productPromotion.Active,
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -446,16 +455,17 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(productPromotion, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "Unauthorized",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-				"active":     productPromotion.Active,
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
@@ -471,16 +481,17 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 					UpdateProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "NoAuthorization",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-				"active":     productPromotion.Active,
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -495,16 +506,17 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 					UpdateProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InternalError",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-				"active":     productPromotion.Active,
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -520,13 +532,18 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.ProductPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InvalidID",
-			promotionID: 0,
+			PromotionID: 0,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": productPromotion.Active,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -535,8 +552,8 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 					UpdateProductPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -551,19 +568,22 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -574,18 +594,18 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
-		promotionID   int64
+		PromotionID   int64
+		ProductID     int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:        "OK",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -599,16 +619,15 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "Unauthorized",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
@@ -621,16 +640,15 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "NoAuthorization",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -642,16 +660,15 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					DeleteProductPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "NotFound",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -665,16 +682,15 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InternalError",
-			promotionID: productPromotion.PromotionID,
-			body: gin.H{
-				"product_id": productPromotion.ProductID,
-			},
+			PromotionID: productPromotion.PromotionID,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -688,16 +704,15 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InvalidID",
-			promotionID: 0,
-			body: gin.H{
-				"product_id": 0,
-			},
+			PromotionID: 0,
+			ProductID:   productPromotion.ProductID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -707,8 +722,8 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -726,20 +741,18 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/product-promotions/%d", tc.promotionID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -770,7 +783,7 @@ func randomProductPromotion() db.ProductPromotion {
 	}
 }
 
-func requireBodyMatchProductPromotion(t *testing.T, body *bytes.Buffer, productPromotion db.ProductPromotion) {
+func requireBodyMatchProductPromotion(t *testing.T, body io.ReadCloser, productPromotion db.ProductPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -782,7 +795,7 @@ func requireBodyMatchProductPromotion(t *testing.T, body *bytes.Buffer, productP
 	require.Equal(t, productPromotion.Active, gotProductPromotion.Active)
 }
 
-func requireBodyMatchProductPromotions(t *testing.T, body *bytes.Buffer, productPromotions []db.ProductPromotion) {
+func requireBodyMatchProductPromotions(t *testing.T, body io.ReadCloser, productPromotions []db.ProductPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

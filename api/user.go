@@ -2,13 +2,12 @@ package api
 
 import (
 	"errors"
-	"net/http"
 	"time"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -18,22 +17,24 @@ import (
 //////////////* Create API //////////////
 
 type createUserRequest struct {
-	Username  string `json:"username" binding:"required,alphanum"`
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=6"`
-	Telephone int32  `json:"telephone" binding:"required,numeric,min=910000000,max=929999999"`
+	Username  string `json:"username" validate:"required,alphanum"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=6"`
+	Telephone int32  `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
 }
 
 type userResponse struct {
-	ID        int64  `json:"id"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Telephone int32  `json:"telephone"`
+	UserID         int64  `json:"id"`
+	Username       string `json:"username"`
+	Email          string `json:"email"`
+	Telephone      int32  `json:"telephone"`
+	ShoppingCartID int64  `json:"cart_id"`
+	WishListID     int64  `json:"wish_id"`
 }
 
 func newUserResponse(user db.User) userResponse {
 	return userResponse{
-		ID:        user.ID,
+		UserID:    user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
 		Telephone: user.Telephone,
@@ -42,25 +43,32 @@ func newUserResponse(user db.User) userResponse {
 
 func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userResponse {
 	return userResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		Telephone: user.Telephone,
+		UserID:         user.ID,
+		Username:       user.Username,
+		Email:          user.Email,
+		Telephone:      user.Telephone,
+		ShoppingCartID: user.ShoppingCartID,
+		WishListID:     user.WishListID,
 	}
 }
 
-func (server *Server) createUser(ctx *gin.Context) {
+func (server *Server) createUser(ctx *fiber.Ctx) error {
 	var req createUserRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateUserWithCartAndWishListParams{
@@ -70,63 +78,69 @@ func (server *Server) createUser(ctx *gin.Context) {
 		Telephone: req.Telephone,
 	}
 
-	user, err := server.store.CreateUserWithCartAndWishList(ctx, arg)
+	user, err := server.store.CreateUserWithCartAndWishList(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return err
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return err
 	}
 
 	rsp := newUserWithCartResponse(user)
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
 }
 
 //////////////* Reset Password API //////////////
 
 type resetPasswordRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Email string `json:"email" validate:"required,email"`
 }
 
-func (server *Server) resetPassword(ctx *gin.Context) {
+func (server *Server) resetPassword(ctx *fiber.Ctx) error {
 	var req resetPasswordRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	getUser, err := server.store.GetUserByEmail(ctx, req.Email)
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	newPassword, err := util.GeneratePassword(10, 3, 2, false, false)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	hashedPassword, err := util.HashPassword(newPassword)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	err = util.EmailSend(getUser.Email, newPassword, server.config.GmailRandomPassword)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateUserParams{
@@ -134,125 +148,163 @@ func (server *Server) resetPassword(ctx *gin.Context) {
 		Password: null.StringFromPtr(&hashedPassword),
 	}
 
-	user, err := server.store.UpdateUser(ctx, arg)
+	user, err := server.store.UpdateUser(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	rsp := newUserResponse(user)
-	ctx.JSON(http.StatusOK, rsp)
-
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
 }
 
 //////////////* Get API //////////////
 
-type getUserRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getUserParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
-func (server *Server) getUser(ctx *gin.Context) {
-	var req getUserRequest
+func (server *Server) getUser(ctx *fiber.Ctx) error {
+	var params getUserParamsRequest
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	user, err := server.store.GetUser(ctx, req.ID)
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	user, err := server.store.GetUser(ctx.Context(), params.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	if user.ID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	rsp := newUserResponse(user)
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
 }
 
-//////////////* List API //////////////
+// //////////////* List API //////////////
 
-type listUsersRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+type listUsersParamsRequest struct {
+	AdminID int64 `params:"admin_id" validate:"required,min=1"`
 }
 
-func (server *Server) listUsers(ctx *gin.Context) {
-	var req listUsersRequest
+type listUsersQueryRequest struct {
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
+}
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+func (server *Server) listUsers(ctx *fiber.Ctx) error {
+	var params listUsersParamsRequest
+	var query listUsersQueryRequest
+
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.ListUsersParams{
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
 	}
 
-	users, err := server.store.ListUsers(ctx, arg)
+	users, err := server.store.ListUsers(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, users)
+	ctx.Status(fiber.StatusOK).JSON(users)
+	return nil
 
 }
 
-//////////////* Update API //////////////
+// //////////////* Update API //////////////
 
-type updateUserUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type updateUserParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type updateUserJsonRequest struct {
-	Telephone      int64 `json:"telephone" binding:"omitempty,required,numeric,min=910000000,max=929999999"`
-	DefaultPayment int64 `json:"default_payment" binding:"omitempty,required"`
+	Telephone      int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
+	DefaultPayment int64 `json:"default_payment" validate:"omitempty,required"`
 }
 
-func (server *Server) updateUser(ctx *gin.Context) {
-	var uri updateUserUriRequest
+func (server *Server) updateUser(ctx *fiber.Ctx) error {
+	var params updateUserParamsRequest
 	var req updateUserJsonRequest
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.UserPayload)
-	if uri.ID != authPayload.UserID {
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateUserParams{
@@ -261,67 +313,75 @@ func (server *Server) updateUser(ctx *gin.Context) {
 		DefaultPayment: null.IntFromPtr(&req.DefaultPayment),
 	}
 
-	user, err := server.store.UpdateUser(ctx, arg)
+	user, err := server.store.UpdateUser(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	rsp := newUserResponse(user)
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
 }
 
-//////////////* Delete API //////////////
+// //////////////* Delete API //////////////
 
-type deleteUserRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteUserParamsRequest struct {
+	UserID  int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `params:"admin_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteUser(ctx *gin.Context) {
-	var req deleteUserRequest
+func (server *Server) deleteUser(ctx *fiber.Ctx) error {
+	var params deleteUserParamsRequest
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
-	_, err := server.store.DeleteUser(ctx, req.ID)
+	_, err := server.store.DeleteUser(ctx.Context(), params.UserID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }
 
-//////////////* Login API //////////////
+// //////////////* Login API //////////////
 
 type loginUserRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 type loginUserResponse struct {
@@ -333,28 +393,33 @@ type loginUserResponse struct {
 	User                  userResponse `json:"user"`
 }
 
-func (server *Server) loginUser(ctx *gin.Context) {
+func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	var req loginUserRequest
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	user, err := server.store.GetUserByEmail(ctx, req.Email)
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	user, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	err = util.CheckPassword(req.Password, user.Password)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	accessToken, accessPayload, err := server.tokenMaker.CreateTokenForUser(
@@ -363,8 +428,8 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		server.config.AccessTokenDuration,
 	)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateTokenForUser(
@@ -373,23 +438,23 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		server.config.RefreshTokenDuration,
 	)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateUserSessionParams{
 		ID:           refreshPayload.ID,
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    ctx.Request.UserAgent(),
-		ClientIp:     ctx.ClientIP(),
+		UserAgent:    string(ctx.Context().UserAgent()),
+		ClientIp:     ctx.IP(),
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
 
-	userSession, err := server.store.CreateUserSession(ctx, arg)
+	userSession, err := server.store.CreateUserSession(ctx.Context(), arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
 	rsp := loginUserResponse{
@@ -400,5 +465,6 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
 		User:                  newUserResponse(user),
 	}
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
 }

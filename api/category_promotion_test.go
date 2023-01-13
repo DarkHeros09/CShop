@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
@@ -27,16 +26,15 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		CategoryID    int64
-		body          gin.H
+		PromotionID   int64
+		AdminID       int64
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:       "OK",
-			CategoryID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			name:        "OK",
+			PromotionID: categoryPromotion.PromotionID,
+			CategoryID:  categoryPromotion.CategoryID,
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetCategoryPromotionParams{
 					CategoryID:  categoryPromotion.CategoryID,
@@ -47,18 +45,16 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(categoryPromotion, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchCategoryPromotion(t, recorder.Body, categoryPromotion)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchCategoryPromotion(t, rsp.Body, categoryPromotion)
 			},
 		},
 
 		{
-			name:       "NotFound",
-			CategoryID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			name:        "NotFound",
+			PromotionID: categoryPromotion.PromotionID,
+			CategoryID:  categoryPromotion.CategoryID,
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetCategoryPromotionParams{
 					CategoryID:  categoryPromotion.CategoryID,
@@ -69,16 +65,14 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InternalError",
-			CategoryID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			name:        "InternalError",
+			PromotionID: categoryPromotion.PromotionID,
+			CategoryID:  categoryPromotion.CategoryID,
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetCategoryPromotionParams{
 					CategoryID:  categoryPromotion.CategoryID,
@@ -89,24 +83,22 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InvalidID",
-			CategoryID: 0,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			name:        "InvalidID",
+			PromotionID: 0,
+			CategoryID:  categoryPromotion.CategoryID,
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetCategoryPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -124,19 +116,17 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
+			url := fmt.Sprintf("/api/v1/category-promotions/%d/categories/%d", tc.PromotionID, tc.CategoryID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/category-promotions/%d", tc.CategoryID)
-			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
-			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
 
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -149,18 +139,21 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
 		CategoryID    int64
+		PromotionID   int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "OK",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -177,14 +170,19 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(categoryPromotion, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchCategoryPromotion(t, recorder.Body, categoryPromotion)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchCategoryPromotion(t, rsp.Body, categoryPromotion)
 			},
 		},
 		{
-			name:       "NoAuthorization",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "NoAuthorization",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -199,13 +197,18 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "Unauthorized",
-			CategoryID: categoryPromotion.CategoryID,
+			name:        "Unauthorized",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
@@ -220,16 +223,17 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 					CreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InternalError",
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "InternalError",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -240,16 +244,17 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name: "InvalidID",
-			body: gin.H{
-				"Category_id":  "invalid",
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "InvalidID",
+			CategoryID:  0,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -259,8 +264,8 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 					CreateCategoryPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -275,19 +280,22 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/category-promotions"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -308,7 +316,7 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 		name          string
 		query         Query
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(recoder *httptest.ResponseRecorder)
+		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
@@ -327,9 +335,9 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 					Times(1).
 					Return(categoryPromotions, nil)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchCategoryPromotions(t, recorder.Body, categoryPromotions)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchCategoryPromotions(t, rsp.Body, categoryPromotions)
 			},
 		},
 		{
@@ -344,8 +352,8 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 					Times(1).
 					Return([]db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
@@ -359,8 +367,8 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 					ListCategoryPromotions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 		{
@@ -374,8 +382,8 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 					ListCategoryPromotions(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -390,10 +398,10 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			url := "/category-promotions"
-			request, err := http.NewRequest(http.MethodGet, url, nil)
+			url := "/api/v1/category-promotions/categories"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
@@ -402,8 +410,11 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
 		})
 	}
 }
@@ -414,19 +425,21 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
+		body          fiber.Map
 		CategoryID    int64
+		PromotionID   int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:       "OK",
-			CategoryID: categoryPromotion.CategoryID,
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "OK",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -443,17 +456,17 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(categoryPromotion, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "Unauthorized",
-			CategoryID: categoryPromotion.CategoryID,
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "Unauthorized",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
@@ -469,17 +482,17 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 					UpdateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "NoAuthorization",
-			CategoryID: categoryPromotion.CategoryID,
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "NoAuthorization",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -494,17 +507,17 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 					UpdateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InternalError",
-			CategoryID: categoryPromotion.CategoryID,
-			body: gin.H{
-				"Category_id":  categoryPromotion.CategoryID,
-				"promotion_id": categoryPromotion.PromotionID,
-				"active":       categoryPromotion.Active,
+			name:        "InternalError",
+			CategoryID:  categoryPromotion.CategoryID,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -520,13 +533,18 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:       "InvalidID",
-			CategoryID: 0,
+			name:        "InvalidID",
+			CategoryID:  0,
+			PromotionID: categoryPromotion.PromotionID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"active": categoryPromotion.Active,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -535,8 +553,8 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 					UpdateCategoryPromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -551,19 +569,22 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/category-promotions/%d", tc.CategoryID)
-			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }
@@ -574,18 +595,18 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		body          gin.H
 		PromotionID   int64
+		CategoryID    int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
 			name:        "OK",
 			PromotionID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -599,16 +620,15 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "Unauthorized",
 			PromotionID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
@@ -621,16 +641,15 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "NoAuthorization",
 			PromotionID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -642,16 +661,15 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					DeleteCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "NotFound",
 			PromotionID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -665,16 +683,15 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InternalError",
 			PromotionID: categoryPromotion.PromotionID,
-			body: gin.H{
-				"category_id": categoryPromotion.CategoryID,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -688,16 +705,15 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
 			name:        "InvalidID",
 			PromotionID: 0,
-			body: gin.H{
-				"category_id": 0,
-			},
+			CategoryID:  categoryPromotion.CategoryID,
+			AdminID:     admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
@@ -707,8 +723,8 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 					Times(0)
 
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -726,20 +742,18 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 
 			// start test server and send request
 			server := newTestServer(t, store)
-			recorder := httptest.NewRecorder()
+			//recorder := httptest.NewRecorder()
 
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/category-promotions/%d", tc.PromotionID)
-			request, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
+			url := fmt.Sprintf("/api/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
-			server.router.ServeHTTP(recorder, request)
-			//check response
-			tc.checkResponse(t, recorder)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 
 	}
@@ -770,7 +784,7 @@ func randomCategoryPromotion() db.CategoryPromotion {
 	}
 }
 
-func requireBodyMatchCategoryPromotion(t *testing.T, body *bytes.Buffer, categoryPromotion db.CategoryPromotion) {
+func requireBodyMatchCategoryPromotion(t *testing.T, body io.ReadCloser, categoryPromotion db.CategoryPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
@@ -780,7 +794,7 @@ func requireBodyMatchCategoryPromotion(t *testing.T, body *bytes.Buffer, categor
 	require.Equal(t, categoryPromotion, gotCategoryPromotion)
 }
 
-func requireBodyMatchCategoryPromotions(t *testing.T, body *bytes.Buffer, CategoryPromotions []db.CategoryPromotion) {
+func requireBodyMatchCategoryPromotions(t *testing.T, body io.ReadCloser, CategoryPromotions []db.CategoryPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

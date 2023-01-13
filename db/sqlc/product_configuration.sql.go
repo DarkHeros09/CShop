@@ -36,20 +36,33 @@ func (q *Queries) CreateProductConfiguration(ctx context.Context, arg CreateProd
 const deleteProductConfiguration = `-- name: DeleteProductConfiguration :exec
 DELETE FROM "product_configuration"
 WHERE product_item_id = $1
+AND variation_option_id = $2
 `
 
-func (q *Queries) DeleteProductConfiguration(ctx context.Context, productItemID int64) error {
-	_, err := q.db.Exec(ctx, deleteProductConfiguration, productItemID)
+type DeleteProductConfigurationParams struct {
+	ProductItemID     int64 `json:"product_item_id"`
+	VariationOptionID int64 `json:"variation_option_id"`
+}
+
+func (q *Queries) DeleteProductConfiguration(ctx context.Context, arg DeleteProductConfigurationParams) error {
+	_, err := q.db.Exec(ctx, deleteProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
 	return err
 }
 
 const getProductConfiguration = `-- name: GetProductConfiguration :one
 SELECT product_item_id, variation_option_id FROM "product_configuration"
-WHERE product_item_id = $1 LIMIT 1
+WHERE product_item_id = $1 
+AND variation_option_id = $2
+LIMIT 1
 `
 
-func (q *Queries) GetProductConfiguration(ctx context.Context, productItemID int64) (ProductConfiguration, error) {
-	row := q.db.QueryRow(ctx, getProductConfiguration, productItemID)
+type GetProductConfigurationParams struct {
+	ProductItemID     int64 `json:"product_item_id"`
+	VariationOptionID int64 `json:"variation_option_id"`
+}
+
+func (q *Queries) GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (ProductConfiguration, error) {
+	row := q.db.QueryRow(ctx, getProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
 	return i, err

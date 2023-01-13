@@ -137,12 +137,13 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			finishedShopOrderID := resultList[z].ShopOrderID
 			require.NotEmpty(t, finishedShopOrderID)
 			finishedShopOrder, err := testQueires.GetShopOrder(context.Background(), finishedShopOrderID)
+			require.NoError(t, err)
 			require.NotEmpty(t, finishedShopOrder)
 			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
 			require.Equal(t, listUsersAddress[z].AddressID, finishedShopOrder.ShippingAddressID)
 			require.Equal(t, listPaymentMethod[z].ID, finishedShopOrder.PaymentMethodID)
 			require.Equal(t, listShippingMethod[z].ID, finishedShopOrder.ShippingMethodID)
-			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID)
+			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID.Int64)
 
 			_, err = testQueires.GetShopOrder(context.Background(), finishedShopOrder.ID)
 			require.NoError(t, err)

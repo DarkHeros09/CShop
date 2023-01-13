@@ -2,36 +2,54 @@ package api
 
 import (
 	"errors"
-	"net/http"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gin-gonic/gin"
+	"github.com/cshop/v3/util"
+	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
 
-//////////////* Create API //////////////
-
-type createVariationOptionRequest struct {
-	VariationID int64  `json:"variation_id" binding:"required,min=1"`
-	Value       string `json:"value" binding:"required,alphanum"`
+// ////////////* Create API //////////////
+type createVariationOptionParamsRequest struct {
+	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+}
+type createVariationOptionJsonRequest struct {
+	VariationID int64  `json:"variation_id" validate:"required,min=1"`
+	Value       string `json:"value" validate:"required,alphanum"`
 }
 
-func (server *Server) createVariationOption(ctx *gin.Context) {
-	var req createVariationOptionRequest
+func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
+	var params createVariationOptionParamsRequest
+	var req createVariationOptionJsonRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
-		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.CreateVariationOptionParams{
@@ -39,191 +57,206 @@ func (server *Server) createVariationOption(ctx *gin.Context) {
 		Value:       req.Value,
 	}
 
-	variationOption, err := server.store.CreateVariationOption(ctx, arg)
+	variationOption, err := server.store.CreateVariationOption(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, variationOption)
+	ctx.Status(fiber.StatusOK).JSON(variationOption)
+	return nil
 }
 
 //////////////* Get API //////////////
 
-type getVariationOptionRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getVariationOptionParamsRequest struct {
+	ID int64 `params:"id" validate:"required,min=1"`
 }
 
-func (server *Server) getVariationOption(ctx *gin.Context) {
-	var req getVariationOptionRequest
+func (server *Server) getVariationOption(ctx *fiber.Ctx) error {
+	var params getVariationOptionParamsRequest
 
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
-	variationOption, err := server.store.GetVariationOption(ctx, req.ID)
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	variationOption, err := server.store.GetVariationOption(ctx.Context(), params.ID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, variationOption)
+
+	ctx.Status(fiber.StatusOK).JSON(variationOption)
+	return nil
 }
 
 //////////////* List API //////////////
 
-type listVariationOptionsRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+type listVariationOptionsQueryRequest struct {
+	PageID   int32 `query:"page_id" validate:"required,min=1"`
+	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listVariationOptions(ctx *gin.Context) {
-	var req listVariationOptionsRequest
+func (server *Server) listVariationOptions(ctx *fiber.Ctx) error {
+	var query listVariationOptionsQueryRequest
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	if err := ctx.QueryParser(&query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(query); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.ListVariationOptionsParams{
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	variationOptions, err := server.store.ListVariationOptions(ctx, arg)
+	variationOptions, err := server.store.ListVariationOptions(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	// requestETag := ctx.GetHeader("If-None-Match")
-	// generatedETag := etag.Generate([]byte(fmt.Sprint(VariationOptions)), true)
-
-	// if requestETag == generatedETag {
-	// 	ctx.JSON(http.StatusNotModified, nil)
-
-	// } else {
-	// 	ctx.Header("ETag", generatedETag)
-	// 	ctx.JSON(http.StatusOK, VariationOptions)
-	// }
-
-	ctx.JSON(http.StatusOK, variationOptions)
-
+	ctx.Status(fiber.StatusOK).JSON(variationOptions)
+	return nil
 }
 
 //////////////* Update API //////////////
 
-type updateVariationOptionUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type updateVariationOptionParamsRequest struct {
+	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	ID      int64 `params:"id" validate:"required,min=1"`
 }
 
 type updateVariationOptionJsonRequest struct {
-	Value       string `json:"value" binding:"omitempty,required"`
-	VariationID int64  `json:"variation_id" binding:"omitempty,required,min=1"`
+	VariationID int64  `json:"variation_id" validate:"omitempty,required,min=1"`
+	Value       string `json:"value" validate:"omitempty,required"`
 }
 
-func (server *Server) updateVariationOption(ctx *gin.Context) {
-	var uri updateVariationOptionUriRequest
+func (server *Server) updateVariationOption(ctx *fiber.Ctx) error {
+	var params updateVariationOptionParamsRequest
 	var req updateVariationOptionJsonRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := ctx.BodyParser(&req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(req); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
 	arg := db.UpdateVariationOptionParams{
-		ID:          uri.ID,
+		ID:          params.ID,
 		Value:       null.StringFromPtr(&req.Value),
 		VariationID: null.IntFromPtr(&req.VariationID),
 	}
 
-	variationOption, err := server.store.UpdateVariationOption(ctx, arg)
+	variationOption, err := server.store.UpdateVariationOption(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
-	ctx.JSON(http.StatusOK, variationOption)
+	ctx.Status(fiber.StatusOK).JSON(variationOption)
+	return nil
 }
 
 //////////////* Delete API //////////////
 
-type deleteVariationOptionUriRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type deleteVariationOptionParamsRequest struct {
+	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	ID      int64 `params:"id" validate:"required,min=1"`
 }
 
 type deleteVariationOptionJsonRequest struct {
-	VariationID int64 `json:"variation_id" binding:"required,min=1"`
+	VariationID int64 `json:"variation_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteVariationOption(ctx *gin.Context) {
-	var uri deleteVariationOptionUriRequest
-	var req deleteVariationOptionJsonRequest
+func (server *Server) deleteVariationOption(ctx *fiber.Ctx) error {
+	var params deleteVariationOptionParamsRequest
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.AdminPayload)
-	if authPayload.AdminID == 0 || authPayload.TypeID != 1 || !authPayload.Active {
+	if err := ctx.ParamsParser(&params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	if err := util.ValidateStruct(params); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
 	}
 
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	err := server.store.DeleteVariationOption(ctx, uri.ID)
+	err := server.store.DeleteVariationOption(ctx.Context(), params.ID)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
 			}
 		} else if err == pgx.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
 }

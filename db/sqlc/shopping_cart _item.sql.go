@@ -47,6 +47,7 @@ const deleteShoppingCartItem = `-- name: DeleteShoppingCartItem :exec
 WITH t1 AS (
   SELECT id FROM "shopping_cart" AS sc
   WHERE sc.user_id = $2
+  AND sc.id = $3
 )
 DELETE FROM "shopping_cart_item" AS sci
 WHERE sci.id = $1
@@ -54,26 +55,34 @@ AND sci.shopping_cart_id = (SELECT id FROM t1)
 `
 
 type DeleteShoppingCartItemParams struct {
-	ID     int64 `json:"id"`
-	UserID int64 `json:"user_id"`
+	ShoppingCartItemID int64 `json:"shopping_cart_item_id"`
+	UserID             int64 `json:"user_id"`
+	ShoppingCartID     int64 `json:"shopping_cart_id"`
 }
 
 func (q *Queries) DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error {
-	_, err := q.db.Exec(ctx, deleteShoppingCartItem, arg.ID, arg.UserID)
+	_, err := q.db.Exec(ctx, deleteShoppingCartItem, arg.ShoppingCartItemID, arg.UserID, arg.ShoppingCartID)
 	return err
 }
 
 const deleteShoppingCartItemAllByUser = `-- name: DeleteShoppingCartItemAllByUser :many
 WITH t1 AS(
-  SELECT id FROM "shopping_cart" WHERE user_id = $1
+  SELECT id FROM "shopping_cart" AS sc 
+  WHERE sc.user_id = $1
+  AND sc.id = $2
 )
 DELETE FROM "shopping_cart_item"
 WHERE shopping_cart_id = (SELECT id FROM t1)
 RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
 `
 
-func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, userID int64) ([]ShoppingCartItem, error) {
-	rows, err := q.db.Query(ctx, deleteShoppingCartItemAllByUser, userID)
+type DeleteShoppingCartItemAllByUserParams struct {
+	UserID         int64 `json:"user_id"`
+	ShoppingCartID int64 `json:"shopping_cart_id"`
+}
+
+func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]ShoppingCartItem, error) {
+	rows, err := q.db.Query(ctx, deleteShoppingCartItemAllByUser, arg.UserID, arg.ShoppingCartID)
 	if err != nil {
 		return nil, err
 	}

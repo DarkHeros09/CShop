@@ -1,0 +1,6 @@
+FROM migrate/migrate:latest
+WORKDIR /app
+COPY start.sh .
+COPY db/migration ./migration
+RUN wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.3/wait-for 
+RUN chmod +x wait-for.sh

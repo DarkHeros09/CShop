@@ -49,6 +49,7 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 
 func TestDeleteOrderStatus(t *testing.T) {
 	orderStatus1 := createRandomOrderStatus(t)
+
 	err := testQueires.DeleteOrderStatus(context.Background(), orderStatus1.ID)
 
 	require.NoError(t, err)
