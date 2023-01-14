@@ -79,7 +79,7 @@ func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
 // //////////////* Get API //////////////
 
 type getPaymentMethodParamsRequest struct {
-	ID     int64 `params:"payment_id" validate:"required,min=1"`
+	ID     int64 `params:"paymentId" validate:"required,min=1"`
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
@@ -183,7 +183,7 @@ func (server *Server) listPaymentMethodes(ctx *fiber.Ctx) error {
 
 // //////////////* UPDATE API ///////////////
 type updatePaymentMethodParamsRequest struct {
-	ID     int64 `params:"payment_id" validate:"required,min=1"`
+	ID     int64 `params:"paymentId" validate:"required,min=1"`
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
@@ -249,7 +249,7 @@ func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deletePaymentMethodParamsRequest struct {
-	ID     int64 `params:"payment_id" validate:"required,min=1"`
+	ID     int64 `params:"paymentId" validate:"required,min=1"`
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 

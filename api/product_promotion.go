@@ -15,9 +15,9 @@ import (
 //////////////* Create API //////////////
 
 type createProductPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
-	ProductID   int64 `params:"product_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	ProductID   int64 `params:"productId" validate:"required,min=1"`
 }
 
 type createProductPromotionJsonRequest struct {
@@ -81,8 +81,8 @@ func (server *Server) createProductPromotion(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductPromotionParamsRequest struct {
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
-	ProductID   int64 `params:"product_id" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	ProductID   int64 `params:"productId" validate:"required,min=1"`
 }
 
 func (server *Server) getProductPromotion(ctx *fiber.Ctx) error {
@@ -158,9 +158,9 @@ func (server *Server) listProductPromotions(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	ProductID   int64 `params:"product_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	ProductID   int64 `params:"productId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 type updateProductPromotionJsonRequest struct {
@@ -223,9 +223,9 @@ func (server *Server) updateProductPromotion(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
-	ProductID   int64 `params:"product_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	ProductID   int64 `params:"productId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteProductPromotion(ctx *fiber.Ctx) error {

@@ -37,7 +37,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       userReview.RatingValue,
+				"rating_value":      userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -65,7 +65,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       userReview.RatingValue,
+				"rating_value":      userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -83,7 +83,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       userReview.RatingValue,
+				"rating_value":      userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -109,7 +109,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   0,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       userReview.RatingValue,
+				"rating_value":      userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -456,7 +456,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       3,
+				"rating_value":      3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -486,7 +486,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       3,
+				"rating_value":      3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -506,7 +506,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":       3,
+				"rating_value":      3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)

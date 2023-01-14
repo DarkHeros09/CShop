@@ -38,7 +38,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        paymentMethod.Provider,
+				"provider":       paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -66,7 +66,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        paymentMethod.Provider,
+				"provider":       paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -84,7 +84,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        paymentMethod.Provider,
+				"provider":       paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -110,7 +110,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: 0,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        paymentMethod.Provider,
+				"provider":       paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -460,7 +460,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        "new address",
+				"provider":       "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -489,7 +489,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        "new address",
+				"provider":       "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -508,7 +508,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        "new address",
+				"provider":       "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -536,7 +536,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: 0,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":        "new address",
+				"provider":       "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)

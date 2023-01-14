@@ -15,9 +15,9 @@ import (
 //////////////* Create API //////////////
 
 type createCategoryPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	CategoryID  int64 `params:"categoryId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 type createCategoryPromotionJsonRequest struct {
@@ -81,8 +81,8 @@ func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getCategoryPromotionParamsRequest struct {
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
-	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	CategoryID  int64 `params:"categoryId" validate:"required,min=1"`
 }
 
 func (server *Server) getCategoryPromotion(ctx *fiber.Ctx) error {
@@ -158,9 +158,9 @@ func (server *Server) listCategoryPromotions(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateCategoryPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	CategoryID  int64 `params:"categoryId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 type updateCategoryPromotionJsonRequest struct {
@@ -223,9 +223,9 @@ func (server *Server) updateCategoryPromotion(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteCategoryPromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
-	CategoryID  int64 `params:"category_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	CategoryID  int64 `params:"categoryId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteCategoryPromotion(ctx *fiber.Ctx) error {

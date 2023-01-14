@@ -17,7 +17,7 @@ import (
 type createUserAddressParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
-type createUserAddressRequest struct {
+type createUserAddressJsonRequest struct {
 	AddressLine    string   `json:"address_line" validate:"required"`
 	Region         string   `json:"region" validate:"required"`
 	City           string   `json:"city" validate:"required"`
@@ -46,7 +46,7 @@ func newUserAddressResponseForCreate(address db.CreateUserAddressWithAddressRow)
 
 func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 	var params createUserAddressParamsRequest
-	var req createUserAddressRequest
+	var req createUserAddressJsonRequest
 
 	if err := ctx.ParamsParser(&params); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -64,16 +64,6 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 	}
 
 	if err := util.ValidateStruct(req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -127,7 +117,7 @@ func newUserAddressResponseForGet(address db.GetUserAddressWithAddressRow) userA
 
 type getUserAddressParamsRequest struct {
 	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"address_id" validate:"required,min=1"`
+	AddressID int64 `params:"addressId" validate:"required,min=1"`
 }
 
 func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
@@ -232,7 +222,7 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 // ////////////* UPDATE API //////////////
 type updateUserAddressParamsRequest struct {
 	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"address_id" validate:"required,min=1"`
+	AddressID int64 `params:"addressId" validate:"required,min=1"`
 }
 
 type updateUserAddressJsonRequest struct {
@@ -329,7 +319,7 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 type deleteUserAddressParamsRequest struct {
 	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"address_id" validate:"required,min=1"`
+	AddressID int64 `params:"addressId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteUserAddress(ctx *fiber.Ctx) error {

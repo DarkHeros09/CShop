@@ -16,7 +16,7 @@ import (
 //////////////* Create API //////////////
 
 type createPromotionParamsRequest struct {
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createPromotionJsonRequest struct {
 	Name         string    `json:"name" validate:"required,alphanum"`
@@ -87,7 +87,7 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getPromotionParamsRequest struct {
-	ID int64 `params:"promotion_id" validate:"required,min=1"`
+	ID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 func (server *Server) getPromotion(ctx *fiber.Ctx) error {
@@ -158,8 +158,8 @@ func (server *Server) listPromotions(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updatePromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 type updatePromotionJsonRequest struct {
@@ -231,8 +231,8 @@ func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deletePromotionParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	PromotionID int64 `params:"promotion_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 func (server *Server) deletePromotion(ctx *fiber.Ctx) error {

@@ -73,7 +73,7 @@ func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
 
 type getOrderStatusParamsRequest struct {
 	UserID   int64 `params:"id" validate:"required,min=1"`
-	StatusID int64 `params:"status_id" validate:"required,min=1"`
+	StatusID int64 `params:"statusId" validate:"required,min=1"`
 }
 
 func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
@@ -175,7 +175,7 @@ func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
 // //////////////* UPDATE API ///////////////
 type updateOrderStatusParamsRequest struct {
 	UserID   int64 `params:"id" validate:"required,min=1"`
-	StatusID int64 `params:"status_id" validate:"required,min=1"`
+	StatusID int64 `params:"statusId" validate:"required,min=1"`
 }
 
 type updateOrderStatusJsonRequest struct {
@@ -238,8 +238,8 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 
 type deleteOrderStatusParamsRequest struct {
-	StatusID int64 `params:"status_id" validate:"required,min=1"`
-	AdminID  int64 `params:"admin_id" validate:"required,min=1"`
+	StatusID int64 `params:"statusId" validate:"required,min=1"`
+	AdminID  int64 `params:"adminId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {

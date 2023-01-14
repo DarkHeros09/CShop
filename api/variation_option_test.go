@@ -131,7 +131,7 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"value":        variationOption.Value,
+				"value":       variationOption.Value,
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -177,7 +177,7 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 			name:    "Unauthorized",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"value":        variationOption.Value,
+				"value":       variationOption.Value,
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -201,7 +201,7 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"value":        variationOption.Value,
+				"value":       variationOption.Value,
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -404,7 +404,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 			VariationOptionID: variationOption.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"value":        "new name",
+				"value":       "new name",
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -431,7 +431,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 			VariationOptionID: variationOption.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"value":        "new name",
+				"value":       "new name",
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -457,7 +457,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 			VariationOptionID: variationOption.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"value":        "new name",
+				"value":       "new name",
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -482,7 +482,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 			VariationOptionID: variationOption.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"value":        "new name",
+				"value":       "new name",
 				"variation_id": variationOption.VariationID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {

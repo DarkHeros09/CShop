@@ -14,8 +14,8 @@ import (
 
 // ////////////* Create API //////////////
 type createProductConfigurationParamsRequest struct {
-	AdminID       int64 `params:"admin_id" validate:"required,min=1"`
-	ProductItemID int64 `params:"item_id" validate:"required,min=1"`
+	AdminID       int64 `params:"adminId" validate:"required,min=1"`
+	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 type createProductConfigurationJsonRequest struct {
@@ -78,8 +78,8 @@ func (server *Server) createProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductConfigurationParamsRequest struct {
-	ProductItemID     int64 `params:"item_id" validate:"required,min=1"`
-	VariationOptionID int64 `params:"variation_id" validate:"required,min=1"`
+	ProductItemID     int64 `params:"itemId" validate:"required,min=1"`
+	VariationOptionID int64 `params:"variationId" validate:"required,min=1"`
 }
 
 func (server *Server) getProductConfiguration(ctx *fiber.Ctx) error {
@@ -116,7 +116,7 @@ func (server *Server) getProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listProductConfigurationsParamsRequest struct {
-	ProductItemID int64 `params:"item_id" validate:"required,min=1"`
+	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 type listProductConfigurationsQueryRequest struct {
@@ -170,8 +170,8 @@ func (server *Server) listProductConfigurations(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductConfigurationParamsRequest struct {
-	AdminID       int64 `params:"admin_id" validate:"required,min=1"`
-	ProductItemID int64 `params:"item_id" validate:"required,min=1"`
+	AdminID       int64 `params:"adminId" validate:"required,min=1"`
+	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 type updateProductConfigurationJsonRequest struct {
@@ -233,9 +233,9 @@ func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductConfigurationParamsRequest struct {
-	AdminID           int64 `params:"admin_id" validate:"required,min=1"`
-	ProductItemID     int64 `params:"item_id" validate:"required,min=1"`
-	VariationOptionID int64 `params:"variation_id" validate:"omitempty,required,min=1"`
+	AdminID           int64 `params:"adminId" validate:"required,min=1"`
+	ProductItemID     int64 `params:"itemId" validate:"required,min=1"`
+	VariationOptionID int64 `params:"variationId" validate:"omitempty,required,min=1"`
 }
 
 func (server *Server) deleteProductConfiguration(ctx *fiber.Ctx) error {

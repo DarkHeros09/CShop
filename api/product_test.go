@@ -133,7 +133,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -191,7 +191,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -218,7 +218,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -424,7 +424,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -457,7 +457,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -489,7 +489,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -520,7 +520,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":   product.CategoryID,
+				"category_id":    product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},

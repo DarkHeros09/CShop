@@ -15,7 +15,7 @@ import (
 //////////////* Create API //////////////
 
 type createProductParamsRequest struct {
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type createProductJsonRequest struct {
@@ -85,7 +85,7 @@ func (server *Server) createProduct(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductRequest struct {
-	ProductID int64 `params:"product_id" validate:"required,min=1"`
+	ProductID int64 `params:"productId" validate:"required,min=1"`
 }
 
 func (server *Server) getProduct(ctx *fiber.Ctx) error {
@@ -154,8 +154,8 @@ func (server *Server) listProducts(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductParamsRequest struct {
-	AdminID   int64 `params:"admin_id" validate:"required,min=1"`
-	ProductID int64 `params:"product_id" validate:"required,min=1"`
+	AdminID   int64 `params:"adminId" validate:"required,min=1"`
+	ProductID int64 `params:"productId" validate:"required,min=1"`
 }
 
 type updateProductJsonRequest struct {
@@ -225,8 +225,8 @@ func (server *Server) updateProduct(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductParamsRequest struct {
-	AdminID   int64 `params:"admin_id" validate:"required,min=1"`
-	ProductID int64 `params:"product_id" validate:"required,min=1"`
+	AdminID   int64 `params:"adminId" validate:"required,min=1"`
+	ProductID int64 `params:"productId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteProduct(ctx *fiber.Ctx) error {

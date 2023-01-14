@@ -131,7 +131,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -189,7 +189,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "Unauthorized",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -221,7 +221,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -245,7 +245,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InvalidID",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":    0,
+				"product_id":     0,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -433,7 +433,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -468,7 +468,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -502,7 +502,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -535,7 +535,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":    productItem.ProductID,
+				"product_id":     productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,

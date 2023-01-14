@@ -131,7 +131,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"category_name":      productCategory.CategoryName,
+				"category_name":     productCategory.CategoryName,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -180,7 +180,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			body: fiber.Map{
-				"category_name":      productCategory.CategoryName,
+				"category_name":     productCategory.CategoryName,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -201,7 +201,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"category_name":      productCategory.CategoryName,
+				"category_name":     productCategory.CategoryName,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -404,7 +404,7 @@ func TestUpdateProductCategoryAPI(t *testing.T) {
 			AdminID:           admin.ID,
 			productCategoryID: productCategory.ID,
 			body: fiber.Map{
-				"category_name":      "new name",
+				"category_name":     "new name",
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -431,7 +431,7 @@ func TestUpdateProductCategoryAPI(t *testing.T) {
 			AdminID:           admin.ID,
 			productCategoryID: productCategory.ID,
 			body: fiber.Map{
-				"category_name":      "new name",
+				"category_name":     "new name",
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -457,7 +457,7 @@ func TestUpdateProductCategoryAPI(t *testing.T) {
 			productCategoryID: productCategory.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"category_name":      "new name",
+				"category_name":     "new name",
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -482,7 +482,7 @@ func TestUpdateProductCategoryAPI(t *testing.T) {
 			productCategoryID: productCategory.ID,
 			AdminID:           admin.ID,
 			body: fiber.Map{
-				"category_name":      "new name",
+				"category_name":     "new name",
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {

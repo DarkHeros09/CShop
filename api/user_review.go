@@ -80,7 +80,7 @@ func (server *Server) createUserReview(ctx *fiber.Ctx) error {
 
 type getUserReviewParamsRequest struct {
 	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"review_id" validate:"required,min=1"`
+	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
 }
 
 func (server *Server) getUserReview(ctx *fiber.Ctx) error {
@@ -182,7 +182,7 @@ func (server *Server) listUserReviews(ctx *fiber.Ctx) error {
 // ////////////* UPDATE API //////////////
 type updateUserReviewParamsRequest struct {
 	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"review_id" validate:"required,min=1"`
+	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
 }
 
 type updateUserReviewJsonRequest struct {
@@ -248,7 +248,7 @@ func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 type deleteUserReviewParamsRequest struct {
 	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"review_id" validate:"required,min=1"`
+	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteUserReview(ctx *fiber.Ctx) error {

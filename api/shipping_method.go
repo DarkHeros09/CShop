@@ -78,7 +78,7 @@ func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
 
 type getShippingMethodParamsRequest struct {
 	UserID           int64 `params:"id" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
 }
 
 func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
@@ -180,7 +180,7 @@ func (server *Server) listShippingMethodes(ctx *fiber.Ctx) error {
 // //////////////* UPDATE API ///////////////
 type updateShippingMethodParamsRequest struct {
 	UserID           int64 `params:"id" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
 }
 
 type updateShippingMethodJsonRequest struct {
@@ -244,8 +244,8 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 
 type deleteShippingMethodParamsRequest struct {
-	AdminID          int64 `params:"admin_id" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"method_id" validate:"required,min=1"`
+	AdminID          int64 `params:"adminId" validate:"required,min=1"`
+	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteShippingMethod(ctx *fiber.Ctx) error {

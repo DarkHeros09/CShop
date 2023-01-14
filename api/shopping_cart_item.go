@@ -16,7 +16,7 @@ import (
 
 type createShoppingCartItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
 }
 type createShoppingCartItemRequest struct {
 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
@@ -80,7 +80,7 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 // ////////////* Get API //////////////
 type getShoppingCartItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
 }
 
 func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
@@ -163,8 +163,8 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 // ////////////* UPDATE API //////////////
 type updateShoppingCartItemParamsRequest struct {
 	UserID             int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID     int64 `params:"cart_id" validate:"required,min=1"`
-	ShoppingCartItemID int64 `params:"item_id" validate:"required,min=1"`
+	ShoppingCartID     int64 `params:"cartId" validate:"required,min=1"`
+	ShoppingCartItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 type updateShoppingCartItemJsonRequest struct {
@@ -230,8 +230,8 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 type deleteShoppingCartItemParamsRequest struct {
 	UserID             int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID     int64 `params:"cart_id" validate:"required,min=1"`
-	ShoppingCartItemID int64 `params:"item_id" validate:"required,min=1"`
+	ShoppingCartID     int64 `params:"cartId" validate:"required,min=1"`
+	ShoppingCartItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
@@ -284,7 +284,7 @@ func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
 
 type deleteShoppingCartItemAllParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
@@ -335,7 +335,7 @@ func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
 // ////////////* Finish Purshase API //////////////
 type finishPurshaseParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cart_id" validate:"required,min=1"`
+	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
 }
 type finishPurshaseJsonRequest struct {
 	UserAddressID    int64  `json:"user_address_id" validate:"required,min=1"`

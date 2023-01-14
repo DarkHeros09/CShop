@@ -40,7 +40,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             shoppingCartItem.Qty,
+				"qty":            shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -70,7 +70,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             shoppingCartItem.Qty,
+				"qty":            shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -91,7 +91,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             shoppingCartItem.Qty,
+				"qty":            shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -120,7 +120,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             shoppingCartItem.Qty,
+				"qty":            shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -421,7 +421,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             qty,
+				"qty":            qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -451,7 +451,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             qty,
+				"qty":            qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -471,7 +471,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":             qty,
+				"qty":            qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -844,7 +844,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":        orderTotal,
+				"order_total":       orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -881,7 +881,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":        orderTotal,
+				"order_total":       orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -905,7 +905,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":        orderTotal,
+				"order_total":       orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)

@@ -14,7 +14,7 @@ import (
 
 type getShopOrderItemParamsRequest struct {
 	UserID      int64 `params:"id" validate:"required,min=1"`
-	ShopOrderID int64 `params:"order_id" validate:"required,min=1"`
+	ShopOrderID int64 `params:"orderId" validate:"required,min=1"`
 }
 
 func (server *Server) getShopOrderItem(ctx *fiber.Ctx) error {

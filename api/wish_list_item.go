@@ -16,7 +16,7 @@ import (
 
 type createWishListItemParamsRequest struct {
 	UserID     int64 `params:"id" validate:"required,min=1"`
-	WishListID int64 `params:"wish_id" validate:"required,min=1"`
+	WishListID int64 `params:"wishId" validate:"required,min=1"`
 }
 
 type createWishListItemJsonRequest struct {
@@ -80,8 +80,8 @@ func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
 
 type getWishListItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
-	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
+	WishListID     int64 `params:"wishId" validate:"required,min=1"`
+	WishListItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
@@ -128,7 +128,7 @@ func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
 
 type listWishListItemsRequest struct {
 	UserID     int64 `params:"id" validate:"required,min=1"`
-	WishListID int64 `params:"wish_id" validate:"required,min=1"`
+	WishListID int64 `params:"wishId" validate:"required,min=1"`
 }
 
 func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
@@ -167,8 +167,8 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 // ////////////* UPDATE API //////////////
 type updateWishListItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
-	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
+	WishListID     int64 `params:"wishId" validate:"required,min=1"`
+	WishListItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 type updateWishListItemJsonRequest struct {
@@ -232,8 +232,8 @@ func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 type deleteWishListItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
-	WishListID     int64 `params:"wish_id" validate:"required,min=1"`
-	WishListItemID int64 `params:"item_id" validate:"required,min=1"`
+	WishListID     int64 `params:"wishId" validate:"required,min=1"`
+	WishListItemID int64 `params:"itemId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
@@ -285,7 +285,7 @@ func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
 
 type deleteWishListItemAllJsonRequest struct {
 	UserID     int64 `params:"id" validate:"required,min=1"`
-	WishListID int64 `params:"wish_id" validate:"required,min=1"`
+	WishListID int64 `params:"wishId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteWishListItemAll(ctx *fiber.Ctx) error {

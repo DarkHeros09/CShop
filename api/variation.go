@@ -14,7 +14,7 @@ import (
 
 // ////////////* Create API //////////////
 type createVariationParamsRequest struct {
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createVariationJsonRequest struct {
 	Name       string `json:"name" validate:"required,alphanum"`
@@ -77,7 +77,7 @@ func (server *Server) createVariation(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getVariationParamsRequest struct {
-	VariationID int64 `params:"variation_id" validate:"required,min=1"`
+	VariationID int64 `params:"variationId" validate:"required,min=1"`
 }
 
 func (server *Server) getVariation(ctx *fiber.Ctx) error {
@@ -149,8 +149,8 @@ func (server *Server) listVariations(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateVariationParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	VariationID int64 `params:"variation_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	VariationID int64 `params:"variationId" validate:"required,min=1"`
 }
 
 type updateVariationJsonRequest struct {
@@ -214,8 +214,8 @@ func (server *Server) updateVariation(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteVariationParamsRequest struct {
-	AdminID     int64 `params:"admin_id" validate:"required,min=1"`
-	VariationID int64 `params:"variation_id" validate:"required,min=1"`
+	AdminID     int64 `params:"adminId" validate:"required,min=1"`
+	VariationID int64 `params:"variationId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteVariation(ctx *fiber.Ctx) error {

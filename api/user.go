@@ -24,7 +24,7 @@ type createUserRequest struct {
 }
 
 type userResponse struct {
-	UserID         int64  `json:"id"`
+	UserID         int64  `json:"_id"`
 	Username       string `json:"username"`
 	Email          string `json:"email"`
 	Telephone      int32  `json:"telephone"`
@@ -210,7 +210,7 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type listUsersParamsRequest struct {
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type listUsersQueryRequest struct {
@@ -335,7 +335,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 
 type deleteUserParamsRequest struct {
 	UserID  int64 `params:"id" validate:"required,min=1"`
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 func (server *Server) deleteUser(ctx *fiber.Ctx) error {

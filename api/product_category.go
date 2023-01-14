@@ -14,7 +14,7 @@ import (
 
 // ////////////* Create API //////////////
 type createProductCategoryParamsRequest struct {
-	AdminID int64 `params:"admin_id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type createProductCategoryJsonRequest struct {
@@ -78,7 +78,7 @@ func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductCategoryParamsRequest struct {
-	CategoryID int64 `params:"category_id" validate:"required,min=1"`
+	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
 }
 
 func (server *Server) getProductCategory(ctx *fiber.Ctx) error {
@@ -149,8 +149,8 @@ func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductCategoryParamsRequest struct {
-	AdminID    int64 `params:"admin_id" validate:"required,min=1"`
-	CategoryID int64 `params:"category_id" validate:"required,min=1"`
+	AdminID    int64 `params:"adminId" validate:"required,min=1"`
+	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
 }
 
 type updateProductCategoryJsonRequest struct {
@@ -214,8 +214,8 @@ func (server *Server) updateProductCategory(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductCategoryParamsRequest struct {
-	AdminID    int64 `params:"admin_id" validate:"required,min=1"`
-	CategoryID int64 `params:"category_id" validate:"required,min=1"`
+	AdminID    int64 `params:"adminId" validate:"required,min=1"`
+	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
 }
 
 type deleteProductCategoryJsonRequest struct {
