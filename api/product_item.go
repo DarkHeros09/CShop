@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -27,25 +26,10 @@ type createProductItemsJsonRequest struct {
 }
 
 func (server *Server) createProductItem(ctx *fiber.Ctx) error {
-	var params createProductItemsParamsRequest
-	var req createProductItemsJsonRequest
+	params := &createProductItemsParamsRequest{}
+	req := &createProductItemsJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -90,14 +74,9 @@ type getProductItemsParamsRequest struct {
 }
 
 func (server *Server) getProductItem(ctx *fiber.Ctx) error {
-	var params getProductItemsParamsRequest
+	params := &getProductItemsParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -123,14 +102,9 @@ type listProductItemsQueryRequest struct {
 }
 
 func (server *Server) listProductItems(ctx *fiber.Ctx) error {
-	var query listProductItemsQueryRequest
+	query := &listProductItemsQueryRequest{}
 
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -171,25 +145,10 @@ type updateProductItemJsonRequest struct {
 }
 
 func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
-	var params updateProductItemParamsRequest
-	var req updateProductItemJsonRequest
+	params := &updateProductItemParamsRequest{}
+	req := &updateProductItemJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -235,14 +194,9 @@ type deleteProductItemParamsRequest struct {
 }
 
 func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
-	var params deleteProductItemParamsRequest
+	params := &deleteProductItemParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

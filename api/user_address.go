@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -45,25 +44,10 @@ func newUserAddressResponseForCreate(address db.CreateUserAddressWithAddressRow)
 }
 
 func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
-	var params createUserAddressParamsRequest
-	var req createUserAddressJsonRequest
+	params := &createUserAddressParamsRequest{}
+	req := &createUserAddressJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -121,14 +105,9 @@ type getUserAddressParamsRequest struct {
 }
 
 func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
-	var params getUserAddressParamsRequest
+	params := &getUserAddressParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -171,25 +150,10 @@ type listUserAddressesQueryRequest struct {
 }
 
 func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
-	var params listUserAddressParamsRequest
-	var query listUserAddressesQueryRequest
+	params := &listUserAddressParamsRequest{}
+	query := &listUserAddressesQueryRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -244,25 +208,10 @@ func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddr
 }
 
 func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
-	var params updateUserAddressParamsRequest
-	var req updateUserAddressJsonRequest
+	params := &updateUserAddressParamsRequest{}
+	req := &updateUserAddressJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -323,14 +272,9 @@ type deleteUserAddressParamsRequest struct {
 }
 
 func (server *Server) deleteUserAddress(ctx *fiber.Ctx) error {
-	var params deleteUserAddressParamsRequest
+	params := &deleteUserAddressParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

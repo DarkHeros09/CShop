@@ -369,7 +369,6 @@ func TestGetUserAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		UserID        int64
-		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, rsp *http.Response)
@@ -377,9 +376,6 @@ func TestGetUserAPI(t *testing.T) {
 		{
 			name:   "OK",
 			UserID: user.ID,
-			body: fiber.Map{
-				"id": user.ID,
-			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -397,9 +393,6 @@ func TestGetUserAPI(t *testing.T) {
 		{
 			name:   "NoAuthorization",
 			UserID: user.ID,
-			body: fiber.Map{
-				"id": user.ID,
-			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -414,9 +407,6 @@ func TestGetUserAPI(t *testing.T) {
 		{
 			name:   "UnauthorizedUser",
 			UserID: user.ID,
-			body: fiber.Map{
-				"id": user.ID,
-			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, "unauthorizedUser", time.Minute)
 			},

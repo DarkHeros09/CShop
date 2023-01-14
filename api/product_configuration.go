@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -23,25 +22,10 @@ type createProductConfigurationJsonRequest struct {
 }
 
 func (server *Server) createProductConfiguration(ctx *fiber.Ctx) error {
-	var params createProductConfigurationParamsRequest
-	var req createProductConfigurationJsonRequest
+	params := &createProductConfigurationParamsRequest{}
+	req := &createProductConfigurationJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -83,14 +67,9 @@ type getProductConfigurationParamsRequest struct {
 }
 
 func (server *Server) getProductConfiguration(ctx *fiber.Ctx) error {
-	var params getProductConfigurationParamsRequest
+	params := &getProductConfigurationParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -125,25 +104,10 @@ type listProductConfigurationsQueryRequest struct {
 }
 
 func (server *Server) listProductConfigurations(ctx *fiber.Ctx) error {
-	var params listProductConfigurationsParamsRequest
-	var query listProductConfigurationsQueryRequest
+	params := &listProductConfigurationsParamsRequest{}
+	query := &listProductConfigurationsQueryRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -179,25 +143,10 @@ type updateProductConfigurationJsonRequest struct {
 }
 
 func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
-	var params updateProductConfigurationParamsRequest
-	var req updateProductConfigurationJsonRequest
+	params := &updateProductConfigurationParamsRequest{}
+	req := &updateProductConfigurationJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -239,14 +188,9 @@ type deleteProductConfigurationParamsRequest struct {
 }
 
 func (server *Server) deleteProductConfiguration(ctx *fiber.Ctx) error {
-	var params deleteProductConfigurationParamsRequest
+	params := &deleteProductConfigurationParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

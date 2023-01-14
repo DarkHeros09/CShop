@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -24,25 +23,10 @@ type createWishListItemJsonRequest struct {
 }
 
 func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
-	var params createWishListItemParamsRequest
-	var req createWishListItemJsonRequest
+	params := &createWishListItemParamsRequest{}
+	req := &createWishListItemJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -85,14 +69,9 @@ type getWishListItemParamsRequest struct {
 }
 
 func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
-	var params getWishListItemParamsRequest
+	params := &getWishListItemParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -132,14 +111,9 @@ type listWishListItemsRequest struct {
 }
 
 func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
-	var params listWishListItemsRequest
+	params := &listWishListItemsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -176,25 +150,10 @@ type updateWishListItemJsonRequest struct {
 }
 
 func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
-	var params updateWishListItemParamsRequest
-	var req updateWishListItemJsonRequest
+	params := &updateWishListItemParamsRequest{}
+	req := &updateWishListItemJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -237,14 +196,9 @@ type deleteWishListItemParamsRequest struct {
 }
 
 func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
-	var params deleteWishListItemParamsRequest
+	params := &deleteWishListItemParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -289,14 +243,9 @@ type deleteWishListItemAllJsonRequest struct {
 }
 
 func (server *Server) deleteWishListItemAll(ctx *fiber.Ctx) error {
-	var params deleteWishListItemAllJsonRequest
+	params := &deleteWishListItemAllJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

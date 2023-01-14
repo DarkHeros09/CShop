@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -23,25 +22,10 @@ type createUserReviewRequest struct {
 }
 
 func (server *Server) createUserReview(ctx *fiber.Ctx) error {
-	var params createUserReviewParamsRequest
-	var req createUserReviewRequest
+	params := &createUserReviewParamsRequest{}
+	req := &createUserReviewRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -84,14 +68,9 @@ type getUserReviewParamsRequest struct {
 }
 
 func (server *Server) getUserReview(ctx *fiber.Ctx) error {
-	var params getUserReviewParamsRequest
+	params := &getUserReviewParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -132,24 +111,10 @@ type listUserReviewsRequest struct {
 }
 
 func (server *Server) listUserReviews(ctx *fiber.Ctx) error {
-	var params listUserReviewParamsRequest
-	var query listUserReviewsRequest
+	params := &listUserReviewParamsRequest{}
+	query := &listUserReviewsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -191,25 +156,10 @@ type updateUserReviewJsonRequest struct {
 }
 
 func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
-	var params updateUserReviewParamsRequest
-	var req updateUserReviewJsonRequest
+	params := &updateUserReviewParamsRequest{}
+	req := &updateUserReviewJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -252,13 +202,9 @@ type deleteUserReviewParamsRequest struct {
 }
 
 func (server *Server) deleteUserReview(ctx *fiber.Ctx) error {
-	var params deleteUserReviewParamsRequest
+	params := &deleteUserReviewParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

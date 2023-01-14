@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -23,25 +22,10 @@ type createPaymentMethodJsonRequest struct {
 }
 
 func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
-	var params createPaymentMethodParamsRequest
-	var req createPaymentMethodJsonRequest
+	params := &createPaymentMethodParamsRequest{}
+	req := &createPaymentMethodJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -84,14 +68,9 @@ type getPaymentMethodParamsRequest struct {
 }
 
 func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
-	var params getPaymentMethodParamsRequest
+	params := &getPaymentMethodParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -134,25 +113,10 @@ type listPaymentMethodsRequest struct {
 }
 
 func (server *Server) listPaymentMethodes(ctx *fiber.Ctx) error {
-	var params listPaymentMethodsParamsRequest
-	var query listPaymentMethodsRequest
+	params := &listPaymentMethodsParamsRequest{}
+	query := &listPaymentMethodsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -193,25 +157,10 @@ type updatePaymentMethodJsonRequest struct {
 }
 
 func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
-	var params updatePaymentMethodParamsRequest
-	var req updatePaymentMethodJsonRequest
+	params := &updatePaymentMethodParamsRequest{}
+	req := &updatePaymentMethodJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -254,14 +203,9 @@ type deletePaymentMethodParamsRequest struct {
 }
 
 func (server *Server) deletePaymentMethod(ctx *fiber.Ctx) error {
-	var params deletePaymentMethodParamsRequest
+	params := &deletePaymentMethodParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

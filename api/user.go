@@ -53,14 +53,9 @@ func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userRespo
 }
 
 func (server *Server) createUser(ctx *fiber.Ctx) error {
-	var req createUserRequest
+	req := &createUserRequest{}
 
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -103,14 +98,9 @@ type resetPasswordRequest struct {
 }
 
 func (server *Server) resetPassword(ctx *fiber.Ctx) error {
-	var req resetPasswordRequest
+	req := &resetPasswordRequest{}
 
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -173,14 +163,9 @@ type getUserParamsRequest struct {
 }
 
 func (server *Server) getUser(ctx *fiber.Ctx) error {
-	var params getUserParamsRequest
+	params := &getUserParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -219,24 +204,10 @@ type listUsersQueryRequest struct {
 }
 
 func (server *Server) listUsers(ctx *fiber.Ctx) error {
-	var params listUsersParamsRequest
-	var query listUsersQueryRequest
+	params := &listUsersParamsRequest{}
+	query := &listUsersQueryRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -278,24 +249,10 @@ type updateUserJsonRequest struct {
 }
 
 func (server *Server) updateUser(ctx *fiber.Ctx) error {
-	var params updateUserParamsRequest
-	var req updateUserJsonRequest
+	params := &updateUserParamsRequest{}
+	req := &updateUserJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -339,14 +296,9 @@ type deleteUserParamsRequest struct {
 }
 
 func (server *Server) deleteUser(ctx *fiber.Ctx) error {
-	var params deleteUserParamsRequest
+	params := &deleteUserParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -394,14 +346,9 @@ type loginUserResponse struct {
 }
 
 func (server *Server) loginUser(ctx *fiber.Ctx) error {
-	var req loginUserRequest
+	req := &loginUserRequest{}
 
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

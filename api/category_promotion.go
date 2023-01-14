@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
@@ -25,25 +24,10 @@ type createCategoryPromotionJsonRequest struct {
 }
 
 func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
-	var params createCategoryPromotionParamsRequest
-	var req createCategoryPromotionJsonRequest
+	params := &createCategoryPromotionParamsRequest{}
+	req := &createCategoryPromotionJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -86,14 +70,9 @@ type getCategoryPromotionParamsRequest struct {
 }
 
 func (server *Server) getCategoryPromotion(ctx *fiber.Ctx) error {
-	var params getCategoryPromotionParamsRequest
+	params := &getCategoryPromotionParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -124,14 +103,9 @@ type listCategoryPromotionsQueryRequest struct {
 }
 
 func (server *Server) listCategoryPromotions(ctx *fiber.Ctx) error {
-	var query listCategoryPromotionsQueryRequest
+	query := &listCategoryPromotionsQueryRequest{}
 
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -168,25 +142,10 @@ type updateCategoryPromotionJsonRequest struct {
 }
 
 func (server *Server) updateCategoryPromotion(ctx *fiber.Ctx) error {
-	var params updateCategoryPromotionParamsRequest
-	var req updateCategoryPromotionJsonRequest
+	params := &updateCategoryPromotionParamsRequest{}
+	req := &updateCategoryPromotionJsonRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -229,14 +188,9 @@ type deleteCategoryPromotionParamsRequest struct {
 }
 
 func (server *Server) deleteCategoryPromotion(ctx *fiber.Ctx) error {
-	var params deleteCategoryPromotionParamsRequest
+	params := &deleteCategoryPromotionParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

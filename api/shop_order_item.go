@@ -5,7 +5,6 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v4"
 )
@@ -18,14 +17,9 @@ type getShopOrderItemParamsRequest struct {
 }
 
 func (server *Server) getShopOrderItem(ctx *fiber.Ctx) error {
-	var params getShopOrderItemParamsRequest
+	params := &getShopOrderItemParamsRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -67,24 +61,10 @@ type listShopOrderItemsQueryRequest struct {
 }
 
 func (server *Server) listShopOrderItems(ctx *fiber.Ctx) error {
-	var params listShopOrderItemsParamsRequest
-	var query listShopOrderItemsQueryRequest
+	params := &listShopOrderItemsParamsRequest{}
+	query := &listShopOrderItemsQueryRequest{}
 
-	if err := ctx.ParamsParser(&params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(params); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := ctx.QueryParser(&query); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-	if err := util.ValidateStruct(query); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

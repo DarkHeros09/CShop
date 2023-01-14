@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v4"
 )
@@ -19,14 +18,9 @@ type renewAccessTokenResponse struct {
 }
 
 func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
-	var req renewAccessTokenRequest
+	req := &renewAccessTokenRequest{}
 
-	if err := ctx.BodyParser(&req); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
