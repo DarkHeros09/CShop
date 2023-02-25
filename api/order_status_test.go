@@ -126,7 +126,7 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/order-status", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/order-status", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -264,7 +264,7 @@ func TestGetOrderStatusAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/order-status/%d", tc.UserID, tc.StatusID)
+			url := fmt.Sprintf("/usr/v1/users/%d/order-status/%d", tc.UserID, tc.StatusID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -402,7 +402,7 @@ func TestListOrderStatusAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/order-status", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/order-status", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -541,7 +541,7 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/order-status/%d", tc.UserID, tc.StatusID)
+			url := fmt.Sprintf("/usr/v1/users/%d/order-status/%d", tc.UserID, tc.StatusID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -662,7 +662,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/order-status/%d", tc.AdminD, tc.StatusID)
+			url := fmt.Sprintf("/admin/%d/v1/order-status/%d", tc.AdminD, tc.StatusID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

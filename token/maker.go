@@ -2,7 +2,7 @@ package token
 
 import "time"
 
-// Maker is an interface for manging tokens
+// Maker is an interface for managing tokens
 type Maker interface {
 	// CreateToken creates a new user token for specific username and duration
 	CreateTokenForUser(userID int64, username string, duration time.Duration) (string, *UserPayload, error)

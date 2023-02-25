@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"math"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
@@ -94,6 +96,21 @@ func (server *Server) getProduct(ctx *fiber.Ctx) error {
 }
 
 // ////////////* List API //////////////
+
+// type listProductsResponse struct {
+// 	MaxPage  int64                `json:"max_page"`
+// 	Products []db.ListProductsRow `json:"products"`
+// }
+
+// func newListProductsResponse(productsList []db.ListProductsRow, query *listProductsQueryRequest) listProductsResponse {
+
+// 	maxPage := int64(math.Ceil(float64(productsList[0].TotalCount) / float64(query.PageSize)))
+// 	return listProductsResponse{
+// 		MaxPage:  maxPage,
+// 		Products: productsList,
+// 	}
+// }
+
 type listProductsQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
@@ -121,6 +138,10 @@ func (server *Server) listProducts(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	// rsp := newListProductsResponse(products, query)
+	maxPage := int64(math.Ceil(float64(products[0].TotalCount) / float64(query.PageSize)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(products)
 	return nil
 }

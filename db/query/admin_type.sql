@@ -16,7 +16,8 @@ OFFSET $2;
 
 -- name: UpdateAdminType :one
 UPDATE "admin_type"
-SET admin_type = $2
+SET admin_type = $2,
+updated_at = now()
 WHERE id = $1
 RETURNING *;
 

@@ -17,7 +17,7 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		ProductID:    product.ID,
 		ProductSku:   util.RandomInt(100, 300),
 		QtyInStock:   int32(util.RandomInt(0, 100)),
-		ProductImage: util.RandomString(5),
+		ProductImage: util.RandomURL(),
 		Price:        util.RandomDecimalString(1, 100),
 		Active:       true,
 	}
@@ -121,4 +121,72 @@ func TestListProductItems(t *testing.T) {
 		require.NotEmpty(t, productItem)
 	}
 
+}
+
+func TestListProductItemsV2(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	initialSearchResult, err := testQueires.ListProductItemsV2(context.Background(), 10)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductItemsNextPageParams{
+		Limit: 10,
+		ID:    initialSearchResult[len(initialSearchResult)-1].ID,
+	}
+
+	secondPage, err := testQueires.ListProductItemsNextPage(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+	arg2 := ListProductItemsNextPageParams{
+		Limit: 10,
+		ID:    secondPage[len(initialSearchResult)-1].ID,
+	}
+
+	thirdPage, err := testQueires.ListProductItemsNextPage(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, secondPage[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+}
+
+func TestSearchProductItems(t *testing.T) {
+
+	productItem := createRandomProductItem(t)
+
+	product, err := testQueires.GetProduct(context.Background(), productItem.ProductID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, product)
+
+	arg1 := SearchProductItemsParams{
+		Limit: 10,
+		Query: product.Name,
+	}
+
+	searchedProductItem, err := testQueires.SearchProductItems(context.Background(), arg1)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, searchedProductItem)
+	require.Equal(t, productItem.ID, searchedProductItem[len(searchedProductItem)-1].ID)
+
+	arg2 := SearchProductItemsNextPageParams{
+		Limit: 10,
+		ID:    searchedProductItem[len(searchedProductItem)-1].ID,
+		Query: product.Name,
+	}
+
+	searchedRestProductItem, err := testQueires.SearchProductItemsNextPage(context.Background(), arg2)
+
+	require.NoError(t, err)
+	require.Empty(t, searchedRestProductItem)
+	// require.Equal(t, productItem.ID, searchedProductItem[len(searchedProductItem)-1].ID)
 }

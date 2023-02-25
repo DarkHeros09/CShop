@@ -149,7 +149,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/addresses", tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/addresses", tc.ID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -289,7 +289,7 @@ func TestGetUserAddressAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			url := fmt.Sprintf("/usr/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -431,7 +431,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/addresses", tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/addresses", tc.ID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -612,7 +612,7 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			url := fmt.Sprintf("/usr/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -741,7 +741,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
+			url := fmt.Sprintf("/usr/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

@@ -4,9 +4,10 @@ INSERT INTO "user" (
   email,
   password,
   telephone,
+  is_blocked,
   default_payment
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -17,9 +18,10 @@ INSERT INTO "user" (
   email,
   password,
   telephone,
+  is_blocked,
   default_payment
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *
 ),
@@ -59,7 +61,8 @@ username = COALESCE(sqlc.narg(username),username),
 email = COALESCE(sqlc.narg(email),email),
 password = COALESCE(sqlc.narg(password),password),
 telephone = COALESCE(sqlc.narg(telephone),telephone),
-default_payment = COALESCE(sqlc.narg(default_payment),default_payment)
+default_payment = COALESCE(sqlc.narg(default_payment),default_payment),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

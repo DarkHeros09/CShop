@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -13,8 +14,9 @@ type renewAccessTokenRequest struct {
 }
 
 type renewAccessTokenResponse struct {
+	UserSessionID        uuid.UUID `json:"user_session_id"`
 	AccessToken          string    `json:"access_token"`
-	AccessTokenExpiresAt time.Time `json:"accesss_token_expires_at"`
+	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
 
 func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
@@ -27,6 +29,9 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 
 	refreshPayload, err := server.tokenMaker.VerifyTokenForUser(req.RefreshToken)
 	if err != nil {
+		if err.Error() == "token has expired" {
+			err = fmt.Errorf("refresh token has expired")
+		}
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
@@ -76,6 +81,7 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	}
 
 	rsp := renewAccessTokenResponse{
+		UserSessionID:        userSession.ID,
 		AccessToken:          accessToken,
 		AccessTokenExpiresAt: accessPayload.ExpiredAt,
 	}

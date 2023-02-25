@@ -23,7 +23,8 @@ OFFSET $2;
 -- name: UpdateWishList :one
 UPDATE "wish_list"
 SET 
-user_id = COALESCE(sqlc.narg(user_id),user_id)
+user_id = COALESCE(sqlc.narg(user_id),user_id),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

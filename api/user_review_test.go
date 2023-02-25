@@ -37,7 +37,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      userReview.RatingValue,
+				"rating_value":       userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -65,7 +65,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      userReview.RatingValue,
+				"rating_value":       userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -83,7 +83,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   user.ID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      userReview.RatingValue,
+				"rating_value":       userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -109,7 +109,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			ID:   0,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      userReview.RatingValue,
+				"rating_value":       userReview.RatingValue,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -141,7 +141,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/reviews", tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/reviews", tc.ID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -279,7 +279,7 @@ func TestGetUserReviewAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -417,7 +417,7 @@ func TestListUsersReviewAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/reviews", tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/reviews", tc.ID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -456,7 +456,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      3,
+				"rating_value":       3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -486,7 +486,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      3,
+				"rating_value":       3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -506,7 +506,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			UserID: userReview.UserID,
 			body: fiber.Map{
 				"ordered_product_id": userReview.OrderedProductID,
-				"rating_value":      3,
+				"rating_value":       3,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -564,7 +564,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -688,7 +688,7 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/reviews/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

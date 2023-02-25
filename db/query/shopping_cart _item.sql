@@ -46,7 +46,8 @@ WITH t1 AS (
 UPDATE "shopping_cart_item" AS sci
 SET 
 product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
-qty = COALESCE(sqlc.narg(qty),qty)
+qty = COALESCE(sqlc.narg(qty),qty),
+updated_at = now()
 WHERE sci.id = sqlc.arg(id)
 RETURNING *, (SELECT user_id FROM t1);
 

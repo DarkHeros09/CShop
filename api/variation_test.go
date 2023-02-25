@@ -132,7 +132,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":       variation.Name,
+				"name":        variation.Name,
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -158,7 +158,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			name:    "NoAuthorization",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":       variation.Name,
+				"name":        variation.Name,
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -182,7 +182,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			name:    "Unauthorized",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":       variation.Name,
+				"name":        variation.Name,
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -206,7 +206,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":       variation.Name,
+				"name":        variation.Name,
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -226,7 +226,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			name:    "InvalidID",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":       variation.Name,
+				"name":        variation.Name,
 				"category_id": 0,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -259,7 +259,7 @@ func TestCreateVariationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/variations", tc.AdminID)
+			url := fmt.Sprintf("/admin/%d/v1/variations", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -410,7 +410,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			VariationID: variation.ID,
 			AdminID:     admin.ID,
 			body: fiber.Map{
-				"name":       "new name",
+				"name":        "new name",
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -437,7 +437,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			VariationID: variation.ID,
 			AdminID:     admin.ID,
 			body: fiber.Map{
-				"name":       "new name",
+				"name":        "new name",
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -463,7 +463,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			VariationID: variation.ID,
 			AdminID:     admin.ID,
 			body: fiber.Map{
-				"name":       "new name",
+				"name":        "new name",
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -488,7 +488,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			VariationID: variation.ID,
 			AdminID:     admin.ID,
 			body: fiber.Map{
-				"name":       "new name",
+				"name":        "new name",
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -514,7 +514,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			VariationID: 0,
 			AdminID:     admin.ID,
 			body: fiber.Map{
-				"name":       "new name",
+				"name":        "new name",
 				"category_id": variation.CategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -547,7 +547,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/variations/%d", tc.AdminID, tc.VariationID)
+			url := fmt.Sprintf("/admin/%d/v1/variations/%d", tc.AdminID, tc.VariationID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -694,7 +694,7 @@ func TestDeleteVariationAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/variations/%d", tc.AdminID, tc.VariationID)
+			url := fmt.Sprintf("/admin/%d/v1/variations/%d", tc.AdminID, tc.VariationID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

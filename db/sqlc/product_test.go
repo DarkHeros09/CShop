@@ -17,7 +17,7 @@ func createRandomProduct(t *testing.T) Product {
 		CategoryID:   category.ID,
 		Name:         util.RandomUser(),
 		Description:  util.RandomUser(),
-		ProductImage: util.RandomUser(),
+		ProductImage: util.RandomURL(),
 		Active:       true,
 	}
 

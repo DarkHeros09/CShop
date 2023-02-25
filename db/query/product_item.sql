@@ -21,10 +21,62 @@ WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE;
 
 -- name: ListProductItems :many
-SELECT * FROM "product_item"
+SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id 
 ORDER BY id
 LIMIT $1
 OFFSET $2;
+
+-- name: ListProductItemsV2 :many
+SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id 
+ORDER BY pi.id DESC
+LIMIT $1;
+
+-- name: ListProductItemsNextPage :many
+SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id 
+WHERE pi.id < $2
+ORDER BY pi.id DESC
+LIMIT $1;
+
+-- name: SearchProductItems :many
+SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+WHERE p.search @@ 
+CASE
+    WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+ORDER BY pi.id DESC, ts_rank(p.search, 
+CASE
+    WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+) DESC
+LIMIT $1;
+
+-- name: SearchProductItemsNextPage :many
+SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+WHERE p.search @@ 
+CASE
+    WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+AND pi.id < $2
+ORDER BY pi.id DESC, ts_rank(p.search, 
+CASE
+    WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+) DESC
+LIMIT $1;
 
 -- name: UpdateProductItem :one
 UPDATE "product_item"
@@ -33,7 +85,8 @@ product_sku = COALESCE(sqlc.narg(product_sku),product_sku),
 qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
 product_image = COALESCE(sqlc.narg(product_image),product_image),
 price = COALESCE(sqlc.narg(price),price),
-active = COALESCE(sqlc.narg(active),active)
+active = COALESCE(sqlc.narg(active),active),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 AND product_id = sqlc.arg(product_id)
 RETURNING *;

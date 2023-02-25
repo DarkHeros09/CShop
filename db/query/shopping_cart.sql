@@ -25,7 +25,8 @@ OFFSET $2;
 -- name: UpdateShoppingCart :one
 UPDATE "shopping_cart"
 SET 
-user_id = COALESCE(sqlc.narg(user_id),user_id)
+user_id = COALESCE(sqlc.narg(user_id),user_id),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

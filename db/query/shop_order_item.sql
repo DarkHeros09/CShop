@@ -54,7 +54,8 @@ SET
 product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
 order_id = COALESCE(sqlc.narg(order_id),order_id),
 quantity = COALESCE(sqlc.narg(quantity),quantity),
-price = COALESCE(sqlc.narg(price),price)
+price = COALESCE(sqlc.narg(price),price),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

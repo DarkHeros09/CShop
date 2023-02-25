@@ -1,0 +1,235 @@
+Project Classic_Shop {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # CShop Database
+  '''
+}
+
+/// Creating tables
+// ADMIN
+Table admin_type as ADT{
+  id bigserial [pk, not null]// auto-increment
+  admin_type varchar [not null, unique]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table admin as AD {
+  id bigserial [pk,not null]// auto-increment
+  username varchar [not null, unique]
+  email varchar [not null, unique]
+  password varchar [not null]
+  active boolean [not null, default: true]
+  type_id bigint [not null, ref: - ADT.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  last_login timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  
+}
+
+// USER 
+Table user as U {
+  id bigserial [pk,not null]// auto-increment
+  username varchar [not null]
+  email varchar [not null, unique]
+  password varchar [not null]
+  telephone int [not null, default: 0]
+  is_blocked boolean [not null, default: false]
+  default_payment bigint
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  
+  indexes{
+    username
+    email
+    telephone
+  }
+}
+
+Table user_session as US {
+  id uuid [pk, not null, unique]
+  user_id bigint [not null,ref:> U.id]
+  refresh_token varchar [not null]
+  user_agent varchar [not null]
+  client_ip varchar [not null]
+  is_blocked boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+  expires_at timestamptz [not null]
+}
+
+Table address as A {
+  id bigserial [pk,not null] // auto-increment
+  address_line varchar [not null]
+  region varchar [not null]
+  city varchar [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table user_address as UA {
+  user_id bigint [not null,ref:> U.id] 
+  address_id bigint [not null,ref:> A.id]
+  default_address bigint
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table user_review as UR {
+  id bigserial [pk,not null] // auto-increment
+  user_id bigint [not null,ref:> U.id]
+  ordered_product_id bigint [not null,unique,ref:> SOI.id]
+  rating_value int [not null, default: 0]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table payment_method as PM {
+  id bigserial [pk,not null] // auto-increment
+  user_id bigint [not null,ref:> U.id]
+  payment_type_id bigint [not null, ref:> PT.id]
+  provider varchar [not null]
+  is_default boolean [not null, default: false]
+}
+
+Table payment_type as PT {
+  id bigserial [pk,not null] // auto-increment
+  value varchar [not null,note:'for companies payment system like BCD']
+}
+
+Table shopping_cart as SC {
+  id bigserial [pk,not null] // auto-increment
+  user_id bigint [not null,ref:> U.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table shopping_cart_item as SCI {
+  id bigserial [pk,not null] // auto-increment
+  shopping_cart_id bigint [not null, ref:> SC.id]
+  product_item_id bigint [not null,ref:> PI.id]
+  qty int [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table wish_list as WL {
+  id bigserial [pk,not null] // auto-increment
+  user_id bigint [not null,ref:> U.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table wish_list_item as WLI {
+  id bigserial [pk,not null] // auto-increment
+  wish_list_id bigint [not null, ref:> WL.id]
+  product_item_id bigint [not null,ref:> PI.id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+// this table is for items in the ship_order
+Table shop_order_item as SOI {
+  id bigserial [pk,not null] // auto-increment
+  product_item_id bigint [not null,ref:> PI.id]
+  order_id bigint [not null, ref:> SO.id]
+  quantity int [not null, default: 0]
+  price varchar [not null, note:'price of product when ordered']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table product_item as PI {
+  id bigserial [pk,not null] // auto-increment
+  product_id bigint [not null, ref:> P.id]
+  product_sku bigint [not null]
+  qty_in_stock int [not null]
+  product_image varchar [not null,note: 'may be used to show different images than original']
+  price varchar [not null]
+  active boolean [not null, default: false, note:'default is false']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table product as P {
+  id bigserial [pk,not null] // auto-increment
+  category_id bigint [not null,ref:> PC.id]
+  name varchar [not null]
+  description varchar [not null]
+  product_image varchar [not null]
+  active boolean [not null, default: false, note:'default is false']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table product_promotion as PPROMO {
+  product_id bigint [not null,ref:> P.id]
+  promotion_id bigint [not null,unique,ref:> PROMO.id]
+  active boolean [not null, default: false, note:'default is false']
+}
+
+Table product_category as PC {
+  id bigserial [pk,not null] // auto-increment
+  parent_category_id bigint [ref:> PC.id]
+  category_name varchar [not null]
+}
+
+Table promotion as PROMO {
+  id bigserial [pk,not null] // auto-increment
+  name varchar [not null]
+  description varchar [not null]
+  discount_rate bigint [not null]
+  active boolean [not null, default: false, note:'default is false']
+  start_date timestamptz [not null]
+  end_date timestamptz [not null]
+}
+
+Table category_promotion as CPROMO {
+  category_id bigint [not null,unique,ref:> PC.id]
+  promotion_id bigint [not null,unique,ref:> PROMO.id]
+  active boolean [not null, default: false, note:'default is false']
+}
+
+Table variation as V {
+  id bigserial [pk,not null] // auto-increment
+  category_id bigint [not null, ref:> PC.id]
+  name varchar [not null,note:'variation names like color, and size']
+}
+
+Table variation_option as VO {
+  id bigserial [pk,not null] // auto-increment
+  variation_id bigint [not null,ref:> V.id]
+  value varchar [not null,note:'variation values like Red, ans Size XL']
+}
+
+Table product_configuration as PCFG {
+  product_item_id bigint [not null,ref:> PI.id]
+  variation_option_id bigint [not null,ref:> VO.id]
+}
+
+Table shop_order as SO {
+  id bigserial [pk,not null] // auto-increment
+  user_id bigint [not null]
+  payment_method_id bigint [not null]
+  shipping_address_id bigint [not null, ref:> A.id]
+  order_total varchar [not null]
+  shipping_method_id bigint [not null, ref:> SM.id]
+  order_status_id bigint
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+Ref: SO.order_status_id > OS.id [delete: set null]
+
+Table order_status as OS {
+  id bigserial [pk,not null] // auto-increment
+  status varchar [not null,note:'values like ordered, processed and delivered']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table shipping_method as SM {
+  id bigserial [pk,not null] // auto-increment
+  name varchar [not null, note:'values like normal, or free']
+  price varchar [not null]
+}
+
+ 

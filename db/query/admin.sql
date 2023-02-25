@@ -25,7 +25,8 @@ OFFSET $2;
 
 -- name: UpdateAdmin :one
 UPDATE "admin"
-SET active = $2
+SET active = $2,
+updated_at = now()
 WHERE id = $1
 RETURNING *;
 

@@ -40,7 +40,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            shoppingCartItem.Qty,
+				"qty":             shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -70,7 +70,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            shoppingCartItem.Qty,
+				"qty":             shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -91,7 +91,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            shoppingCartItem.Qty,
+				"qty":             shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -120,7 +120,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			body: fiber.Map{
 
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            shoppingCartItem.Qty,
+				"qty":             shoppingCartItem.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -153,7 +153,7 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -273,7 +273,7 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -384,7 +384,7 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/items", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/items", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -421,7 +421,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            qty,
+				"qty":             qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -451,7 +451,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            qty,
+				"qty":             qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -471,7 +471,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			ShoppingCartItemID: shoppingCartItem.ID,
 			body: fiber.Map{
 				"product_item_id": shoppingCartItem.ProductItemID,
-				"qty":            qty,
+				"qty":             qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -528,7 +528,7 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -667,7 +667,7 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 			// data, err := json.Marshal(tc.body)
 			// require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/items/%d", tc.UserID, tc.ShoppingCartID, tc.ShoppingCartItemID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -797,7 +797,7 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d", tc.UserID, tc.ShoppingCartID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d", tc.UserID, tc.ShoppingCartID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -844,7 +844,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":       orderTotal,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -881,7 +881,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":       orderTotal,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -905,7 +905,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
-				"order_total":       orderTotal,
+				"order_total":        orderTotal,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -964,7 +964,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/carts/%d/purchase", tc.UserID, tc.ShoppingCartID)
+			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/purchase", tc.UserID, tc.ShoppingCartID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

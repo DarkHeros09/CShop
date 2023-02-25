@@ -30,7 +30,8 @@ UPDATE "address"
 SET 
 address_line = COALESCE(sqlc.narg(address_line),address_line),
 region = COALESCE(sqlc.narg(region),region),
-city = COALESCE(sqlc.narg(city),city)
+city = COALESCE(sqlc.narg(city),city),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

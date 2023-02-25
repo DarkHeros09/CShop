@@ -66,7 +66,8 @@ OFFSET $3;
 -- name: UpdateUserAddress :one
 UPDATE "user_address"
 SET 
-default_address = $1
+default_address = $1,
+updated_at = now()
 WHERE user_id = $2
 AND address_id = $3
 RETURNING *;

@@ -125,7 +125,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/shop-orders/%d", tc.UserID, tc.ShopOrderID)
+			url := fmt.Sprintf("/usr/v1/users/%d/shop-orders/%d", tc.UserID, tc.ShopOrderID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -270,7 +270,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/shop-orders", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/shop-orders", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 

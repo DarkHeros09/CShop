@@ -102,17 +102,17 @@ func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
 
 // //////////////* List API //////////////
 
-type listShippingMethodesParamsRequest struct {
+type listShippingMethodsParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
-type listShippingMethodesQueryRequest struct {
+type listShippingMethodsQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShippingMethodes(ctx *fiber.Ctx) error {
-	params := &listShippingMethodesParamsRequest{}
-	query := &listShippingMethodesQueryRequest{}
+func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
+	params := &listShippingMethodsParamsRequest{}
+	query := &listShippingMethodsQueryRequest{}
 
 	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -130,7 +130,7 @@ func (server *Server) listShippingMethodes(ctx *fiber.Ctx) error {
 		Limit:  query.PageSize,
 		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	shippingMethodes, err := server.store.ListShippingMethodsByUserID(ctx.Context(), arg)
+	shippingMethods, err := server.store.ListShippingMethodsByUserID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -139,7 +139,7 @@ func (server *Server) listShippingMethodes(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(shippingMethodes)
+	ctx.Status(fiber.StatusOK).JSON(shippingMethods)
 	return nil
 }
 

@@ -1,3 +1,7 @@
+-- SQL dump generated using DBML (dbml-lang.org)
+-- Database: PostgreSQL
+-- Generated at: 2023-01-23T19:15:16.151Z
+
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "admin_type" varchar UNIQUE NOT NULL,

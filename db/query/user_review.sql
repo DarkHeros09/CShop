@@ -25,7 +25,8 @@ OFFSET $2;
 UPDATE "user_review"
 SET 
 ordered_product_id = COALESCE(sqlc.narg(ordered_product_id),ordered_product_id),
-rating_value = COALESCE(sqlc.narg(rating_value),rating_value)
+rating_value = COALESCE(sqlc.narg(rating_value),rating_value),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 AND user_id = sqlc.arg(user_id)
 RETURNING *;

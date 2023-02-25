@@ -36,7 +36,8 @@ OFFSET $2;
 -- name: UpdateOrderStatus :one
 UPDATE "order_status"
 SET 
-status = COALESCE(sqlc.narg(status),status)
+status = COALESCE(sqlc.narg(status),status),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

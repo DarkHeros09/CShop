@@ -133,7 +133,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -191,7 +191,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -218,7 +218,7 @@ func TestCreateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   product.Description,
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": product.ProductImage,
 				"active":        product.Active,
 			},
@@ -271,7 +271,7 @@ func TestCreateProductAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/products", tc.AdminID)
+			url := fmt.Sprintf("/admin/%d/v1/products", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -287,9 +287,9 @@ func TestCreateProductAPI(t *testing.T) {
 
 func TestListProductsAPI(t *testing.T) {
 	n := 5
-	products := make([]db.Product, n)
+	products := make([]db.ListProductsRow, n)
 	for i := 0; i < n; i++ {
-		products[i] = randomProduct()
+		products[i] = randomProductForList()
 	}
 
 	type Query struct {
@@ -322,7 +322,7 @@ func TestListProductsAPI(t *testing.T) {
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchProducts(t, rsp.Body, products)
+				requireBodyMatchProductsList(t, rsp.Body, products)
 			},
 		},
 		{
@@ -335,7 +335,7 @@ func TestListProductsAPI(t *testing.T) {
 				store.EXPECT().
 					ListProducts(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.Product{}, pgx.ErrTxClosed)
+					Return([]db.ListProductsRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -424,7 +424,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -457,7 +457,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -489,7 +489,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -520,7 +520,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			body: fiber.Map{
 				"name":          product.Name,
 				"description":   "new product Description",
-				"category_id":    product.CategoryID,
+				"category_id":   product.CategoryID,
 				"product_image": "https://newproduct.com/ProductImage",
 				"active":        product.Active,
 			},
@@ -579,7 +579,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/products/%d", tc.AdminID, tc.productID)
+			url := fmt.Sprintf("/admin/%d/v1/products/%d", tc.AdminID, tc.productID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -721,7 +721,7 @@ func TestDeleteProductAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/products/%d", tc.AdminID, tc.productID)
+			url := fmt.Sprintf("/admin/%d/v1/products/%d", tc.AdminID, tc.productID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -763,6 +763,17 @@ func randomProduct() db.Product {
 		Active:       util.RandomBool(),
 	}
 }
+func randomProductForList() db.ListProductsRow {
+	return db.ListProductsRow{
+		ID:           util.RandomInt(1, 1000),
+		CategoryID:   util.RandomInt(1, 500),
+		Name:         util.RandomUser(),
+		Description:  util.RandomUser(),
+		ProductImage: util.RandomURL(),
+		Active:       util.RandomBool(),
+		TotalCount:   util.RandomMoney(),
+	}
+}
 
 func requireBodyMatchProduct(t *testing.T, body io.ReadCloser, product db.Product) {
 	data, err := io.ReadAll(body)
@@ -779,6 +790,16 @@ func requireBodyMatchProducts(t *testing.T, body io.ReadCloser, products []db.Pr
 	require.NoError(t, err)
 
 	var gotProducts []db.Product
+	err = json.Unmarshal(data, &gotProducts)
+	require.NoError(t, err)
+	require.Equal(t, products, gotProducts)
+}
+
+func requireBodyMatchProductsList(t *testing.T, body io.ReadCloser, products []db.ListProductsRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProducts []db.ListProductsRow
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)

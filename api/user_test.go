@@ -11,6 +11,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/goccy/go-reflect"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -51,13 +52,37 @@ func EqCreateUserParamsMatcher(arg db.CreateUserWithCartAndWishListParams, passw
 	return eqCreateUserParamsMatcher{arg, password}
 }
 
+func addAccess(
+	t *testing.T,
+	tokenMaker token.Maker,
+	userID int64,
+	username string,
+	duration time.Duration,
+) (string, *token.UserPayload, error) {
+	token, payload, err := tokenMaker.CreateTokenForUser(userID, username, duration)
+	require.NoError(t, err)
+	require.NotEmpty(t, payload)
+	return token, payload, err
+}
+
 func TestCreateUserAPI(t *testing.T) {
 	user, password := randomUserWithCartAndWishList(t)
+
+	finalRsp := createUserResponse{
+		User: newUserResponse(db.User{
+			ID:             user.ID,
+			Username:       user.Username,
+			Email:          user.Email,
+			Password:       password,
+			Telephone:      user.Telephone,
+			IsBlocked:      user.IsBlocked,
+			DefaultPayment: user.DefaultPayment,
+		})}
 
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		buildStubs    func(store *mockdb.MockStore)
+		buildStubs    func(store *mockdb.MockStore, tokenMaker token.Maker)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
@@ -68,7 +93,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  password,
 				"telephone": user.Telephone,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
@@ -80,10 +105,45 @@ func TestCreateUserAPI(t *testing.T) {
 					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
 					Return(user, nil)
+				accessToken, accessPayload, err := addAccess(t, tokenMaker, user.ID, user.Username, time.Duration(time.Duration.Minutes(30)))
+				require.NoError(t, err)
+				refreshToken, refreshPayload, err := addAccess(t, tokenMaker, user.ID, user.Username, time.Duration(time.Duration.Hours(720)))
+				require.NoError(t, err)
+
+				userSession := db.UserSession{
+					ID:           uuid.New(),
+					UserID:       user.ID,
+					RefreshToken: refreshToken,
+					UserAgent:    "TestAgent",
+					ClientIp:     "TestIP",
+					IsBlocked:    false,
+					ExpiresAt:    accessPayload.ExpiredAt,
+				}
+
+				finalRsp = createUserResponse{
+					UserSessionID:         userSession.ID,
+					AccessToken:           accessToken,
+					AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+					RefreshToken:          refreshToken,
+					RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+					User: newUserResponse(db.User{
+						ID:             user.ID,
+						Username:       user.Username,
+						Email:          user.Email,
+						Password:       password,
+						Telephone:      user.Telephone,
+						IsBlocked:      user.IsBlocked,
+						DefaultPayment: user.DefaultPayment,
+					}),
+				}
+
+				store.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).
+					Times(1)
+
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchUserForCreate(t, rsp.Body, user)
+				requireBodyMatchUserForCreate(t, rsp.Body, finalRsp)
 			},
 		},
 		{
@@ -94,7 +154,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  password,
 				"telephone": user.Telephone,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
@@ -118,7 +178,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  password,
 				"telephone": user.Telephone,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
@@ -147,7 +207,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  password,
 				"telephone": user.Telephone,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
@@ -171,7 +231,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"telephone": user.Telephone,
 			},
 
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
@@ -194,7 +254,7 @@ func TestCreateUserAPI(t *testing.T) {
 				"password":  "123",
 				"telephone": user.Telephone,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
 					Username:  user.Username,
 					Email:     user.Email,
@@ -218,9 +278,9 @@ func TestCreateUserAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
-			tc.buildStubs(store)
 
 			server := newTestServer(t, store)
+			tc.buildStubs(store, server.tokenMaker)
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
@@ -483,7 +543,7 @@ func TestGetUserAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
@@ -612,7 +672,7 @@ func TestUpdateUserAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
@@ -783,7 +843,7 @@ func TestListUsersAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/users", tc.AdminID)
+			url := fmt.Sprintf("/admin/%d/v1/users", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -916,7 +976,7 @@ func TestDeleteUserAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/users/%d", tc.AdminID, tc.UserID)
+			url := fmt.Sprintf("/admin/%d/v1/users/%d", tc.AdminID, tc.UserID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -943,8 +1003,8 @@ func randomUser(t *testing.T) (user db.User, password string) {
 		Username:  util.RandomUser(),
 		Password:  hashedPassword,
 		Telephone: int32(util.RandomInt(910000000, 929999999)),
-
-		Email: util.RandomEmail(),
+		IsBlocked: false,
+		Email:     util.RandomEmail(),
 	}
 	return
 }
@@ -995,19 +1055,31 @@ func requireBodyMatchUser(t *testing.T, body io.Reader, user db.User) {
 	require.Empty(t, gotUser.Password)
 }
 
-func requireBodyMatchUserForCreate(t *testing.T, body io.Reader, user db.CreateUserWithCartAndWishListRow) {
+func requireBodyMatchUserForCreate(t *testing.T, body io.Reader, user createUserResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUser db.CreateUserWithCartAndWishListRow
+	var gotUser createUserResponse
 	err = json.Unmarshal(data, &gotUser)
 
 	require.NoError(t, err)
-	require.Equal(t, user.Username, gotUser.Username)
-	require.Equal(t, user.Telephone, gotUser.Telephone)
-	require.Equal(t, user.Email, gotUser.Email)
-	require.Empty(t, gotUser.Password)
+	require.Equal(t, user.User, gotUser.User)
+	// require.Empty(t, gotUser.Password)
 }
+
+// func requireBodyMatchUserForCreate(t *testing.T, body io.Reader, user db.CreateUserWithCartAndWishListRow) {
+// 	data, err := io.ReadAll(body)
+// 	require.NoError(t, err)
+
+// 	var gotUser db.CreateUserWithCartAndWishListRow
+// 	err = json.Unmarshal(data, &gotUser)
+
+// 	require.NoError(t, err)
+// 	require.Equal(t, user.Username, gotUser.Username)
+// 	require.Equal(t, user.Telephone, gotUser.Telephone)
+// 	require.Equal(t, user.Email, gotUser.Email)
+// 	require.Empty(t, gotUser.Password)
+// }
 
 func requireBodyMatchUsers(t *testing.T, body io.ReadCloser, users []db.User) {
 	data, err := io.ReadAll(body)

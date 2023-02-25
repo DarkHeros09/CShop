@@ -37,3 +37,7 @@ sql:
         - db_type: "pg_catalog.bool"
           go_type: "github.com/guregu/null.Bool"
           nullable: true
+
+        - column: "product.search"
+          go_type: "github.com/guregu/null.String"
+          nullable: true

@@ -24,7 +24,7 @@ type createUserRequest struct {
 }
 
 type userResponse struct {
-	UserID         int64  `json:"_id"`
+	UserID         int64  `json:"id"`
 	Username       string `json:"username"`
 	Email          string `json:"email"`
 	Telephone      int32  `json:"telephone"`
@@ -50,6 +50,15 @@ func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userRespo
 		ShoppingCartID: user.ShoppingCartID,
 		WishListID:     user.WishListID,
 	}
+}
+
+type createUserResponse struct {
+	UserSessionID         uuid.UUID    `json:"user_session_id"`
+	AccessToken           string       `json:"access_token"`
+	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
+	RefreshToken          string       `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
+	User                  userResponse `json:"user"`
 }
 
 func (server *Server) createUser(ctx *fiber.Ctx) error {
@@ -86,7 +95,51 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	rsp := newUserWithCartResponse(user)
+	accessToken, accessPayload, err := server.tokenMaker.CreateTokenForUser(
+		user.ID,
+		user.Username,
+		server.config.AccessTokenDuration,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateTokenForUser(
+		user.ID,
+		user.Username,
+		server.config.RefreshTokenDuration,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg1 := db.CreateUserSessionParams{
+		ID:           refreshPayload.ID,
+		UserID:       user.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    string(ctx.Context().UserAgent()),
+		ClientIp:     ctx.IP(),
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	}
+
+	userSession, err := server.store.CreateUserSession(ctx.Context(), arg1)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	createdUser := newUserWithCartResponse(user)
+	rsp := createUserResponse{
+		UserSessionID:         userSession.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  createdUser,
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
@@ -112,6 +165,12 @@ func (server *Server) resetPassword(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if getUser.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -151,6 +210,7 @@ func (server *Server) resetPassword(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	//! i think it should be empty response
 	rsp := newUserResponse(user)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -184,6 +244,12 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -259,7 +325,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 
 	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
 	if params.UserID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
+		err := errors.New("account doesn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
@@ -337,11 +403,11 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	UseSessionID          uuid.UUID    `json:"user_session_id"`
+	UserSessionID         uuid.UUID    `json:"user_session_id"`
 	AccessToken           string       `json:"access_token"`
-	AccessTokenExpiresAt  time.Time    `json:"accesss_token_expires_at"`
+	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
 	RefreshToken          string       `json:"refresh_token"`
-	RefreshTokenExpiresAt time.Time    `json:"refreshs_token_expires_at"`
+	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
 	User                  userResponse `json:"user"`
 }
 
@@ -360,6 +426,12 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -405,7 +477,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	}
 
 	rsp := loginUserResponse{
-		UseSessionID:          userSession.ID,
+		UserSessionID:         userSession.ID,
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
@@ -413,5 +485,55 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		User:                  newUserResponse(user),
 	}
 	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
+}
+
+// //////////////* Logout API //////////////
+
+type logoutUserParamsRequest struct {
+	UserID int64 `json:"id" validate:"required,min=1"`
+}
+
+type logoutUserJsonRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (server *Server) logoutUser(ctx *fiber.Ctx) error {
+	params := &logoutUserParamsRequest{}
+	req := &logoutUserJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	if params.UserID != authPayload.UserID {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.UpdateUserSessionParams{
+		ID:           authPayload.ID,
+		UserID:       authPayload.UserID,
+		RefreshToken: req.RefreshToken,
+		IsBlocked:    null.BoolFrom(true),
+	}
+
+	_, err := server.store.UpdateUserSession(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 	return nil
 }

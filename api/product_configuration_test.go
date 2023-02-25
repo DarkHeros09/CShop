@@ -273,7 +273,7 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
+			url := fmt.Sprintf("/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -557,7 +557,7 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
+			url := fmt.Sprintf("/admin/%d/v1/product-configurations/%d", tc.AdminID, tc.ProductItemID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -731,7 +731,7 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-configurations/%d/variation-options/%d", tc.AdminID, tc.ProductItemID, tc.VariationOptionID)
+			url := fmt.Sprintf("/admin/%d/v1/product-configurations/%d/variation-options/%d", tc.AdminID, tc.ProductItemID, tc.VariationOptionID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

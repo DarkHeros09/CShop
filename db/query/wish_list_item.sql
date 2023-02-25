@@ -45,7 +45,8 @@ ORDER BY id;
 
 UPDATE "wish_list_item" AS wli
 SET 
-product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id)
+product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
+updated_at = now()
 WHERE wli.id = sqlc.arg(id)
 AND wli.wish_list_id = sqlc.arg(wish_list_id)
 RETURNING *;

@@ -112,7 +112,7 @@ type listPaymentMethodsRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listPaymentMethodes(ctx *fiber.Ctx) error {
+func (server *Server) listPaymentMethods(ctx *fiber.Ctx) error {
 	params := &listPaymentMethodsParamsRequest{}
 	query := &listPaymentMethodsRequest{}
 
@@ -132,7 +132,7 @@ func (server *Server) listPaymentMethodes(ctx *fiber.Ctx) error {
 		Limit:  query.PageSize,
 		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	paymentMethodes, err := server.store.ListPaymentMethods(ctx.Context(), arg)
+	paymentMethods, err := server.store.ListPaymentMethods(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -141,7 +141,7 @@ func (server *Server) listPaymentMethodes(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(paymentMethodes)
+	ctx.Status(fiber.StatusOK).JSON(paymentMethods)
 	return nil
 }
 

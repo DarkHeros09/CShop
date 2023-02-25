@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"math"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
@@ -123,6 +125,9 @@ func (server *Server) listProductItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.PageSize)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -226,4 +231,148 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 
 	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 	return nil
+}
+
+//////////////* Pagination List API //////////////
+
+type listProductItemsV2QueryRequest struct {
+	Limit int32 `query:"limit" validate:"required,min=5,max=10"`
+}
+
+func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
+	query := &listProductItemsV2QueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	productItems, err := server.store.ListProductItemsV2(ctx.Context(), query.Limit)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Status(fiber.StatusOK).JSON(productItems)
+	return nil
+
+}
+
+type listProductItemsNextPageQueryRequest struct {
+	Cursor int64 `query:"cursor" validate:"required,min=1"`
+	Limit  int32 `query:"limit" validate:"required,min=5,max=10"`
+}
+
+func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
+	query := &listProductItemsNextPageQueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.ListProductItemsNextPageParams{
+		Limit: query.Limit,
+		ID:    query.Cursor,
+	}
+
+	productItems, err := server.store.ListProductItemsNextPage(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Status(fiber.StatusOK).JSON(productItems)
+	return nil
+
+}
+
+//////////////* Paginated Search API //////////////
+
+type searchProductItemsQueryRequest struct {
+	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
+	Query string `query:"query" validate:"required,alphanum"`
+}
+
+func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
+	query := &searchProductItemsQueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.SearchProductItemsParams{
+		Limit: query.Limit,
+		Query: query.Query,
+	}
+
+	productItems, err := server.store.SearchProductItems(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Status(fiber.StatusOK).JSON(productItems)
+	return nil
+
+}
+
+type searchProductItemsNextPageQueryRequest struct {
+	Cursor int64  `query:"cursor" validate:"required,min=1"`
+	Limit  int32  `query:"limit" validate:"required,min=5,max=10"`
+	Query  string `query:"query" validate:"required,alphanum"`
+}
+
+func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
+	query := &searchProductItemsNextPageQueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.SearchProductItemsNextPageParams{
+		Limit: query.Limit,
+		ID:    query.Cursor,
+		Query: query.Query,
+	}
+
+	productItems, err := server.store.SearchProductItemsNextPage(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+
+	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Status(fiber.StatusOK).JSON(productItems)
+	return nil
+
 }

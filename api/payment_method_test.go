@@ -38,7 +38,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       paymentMethod.Provider,
+				"provider":        paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -66,7 +66,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       paymentMethod.Provider,
+				"provider":        paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -84,7 +84,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: user.ID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       paymentMethod.Provider,
+				"provider":        paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -110,7 +110,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			UserID: 0,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       paymentMethod.Provider,
+				"provider":        paymentMethod.Provider,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -142,7 +142,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/payment-methods", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -281,7 +281,7 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -420,7 +420,7 @@ func TestListPaymentMethodAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/payment-methods", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -460,7 +460,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       "new address",
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -489,7 +489,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       "new address",
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -508,7 +508,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       "new address",
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -536,7 +536,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			UserID: 0,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
-				"provider":       "new address",
+				"provider":        "new address",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -568,7 +568,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -696,7 +696,7 @@ func TestDeletePaymentMethodAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

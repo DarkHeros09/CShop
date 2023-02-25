@@ -28,6 +28,7 @@ func createRandomShopOrderItem(t *testing.T) ShopOrderItem {
 	require.Equal(t, arg.OrderID, shopOrderItem.OrderID)
 	require.Equal(t, arg.Quantity, shopOrderItem.Quantity)
 	require.Equal(t, arg.Price, shopOrderItem.Price)
+	require.Equal(t, arg.Price, shopOrderItem.Price)
 
 	return shopOrderItem
 }

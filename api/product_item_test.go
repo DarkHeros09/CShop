@@ -131,7 +131,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -189,7 +189,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "Unauthorized",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -221,7 +221,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -245,7 +245,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InvalidID",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":     0,
+				"product_id":    0,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -282,7 +282,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-items", tc.AdminID)
+			url := fmt.Sprintf("/admin/%d/v1/product-items", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -298,9 +298,9 @@ func TestCreateProductItemAPI(t *testing.T) {
 
 func TestListProductItemsAPI(t *testing.T) {
 	n := 5
-	productItems := make([]db.ProductItem, n)
+	productItems := make([]db.ListProductItemsRow, n)
 	for i := 0; i < n; i++ {
-		productItems[i] = randomProductItem()
+		productItems[i] = randomProductItemList()
 	}
 
 	type Query struct {
@@ -333,7 +333,7 @@ func TestListProductItemsAPI(t *testing.T) {
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchProductItems(t, rsp.Body, productItems)
+				requireBodyMatchProductItemsList(t, rsp.Body, productItems)
 			},
 		},
 		{
@@ -346,7 +346,7 @@ func TestListProductItemsAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductItems(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ProductItem{}, pgx.ErrTxClosed)
+					Return([]db.ListProductItemsRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -415,6 +415,430 @@ func TestListProductItemsAPI(t *testing.T) {
 	}
 }
 
+func TestListProductItemsV2API(t *testing.T) {
+	n := 10
+	productItems := make([]db.ListProductItemsV2Row, n)
+	for i := 0; i < n; i++ {
+		productItems[i] = randomListProductItemV2()
+	}
+
+	type Query struct {
+		Limit int
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit: n,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Eq(int32(n))).
+					Times(1).
+					Return(productItems, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListProductItemsV2(t, rsp.Body, productItems)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit: 10,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListProductItemsV2Row{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit: 11,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/product-items-v2"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestListProductItemsNextPageAPI(t *testing.T) {
+	n := 10
+	productItems1 := make([]db.ListProductItemsNextPageRow, n)
+	productItems2 := make([]db.ListProductItemsNextPageRow, n)
+	for i := 0; i < n; i++ {
+		productItems1[i] = randomRestProductItemSearch()
+	}
+	for i := 0; i < n; i++ {
+		productItems2[i] = randomRestProductItemSearch()
+	}
+
+	type Query struct {
+		Cursor int
+		Limit  int
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit:  n,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.ListProductItemsNextPageParams{
+					Limit: int32(n),
+					ID:    productItems1[len(productItems1)-1].ID,
+				}
+
+				store.EXPECT().
+					ListProductItemsNextPage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productItems2, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListProductItemsNextPage(t, rsp.Body, productItems2)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit:  10,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					ListProductItemsNextPage(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListProductItemsNextPageRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit:  11,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsNextPage(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/product-items-next-page"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+func TestSearchProductItemsAPI(t *testing.T) {
+	n := 10
+	q := "abc"
+	productItems := make([]db.SearchProductItemsRow, n)
+	for i := 0; i < n; i++ {
+		productItems[i] = randomSearchProductItems()
+	}
+
+	type Query struct {
+		Limit int
+		Query string
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit: n,
+				Query: q,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.SearchProductItemsParams{
+					Limit: int32(n),
+					Query: q,
+				}
+				store.EXPECT().
+					SearchProductItems(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productItems, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchSearchProductItems(t, rsp.Body, productItems)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit: n,
+				Query: q,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					SearchProductItems(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.SearchProductItemsRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit: 11,
+				Query: q,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					SearchProductItems(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/search-product-items"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("query", tc.query.Query)
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestSearchProductItemsNextPageAPI(t *testing.T) {
+	n := 10
+	q := "abc"
+	productItems1 := make([]db.SearchProductItemsNextPageRow, n)
+	productItems2 := make([]db.SearchProductItemsNextPageRow, n)
+	for i := 0; i < n; i++ {
+		productItems1[i] = randomSearchProductItemNextPage()
+	}
+	for i := 0; i < n; i++ {
+		productItems2[i] = randomSearchProductItemNextPage()
+	}
+
+	type Query struct {
+		Cursor int
+		Limit  int
+		Query  string
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit:  n,
+				Query:  q,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.SearchProductItemsNextPageParams{
+					Limit: int32(n),
+					ID:    productItems1[len(productItems1)-1].ID,
+					Query: q,
+				}
+
+				store.EXPECT().
+					SearchProductItemsNextPage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productItems2, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchSearchProductItemsNextPage(t, rsp.Body, productItems2)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit:  10,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Query:  q,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					SearchProductItemsNextPage(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.SearchProductItemsNextPageRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit:  11,
+				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Query:  q,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					SearchProductItemsNextPage(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/search-product-items-next-page"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			q.Add("query", tc.query.Query)
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
 func TestUpdateProductItemAPI(t *testing.T) {
 	admin, _ := randomProductItemSuperAdmin(t)
 	productItem := randomProductItem()
@@ -433,7 +857,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -468,7 +892,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -502,7 +926,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -535,7 +959,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":     productItem.ProductID,
+				"product_id":    productItem.ProductID,
 				"product_sku":   productItem.ProductSku,
 				"qty_in_stock":  productItem.QtyInStock,
 				"product_image": productItem.ProductImage,
@@ -598,7 +1022,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			url := fmt.Sprintf("/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -740,7 +1164,7 @@ func TestDeleteProductItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			url := fmt.Sprintf("/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -783,6 +1207,70 @@ func randomProductItem() db.ProductItem {
 		Active:       util.RandomBool(),
 	}
 }
+func randomProductItemList() db.ListProductItemsRow {
+	return db.ListProductItemsRow{
+		ID:           util.RandomInt(1, 1000),
+		ProductID:    util.RandomMoney(),
+		ProductSku:   util.RandomMoney(),
+		QtyInStock:   int32(util.RandomMoney()),
+		ProductImage: util.RandomURL(),
+		Price:        util.RandomDecimalString(0, 1000),
+		Active:       util.RandomBool(),
+		Name:         null.StringFrom(util.RandomUser()),
+	}
+}
+
+func randomListProductItemV2() db.ListProductItemsV2Row {
+	return db.ListProductItemsV2Row{
+		ID:           util.RandomInt(1, 1000),
+		ProductID:    util.RandomMoney(),
+		ProductSku:   util.RandomMoney(),
+		QtyInStock:   int32(util.RandomMoney()),
+		ProductImage: util.RandomURL(),
+		Price:        util.RandomDecimalString(0, 1000),
+		Active:       util.RandomBool(),
+		Name:         null.StringFrom(util.RandomUser()),
+	}
+}
+
+func randomRestProductItemSearch() db.ListProductItemsNextPageRow {
+	return db.ListProductItemsNextPageRow{
+		ID:           util.RandomInt(1, 1000),
+		ProductID:    util.RandomMoney(),
+		ProductSku:   util.RandomMoney(),
+		QtyInStock:   int32(util.RandomMoney()),
+		ProductImage: util.RandomURL(),
+		Price:        util.RandomDecimalString(0, 1000),
+		Active:       util.RandomBool(),
+		Name:         null.StringFrom(util.RandomUser()),
+	}
+}
+
+func randomSearchProductItems() db.SearchProductItemsRow {
+	return db.SearchProductItemsRow{
+		ID:           util.RandomInt(1, 1000),
+		ProductID:    util.RandomMoney(),
+		ProductSku:   util.RandomMoney(),
+		QtyInStock:   int32(util.RandomMoney()),
+		ProductImage: util.RandomURL(),
+		Price:        util.RandomDecimalString(0, 1000),
+		Active:       util.RandomBool(),
+		Name:         null.StringFrom("abc" + util.RandomUser()),
+	}
+}
+
+func randomSearchProductItemNextPage() db.SearchProductItemsNextPageRow {
+	return db.SearchProductItemsNextPageRow{
+		ID:           util.RandomInt(1, 1000),
+		ProductID:    util.RandomMoney(),
+		ProductSku:   util.RandomMoney(),
+		QtyInStock:   int32(util.RandomMoney()),
+		ProductImage: util.RandomURL(),
+		Price:        util.RandomDecimalString(0, 1000),
+		Active:       util.RandomBool(),
+		Name:         null.StringFrom("abc" + util.RandomUser()),
+	}
+}
 
 func requireBodyMatchProductItem(t *testing.T, body io.ReadCloser, productItem db.ProductItem) {
 	data, err := io.ReadAll(body)
@@ -799,6 +1287,56 @@ func requireBodyMatchProductItems(t *testing.T, body io.ReadCloser, productItems
 	require.NoError(t, err)
 
 	var gotProductItems []db.ProductItem
+	err = json.Unmarshal(data, &gotProductItems)
+	require.NoError(t, err)
+	require.Equal(t, productItems, gotProductItems)
+}
+
+func requireBodyMatchProductItemsList(t *testing.T, body io.ReadCloser, productItems []db.ListProductItemsRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItems []db.ListProductItemsRow
+	err = json.Unmarshal(data, &gotProductItems)
+	require.NoError(t, err)
+	require.Equal(t, productItems, gotProductItems)
+}
+
+func requireBodyMatchListProductItemsV2(t *testing.T, body io.ReadCloser, productItems []db.ListProductItemsV2Row) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItems []db.ListProductItemsV2Row
+	err = json.Unmarshal(data, &gotProductItems)
+	require.NoError(t, err)
+	require.Equal(t, productItems, gotProductItems)
+}
+
+func requireBodyMatchListProductItemsNextPage(t *testing.T, body io.ReadCloser, productItems []db.ListProductItemsNextPageRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItems []db.ListProductItemsNextPageRow
+	err = json.Unmarshal(data, &gotProductItems)
+	require.NoError(t, err)
+	require.Equal(t, productItems, gotProductItems)
+}
+
+func requireBodyMatchSearchProductItems(t *testing.T, body io.ReadCloser, productItems []db.SearchProductItemsRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItems []db.SearchProductItemsRow
+	err = json.Unmarshal(data, &gotProductItems)
+	require.NoError(t, err)
+	require.Equal(t, productItems, gotProductItems)
+}
+
+func requireBodyMatchSearchProductItemsNextPage(t *testing.T, body io.ReadCloser, productItems []db.SearchProductItemsNextPageRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItems []db.SearchProductItemsNextPageRow
 	err = json.Unmarshal(data, &gotProductItems)
 	require.NoError(t, err)
 	require.Equal(t, productItems, gotProductItems)

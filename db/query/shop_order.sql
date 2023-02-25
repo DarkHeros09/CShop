@@ -29,7 +29,8 @@ payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_id),
 order_total = COALESCE(sqlc.narg(order_total),order_total),
 shipping_method_id = COALESCE(sqlc.narg(shipping_method_id),shipping_method_id),
-order_status_id = COALESCE(sqlc.narg(order_status_id),order_status_id)
+order_status_id = COALESCE(sqlc.narg(order_status_id),order_status_id),
+updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

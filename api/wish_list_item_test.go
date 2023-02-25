@@ -144,7 +144,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -271,7 +271,7 @@ func TestGetWishListItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -388,7 +388,7 @@ func TestListWishListItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -528,7 +528,7 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -660,7 +660,7 @@ func TestDeleteWishListItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d/items/%d", tc.UserID, tc.WishListID, tc.WishListItemID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -780,7 +780,7 @@ func TestDeleteWishListItemAllAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
