@@ -168,28 +168,37 @@ func TestListShoppingCartItemsByCartID(t *testing.T) {
 }
 
 func TestListShoppingCartItemsByUserID(t *testing.T) {
-	var shoppingCartItems []ListShoppingCartItemsByUserIDRow
+	// var shoppingCartItems []ListShoppingCartItemsByUserIDRow
 	// var totalShoppingCartItems []ListShoppingCartItemsByUserIDRow
-	var err error
+	shoppingCartItemsChan := make(chan []ListShoppingCartItemsByUserIDRow)
+	errChan := make(chan error)
 	// var shoppingCart ShoppingCart
 	shoppingCart := createRandomShoppingCart(t)
-	for i := 0; i < 5; i++ {
-		productItem := createRandomProductItem(t)
-		arg := []CreateShoppingCartItemParams{
-			{ShoppingCartID: shoppingCart.ID,
-				ProductItemID: productItem.ID,
-				Qty:           int32(util.RandomInt(1, 10))},
+
+	go func() {
+		for i := 0; i < 5; i++ {
+			productItem := createRandomProductItem(t)
+			arg := []CreateShoppingCartItemParams{
+				{ShoppingCartID: shoppingCart.ID,
+					ProductItemID: productItem.ID,
+					Qty:           int32(util.RandomInt(1, 10))},
+			}
+			result := testQueires.CreateShoppingCartItem(context.Background(), arg)
+			result.Query(func(i int, sci []ShoppingCartItem, err error) {
+
+				require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
+				require.NoError(t, err)
+			})
+
+			shoppingCartItems, err := testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
+			// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
+			shoppingCartItemsChan <- shoppingCartItems
+			errChan <- err
 		}
-		result := testQueires.CreateShoppingCartItem(context.Background(), arg)
-		result.Query(func(i int, sci []ShoppingCartItem, err error) {
+	}()
 
-			require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
-			require.NoError(t, err)
-		})
-
-		shoppingCartItems, err = testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
-		// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
-	}
+	shoppingCartItems := <-shoppingCartItemsChan
+	err := <-errChan
 
 	require.NoError(t, err)
 	// require.Len(t, totalShoppingCartItems, 10)
