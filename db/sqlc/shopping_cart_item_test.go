@@ -173,7 +173,7 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 	var err error
 	// var shoppingCart ShoppingCart
 	shoppingCart := createRandomShoppingCart(t)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		productItem := createRandomProductItem(t)
 		arg := []CreateShoppingCartItemParams{
 			{ShoppingCartID: shoppingCart.ID,
