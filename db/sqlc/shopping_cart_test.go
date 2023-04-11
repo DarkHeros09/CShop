@@ -12,11 +12,19 @@ import (
 func createRandomShoppingCart(t *testing.T) ShoppingCart {
 	user1 := createRandomUser(t)
 
-	shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
-	require.NoError(t, err)
-	require.NotEmpty(t, shoppingCart)
+	shoppingCartChan := make(chan ShoppingCart)
 
-	require.Equal(t, user1.ID, shoppingCart.UserID)
+	go func() {
+		shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
+		require.NoError(t, err)
+		require.NotEmpty(t, shoppingCart)
+
+		require.Equal(t, user1.ID, shoppingCart.UserID)
+
+		shoppingCartChan <- shoppingCart
+	}()
+
+	shoppingCart := <-shoppingCartChan
 
 	return shoppingCart
 }
