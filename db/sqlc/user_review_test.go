@@ -93,17 +93,31 @@ func TestDeleteUserReview(t *testing.T) {
 }
 
 func TestListUserReviews(t *testing.T) {
-	var lastUserReview UserReview
-	for i := 0; i < 5; i++ {
-		lastUserReview = createRandomUserReview(t)
-	}
+	lastUserReviewChan := make(chan UserReview)
+	go func() {
+		var lastUserReview UserReview
+		for i := 0; i < 5; i++ {
+			lastUserReview = createRandomUserReview(t)
+		}
+		lastUserReviewChan <- lastUserReview
+	}()
+
+	lastUserReview := <-lastUserReviewChan
 	arg := ListUserReviewsParams{
 		Limit:  5,
 		Offset: 0,
 		UserID: lastUserReview.UserID,
 	}
 
-	userReviews, err := testQueires.ListUserReviews(context.Background(), arg)
+	userReviewsChan := make(chan []UserReview)
+	errChan := make(chan error)
+	go func() {
+		userReviews, err := testQueires.ListUserReviews(context.Background(), arg)
+		userReviewsChan <- userReviews
+		errChan <- err
+	}()
+	userReviews := <-userReviewsChan
+	err := <-errChan
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userReviews)
