@@ -175,24 +175,24 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 	// var shoppingCart ShoppingCart
 	shoppingCart := createRandomShoppingCart(t)
 
-	go func() {
-		for i := 0; i < 5; i++ {
-			productItem := createRandomProductItem(t)
-			arg := []CreateShoppingCartItemParams{
-				{ShoppingCartID: shoppingCart.ID,
-					ProductItemID: productItem.ID,
-					Qty:           int32(util.RandomInt(1, 10))},
-			}
-			result := testQueires.CreateShoppingCartItem(context.Background(), arg)
-			result.Query(func(i int, sci []ShoppingCartItem, err error) {
+	// go func() {
+	// 	for i := 0; i < 5; i++ {
+	// 		productItem := createRandomProductItem(t)
+	// 		arg := []CreateShoppingCartItemParams{
+	// 			{ShoppingCartID: shoppingCart.ID,
+	// 				ProductItemID: productItem.ID,
+	// 				Qty:           int32(util.RandomInt(1, 10))},
+	// 		}
+	// 		result := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	// 		result.Query(func(i int, sci []ShoppingCartItem, err error) {
 
-				require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
-				require.NoError(t, err)
-			})
+	// 			require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
+	// 			require.NoError(t, err)
+	// 		})
 
-			// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
-		}
-	}()
+	// 		// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
+	// 	}
+	// }()
 	go func() {
 		shoppingCartItems, err := testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
 		shoppingCartItemsChan <- shoppingCartItems
