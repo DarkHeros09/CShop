@@ -174,8 +174,57 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 	return items, nil
 }
 
+const listProductItemsByIDs = `-- name: ListProductItemsByIDs :many
+SELECT pi.id, p.name, pi.product_id, 
+pi.product_image, pi.price, pi.active
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id 
+WHERE pi.id = ANY($1::bigint[])
+`
+
+type ListProductItemsByIDsRow struct {
+	ID           int64       `json:"id"`
+	Name         null.String `json:"name"`
+	ProductID    int64       `json:"product_id"`
+	ProductImage string      `json:"product_image"`
+	Price        string      `json:"price"`
+	Active       bool        `json:"active"`
+}
+
+func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error) {
+	rows, err := q.db.Query(ctx, listProductItemsByIDs, productsIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductItemsByIDsRow{}
+	for rows.Next() {
+		var i ListProductItemsByIDsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ProductID,
+			&i.ProductImage,
+			&i.Price,
+			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProductItemsNextPage = `-- name: ListProductItemsNextPage :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS p
+LIMIT 1
+)
+SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, (SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id 
 WHERE pi.id < $2
@@ -358,7 +407,7 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 }
 
 const searchProductItemsNextPage = `-- name: SearchProductItemsNextPage :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, COUNT(*) OVER() AS total_count
+SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name,  COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 WHERE p.search @@ 
@@ -396,6 +445,11 @@ type SearchProductItemsNextPageRow struct {
 	TotalCount   int64       `json:"total_count"`
 }
 
+// WITH t1 AS (
+// SELECT COUNT(*) OVER() AS total_count
+// FROM "product_item" AS p
+// LIMIT 1
+// )
 func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPage, arg.Limit, arg.ID, arg.Query)
 	if err != nil {

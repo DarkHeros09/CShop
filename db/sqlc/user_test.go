@@ -154,7 +154,7 @@ func TestDeleteUser(t *testing.T) {
 
 func TestListUsers(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomUser(t)
+		go createRandomUser(t)
 	}
 	arg := ListUsersParams{
 		Limit:  5,

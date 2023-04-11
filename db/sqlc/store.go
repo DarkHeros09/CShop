@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
 )
 
@@ -18,11 +18,11 @@ type Store interface {
 // Store provides all functions to execute db queries and transactions
 type SQLStore struct {
 	*Queries
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 // NewStore creates a new Store
-func NewStore(db *pgx.Conn) Store {
+func NewStore(db *pgxpool.Pool) Store {
 	return &SQLStore{
 		db:      db,
 		Queries: New(db),

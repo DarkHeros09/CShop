@@ -1,24 +1,28 @@
--- name: CreateShoppingCartItem :one
+-- name: CreateShoppingCartItem :batchmany
 INSERT INTO "shopping_cart_item" (
   shopping_cart_id,
   product_item_id,
   qty
 ) VALUES (
   $1, $2, $3
-)
+) ON CONFLICT (product_item_id)
+DO UPDATE SET
+qty = EXCLUDED.qty,
+shopping_cart_id = EXCLUDED.shopping_cart_id,
+updated_at = now()
 RETURNING *;
 
 -- name: GetShoppingCartItem :one
 SELECT * FROM "shopping_cart_item"
 WHERE id = $1 LIMIT 1;
 
--- name: GetShoppingCartItemByUserIDCartID :one
+-- name: GetShoppingCartItemByUserIDCartID :many
 SELECT sci.*, sc.user_id
 FROM "shopping_cart_item" AS sci
 LEFT JOIN "shopping_cart" AS sc ON sc.id = sci.shopping_cart_id
 WHERE sc.user_id = $1
-AND sci.shopping_cart_id = $2
-LIMIT 1;
+AND sc.id = $2;
+-- LIMIT 1;
 
 -- name: ListShoppingCartItems :many
 SELECT * FROM "shopping_cart_item"

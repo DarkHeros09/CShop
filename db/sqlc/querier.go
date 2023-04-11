@@ -28,7 +28,7 @@ type Querier interface {
 	CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error)
 	CreateShopOrderItem(ctx context.Context, arg CreateShopOrderItemParams) (ShopOrderItem, error)
 	CreateShoppingCart(ctx context.Context, userID int64) (ShoppingCart, error)
-	CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error)
+	CreateShoppingCartItem(ctx context.Context, arg []CreateShoppingCartItemParams) *CreateShoppingCartItemBatchResults
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
 	CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error)
@@ -126,11 +126,13 @@ type Querier interface {
 	GetShoppingCart(ctx context.Context, id int64) (ShoppingCart, error)
 	GetShoppingCartByUserIDCartID(ctx context.Context, arg GetShoppingCartByUserIDCartIDParams) (ShoppingCart, error)
 	GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCartItem, error)
-	GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) (GetShoppingCartItemByUserIDCartIDRow, error)
+	GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) ([]GetShoppingCartItemByUserIDCartIDRow, error)
 	GetUser(ctx context.Context, id int64) (User, error)
 	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
 	GetUserAddressWithAddress(ctx context.Context, arg GetUserAddressWithAddressParams) (GetUserAddressWithAddressRow, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
+	// SELECT * FROM "user"
+	// WHERE email = $1 LIMIT 1;
+	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserReview(ctx context.Context, arg GetUserReviewParams) (UserReview, error)
 	GetUserSession(ctx context.Context, id uuid.UUID) (UserSession, error)
 	GetVariation(ctx context.Context, id int64) (Variation, error)
@@ -151,6 +153,7 @@ type Querier interface {
 	ListProductCategoriesByParent(ctx context.Context, arg ListProductCategoriesByParentParams) ([]ProductCategory, error)
 	ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error)
 	ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error)
+	ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error)
 	ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error)
 	ListProductItemsV2(ctx context.Context, limit int32) ([]ListProductItemsV2Row, error)
 	ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error)
@@ -167,6 +170,7 @@ type Querier interface {
 	ListShopOrderItemsByOrderID(ctx context.Context, arg ListShopOrderItemsByOrderIDParams) ([]ShopOrderItem, error)
 	ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]ListShopOrderItemsByUserIDRow, error)
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
+	// LIMIT 1;
 	ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error)
 	ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error)
 	ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error)
@@ -181,6 +185,11 @@ type Querier interface {
 	ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error)
 	ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error)
 	SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error)
+	// WITH t1 AS (
+	// SELECT COUNT(*) OVER() AS total_count
+	// FROM "product_item" AS p
+	// LIMIT 1
+	// )
 	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)

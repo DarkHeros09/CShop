@@ -411,6 +411,17 @@ type loginUserResponse struct {
 	User                  userResponse `json:"user"`
 }
 
+func newUserLoginResponse(user db.GetUserByEmailRow) userResponse {
+	return userResponse{
+		UserID:         user.ID,
+		Username:       user.Username,
+		Email:          user.Email,
+		Telephone:      user.Telephone,
+		ShoppingCartID: user.ShopCartID.Int64,
+		WishListID:     user.WishListID.Int64,
+	}
+}
+
 func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	req := &loginUserRequest{}
 
@@ -482,7 +493,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		User:                  newUserResponse(user),
+		User:                  newUserLoginResponse(user),
 	}
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -491,11 +502,12 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 // //////////////* Logout API //////////////
 
 type logoutUserParamsRequest struct {
-	UserID int64 `json:"id" validate:"required,min=1"`
+	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
 type logoutUserJsonRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	UserSessionID string `json:"user_session_id" validate:"required"`
+	RefreshToken  string `json:"refresh_token" validate:"required"`
 }
 
 func (server *Server) logoutUser(ctx *fiber.Ctx) error {
@@ -503,6 +515,11 @@ func (server *Server) logoutUser(ctx *fiber.Ctx) error {
 	req := &logoutUserJsonRequest{}
 
 	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	userSessionID, err := uuid.Parse(req.UserSessionID)
+	if err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -515,13 +532,13 @@ func (server *Server) logoutUser(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateUserSessionParams{
-		ID:           authPayload.ID,
+		ID:           userSessionID,
 		UserID:       authPayload.UserID,
 		RefreshToken: req.RefreshToken,
 		IsBlocked:    null.BoolFrom(true),
 	}
 
-	_, err := server.store.UpdateUserSession(ctx.Context(), arg)
+	_, err = server.store.UpdateUserSession(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

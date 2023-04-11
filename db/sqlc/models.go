@@ -207,6 +207,7 @@ type UserSession struct {
 	ClientIp     string    `json:"client_ip"`
 	IsBlocked    bool      `json:"is_blocked"`
 	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 	ExpiresAt    time.Time `json:"expires_at"`
 }
 

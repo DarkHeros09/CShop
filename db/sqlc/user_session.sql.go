@@ -25,7 +25,7 @@ INSERT INTO "user_session" (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, expires_at
+RETURNING id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, updated_at, expires_at
 `
 
 type CreateUserSessionParams struct {
@@ -57,13 +57,14 @@ func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionPa
 		&i.ClientIp,
 		&i.IsBlocked,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
 	return i, err
 }
 
 const getUserSession = `-- name: GetUserSession :one
-SELECT id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, expires_at FROM "user_session"
+SELECT id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, updated_at, expires_at FROM "user_session"
 WHERE id = $1 LIMIT 1
 `
 
@@ -78,6 +79,7 @@ func (q *Queries) GetUserSession(ctx context.Context, id uuid.UUID) (UserSession
 		&i.ClientIp,
 		&i.IsBlocked,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
 	return i, err
@@ -91,7 +93,7 @@ updated_at = now()
 WHERE id = $2
 AND user_id = $3
 AND refresh_token = $4
-RETURNING id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, expires_at
+RETURNING id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at, updated_at, expires_at
 `
 
 type UpdateUserSessionParams struct {
@@ -117,6 +119,7 @@ func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionPa
 		&i.ClientIp,
 		&i.IsBlocked,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
 	return i, err

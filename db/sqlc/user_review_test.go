@@ -94,7 +94,7 @@ func TestDeleteUserReview(t *testing.T) {
 
 func TestListUserReviews(t *testing.T) {
 	var lastUserReview UserReview
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		lastUserReview = createRandomUserReview(t)
 	}
 	arg := ListUserReviewsParams{

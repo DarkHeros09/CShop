@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-01-23T19:15:16.151Z
+-- Generated at: 2023-04-06T22:44:37.714Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -41,6 +41,7 @@ CREATE TABLE "user_session" (
   "client_ip" varchar NOT NULL,
   "is_blocked" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "expires_at" timestamptz NOT NULL
 );
 
@@ -93,7 +94,7 @@ CREATE TABLE "shopping_cart" (
 CREATE TABLE "shopping_cart_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "shopping_cart_id" bigint NOT NULL,
-  "product_item_id" bigint NOT NULL,
+  "product_item_id" bigint UNIQUE NOT NULL,
   "qty" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'

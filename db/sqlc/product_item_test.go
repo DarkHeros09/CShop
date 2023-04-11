@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -119,6 +120,28 @@ func TestListProductItems(t *testing.T) {
 
 	for _, productItem := range productItems {
 		require.NotEmpty(t, productItem)
+	}
+
+}
+
+func TestListProductItemsByIDs(t *testing.T) {
+	var productsIds []int64
+
+	for i := 0; i < 5; i++ {
+		pi := createRandomProductItem(t)
+		productsIds = append(productsIds, pi.ID)
+	}
+
+	fmt.Println("ProductsIDS", productsIds)
+
+	productItems, err := testQueires.ListProductItemsByIDs(context.Background(), productsIds)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productItems)
+
+	for i, productItem := range productItems {
+		require.NotEmpty(t, productItem)
+		require.Equal(t, productItem.ID, productsIds[i])
 	}
 
 }

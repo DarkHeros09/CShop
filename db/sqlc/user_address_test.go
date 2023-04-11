@@ -154,7 +154,8 @@ func TestListUserAddresses(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, userAddresses, 1)
 
-	for _, userAddress := range userAddresses {
+	for _, userAddress1 := range userAddresses {
+		userAddress := userAddress1
 		require.NotEmpty(t, userAddress)
 		require.Equal(t, lastUserAddress.UserID, userAddress.UserID)
 		require.Equal(t, lastUserAddress.AddressID, userAddress.AddressID)

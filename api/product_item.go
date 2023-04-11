@@ -305,7 +305,7 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 
 type searchProductItemsQueryRequest struct {
 	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query string `query:"query" validate:"required,alphanum"`
+	Query string `query:"query" validate:"omitempty,required,alphanum"`
 }
 
 func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
@@ -331,9 +331,18 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	if len(productItems) > 0 {
+		pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
+		if len(productItems) == int(productItems[0].TotalCount) {
+			ctx.Set("Max-Page", "0")
+		} else {
+			maxPage := int64(math.Ceil(pagesNumber))
+			ctx.Set("Max-Page", fmt.Sprint(maxPage))
+		}
+	} else {
+		ctx.Set("Max-Page", "0")
+	}
 
-	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -342,7 +351,7 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 type searchProductItemsNextPageQueryRequest struct {
 	Cursor int64  `query:"cursor" validate:"required,min=1"`
 	Limit  int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query  string `query:"query" validate:"required,alphanum"`
+	Query  string `query:"query" validate:"omitempty,required,alphanum"`
 }
 
 func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
@@ -369,9 +378,18 @@ func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	if len(productItems) > 0 {
+		pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
+		if len(productItems) == int(productItems[0].TotalCount) {
+			ctx.Set("Max-Page", "0")
+		} else {
+			maxPage := int64(math.Ceil(pagesNumber))
+			ctx.Set("Max-Page", fmt.Sprint(maxPage))
+		}
+	} else {
+		ctx.Set("Max-Page", "0")
+	}
 
-	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 

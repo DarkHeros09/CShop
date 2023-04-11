@@ -54,6 +54,7 @@ Table user_session as US {
   client_ip varchar [not null]
   is_blocked boolean [not null, default: false]
   created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   expires_at timestamptz [not null]
 }
 
@@ -106,7 +107,7 @@ Table shopping_cart as SC {
 Table shopping_cart_item as SCI {
   id bigserial [pk,not null] // auto-increment
   shopping_cart_id bigint [not null, ref:> SC.id]
-  product_item_id bigint [not null,ref:> PI.id]
+  product_item_id bigint [not null, unique, ref:> PI.id]
   qty int [not null]
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']

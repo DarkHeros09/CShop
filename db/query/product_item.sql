@@ -20,6 +20,13 @@ SELECT * FROM "product_item"
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE;
 
+-- name: ListProductItemsByIDs :many
+SELECT pi.id, p.name, pi.product_id, 
+pi.product_image, pi.price, pi.active
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id 
+WHERE pi.id = ANY(sqlc.arg(products_ids)::bigint[]);
+
 -- name: ListProductItems :many
 SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
@@ -36,7 +43,12 @@ ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: ListProductItemsNextPage :many
-SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS p
+LIMIT 1
+)
+SELECT pi.*, p.name, (SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id 
 WHERE pi.id < $2
@@ -61,7 +73,12 @@ END
 LIMIT $1;
 
 -- name: SearchProductItemsNextPage :many
-SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+-- WITH t1 AS (
+-- SELECT COUNT(*) OVER() AS total_count
+-- FROM "product_item" AS p
+-- LIMIT 1
+-- )
+SELECT pi.*, p.name,  COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 WHERE p.search @@ 

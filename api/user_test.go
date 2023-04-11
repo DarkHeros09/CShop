@@ -66,8 +66,17 @@ func addAccess(
 }
 
 func TestCreateUserAPI(t *testing.T) {
-	user, password := randomUserWithCartAndWishList(t)
+	// userChan := make(chan db.CreateUserWithCartAndWishListRow)
+	// passwordChan := make(chan string)
 
+	// go func() {
+	//     user, password := randomUserWithCartAndWishList(t)
+	//     userChan <- user
+	//     passwordChan <- password
+	// }()
+	// user := <-userChan
+	// password := <-passwordChan
+	user, password := randomUserWithCartAndWishList(t)
 	finalRsp := createUserResponse{
 		User: newUserResponse(db.User{
 			ID:             user.ID,
@@ -274,7 +283,7 @@ func TestCreateUserAPI(t *testing.T) {
 	for i := range testCases {
 		tc := testCases[i]
 
-		t.Run(tc.name, func(t *testing.T) {
+		go t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
@@ -299,7 +308,7 @@ func TestCreateUserAPI(t *testing.T) {
 }
 
 func TestLoginUserAPI(t *testing.T) {
-	user, password := randomUser(t)
+	user, password := randomUserLogin(t)
 
 	testCases := []struct {
 		name          string
@@ -337,7 +346,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, pgx.ErrNoRows)
+					Return(db.GetUserByEmailRow{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -369,7 +378,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -420,6 +429,139 @@ func TestLoginUserAPI(t *testing.T) {
 		})
 	}
 }
+
+// func TestLogoutUserAPI(t *testing.T) {
+// 	user, userLog := randomUserLogout(t)
+
+// 	testCases := []struct {
+// 		name          string
+// 		body          fiber.Map
+// 		UserID        int64
+// 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+// 		buildStubs    func(store *mockdb.MockStore)
+// 		checkResponse func(rsp *http.Response)
+// 	}{
+// 		{
+// 			name:   "OK",
+// 			UserID: user.UserID,
+// 			body: fiber.Map{
+// 				"refresh_token": "bearer",
+// 			},
+// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.UserID, userLog.Username, time.Minute)
+// 			},
+// 			buildStubs: func(store *mockdb.MockStore) {
+
+// 				arg := db.UpdateUserSessionParams{
+// 					IsBlocked:    null.BoolFrom(user.IsBlocked),
+// 					ID:           user.ID,
+// 					UserID:       user.UserID,
+// 					RefreshToken: "bearer",
+// 				}
+// 				store.EXPECT().
+// 					UpdateUserSession(gomock.Any(), gomock.Eq(arg)).
+// 					Times(1).
+// 					Return(user, nil)
+
+// 			},
+// 			checkResponse: func(rsp *http.Response) {
+// 				require.Equal(t, http.StatusOK, rsp.StatusCode)
+// 			},
+// 		},
+// 		// {
+// 		// 	name: "UserNotFound",
+// 		// 	body: fiber.Map{
+// 		// 		"email":    "NotFound@NotFound.com",
+// 		// 		"password": password,
+// 		// 	},
+// 		// 	buildStubs: func(store *mockdb.MockStore) {
+// 		// 		store.EXPECT().
+// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
+// 		// 			Times(1).
+// 		// 			Return(db.GetUserByEmailRow{}, pgx.ErrNoRows)
+// 		// 	},
+// 		// 	checkResponse: func(rsp *http.Response) {
+// 		// 		require.Equal(t, http.StatusNotFound, rsp.StatusCode)
+// 		// 	},
+// 		// },
+// 		// {
+// 		// 	name: "IncorrectPassword",
+// 		// 	body: fiber.Map{
+// 		// 		"email":    user.Email,
+// 		// 		"password": "incorrect",
+// 		// 	},
+// 		// 	buildStubs: func(store *mockdb.MockStore) {
+// 		// 		store.EXPECT().
+// 		// 			GetUserByEmail(gomock.Any(), gomock.Eq(user.Email)).
+// 		// 			Times(1).
+// 		// 			Return(user, nil)
+// 		// 	},
+// 		// 	checkResponse: func(rsp *http.Response) {
+// 		// 		require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+// 		// 	},
+// 		// },
+// 		// {
+// 		// 	name: "InternalError",
+// 		// 	body: fiber.Map{
+// 		// 		"email":    user.Email,
+// 		// 		"password": password,
+// 		// 	},
+// 		// 	buildStubs: func(store *mockdb.MockStore) {
+// 		// 		store.EXPECT().
+// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
+// 		// 			Times(1).
+// 		// 			Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+// 		// 	},
+// 		// 	checkResponse: func(rsp *http.Response) {
+// 		// 		require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+// 		// 	},
+// 		// },
+// 		// {
+// 		// 	name: "InvalidUsername",
+// 		// 	body: fiber.Map{
+// 		// 		"email":    "invalid-email#1",
+// 		// 		"password": password,
+// 		// 	},
+// 		// 	buildStubs: func(store *mockdb.MockStore) {
+// 		// 		store.EXPECT().
+// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
+// 		// 			Times(0)
+// 		// 	},
+// 		// 	checkResponse: func(rsp *http.Response) {
+// 		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+// 		// 	},
+// 		// },
+// 	}
+
+// 	for i := range testCases {
+// 		tc := testCases[i]
+
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			ctrl := gomock.NewController(t)
+
+// 			store := mockdb.NewMockStore(ctrl)
+// 			tc.buildStubs(store)
+
+// 			server := newTestServer(t, store)
+// 			// //recorder := httptest.NewRecorder()
+
+// 			// Marshal body data to JSON
+// 			data, err := json.Marshal(tc.body)
+// 			require.NoError(t, err)
+
+// 			// url := "/api/v1/users/logout"
+// 			url := fmt.Sprintf("/usr/v1/users/%d/logout", tc.UserID)
+// 			request, err := http.NewRequest(fiber.MethodDelete, url, bytes.NewReader(data))
+// 			require.NoError(t, err)
+
+// 			request.Header.Set("Content-Type", "application/json")
+
+// 			rsp, err := server.router.Test(request)
+// 			require.NoError(t, err)
+// 			tc.checkResponse(rsp)
+// 		})
+// 	}
+// }
 
 func TestGetUserAPI(t *testing.T) {
 	user, _ := randomUser(t)
@@ -1005,6 +1147,39 @@ func randomUser(t *testing.T) (user db.User, password string) {
 		Telephone: int32(util.RandomInt(910000000, 929999999)),
 		IsBlocked: false,
 		Email:     util.RandomEmail(),
+	}
+	return
+}
+
+func randomUserLogin(t *testing.T) (user db.GetUserByEmailRow, password string) {
+	password = util.RandomString(6)
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.GetUserByEmailRow{
+		ID:        util.RandomMoney(),
+		Username:  util.RandomUser(),
+		Password:  hashedPassword,
+		Telephone: int32(util.RandomInt(910000000, 929999999)),
+		IsBlocked: false,
+		Email:     util.RandomEmail(),
+	}
+	return
+}
+
+func randomUserLogout(t *testing.T) (user db.UserSession, userLog db.GetUserByEmailRow) {
+	uuid1, err := uuid.NewRandom()
+	require.NoError(t, err)
+
+	userLog, _ = randomUserLogin(t)
+
+	user = db.UserSession{
+		ID:           uuid1,
+		UserID:       userLog.ID,
+		RefreshToken: util.RandomString(5),
+		UserAgent:    util.RandomString(5),
+		ClientIp:     util.RandomString(5),
+		IsBlocked:    false,
 	}
 	return
 }

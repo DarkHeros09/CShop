@@ -45,8 +45,12 @@ SELECT * FROM "user"
 WHERE id = $1 LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT * FROM "user"
-WHERE email = $1 LIMIT 1;
+-- SELECT * FROM "user"
+-- WHERE email = $1 LIMIT 1;
+SELECT u.*, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
+LEFT JOIN wish_list AS wl ON wl.user_id = u.id
+WHERE email = $1;
 
 -- name: ListUsers :many
 SELECT * FROM "user"

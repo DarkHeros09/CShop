@@ -184,13 +184,31 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password, telephone, is_blocked, default_payment, created_at, updated_at FROM "user"
-WHERE email = $1 LIMIT 1
+SELECT u.id, u.username, u.email, u.password, u.telephone, u.is_blocked, u.default_payment, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
+LEFT JOIN wish_list AS wl ON wl.user_id = u.id
+WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+type GetUserByEmailRow struct {
+	ID             int64     `json:"id"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	Password       string    `json:"password"`
+	Telephone      int32     `json:"telephone"`
+	IsBlocked      bool      `json:"is_blocked"`
+	DefaultPayment null.Int  `json:"default_payment"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	ShopCartID     null.Int  `json:"shop_cart_id"`
+	WishListID     null.Int  `json:"wish_list_id"`
+}
+
+// SELECT * FROM "user"
+// WHERE email = $1 LIMIT 1;
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
@@ -201,6 +219,8 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.DefaultPayment,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ShopCartID,
+		&i.WishListID,
 	)
 	return i, err
 }

@@ -7,7 +7,9 @@ import (
 	"github.com/cshop/v3/api"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
-	"github.com/jackc/pgx/v4"
+
+	// "github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 func main() {
@@ -15,7 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
-	conn, err := pgx.Connect(context.Background(), config.DBSource)
+	conn, err := pgxpool.Connect(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}

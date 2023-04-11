@@ -12,37 +12,6 @@ import (
 	"github.com/guregu/null"
 )
 
-const createShoppingCartItem = `-- name: CreateShoppingCartItem :one
-INSERT INTO "shopping_cart_item" (
-  shopping_cart_id,
-  product_item_id,
-  qty
-) VALUES (
-  $1, $2, $3
-)
-RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
-`
-
-type CreateShoppingCartItemParams struct {
-	ShoppingCartID int64 `json:"shopping_cart_id"`
-	ProductItemID  int64 `json:"product_item_id"`
-	Qty            int32 `json:"qty"`
-}
-
-func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error) {
-	row := q.db.QueryRow(ctx, createShoppingCartItem, arg.ShoppingCartID, arg.ProductItemID, arg.Qty)
-	var i ShoppingCartItem
-	err := row.Scan(
-		&i.ID,
-		&i.ShoppingCartID,
-		&i.ProductItemID,
-		&i.Qty,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const deleteShoppingCartItem = `-- name: DeleteShoppingCartItem :exec
 WITH t1 AS (
   SELECT id FROM "shopping_cart" AS sc
@@ -127,18 +96,17 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCa
 	return i, err
 }
 
-const getShoppingCartItemByUserIDCartID = `-- name: GetShoppingCartItemByUserIDCartID :one
+const getShoppingCartItemByUserIDCartID = `-- name: GetShoppingCartItemByUserIDCartID :many
 SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.qty, sci.created_at, sci.updated_at, sc.user_id
 FROM "shopping_cart_item" AS sci
 LEFT JOIN "shopping_cart" AS sc ON sc.id = sci.shopping_cart_id
 WHERE sc.user_id = $1
-AND sci.shopping_cart_id = $2
-LIMIT 1
+AND sc.id = $2
 `
 
 type GetShoppingCartItemByUserIDCartIDParams struct {
-	UserID         int64 `json:"user_id"`
-	ShoppingCartID int64 `json:"shopping_cart_id"`
+	UserID int64 `json:"user_id"`
+	ID     int64 `json:"id"`
 }
 
 type GetShoppingCartItemByUserIDCartIDRow struct {
@@ -151,22 +119,36 @@ type GetShoppingCartItemByUserIDCartIDRow struct {
 	UserID         null.Int  `json:"user_id"`
 }
 
-func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) (GetShoppingCartItemByUserIDCartIDRow, error) {
-	row := q.db.QueryRow(ctx, getShoppingCartItemByUserIDCartID, arg.UserID, arg.ShoppingCartID)
-	var i GetShoppingCartItemByUserIDCartIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.ShoppingCartID,
-		&i.ProductItemID,
-		&i.Qty,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UserID,
-	)
-	return i, err
+func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) ([]GetShoppingCartItemByUserIDCartIDRow, error) {
+	rows, err := q.db.Query(ctx, getShoppingCartItemByUserIDCartID, arg.UserID, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetShoppingCartItemByUserIDCartIDRow{}
+	for rows.Next() {
+		var i GetShoppingCartItemByUserIDCartIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ShoppingCartID,
+			&i.ProductItemID,
+			&i.Qty,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listShoppingCartItems = `-- name: ListShoppingCartItems :many
+
 SELECT id, shopping_cart_id, product_item_id, qty, created_at, updated_at FROM "shopping_cart_item"
 ORDER BY id
 LIMIT $1
@@ -178,6 +160,7 @@ type ListShoppingCartItemsParams struct {
 	Offset int32 `json:"offset"`
 }
 
+// LIMIT 1;
 func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error) {
 	rows, err := q.db.Query(ctx, listShoppingCartItems, arg.Limit, arg.Offset)
 	if err != nil {

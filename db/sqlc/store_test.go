@@ -34,7 +34,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
+	// var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -79,7 +79,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 				ProductID:    product.ID,
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   50,
-				ProductImage: util.RandomString(5),
+				ProductImage: util.RandomURL(),
 				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
@@ -88,15 +88,19 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
-				ShoppingCartID: shoppingCart.ID,
-				ProductItemID:  productItem.ID,
-				Qty:            Qty,
+			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
+				{ShoppingCartID: shoppingCart.ID,
+					ProductItemID: productItem.ID,
+					Qty:           Qty},
 			})
-			if err != nil {
-				log.Fatal("err is: ", err)
-			}
-			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
+
+			result.Query(func(i int, sci []ShoppingCartItem, err error) {
+
+				if err != nil {
+					log.Fatal("err is: ", err)
+				}
+				listShoppingCartItem = append(listShoppingCartItem, sci...)
+			})
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {
@@ -173,12 +177,12 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 
 			arg1 := GetShoppingCartItemByUserIDCartIDParams{
-				UserID:         shoppingCart.UserID,
-				ShoppingCartID: shoppingCart.ID,
+				UserID: shoppingCart.UserID,
+				ID:     shoppingCart.ID,
 			}
 
 			DeletedShopCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
-			require.Error(t, err)
+			require.NoError(t, err)
 			require.Empty(t, DeletedShopCartItem)
 		}
 	}
@@ -202,7 +206,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
+	// var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -246,7 +250,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 				ProductID:    product.ID,
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   4,
-				ProductImage: util.RandomString(5),
+				ProductImage: util.RandomURL(),
 				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
@@ -255,15 +259,19 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
-				ShoppingCartID: shoppingCart.ID,
-				ProductItemID:  productItem.ID,
-				Qty:            Qty,
+			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
+				{ShoppingCartID: shoppingCart.ID,
+					ProductItemID: productItem.ID,
+					Qty:           Qty},
 			})
-			if err != nil {
-				log.Fatal("err is: ", err)
-			}
-			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
+
+			result.Query(func(i int, sci []ShoppingCartItem, err error) {
+
+				if err != nil {
+					log.Fatal("err is: ", err)
+				}
+				listShoppingCartItem = append(listShoppingCartItem, sci...)
+			})
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {
@@ -319,7 +327,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
+	// var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -363,7 +371,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 				ProductID:    product.ID,
 				ProductSku:   util.RandomInt(5, 100),
 				QtyInStock:   0,
-				ProductImage: util.RandomString(5),
+				ProductImage: util.RandomURL(),
 				Price:        util.RandomDecimalString(1, 100),
 				Active:       true,
 			})
@@ -372,15 +380,19 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
-				ShoppingCartID: shoppingCart.ID,
-				ProductItemID:  productItem.ID,
-				Qty:            Qty,
+			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
+				{ShoppingCartID: shoppingCart.ID,
+					ProductItemID: productItem.ID,
+					Qty:           Qty},
 			})
-			if err != nil {
-				log.Fatal("err is: ", err)
-			}
-			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
+
+			result.Query(func(i int, sci []ShoppingCartItem, err error) {
+
+				if err != nil {
+					log.Fatal("err is: ", err)
+				}
+				listShoppingCartItem = append(listShoppingCartItem, sci...)
+			})
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {
