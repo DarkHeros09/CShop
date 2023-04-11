@@ -190,13 +190,15 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 				require.NoError(t, err)
 			})
 
-			shoppingCartItems, err := testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
 			// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
-			shoppingCartItemsChan <- shoppingCartItems
-			errChan <- err
 		}
 	}()
+	go func() {
+		shoppingCartItems, err := testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
+		shoppingCartItemsChan <- shoppingCartItems
+		errChan <- err
 
+	}()
 	shoppingCartItems := <-shoppingCartItemsChan
 	err := <-errChan
 
