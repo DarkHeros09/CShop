@@ -116,8 +116,8 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 
 func TestListShoppingCartItemes(t *testing.T) {
 	shoppingCart := createRandomShoppingCart(t)
-	productItem := createRandomProductItem(t)
 	for i := 0; i < 5; i++ {
+		productItem := createRandomProductItem(t)
 		arg := []CreateShoppingCartItemParams{
 			{ShoppingCartID: shoppingCart.ID,
 				ProductItemID: productItem.ID,
@@ -130,8 +130,15 @@ func TestListShoppingCartItemes(t *testing.T) {
 		Limit:  5,
 		Offset: 0,
 	}
-
-	shoppingCartItems, err := testQueires.ListShoppingCartItems(context.Background(), arg)
+	shoppingCartItemsChan := make(chan []ShoppingCartItem)
+	errChan := make(chan error)
+	go func() {
+		shoppingCartItems, err := testQueires.ListShoppingCartItems(context.Background(), arg)
+		shoppingCartItemsChan <- shoppingCartItems
+		errChan <- err
+	}()
+	shoppingCartItems := <-shoppingCartItemsChan
+	err := <-errChan
 	require.NoError(t, err)
 	require.Len(t, shoppingCartItems, 5)
 
