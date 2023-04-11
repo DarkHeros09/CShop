@@ -123,7 +123,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 				ProductItemID: productItem.ID,
 				Qty:           int32(util.RandomInt(5, 10))},
 		}
-		testQueires.CreateShoppingCartItem(context.Background(), arg)
+		go testQueires.CreateShoppingCartItem(context.Background(), arg)
 	}
 
 	arg := ListShoppingCartItemsParams{
