@@ -10,11 +10,11 @@ import (
 )
 
 func createRandomShoppingCart(t *testing.T) ShoppingCart {
-	user1 := createRandomUser(t)
 
 	shoppingCartChan := make(chan ShoppingCart)
 
 	go func() {
+		user1 := createRandomUser(t)
 		shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
 		require.NoError(t, err)
 		require.NotEmpty(t, shoppingCart)
