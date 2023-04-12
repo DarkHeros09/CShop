@@ -125,7 +125,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 					ProductItemID: productItem.ID,
 					Qty:           int32(util.RandomInt(5, 10))},
 			}
-			go testQueires.CreateShoppingCartItem(context.Background(), arg)
+			testQueires.CreateShoppingCartItem(context.Background(), arg)
 
 		}
 		nChan <- 5
