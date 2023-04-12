@@ -35,5 +35,5 @@ func TestMain(m *testing.M) {
 
 	testQueires = New(testDB)
 
-	os.Exit(m.Run())
+	defer os.Exit(m.Run())
 }
