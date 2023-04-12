@@ -120,10 +120,11 @@ func TestListShoppingCartItemes(t *testing.T) {
 	go func() {
 		for i := 0; i < 5; i++ {
 			productItem := createRandomProductItem(t)
+			Qty := int32(util.RandomInt(5, 10))
 			arg := []CreateShoppingCartItemParams{
 				{ShoppingCartID: shoppingCart.ID,
 					ProductItemID: productItem.ID,
-					Qty:           int32(util.RandomInt(5, 10))},
+					Qty:           Qty},
 			}
 			testQueires.CreateShoppingCartItem(context.Background(), arg)
 
