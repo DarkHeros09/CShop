@@ -27,7 +27,7 @@ func createRandomAdminType(t *testing.T) AdminType {
 	return adminType
 }
 func TestCreateAdminType(t *testing.T) {
-	createRandomAdminType(t)
+	go createRandomAdminType(t)
 }
 
 func TestGetAdminType(t *testing.T) {

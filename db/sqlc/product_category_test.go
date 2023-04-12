@@ -11,11 +11,22 @@ import (
 )
 
 func createRandomProductCategory(t *testing.T) ProductCategory {
+	categoryName := util.RandomString(5)
 	arg := CreateProductCategoryParams{
 		ParentCategoryID: null.Int{},
-		CategoryName:     util.RandomString(5),
+		CategoryName:     categoryName,
 	}
+	// productCategoryChan := make(chan ProductCategory)
+	// errChan := make(chan error)
 
+	// go func() {
+	// 	productCategory, err := testQueires.CreateProductCategory(context.Background(), arg)
+	// 	productCategoryChan <- productCategory
+	// 	errChan <- err
+	// }()
+
+	// err := <-errChan
+	// productCategory := <-productCategoryChan
 	productCategory, err := testQueires.CreateProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)

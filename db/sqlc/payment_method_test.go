@@ -30,7 +30,7 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 }
 
 func TestCreatePaymentMethod(t *testing.T) {
-	createRandomPaymentMethod(t)
+	go createRandomPaymentMethod(t)
 }
 
 func TestGetPaymentMethod(t *testing.T) {

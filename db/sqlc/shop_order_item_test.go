@@ -87,7 +87,7 @@ func TestDeleteShopOrderItem(t *testing.T) {
 
 func TestListShopOrderItems(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomShopOrderItem(t)
+		go createRandomShopOrderItem(t)
 	}
 	arg := ListShopOrderItemsParams{
 		Limit:  5,

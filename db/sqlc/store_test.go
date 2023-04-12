@@ -108,7 +108,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 
 			totalPrice += price.String()
-			time.Sleep(3 * time.Second)
+			// time.Sleep(3 * time.Second)
 		}
 		go func() {
 			lock.Lock()
@@ -313,7 +313,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
-	n := 1
+	n := 3
 	Qty := int32(5)
 	var userAddress UserAddress
 	var listUsersAddress []UserAddress
@@ -400,7 +400,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			}
 
 			totalPrice += price.String()
-			time.Sleep(3 * time.Second)
+			// time.Sleep(3 * time.Second)
 		}
 		go func() {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{

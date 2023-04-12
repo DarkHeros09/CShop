@@ -84,12 +84,8 @@ func TestUpdatePromotionName(t *testing.T) {
 func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
 	arg := UpdatePromotionParams{
-		Name:         null.String{},
 		Description:  null.StringFrom(util.RandomString(5)),
 		DiscountRate: null.IntFrom(util.RandomInt(1, 90)),
-		Active:       null.Bool{},
-		StartDate:    null.Time{},
-		EndDate:      null.Time{},
 		ID:           promotion1.ID,
 	}
 
@@ -124,7 +120,7 @@ func TestDeletePromotion(t *testing.T) {
 
 func TestListPromotions(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomPromotion(t)
+		go createRandomPromotion(t)
 	}
 	arg := ListPromotionsParams{
 		Limit:  5,

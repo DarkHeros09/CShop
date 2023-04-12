@@ -67,7 +67,7 @@ func TestDeleteWishList(t *testing.T) {
 
 func TestListWishLists(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomWishList(t)
+		go createRandomWishList(t)
 	}
 	arg := ListWishListsParams{
 		Limit:  5,

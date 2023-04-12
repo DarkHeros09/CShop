@@ -51,20 +51,27 @@ func TestGetCategoryPromotion(t *testing.T) {
 }
 
 func TestUpdateCategoryPromotionActive(t *testing.T) {
-	CategoryPromotion1 := createRandomCategoryPromotion(t)
+	categoryPromotionChan := make(chan CategoryPromotion)
+	go func() {
+		categoryPromotion1 := createRandomCategoryPromotion(t)
+
+		categoryPromotionChan <- categoryPromotion1
+
+	}()
+	categoryPromotion1 := <-categoryPromotionChan
 	arg := UpdateCategoryPromotionParams{
-		PromotionID: CategoryPromotion1.PromotionID,
-		Active:      null.BoolFrom(!CategoryPromotion1.Active),
-		CategoryID:  CategoryPromotion1.CategoryID,
+		PromotionID: categoryPromotion1.PromotionID,
+		Active:      null.BoolFrom(!categoryPromotion1.Active),
+		CategoryID:  categoryPromotion1.CategoryID,
 	}
 
-	CategoryPromotion2, err := testQueires.UpdateCategoryPromotion(context.Background(), arg)
+	categoryPromotion2, err := testQueires.UpdateCategoryPromotion(context.Background(), arg)
 	require.NoError(t, err)
-	require.NotEmpty(t, CategoryPromotion2)
+	require.NotEmpty(t, categoryPromotion2)
 
-	require.Equal(t, CategoryPromotion1.CategoryID, CategoryPromotion2.CategoryID)
-	require.Equal(t, CategoryPromotion1.PromotionID, CategoryPromotion2.PromotionID)
-	require.NotEqual(t, CategoryPromotion1.Active, CategoryPromotion2.Active)
+	require.Equal(t, categoryPromotion1.CategoryID, categoryPromotion2.CategoryID)
+	require.Equal(t, categoryPromotion1.PromotionID, categoryPromotion2.PromotionID)
+	require.NotEqual(t, categoryPromotion1.Active, categoryPromotion2.Active)
 }
 
 func TestDeleteCategoryPromotion(t *testing.T) {

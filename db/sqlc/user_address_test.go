@@ -140,10 +140,20 @@ func TestDeleteUserAddress(t *testing.T) {
 }
 
 func TestListUserAddresses(t *testing.T) {
-	var lastUserAddress UserAddress
+	lastUserAddressChan := make(chan UserAddress)
 	for i := 0; i < 10; i++ {
-		lastUserAddress = createRandomUserAddress(t)
+		go func(i int) {
+			if i == 9 {
+				lastUserAddress := createRandomUserAddress(t)
+				lastUserAddressChan <- lastUserAddress
+			} else {
+
+				createRandomUserAddress(t)
+			}
+
+		}(i)
 	}
+	lastUserAddress := <-lastUserAddressChan
 	arg := ListUserAddressesParams{
 		UserID: lastUserAddress.UserID,
 		Limit:  5,

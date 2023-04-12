@@ -119,7 +119,7 @@ func TestDeleteWishListItemAll(t *testing.T) {
 
 func TestListWishListItemes(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomWishListItem(t)
+		go createRandomWishListItem(t)
 	}
 
 	arg := ListWishListItemsParams{
