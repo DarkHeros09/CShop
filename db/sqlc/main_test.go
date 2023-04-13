@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}
-	defer testDB.Close()
+	// defer testDB.Close()
 
 	testQueires = New(testDB)
 

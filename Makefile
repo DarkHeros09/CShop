@@ -1,4 +1,5 @@
 DB_URL=postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable
+DAGGER_DB_URL=postgresql://postgres:secret@db:5432/cshop?sslmode=disable
 
 postgres:
 	docker run --name psql_14.5-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
@@ -44,6 +45,14 @@ cimigrateup:
 cimigratedown:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose down
+
+dmigrateup:
+	migrate -path db/migration -database \
+	"$(DAGGER_DB_URL)" -verbose up
+
+dmigratedown:
+	migrate -path db/migration -database \
+	"$(DAGGER_DB_URL)" -verbose down
 sqlc:
 	sqlc generate
 
