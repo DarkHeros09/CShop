@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
@@ -127,8 +128,15 @@ func TestListShoppingCartItemes(t *testing.T) {
 					ProductItemID: productItem.ID,
 					Qty:           Qty},
 			}
-			testQueires.CreateShoppingCartItem(context.Background(), arg)
+			cartItemsChan := make(chan *CreateShoppingCartItemBatchResults)
+			go func() {
+				cartItems := testQueires.CreateShoppingCartItem(context.Background(), arg)
+				cartItemsChan <- cartItems
+			}()
+			cartItems := <-cartItemsChan
+			require.NotEmpty(t, cartItems)
 			if i == 4 {
+				time.Sleep(500 * time.Millisecond)
 				nChan <- 5
 			}
 

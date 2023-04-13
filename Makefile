@@ -1,5 +1,7 @@
-DB_URL=postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable
-DAGGER_DB_URL=postgresql://postgres:secret@db:5432/cshop?sslmode=disable
+DB_HOST ?= localhost
+DB_PORT ?= 6666
+
+DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
 
 postgres:
 	docker run --name psql_14.5-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
@@ -38,21 +40,6 @@ migratedown1:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose down 1
 
-cimigrateup:
-	migrate -path db/migration -database \
-	"$(DB_URL)" -verbose up
-
-cimigratedown:
-	migrate -path db/migration -database \
-	"$(DB_URL)" -verbose down
-
-dmigrateup:
-	migrate -path db/migration -database \
-	"$(DAGGER_DB_URL)" -verbose up
-
-dmigratedown:
-	migrate -path db/migration -database \
-	"$(DAGGER_DB_URL)" -verbose down
 sqlc:
 	sqlc generate
 
@@ -98,5 +85,5 @@ db_schema:
 	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
 
 
-.PHONY: postgres createdb dropdb initmigrate migrateup migratedown cimigrateup cimigratedown sqlc \
+.PHONY: postgres createdb dropdb initmigrate migrateup migratedown sqlc \
 		sqlcwin sqlcfix triggersup triggersdown mock server proto protofix evans db_docs db_schema
