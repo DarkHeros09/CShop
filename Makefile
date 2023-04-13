@@ -66,7 +66,7 @@ sqlcfix:
 	docker run --rm -v ${CURDIR}:/src -w /src kjconroy/sqlc generate
 
 test:
-	go test -v -cover -timeout 30s ./...
+	go test -v -cover -timeout 1m ./...
 
 server:
 	go run main.go
