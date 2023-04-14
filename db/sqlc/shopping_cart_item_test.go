@@ -153,16 +153,13 @@ func TestListShoppingCartItemes(t *testing.T) {
 	}
 	shoppingCartItemsChan := make(chan []ShoppingCartItem)
 	errChan := make(chan error)
-	wg.Add(1)
 	go func() {
 		shoppingCartItems, err := testQueires.ListShoppingCartItems(context.Background(), arg)
 		shoppingCartItemsChan <- shoppingCartItems
 		errChan <- err
-		wg.Done()
 	}()
 	shoppingCartItems := <-shoppingCartItemsChan
 	err := <-errChan
-	wg.Wait()
 	require.NoError(t, err)
 	require.Len(t, shoppingCartItems, 5)
 
