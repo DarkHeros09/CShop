@@ -134,7 +134,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 			}
 			cartItemsChan := make(chan *CreateShoppingCartItemBatchResults)
 			go func() {
-				cartItems := testQueires.CreateShoppingCartItem(context.Background(), arg)
+				cartItems := testQueires.CreateShoppingCartItem(context.TODO(), arg)
 				cartItemsChan <- cartItems
 			}()
 			cartItems := <-cartItemsChan
@@ -154,7 +154,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 	shoppingCartItemsChan := make(chan []ShoppingCartItem)
 	errChan := make(chan error)
 	go func() {
-		shoppingCartItems, err := testQueires.ListShoppingCartItems(context.Background(), arg)
+		shoppingCartItems, err := testQueires.ListShoppingCartItems(context.TODO(), arg)
 		shoppingCartItemsChan <- shoppingCartItems
 		errChan <- err
 	}()
