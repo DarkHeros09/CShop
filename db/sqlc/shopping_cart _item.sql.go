@@ -149,8 +149,8 @@ func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg Get
 
 const listShoppingCartItems = `-- name: ListShoppingCartItems :many
 
-SELECT id, shopping_cart_id, product_item_id, qty, created_at, updated_at FROM "shopping_cart_item"
-ORDER BY id
+SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.qty, sci.created_at, sci.updated_at FROM "shopping_cart_item" AS sci
+ORDER BY sci.id
 LIMIT $1
 OFFSET $2
 `

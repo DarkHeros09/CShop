@@ -25,8 +25,8 @@ AND sc.id = $2;
 -- LIMIT 1;
 
 -- name: ListShoppingCartItems :many
-SELECT * FROM "shopping_cart_item"
-ORDER BY id
+SELECT sci.* FROM "shopping_cart_item" AS sci
+ORDER BY sci.id
 LIMIT $1
 OFFSET $2;
 
