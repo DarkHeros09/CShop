@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
@@ -117,10 +118,13 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 
 func TestListShoppingCartItemes(t *testing.T) {
 	shoppingCart := createRandomShoppingCart(t)
-	nChan := make(chan int32)
+	var wg sync.WaitGroup
+
+	wg.Add(5)
 
 	for i := 0; i < 5; i++ {
 		go func(i int) {
+			fmt.Println("LOOP: ", i)
 			productItem := createRandomProductItem(t)
 			Qty := int32(util.RandomInt(5, 10))
 			arg := []CreateShoppingCartItemParams{
@@ -135,18 +139,16 @@ func TestListShoppingCartItemes(t *testing.T) {
 			}()
 			cartItems := <-cartItemsChan
 			require.NotEmpty(t, cartItems)
-			if i == 4 {
-				time.Sleep(500 * time.Millisecond)
-				nChan <- 5
-			}
+			wg.Done()
 
 		}(i)
 
 	}
 
-	n := <-nChan
+	wg.Wait()
+
 	arg := ListShoppingCartItemsParams{
-		Limit:  n,
+		Limit:  5,
 		Offset: 0,
 	}
 	shoppingCartItemsChan := make(chan []ShoppingCartItem)
