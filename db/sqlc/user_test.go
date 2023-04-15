@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -153,12 +154,18 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		go createRandomUser(t)
+		go func() {
+			createRandomUser(t)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	arg := ListUsersParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	users, err := testQueires.ListUsers(context.Background(), arg)

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -86,12 +87,18 @@ func TestDeleteShopOrderItem(t *testing.T) {
 }
 
 func TestListShopOrderItems(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		createRandomShopOrderItem(t)
+		go func() {
+			createRandomShopOrderItem(t)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	arg := ListShopOrderItemsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	shopOrderItems, err := testQueires.ListShopOrderItems(context.Background(), arg)

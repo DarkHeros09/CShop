@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -11,13 +12,12 @@ import (
 )
 
 func createRandomShopOrder(t *testing.T) ShopOrder {
-	user := createRandomUser(t)
 	paymentMethod := createRandomPaymentMethod(t)
 	address := createRandomAddress(t)
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
-		UserID:            user.ID,
+		UserID:            paymentMethod.UserID,
 		PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimalString(1, 100),
@@ -98,12 +98,18 @@ func TestDeleteShopOrder(t *testing.T) {
 }
 
 func TestListShopOrders(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		createRandomShopOrder(t)
+		go func(i int) {
+			createRandomShopOrder(t)
+			wg.Done()
+		}(i)
 	}
+	wg.Wait()
 	arg := ListShopOrdersParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	shopOrders, err := testQueires.ListShopOrders(context.Background(), arg)

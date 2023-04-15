@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/guregu/null"
@@ -89,9 +90,16 @@ func TestDeleteShoppingCart(t *testing.T) {
 }
 
 func TestListShoppingCarts(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		createRandomShoppingCart(t)
+		go func() {
+			createRandomShoppingCart(t)
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 	arg := ListShoppingCartsParams{
 		Limit:  5,
 		Offset: 0,

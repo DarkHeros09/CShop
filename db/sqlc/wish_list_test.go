@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/guregu/null"
@@ -66,9 +67,15 @@ func TestDeleteWishList(t *testing.T) {
 }
 
 func TestListWishLists(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		go createRandomWishList(t)
+		go func() {
+			createRandomWishList(t)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	arg := ListWishListsParams{
 		Limit:  5,
 		Offset: 0,

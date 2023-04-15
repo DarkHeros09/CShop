@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -94,15 +95,20 @@ func TestDeleteUserReview(t *testing.T) {
 
 func TestListUserReviews(t *testing.T) {
 	lastUserReviewChan := make(chan UserReview)
-	go func() {
-		var lastUserReview UserReview
-		for i := 0; i < 5; i++ {
-			lastUserReview = createRandomUserReview(t)
-		}
-		lastUserReviewChan <- lastUserReview
-	}()
+	var wg sync.WaitGroup
+	wg.Add(5)
+	for i := 0; i < 5; i++ {
+		go func(i int) {
+			lastUserReview := createRandomUserReview(t)
+			wg.Done()
+			if i == 4 {
 
+				lastUserReviewChan <- lastUserReview
+			}
+		}(i)
+	}
 	lastUserReview := <-lastUserReviewChan
+	wg.Wait()
 	arg := ListUserReviewsParams{
 		Limit:  5,
 		Offset: 0,

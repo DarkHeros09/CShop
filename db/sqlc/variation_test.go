@@ -80,7 +80,7 @@ func TestListVariations(t *testing.T) {
 	}
 	arg := ListVariationsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	variations, err := testQueires.ListVariations(context.Background(), arg)

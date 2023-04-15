@@ -66,17 +66,18 @@ func addAccess(
 }
 
 func TestCreateUserAPI(t *testing.T) {
-	// userChan := make(chan db.CreateUserWithCartAndWishListRow)
-	// passwordChan := make(chan string)
+	t.Parallel()
+	userChan := make(chan db.CreateUserWithCartAndWishListRow)
+	passwordChan := make(chan string)
 
-	// go func() {
-	//     user, password := randomUserWithCartAndWishList(t)
-	//     userChan <- user
-	//     passwordChan <- password
-	// }()
-	// user := <-userChan
-	// password := <-passwordChan
-	user, password := randomUserWithCartAndWishList(t)
+	go func() {
+		user, password := randomUserWithCartAndWishList(t)
+		userChan <- user
+		passwordChan <- password
+	}()
+	user := <-userChan
+	password := <-passwordChan
+	// user, password := randomUserWithCartAndWishList(t)
 	finalRsp := createUserResponse{
 		User: newUserResponse(db.User{
 			ID:             user.ID,
@@ -146,6 +147,10 @@ func TestCreateUserAPI(t *testing.T) {
 					}),
 				}
 
+				store.EXPECT().
+					CreateUserWithCartAndWishList(gomock.Any(), gomock.Any()).
+					Times(1)
+
 				store.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).
 					Times(1)
 
@@ -196,11 +201,12 @@ func TestCreateUserAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
-					Times(1).Return(db.CreateUserWithCartAndWishListRow{},
-					&pgconn.PgError{
-						Code:    "23505",
-						Message: "unique_violation"},
-				)
+					Times(1).
+					Return(db.CreateUserWithCartAndWishListRow{},
+						&pgconn.PgError{
+							Code:    "23505",
+							Message: "unique_violation"},
+					)
 			},
 			checkResponse: func(rsp *http.Response) {
 				//! should return forbiddenStatus
@@ -308,6 +314,7 @@ func TestCreateUserAPI(t *testing.T) {
 }
 
 func TestLoginUserAPI(t *testing.T) {
+	t.Parallel()
 	user, password := randomUserLogin(t)
 
 	testCases := []struct {
@@ -404,7 +411,7 @@ func TestLoginUserAPI(t *testing.T) {
 	for i := range testCases {
 		tc := testCases[i]
 
-		t.Run(tc.name, func(t *testing.T) {
+		go t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)

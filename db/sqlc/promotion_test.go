@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -119,9 +120,16 @@ func TestDeletePromotion(t *testing.T) {
 }
 
 func TestListPromotions(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		go createRandomPromotion(t)
+		go func() {
+			createRandomPromotion(t)
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 	arg := ListPromotionsParams{
 		Limit:  5,
 		Offset: 5,

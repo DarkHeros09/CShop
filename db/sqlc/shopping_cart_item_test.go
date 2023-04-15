@@ -117,6 +117,7 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 }
 
 func TestListShoppingCartItemes(t *testing.T) {
+	t.Parallel()
 	shoppingCart := createRandomShoppingCart(t)
 	var wg sync.WaitGroup
 

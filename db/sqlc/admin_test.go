@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -96,12 +97,18 @@ func TestDeleteAdmin(t *testing.T) {
 }
 
 func TestListAdmins(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(10)
 	for i := 0; i < 10; i++ {
-		createRandomAdmin(t)
+		go func() {
+			createRandomAdmin(t)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	arg := ListAdminsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	admins, err := testQueires.ListAdmins(context.Background(), arg)
