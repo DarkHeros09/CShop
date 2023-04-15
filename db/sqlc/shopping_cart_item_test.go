@@ -121,7 +121,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 	shoppingCart := createRandomShoppingCart(t)
 	var wg sync.WaitGroup
 
-	wg.Add(5)
+	wg.Add(10)
 
 	for i := 0; i < 5; i++ {
 		go func(i int) {
@@ -137,6 +137,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 			go func() {
 				cartItems := testQueires.CreateShoppingCartItem(context.Background(), arg)
 				cartItemsChan <- cartItems
+				wg.Done()
 			}()
 			cartItems := <-cartItemsChan
 			require.NotEmpty(t, cartItems)
