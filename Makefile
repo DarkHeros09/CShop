@@ -55,6 +55,9 @@ sqlcfix:
 test:
 	go test -v -cover -timeout 1m -shuffle on -count=1 ./...
 
+dagger_test:
+	go run ./dagger/dagger_test_workflow.go
+
 server:
 	go run main.go
 
@@ -86,4 +89,5 @@ db_schema:
 
 
 .PHONY: postgres createdb dropdb initmigrate migrateup migratedown sqlc \
-		sqlcwin sqlcfix triggersup triggersdown mock server proto protofix evans db_docs db_schema
+		sqlcwin sqlcfix triggersup triggersdown mock server proto protofix evans db_docs db_schema \
+		dagger_test
