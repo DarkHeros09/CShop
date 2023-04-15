@@ -212,7 +212,7 @@ func (server *Server) gracefulShutdown() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	<-done
+	_ = <-done
 	log.Println("Shutdown server...")
 	if err := server.router.Shutdown(); err != nil {
 		log.Fatalf("Could not gracefully shutdown the server: %v\n", err)

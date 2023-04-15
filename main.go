@@ -23,11 +23,11 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	runGinServer(config, store)
+	runFiberServer(config, store)
 
 }
 
-func runGinServer(config util.Config, store db.Store) {
+func runFiberServer(config util.Config, store db.Store) {
 	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal("cannot create server:", err)

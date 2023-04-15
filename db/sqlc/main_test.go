@@ -18,23 +18,23 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
-	testDBChan := make(chan *pgxpool.Pool)
-	errChan := make(chan error)
-	go func() {
-		testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
-		testDBChan <- testDB
-		errChan <- err
-	}()
+	// testDBChan := make(chan *pgxpool.Pool)
+	// errChan := make(chan error)
+	// go func() {
+	// 	testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
+	// 	testDBChan <- testDB
+	// 	errChan <- err
+	// }()
 
-	testDB := <-testDBChan
-	err = <-errChan
-	// testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
-	// if err != nil {
-	// 	log.Fatal("cannot connect to db", err)
-	// }
+	// testDB := <-testDBChan
+	// err = <-errChan
+	testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
+	if err != nil {
+		log.Fatal("cannot connect to db", err)
+		os.Exit(m.Run())
+	}
 	// defer testDB.Close()
 
 	testQueires = New(testDB)
 
-	os.Exit(m.Run())
 }

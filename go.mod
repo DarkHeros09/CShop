@@ -6,7 +6,7 @@ require (
 	github.com/bytedance/sonic v1.8.7
 	github.com/goccy/go-json v0.10.2
 	github.com/goccy/go-reflect v1.2.0
-	github.com/gofiber/fiber/v2 v2.43.0
+	github.com/gofiber/fiber/v2 v2.44.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.14.0
