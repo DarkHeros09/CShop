@@ -292,11 +292,12 @@ func (mr *MockStoreMockRecorder) CreateShoppingCart(arg0, arg1 interface{}) *gom
 }
 
 // CreateShoppingCartItem mocks base method.
-func (m *MockStore) CreateShoppingCartItem(arg0 context.Context, arg1 []db.CreateShoppingCartItemParams) *db.CreateShoppingCartItemBatchResults {
+func (m *MockStore) CreateShoppingCartItem(arg0 context.Context, arg1 db.CreateShoppingCartItemParams) (db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShoppingCartItem", arg0, arg1)
-	ret0, _ := ret[0].(*db.CreateShoppingCartItemBatchResults)
-	return ret0
+	ret0, _ := ret[0].(db.ShoppingCartItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CreateShoppingCartItem indicates an expected call of CreateShoppingCartItem.

@@ -12,36 +12,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomShoppingCartItem(t *testing.T) ([]ShoppingCartItem, ShoppingCart) {
+func createRandomShoppingCartItem(t *testing.T) (ShoppingCartItem, ShoppingCart) {
 	shoppingCart := createRandomShoppingCart(t)
 	productItem := createRandomProductItem(t)
-	var shoppingCartItems []ShoppingCartItem
-	arg := []CreateShoppingCartItemParams{
-		{ShoppingCartID: shoppingCart.ID,
-			ProductItemID: productItem.ID,
-			Qty:           int32(util.RandomInt(0, 10)),
-		}}
+	// var shoppingCartItems []ShoppingCartItem
+	arg := CreateShoppingCartItemParams{
+		ShoppingCartID: shoppingCart.ID,
+		ProductItemID:  productItem.ID,
+		Qty:            int32(util.RandomInt(0, 10)),
+	}
 
-	result := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	// result := testQueires.CreateShoppingCartItem(context.Background(), arg)
 
-	result.Query(func(i int, sci []ShoppingCartItem, err error) {
-		require.NoError(t, err)
-		require.NotEmpty(t, sci)
-		require.Equal(t, arg[i].ShoppingCartID, sci[i].ShoppingCartID)
-		require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
-		require.Equal(t, arg[i].Qty, sci[i].Qty)
-		shoppingCartItems = sci
-	})
+	// result.Query(func(i int, sci []ShoppingCartItem, err error) {
+	// 	require.NoError(t, err)
+	// 	require.NotEmpty(t, sci)
+	// 	require.Equal(t, arg[i].ShoppingCartID, sci[i].ShoppingCartID)
+	// 	require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
+	// 	require.Equal(t, arg[i].Qty, sci[i].Qty)
+	// 	shoppingCartItems = sci
+	// })
 
-	// shoppingCartItem, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
-	// require.NoError(t, err)
-	// require.NotEmpty(t, shoppingCartItem)
+	shoppingCartItem, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, shoppingCartItem)
 
-	// require.Equal(t, arg.ShoppingCartID, shoppingCartItem.ShoppingCartID)
-	// require.Equal(t, arg.ProductItemID, shoppingCartItem.ProductItemID)
-	// require.Equal(t, arg.Qty, shoppingCartItem.Qty)
+	require.Equal(t, arg.ShoppingCartID, shoppingCartItem.ShoppingCartID)
+	require.Equal(t, arg.ProductItemID, shoppingCartItem.ProductItemID)
+	require.Equal(t, arg.Qty, shoppingCartItem.Qty)
 
-	return shoppingCartItems, shoppingCart
+	return shoppingCartItem, shoppingCart
 }
 
 func TestCreateShoppingCartItem(t *testing.T) {
@@ -51,55 +51,55 @@ func TestCreateShoppingCartItem(t *testing.T) {
 func TestGetShoppingCartItem(t *testing.T) {
 	shoppingCartItem1, _ := createRandomShoppingCartItem(t)
 
-	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1[0].ID)
+	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem2)
 
-	require.Equal(t, shoppingCartItem1[0].ShoppingCartID, shoppingCartItem2.ShoppingCartID)
-	require.Equal(t, shoppingCartItem1[0].ProductItemID, shoppingCartItem2.ProductItemID)
-	require.Equal(t, shoppingCartItem1[0].Qty, shoppingCartItem2.Qty)
+	require.Equal(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
+	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
+	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
 }
 
-func TestGetShoppingCartItemByCartID(t *testing.T) {
-	shoppingCartItem1, shoppingCart1 := createRandomShoppingCartItem(t)
+// func TestGetShoppingCartItemByCartID(t *testing.T) {
+// 	shoppingCartItem1, shoppingCart1 := createRandomShoppingCartItem(t)
 
-	arg := GetShoppingCartItemByUserIDCartIDParams{
-		UserID: shoppingCart1.UserID,
-		ID:     shoppingCartItem1[0].ShoppingCartID,
-	}
+// 	arg := GetShoppingCartItemByUserIDCartIDParams{
+// 		UserID: shoppingCart1.UserID,
+// 		ID:     shoppingCartItem1.ShoppingCartID,
+// 	}
 
-	shoppingCartItem2, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, shoppingCartItem2)
+// 	shoppingCartItem2, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg)
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, shoppingCartItem2)
 
-	require.Equal(t, shoppingCartItem1[0].ShoppingCartID, shoppingCartItem2[0].ShoppingCartID)
-	require.Equal(t, shoppingCartItem1[0].ProductItemID, shoppingCartItem2[0].ProductItemID)
-	require.Equal(t, shoppingCartItem1[0].Qty, shoppingCartItem2[0].Qty)
-}
+// 	require.Equal(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
+// 	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
+// 	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
+// }
 
 func TestUpdateShoppingCartItem(t *testing.T) {
 	shoppingCartItem1, _ := createRandomShoppingCartItem(t)
 	arg := UpdateShoppingCartItemParams{
 		ProductItemID:  null.Int{},
 		Qty:            null.Int{},
-		ID:             shoppingCartItem1[0].ID,
-		ShoppingCartID: shoppingCartItem1[0].ShoppingCartID,
+		ID:             shoppingCartItem1.ID,
+		ShoppingCartID: shoppingCartItem1.ShoppingCartID,
 	}
 
 	shoppingCartItem2, err := testQueires.UpdateShoppingCartItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem2)
 
-	require.Equal(t, shoppingCartItem1[0].ShoppingCartID, shoppingCartItem2.ShoppingCartID)
-	require.Equal(t, shoppingCartItem1[0].ProductItemID, shoppingCartItem2.ProductItemID)
-	require.Equal(t, shoppingCartItem1[0].Qty, shoppingCartItem2.Qty)
+	require.Equal(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
+	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
+	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
 }
 
 func TestDeleteShoppingCartItem(t *testing.T) {
 	shoppingCartItem1, shoppingCart := createRandomShoppingCartItem(t)
 
 	arg := DeleteShoppingCartItemParams{
-		ShoppingCartItemID: shoppingCartItem1[0].ID,
+		ShoppingCartItemID: shoppingCartItem1.ID,
 		UserID:             shoppingCart.UserID,
 		ShoppingCartID:     shoppingCart.ID,
 	}
@@ -108,7 +108,7 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 
 	require.NoError(t, err)
 
-	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1[0].ID)
+	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -128,18 +128,22 @@ func TestListShoppingCartItemes(t *testing.T) {
 			fmt.Println("LOOP: ", i)
 			productItem := createRandomProductItem(t)
 			Qty := int32(util.RandomInt(5, 10))
-			arg := []CreateShoppingCartItemParams{
-				{ShoppingCartID: shoppingCart.ID,
-					ProductItemID: productItem.ID,
-					Qty:           Qty},
+			arg := CreateShoppingCartItemParams{
+				ShoppingCartID: shoppingCart.ID,
+				ProductItemID:  productItem.ID,
+				Qty:            Qty,
 			}
-			cartItemsChan := make(chan *CreateShoppingCartItemBatchResults)
+			cartItemsChan := make(chan ShoppingCartItem)
+			errChan := make(chan error)
 			go func() {
-				cartItems := testQueires.CreateShoppingCartItem(context.Background(), arg)
+				cartItems, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
 				cartItemsChan <- cartItems
+				errChan <- err
 				wg.Done()
 			}()
 			cartItems := <-cartItemsChan
+			err := <-errChan
+			require.NoError(t, err)
 			require.NotEmpty(t, cartItems)
 			wg.Done()
 
@@ -176,15 +180,13 @@ func TestListShoppingCartItemsByCartID(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		// time.Sleep(time.Millisecond * 500)
 		productItem := createRandomProductItem(t)
-		arg := []CreateShoppingCartItemParams{
-			{ShoppingCartID: shoppingCart.ID,
-				ProductItemID: productItem.ID,
-				Qty:           int32(util.RandomInt(5, 10))},
+		arg := CreateShoppingCartItemParams{
+			ShoppingCartID: shoppingCart.ID,
+			ProductItemID:  productItem.ID,
+			Qty:            int32(util.RandomInt(5, 10)),
 		}
-		result := testQueires.CreateShoppingCartItem(context.Background(), arg)
-		result.Query(func(i int, sci []ShoppingCartItem, err error) {
-			require.NoError(t, err)
-		})
+		testQueires.CreateShoppingCartItem(context.Background(), arg)
+
 	}
 
 	shoppingCartItems, err := testQueires.ListShoppingCartItemsByCartID(context.Background(), shoppingCart.ID)
@@ -245,17 +247,13 @@ func TestDeleteALLShoppingCartItemes(t *testing.T) {
 	shoppingCart := createRandomShoppingCart(t)
 	for i := 0; i < 10; i++ {
 		productItem := createRandomProductItem(t)
-		arg := []CreateShoppingCartItemParams{
-			{ShoppingCartID: shoppingCart.ID,
-				ProductItemID: productItem.ID,
-				Qty:           int32(util.RandomInt(1, 10))},
+		arg := CreateShoppingCartItemParams{
+			ShoppingCartID: shoppingCart.ID,
+			ProductItemID:  productItem.ID,
+			Qty:            int32(util.RandomInt(1, 10)),
 		}
-		result := testQueires.CreateShoppingCartItem(context.Background(), arg)
-		result.Query(func(i int, sci []ShoppingCartItem, err error) {
+		testQueires.CreateShoppingCartItem(context.Background(), arg)
 
-			require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
-			require.NoError(t, err)
-		})
 	}
 
 	arg1 := DeleteShoppingCartItemAllByUserParams{

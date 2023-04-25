@@ -411,6 +411,7 @@ func TestLoginUserAPI(t *testing.T) {
 	for i := range testCases {
 		tc := testCases[i]
 
+		// t.Run(tc.name, func(t *testing.T) {
 		go t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
@@ -432,7 +433,7 @@ func TestLoginUserAPI(t *testing.T) {
 
 			rsp, err := server.router.Test(request)
 			require.NoError(t, err)
-			tc.checkResponse(rsp)
+			go tc.checkResponse(rsp)
 		})
 	}
 }

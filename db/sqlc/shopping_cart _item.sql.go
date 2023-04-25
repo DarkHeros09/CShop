@@ -12,6 +12,37 @@ import (
 	"github.com/guregu/null"
 )
 
+const createShoppingCartItem = `-- name: CreateShoppingCartItem :one
+INSERT INTO "shopping_cart_item" (
+  shopping_cart_id,
+  product_item_id,
+  qty
+) VALUES (
+  $1, $2, $3
+)
+RETURNING id, shopping_cart_id, product_item_id, qty, created_at, updated_at
+`
+
+type CreateShoppingCartItemParams struct {
+	ShoppingCartID int64 `json:"shopping_cart_id"`
+	ProductItemID  int64 `json:"product_item_id"`
+	Qty            int32 `json:"qty"`
+}
+
+func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error) {
+	row := q.db.QueryRow(ctx, createShoppingCartItem, arg.ShoppingCartID, arg.ProductItemID, arg.Qty)
+	var i ShoppingCartItem
+	err := row.Scan(
+		&i.ID,
+		&i.ShoppingCartID,
+		&i.ProductItemID,
+		&i.Qty,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteShoppingCartItem = `-- name: DeleteShoppingCartItem :exec
 WITH t1 AS (
   SELECT id FROM "shopping_cart" AS sc

@@ -34,7 +34,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	// var shoppingCartItem ShoppingCartItem
+	var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -88,19 +88,15 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
-				{ShoppingCartID: shoppingCart.ID,
-					ProductItemID: productItem.ID,
-					Qty:           Qty},
+			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+				ShoppingCartID: shoppingCart.ID,
+				ProductItemID:  productItem.ID,
+				Qty:            Qty,
 			})
-
-			result.Query(func(i int, sci []ShoppingCartItem, err error) {
-
-				if err != nil {
-					log.Fatal("err is: ", err)
-				}
-				listShoppingCartItem = append(listShoppingCartItem, sci...)
-			})
+			if err != nil {
+				log.Fatal("err is: ", err)
+			}
+			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {
@@ -206,7 +202,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	// var shoppingCartItem ShoppingCartItem
+	var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -259,19 +255,15 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
-				{ShoppingCartID: shoppingCart.ID,
-					ProductItemID: productItem.ID,
-					Qty:           Qty},
+			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+				ShoppingCartID: shoppingCart.ID,
+				ProductItemID:  productItem.ID,
+				Qty:            Qty,
 			})
-
-			result.Query(func(i int, sci []ShoppingCartItem, err error) {
-
-				if err != nil {
-					log.Fatal("err is: ", err)
-				}
-				listShoppingCartItem = append(listShoppingCartItem, sci...)
-			})
+			if err != nil {
+				log.Fatal("err is: ", err)
+			}
+			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {
@@ -327,7 +319,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	var listOrderStatus []OrderStatus
 	var shoppingCart ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	// var shoppingCartItem ShoppingCartItem
+	var shoppingCartItem ShoppingCartItem
 	var listShoppingCartItem []ShoppingCartItem
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
@@ -380,19 +372,15 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			result := store.CreateShoppingCartItem(context.Background(), []CreateShoppingCartItemParams{
-				{ShoppingCartID: shoppingCart.ID,
-					ProductItemID: productItem.ID,
-					Qty:           Qty},
+			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+				ShoppingCartID: shoppingCart.ID,
+				ProductItemID:  productItem.ID,
+				Qty:            Qty,
 			})
-
-			result.Query(func(i int, sci []ShoppingCartItem, err error) {
-
-				if err != nil {
-					log.Fatal("err is: ", err)
-				}
-				listShoppingCartItem = append(listShoppingCartItem, sci...)
-			})
+			if err != nil {
+				log.Fatal("err is: ", err)
+			}
+			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
 			price, err = decimal.NewFromString(productItem.Price)
 			if err != nil {

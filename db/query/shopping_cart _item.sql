@@ -1,15 +1,11 @@
--- name: CreateShoppingCartItem :batchmany
+-- name: CreateShoppingCartItem :one
 INSERT INTO "shopping_cart_item" (
   shopping_cart_id,
   product_item_id,
   qty
 ) VALUES (
   $1, $2, $3
-) ON CONFLICT (product_item_id)
-DO UPDATE SET
-qty = EXCLUDED.qty,
-shopping_cart_id = EXCLUDED.shopping_cart_id,
-updated_at = now()
+)
 RETURNING *;
 
 -- name: GetShoppingCartItem :one

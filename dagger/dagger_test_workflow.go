@@ -23,6 +23,7 @@ func main() {
 
 	// Database service used for application tests
 	database := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:15.2").
+		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("POSTGRES_USER", "postgres").
 		WithEnvVariable("POSTGRES_PASSWORD", "secret").
 		WithEnvVariable("POSTGRES_DB", "cshop").
@@ -38,6 +39,7 @@ func main() {
 
 	// Run Service with tests
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).From("golang:1.20").
+		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "GMT+2").
 		WithServiceBinding("localhost", database). // bind database with the name db
 		WithEnvVariable("DB_HOST", "localhost").   // db refers to the service binding
@@ -54,8 +56,8 @@ func main() {
 		WithExec([]string{"which", "migrate"})                                  // test go migrate
 
 	out, err := build.
-		WithExec([]string{"make", "migrateup"}). // run migrations
-		WithExec([]string{"make", "test"}).      // execute go test
+		WithExec([]string{"make", "migrate_up"}). // run migrations
+		WithExec([]string{"make", "test"}).       // execute go test
 		Stdout(ctx)
 
 	if err != nil {

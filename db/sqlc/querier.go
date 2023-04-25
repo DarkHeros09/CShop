@@ -28,7 +28,7 @@ type Querier interface {
 	CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error)
 	CreateShopOrderItem(ctx context.Context, arg CreateShopOrderItemParams) (ShopOrderItem, error)
 	CreateShoppingCart(ctx context.Context, userID int64) (ShoppingCart, error)
-	CreateShoppingCartItem(ctx context.Context, arg []CreateShoppingCartItemParams) *CreateShoppingCartItemBatchResults
+	CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
 	CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error)

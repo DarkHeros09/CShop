@@ -31,10 +31,10 @@ func TestMain(m *testing.M) {
 	testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
-		os.Exit(m.Run())
 	}
 	// defer testDB.Close()
 
 	testQueires = New(testDB)
 
+	os.Exit(m.Run())
 }

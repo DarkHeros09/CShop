@@ -11,28 +11,85 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+// //////////////* Create API //////////////
+
+// type createShoppingCartItemParamsRequest struct {
+// 	UserID         int64 `params:"id" validate:"required,min=1"`
+// 	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+// }
+
+// type data struct {
+// 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
+// 	QTY           int32 `json:"qty" validate:"required,min=1"`
+// }
+
+// type createShoppingCartItemsRequest struct {
+// 	ShopCartItem []data `json:"data" validate:"required,dive,required"`
+// }
+
+// func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
+// 	params := &createShoppingCartItemParamsRequest{}
+// 	req := &createShoppingCartItemsRequest{}
+// 	var arg []db.CreateShoppingCartItemParams
+// 	var shoppingCartItems []db.ShoppingCartItem
+// 	var err1 error
+
+// 	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+// 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+// 		return nil
+// 	}
+
+// 	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+// 	if authPayload.UserID != params.UserID {
+// 		err := errors.New("account deosn't belong to the authenticated user")
+// 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+// 		return nil
+// 	}
+
+// 	for i := 0; i < len(req.ShopCartItem); i++ {
+// 		arg = append(arg, db.CreateShoppingCartItemParams{
+// 			ShoppingCartID: params.ShoppingCartID,
+// 			ProductItemID:  req.ShopCartItem[i].ProductItemID,
+// 			Qty:            req.ShopCartItem[i].QTY,
+// 		})
+// 	}
+
+// 	result := server.store.CreateShoppingCartItem(ctx.Context(), arg)
+
+// 	result.Query(func(i int, sci []db.ShoppingCartItem, err error) {
+// 		err1 = err
+// 		shoppingCartItems = append(shoppingCartItems, sci...)
+// 	})
+
+// 	if err1 != nil {
+// 		if pqErr, ok := err1.(*pgconn.PgError); ok {
+// 			switch pqErr.Message {
+// 			case "foreign_key_violation", "unique_violation":
+// 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err1))
+// 				return nil
+// 			}
+// 		}
+// 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err1))
+// 		return nil
+// 	}
+// 	ctx.Status(fiber.StatusOK).JSON(shoppingCartItems)
+// 	return nil
+// }
+
 //////////////* Create API //////////////
 
 type createShoppingCartItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
 	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
 }
-
-type data struct {
+type createShoppingCartItemRequest struct {
 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
 	QTY           int32 `json:"qty" validate:"required,min=1"`
 }
 
-type createShoppingCartItemsRequest struct {
-	ShopCartItem []data `json:"data" validate:"required,dive,required"`
-}
-
 func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 	params := &createShoppingCartItemParamsRequest{}
-	req := &createShoppingCartItemsRequest{}
-	var arg []db.CreateShoppingCartItemParams
-	var shoppingCartItems []db.ShoppingCartItem
-	var err1 error
+	req := &createShoppingCartItemRequest{}
 
 	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -46,33 +103,26 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	for i := 0; i < len(req.ShopCartItem); i++ {
-		arg = append(arg, db.CreateShoppingCartItemParams{
-			ShoppingCartID: params.ShoppingCartID,
-			ProductItemID:  req.ShopCartItem[i].ProductItemID,
-			Qty:            req.ShopCartItem[i].QTY,
-		})
+	arg := db.CreateShoppingCartItemParams{
+		ShoppingCartID: params.ShoppingCartID,
+		ProductItemID:  req.ProductItemID,
+		Qty:            req.QTY,
 	}
 
-	result := server.store.CreateShoppingCartItem(ctx.Context(), arg)
-
-	result.Query(func(i int, sci []db.ShoppingCartItem, err error) {
-		err1 = err
-		shoppingCartItems = append(shoppingCartItems, sci...)
-	})
-
-	if err1 != nil {
-		if pqErr, ok := err1.(*pgconn.PgError); ok {
+	shoppingCartItem, err := server.store.CreateShoppingCartItem(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
 			case "foreign_key_violation", "unique_violation":
-				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err1))
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err1))
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(shoppingCartItems)
+
+	ctx.Status(fiber.StatusOK).JSON(shoppingCartItem)
 	return nil
 }
 
@@ -124,7 +174,6 @@ type listShoppingCartItemsParamsRequest struct {
 
 type listShoppingCartItemsResponse struct {
 	// ShopCartItems []db.ListShoppingCartItemsByUserIDRow `json:"shop_cart_items"`
-	UserID         int64     `json:"user_id"`
 	ID             null.Int  `json:"id"`
 	ShoppingCartID null.Int  `json:"shopping_cart_id"`
 	CreatedAt      null.Time `json:"created_at"`
@@ -142,19 +191,22 @@ type listShoppingCartItemsResponse struct {
 func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) []listShoppingCartItemsResponse {
 	rsp := make([]listShoppingCartItemsResponse, len(productItems))
 	for i := 0; i < len(productItems); i++ {
-		rsp[i] = listShoppingCartItemsResponse{
-			UserID:         shopCartItems[i].UserID,
-			ID:             shopCartItems[i].ID,
-			ShoppingCartID: shopCartItems[i].ShoppingCartID,
-			CreatedAt:      shopCartItems[i].CreatedAt,
-			UpdatedAt:      shopCartItems[i].UpdatedAt,
-			ProductItemID:  shopCartItems[i].ProductItemID,
-			Name:           productItems[i].Name,
-			Qty:            shopCartItems[i].Qty,
-			ProductID:      productItems[i].ProductID,
-			ProductImage:   productItems[i].ProductImage,
-			Price:          productItems[i].Price,
-			Active:         productItems[i].Active,
+		for j := 0; j < len(shopCartItems); j++ {
+			if productItems[i].ID == shopCartItems[j].ProductItemID.Int64 {
+				rsp[i] = listShoppingCartItemsResponse{
+					ID:             shopCartItems[j].ID,
+					ShoppingCartID: shopCartItems[j].ShoppingCartID,
+					CreatedAt:      shopCartItems[j].CreatedAt,
+					UpdatedAt:      shopCartItems[j].UpdatedAt,
+					ProductItemID:  shopCartItems[j].ProductItemID,
+					Name:           productItems[i].Name,
+					Qty:            shopCartItems[j].Qty,
+					ProductID:      productItems[i].ProductID,
+					ProductImage:   productItems[i].ProductImage,
+					Price:          productItems[i].Price,
+					Active:         productItems[i].Active,
+				}
+			}
 		}
 	}
 
@@ -185,12 +237,12 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	productsIds := make([]int64, len(shoppingCartItems))
+	productsItemsIds := make([]int64, len(shoppingCartItems))
 	for i := 0; i < len(shoppingCartItems); i++ {
-		productsIds[i] = shoppingCartItems[i].ProductItemID.Int64
+		productsItemsIds[i] = shoppingCartItems[i].ProductItemID.Int64
 	}
 
-	productItems, err := server.store.ListProductItemsByIDs(ctx.Context(), productsIds)
+	productItems, err := server.store.ListProductItemsByIDs(ctx.Context(), productsItemsIds)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

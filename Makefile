@@ -7,36 +7,36 @@ postgres:
 	docker run --name psql_14.5-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
 	-e POSTGRES_PASSWORD=secret -d postgres:14.5-alpine
 
-createdb:
+create_db:
 	docker exec -it psql_14.5-cshop createdb --username=postgres --owner=postgres cshop
 
-dropdb:
+drop_db:
 	docker exec -it psql_14.5-cshop dropdb cshop --username=postgres
 
-initmigrate:
+init_migrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
 
-triggersup:
+triggers_up:
 	migrate -path db/migration/triggers -database \
 	"$(DB_URL)" -verbose up
 
-triggersdown:
+triggers_down:
 	migrate -path db/migration/triggers -database \
 	"$(DB_URL)" -verbose up
 
-migrateup:
+migrate_up:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose up
 
-migrateup1:
+migrate_up1:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose up 1
 
-migratedown:
+migrate_down:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose down
 
-migratedown1:
+migrate_down1:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose down 1
 
@@ -88,6 +88,6 @@ db_schema:
 	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
 
 
-.PHONY: postgres createdb dropdb initmigrate migrateup migratedown sqlc \
-		sqlcwin sqlcfix triggersup triggersdown mock server proto protofix evans db_docs db_schema \
-		dagger_test
+.PHONY: postgres create_db drop_db init_migrate migrate_up migrate_down \
+		migrate_up1 migrate_down1 sqlc sqlcwin sqlcfix triggers_up triggers_down \
+		mock server proto protofix evans db_docs db_schema dagger_test

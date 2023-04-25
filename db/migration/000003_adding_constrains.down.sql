@@ -1,0 +1,2 @@
+ALTER TABLE "shopping_cart_item"
+DROP CONSTRAINT shopping_cart_item_shopping_cart_id_product_item_id_key;
