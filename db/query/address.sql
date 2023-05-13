@@ -18,6 +18,10 @@ SELECT * FROM "address"
 WHERE city = $1 
 LIMIT 1;
 
+-- name: ListAddressesByID :many
+SELECT * FROM "address"
+WHERE id = ANY(sqlc.arg(addresses_ids)::bigint[]);
+
 -- name: ListAddressesByCity :many
 SELECT * FROM "address"
 WHERE city = $1

@@ -40,6 +40,10 @@ migrate_down1:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose down 1
 
+migrate_fix:
+	migrate -path db/migration -database \
+	"$(DB_URL)" -verbose force 1
+
 sqlc:
 	sqlc generate
 

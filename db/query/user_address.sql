@@ -48,6 +48,10 @@ WHERE user_id = $1
 AND address_id = $2
 LIMIT 1;
 
+-- name: CheckUserAddressDefaultAddress :one
+SELECT COUNT(*) FROM "user_address"
+WHERE user_id = $1;
+
 -- name: GetUserAddressWithAddress :one
 SELECT ua.user_id, ua.address_id, ua.default_address, "address".address_line,  "address".region,  "address".city
 FROM "user_address" AS ua 

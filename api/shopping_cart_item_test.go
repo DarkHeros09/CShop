@@ -301,17 +301,17 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 		shoppingCartItems[i] = createRandomListShoppingCartItem(t, shoppingCart, randomProductItems)
 	}
 
-	fmt.Println("ShoppingCarts: ", shoppingCartItems)
-	fmt.Println("ShoppingCarts LEN: ", len(shoppingCartItems))
-	fmt.Println("ProductItems: ", productItems)
-	fmt.Println("ProductItems LEN: ", len(productItems))
+	// fmt.Println("ShoppingCarts: ", shoppingCartItems)
+	// fmt.Println("ShoppingCarts LEN: ", len(shoppingCartItems))
+	// fmt.Println("ProductItems: ", productItems)
+	// fmt.Println("ProductItems LEN: ", len(productItems))
 
 	productIds := createProductIdsForCart(t, shoppingCartItems)
-	fmt.Println("ProductIDs: ", productIds)
+	// fmt.Println("ProductIDs: ", productIds)
 	listProductsByIds := createRandomListProductsByIds(t, shoppingCartItems, productItems)
-	fmt.Println("ProductsListById: ", listProductsByIds)
+	// fmt.Println("ProductsListById: ", listProductsByIds)
 
-	finalRsp := createfinalRspForCart(t, shoppingCartItems, listProductsByIds)
+	finalRsp := createFinalRspForCart(t, shoppingCartItems, listProductsByIds)
 
 	testCases := []struct {
 		name          string
@@ -1068,7 +1068,7 @@ func createProductIdsForCart(t *testing.T, shoppingCartItems []db.ListShoppingCa
 
 	return productsIds
 }
-func createfinalRspForCart(t *testing.T, shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listShoppingCartItemsResponse) {
+func createFinalRspForCart(t *testing.T, shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listShoppingCartItemsResponse) {
 	for i := 0; i < len(productItems); i++ {
 		rsp = append(rsp, listShoppingCartItemsResponse{
 			ID:             shopCartItems[i].ID,

@@ -17,9 +17,9 @@ type createUserAddressParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type createUserAddressJsonRequest struct {
-	AddressLine    string   `json:"address_line" validate:"required"`
-	Region         string   `json:"region" validate:"required"`
-	City           string   `json:"city" validate:"required"`
+	AddressLine    string   `json:"address_line" validate:"omitempty,required"`
+	Region         string   `json:"region" validate:"omitempty,required"`
+	City           string   `json:"city" validate:"omitempty,required"`
 	DefaultAddress null.Int `json:"default_address" validate:"omitempty,required"`
 }
 
@@ -32,14 +32,14 @@ type userAddressResponse struct {
 	City           string `json:"city"`
 }
 
-func newUserAddressResponseForCreate(address db.CreateUserAddressWithAddressRow) userAddressResponse {
+func newUserAddressResponseForCreate(address db.Address, userAddress db.UserAddress) userAddressResponse {
 	return userAddressResponse{
-		UserID:         address.UserID,
-		AddressID:      address.AddressID,
-		DefaultAddress: address.DefaultAddress.Int64,
+		UserID:         userAddress.UserID,
+		AddressID:      userAddress.AddressID,
 		AddressLine:    address.AddressLine,
 		Region:         address.Region,
 		City:           address.City,
+		DefaultAddress: userAddress.DefaultAddress.Int64,
 	}
 }
 
@@ -59,15 +59,13 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.CreateUserAddressWithAddressParams{
-		UserID:         authPayload.UserID,
-		AddressLine:    req.AddressLine,
-		Region:         req.Region,
-		City:           req.City,
-		DefaultAddress: req.DefaultAddress,
+	arg1 := db.CreateAddressParams{
+		AddressLine: req.AddressLine,
+		Region:      req.Region,
+		City:        req.City,
 	}
 
-	userAddress, err := server.store.CreateUserAddressWithAddress(ctx.Context(), arg)
+	address, err := server.store.CreateAddress(ctx.Context(), arg1)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -80,7 +78,42 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := newUserAddressResponseForCreate(userAddress)
+	defaultAddressLength, err := server.store.CheckUserAddressDefaultAddress(ctx.Context(), params.UserID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	var defaultAddress int64
+
+	if defaultAddressLength == 0 {
+		defaultAddress = address.ID
+	}
+
+	arg2 := db.CreateUserAddressParams{
+		UserID:         params.UserID,
+		AddressID:      address.ID,
+		DefaultAddress: null.IntFromPtr(&defaultAddress),
+	}
+
+	userAddress, err := server.store.CreateUserAddress(ctx.Context(), arg2)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newUserAddressResponseForCreate(address, userAddress)
 
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -149,6 +182,35 @@ type listUserAddressesQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
+type listUserAddressResponse struct {
+	UserID         int64    `json:"user_id"`
+	AddressID      int64    `json:"address_id"`
+	DefaultAddress null.Int `json:"default_address"`
+	AddressLine    string   `json:"address_line"`
+	Region         string   `json:"region"`
+	City           string   `json:"city"`
+}
+
+func newlistUserAddressResponse(userAddress []db.UserAddress, address []db.Address) []listUserAddressResponse {
+	rsp := make([]listUserAddressResponse, len(userAddress))
+	for i := 0; i < len(userAddress); i++ {
+		for j := 0; j < len(address); j++ {
+			if userAddress[i].AddressID == address[j].ID {
+				rsp[i] = listUserAddressResponse{
+					UserID:         userAddress[i].UserID,
+					AddressID:      userAddress[i].AddressID,
+					DefaultAddress: null.IntFromPtr(&userAddress[i].DefaultAddress.Int64),
+					AddressLine:    address[j].AddressLine,
+					Region:         address[j].Region,
+					City:           address[j].City,
+				}
+			}
+		}
+	}
+
+	return rsp
+}
+
 func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 	params := &listUserAddressParamsRequest{}
 	query := &listUserAddressesQueryRequest{}
@@ -165,12 +227,13 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.ListUserAddressesParams{
+	arg1 := db.ListUserAddressesParams{
 		UserID: authPayload.UserID,
 		Limit:  query.PageSize,
 		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	userAddresses, err := server.store.ListUserAddresses(ctx.Context(), arg)
+
+	userAddresses, err := server.store.ListUserAddresses(ctx.Context(), arg1)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -179,7 +242,23 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(userAddresses)
+
+	addresssesIds := make([]int64, len(userAddresses))
+	for i := 0; i < len(userAddresses); i++ {
+		addresssesIds[i] = userAddresses[i].AddressID
+	}
+	addresses, err := server.store.ListAddressesByID(ctx.Context(), addresssesIds)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newlistUserAddressResponse(userAddresses, addresses)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
 

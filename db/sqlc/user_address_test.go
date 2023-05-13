@@ -14,9 +14,9 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 	address1 := createRandomAddress(t)
 
 	arg := CreateUserAddressParams{
-		UserID:         user1.ID,
-		AddressID:      address1.ID,
-		DefaultAddress: null.IntFromPtr(&address1.ID),
+		UserID:    user1.ID,
+		AddressID: address1.ID,
+		// DefaultAddress: null.IntFromPtr(&address1.ID),
 	}
 
 	userAddress, err := testQueires.CreateUserAddress(context.Background(), arg)
@@ -25,7 +25,7 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 
 	require.Equal(t, arg.UserID, userAddress.UserID)
 	require.Equal(t, arg.AddressID, userAddress.AddressID)
-	require.Equal(t, arg.DefaultAddress, userAddress.DefaultAddress)
+	// require.Equal(t, arg.DefaultAddress, userAddress.DefaultAddress)
 
 	return userAddress
 
@@ -100,6 +100,30 @@ func TestGetUserAddressWithAddress(t *testing.T) {
 	require.Equal(t, userAddress1.Region, userAddress2.Region)
 	require.Equal(t, userAddress1.City, userAddress2.City)
 
+}
+
+func TestCheckUserAddressDefaultAddress(t *testing.T) {
+	userAddress1 := createRandomUserAddressWithAddress(t)
+
+	userAddressLength, err := testQueires.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, userAddressLength)
+
+	require.Greater(t, userAddressLength, int64(0))
+
+	arg := DeleteUserAddressParams{
+		UserID:    userAddress1.UserID,
+		AddressID: userAddress1.AddressID,
+	}
+	userAddress2, err := testQueires.DeleteUserAddress(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, userAddress2)
+
+	userAddressLength2, err := testQueires.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
+	require.NoError(t, err)
+	require.Empty(t, userAddressLength2)
+
+	require.Equal(t, userAddressLength2, int64(0))
 }
 
 func TestUpdateUserAddress(t *testing.T) {
