@@ -16,7 +16,7 @@ type getShopOrderItemParamsRequest struct {
 	ShopOrderID int64 `params:"orderId" validate:"required,min=1"`
 }
 
-func (server *Server) getShopOrderItem(ctx *fiber.Ctx) error {
+func (server *Server) getShopOrderItems(ctx *fiber.Ctx) error {
 	params := &getShopOrderItemParamsRequest{}
 
 	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -31,12 +31,12 @@ func (server *Server) getShopOrderItem(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.GetShopOrderItemByUserIDOrderIDParams{
+	arg := db.ListShopOrderItemsByUserIDOrderIDParams{
 		UserID:  params.UserID,
 		OrderID: params.ShopOrderID,
 	}
 
-	shopOrderItem, err := server.store.GetShopOrderItemByUserIDOrderID(ctx.Context(), arg)
+	shopOrderItem, err := server.store.ListShopOrderItemsByUserIDOrderID(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

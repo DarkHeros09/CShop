@@ -162,54 +162,12 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 	return items, nil
 }
 
-const listShopOrderItemsByOrderID = `-- name: ListShopOrderItemsByOrderID :many
-SELECT id, product_item_id, order_id, quantity, price, created_at, updated_at FROM "shop_order_item"
-WHERE order_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3
-`
-
-type ListShopOrderItemsByOrderIDParams struct {
-	OrderID int64 `json:"order_id"`
-	Limit   int32 `json:"limit"`
-	Offset  int32 `json:"offset"`
-}
-
-func (q *Queries) ListShopOrderItemsByOrderID(ctx context.Context, arg ListShopOrderItemsByOrderIDParams) ([]ShopOrderItem, error) {
-	rows, err := q.db.Query(ctx, listShopOrderItemsByOrderID, arg.OrderID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ShopOrderItem{}
-	for rows.Next() {
-		var i ShopOrderItem
-		if err := rows.Scan(
-			&i.ID,
-			&i.ProductItemID,
-			&i.OrderID,
-			&i.Quantity,
-			&i.Price,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listShopOrderItemsByUserID = `-- name: ListShopOrderItemsByUserID :many
-SELECT so.user_id, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.created_at, soi.updated_at 
+SELECT so.id, so.order_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.created_at, soi.updated_at 
 FROM "shop_order" AS so
 LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
 WHERE so.user_id = $3
-ORDER BY id
+ORDER BY so.id
 LIMIT $1
 OFFSET $2
 `
@@ -221,14 +179,23 @@ type ListShopOrderItemsByUserIDParams struct {
 }
 
 type ListShopOrderItemsByUserIDRow struct {
-	UserID        int64       `json:"user_id"`
-	ID            null.Int    `json:"id"`
-	ProductItemID null.Int    `json:"product_item_id"`
-	OrderID       null.Int    `json:"order_id"`
-	Quantity      null.Int    `json:"quantity"`
-	Price         null.String `json:"price"`
-	CreatedAt     null.Time   `json:"created_at"`
-	UpdatedAt     null.Time   `json:"updated_at"`
+	ID                int64       `json:"id"`
+	OrderNumber       string      `json:"order_number"`
+	UserID            int64       `json:"user_id"`
+	PaymentMethodID   int64       `json:"payment_method_id"`
+	ShippingAddressID int64       `json:"shipping_address_id"`
+	OrderTotal        string      `json:"order_total"`
+	ShippingMethodID  int64       `json:"shipping_method_id"`
+	OrderStatusID     null.Int    `json:"order_status_id"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+	ID_2              null.Int    `json:"id_2"`
+	ProductItemID     null.Int    `json:"product_item_id"`
+	OrderID           null.Int    `json:"order_id"`
+	Quantity          null.Int    `json:"quantity"`
+	Price             null.String `json:"price"`
+	CreatedAt_2       null.Time   `json:"created_at_2"`
+	UpdatedAt_2       null.Time   `json:"updated_at_2"`
 }
 
 func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]ListShopOrderItemsByUserIDRow, error) {
@@ -241,7 +208,61 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 	for rows.Next() {
 		var i ListShopOrderItemsByUserIDRow
 		if err := rows.Scan(
+			&i.ID,
+			&i.OrderNumber,
 			&i.UserID,
+			&i.PaymentMethodID,
+			&i.ShippingAddressID,
+			&i.OrderTotal,
+			&i.ShippingMethodID,
+			&i.OrderStatusID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ID_2,
+			&i.ProductItemID,
+			&i.OrderID,
+			&i.Quantity,
+			&i.Price,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listShopOrderItemsByUserIDOrderID = `-- name: ListShopOrderItemsByUserIDOrderID :many
+SELECT soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.created_at, soi.updated_at
+FROM "shop_order_item" AS soi
+LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
+WHERE so.user_id = $1
+AND soi.order_id = $2
+ORDER BY soi.id
+`
+
+type ListShopOrderItemsByUserIDOrderIDParams struct {
+	UserID  int64 `json:"user_id"`
+	OrderID int64 `json:"order_id"`
+}
+
+// SELECT * FROM "shop_order_item"
+// WHERE order_id = $1
+// ORDER BY id;
+func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ShopOrderItem, error) {
+	rows, err := q.db.Query(ctx, listShopOrderItemsByUserIDOrderID, arg.UserID, arg.OrderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ShopOrderItem{}
+	for rows.Next() {
+		var i ShopOrderItem
+		if err := rows.Scan(
 			&i.ID,
 			&i.ProductItemID,
 			&i.OrderID,

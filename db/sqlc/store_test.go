@@ -156,13 +156,14 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NotEqual(t, listProductItem[z].QtyInStock, newProductItem.QtyInStock)
 			require.Equal(t, listProductItem[z].QtyInStock-listShoppingCartItem[z].Qty, newProductItem.QtyInStock)
 
-			//check ShoppingCart, and ShopOrder
-			argF := ListShopOrderItemsByOrderIDParams{
+			// check ShoppingCart, and ShopOrder
+			argF := ListShopOrderItemsByUserIDOrderIDParams{
 				OrderID: finishedShopOrder.ID,
-				Limit:   10,
-				Offset:  0,
+				UserID:  finishedShopOrder.UserID,
+				// Limit:   10,
+				// Offset:  0,
 			}
-			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByOrderID(context.Background(), argF)
+			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByUserIDOrderID(context.Background(), argF)
 			require.NotEmpty(t, finishedShopOrderItems)
 			require.NoError(t, err)
 			println(len(finishedShopOrderItems))

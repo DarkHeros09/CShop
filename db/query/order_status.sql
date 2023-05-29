@@ -4,6 +4,7 @@ INSERT INTO "order_status" (
 ) VALUES (
   $1
 )
+ON CONFLICT(status) DO UPDATE SET status = $1
 RETURNING *;
 
 -- name: GetOrderStatus :one
@@ -19,10 +20,10 @@ AND os.id = $2
 LIMIT 1;
 
 -- name: ListOrderStatuses :many
-SELECT * FROM "order_status"
-ORDER BY id
-LIMIT $1
-OFFSET $2;
+SELECT * FROM "order_status";
+-- ORDER BY id
+-- LIMIT $1
+-- OFFSET $2;
 
 -- name: ListOrderStatusesByUserID :many
 SELECT os.*, so.user_id

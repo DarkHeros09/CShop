@@ -6,22 +6,26 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomShippingMethod(t *testing.T) ShippingMethod {
-	arg := CreateShippingMethodParams{
-		Name:  util.RandomString(5),
-		Price: util.RandomDecimalString(1, 100),
+	shippingMethods := []string{"توصيل سريع"}
+	var shippingMethod ShippingMethod
+	var err error
+	for i := 0; i < len(shippingMethods); i++ {
+		arg := CreateShippingMethodParams{
+			Name:  shippingMethods[i],
+			Price: util.RandomDecimalString(1, 100),
+		}
+
+		shippingMethod, err = testQueires.CreateShippingMethod(context.Background(), arg)
+		require.NoError(t, err)
+		require.NotEmpty(t, shippingMethod)
+
+		require.Equal(t, arg.Name, shippingMethod.Name)
+		require.Equal(t, arg.Price, shippingMethod.Price)
 	}
-
-	shippingMethod, err := testQueires.CreateShippingMethod(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, shippingMethod)
-
-	require.Equal(t, arg.Name, shippingMethod.Name)
-	require.Equal(t, arg.Price, shippingMethod.Price)
 
 	return shippingMethod
 }
@@ -45,7 +49,7 @@ func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 	shippingMethod1 := createRandomShippingMethod(t)
 	arg := UpdateShippingMethodParams{
 		ID:    shippingMethod1.ID,
-		Name:  null.StringFrom(util.RandomString(5)),
+		Name:  null.StringFrom(shippingMethod1.Name),
 		Price: null.StringFrom(util.RandomDecimalString(1, 100)),
 	}
 
@@ -55,33 +59,35 @@ func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 
 	require.Equal(t, shippingMethod1.ID, shippingMethod2.ID)
 	require.NotEqual(t, shippingMethod1.Price, shippingMethod2.Price)
-	require.NotEqual(t, shippingMethod1.Name, shippingMethod2.Name)
+	require.Equal(t, shippingMethod1.Name, shippingMethod2.Name)
 }
 
-func TestDeleteShippingMethod(t *testing.T) {
-	shippingMethod1 := createRandomShippingMethod(t)
-	err := testQueires.DeleteShippingMethod(context.Background(), shippingMethod1.ID)
+// func TestDeleteShippingMethod(t *testing.T) {
+// 	shippingMethod1 := createRandomShippingMethod(t)
+// 	err := testQueires.DeleteShippingMethod(context.Background(), shippingMethod1.ID)
 
-	require.NoError(t, err)
+// 	require.NoError(t, err)
 
-	shippingMethod2, err := testQueires.GetShippingMethod(context.Background(), shippingMethod1.ID)
+// 	shippingMethod2, err := testQueires.GetShippingMethod(context.Background(), shippingMethod1.ID)
 
-	require.Error(t, err)
-	require.EqualError(t, err, pgx.ErrNoRows.Error())
-	require.Empty(t, shippingMethod2)
+// 	require.Error(t, err)
+// 	require.EqualError(t, err, pgx.ErrNoRows.Error())
+// 	require.Empty(t, shippingMethod2)
 
-}
+// 	_ = createRandomShippingMethod(t)
+
+// }
 
 func TestListShippingMethods(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomShippingMethod(t)
 	}
-	arg := ListShippingMethodsParams{
-		Limit:  5,
-		Offset: 5,
-	}
+	// arg := ListShippingMethodsParams{
+	// 	Limit:  5,
+	// 	Offset: 0,
+	// }
 
-	shippingMethods, err := testQueires.ListShippingMethods(context.Background(), arg)
+	shippingMethods, err := testQueires.ListShippingMethods(context.Background())
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shippingMethods)

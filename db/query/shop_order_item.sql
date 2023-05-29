@@ -27,19 +27,23 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
--- name: ListShopOrderItemsByOrderID :many
-SELECT * FROM "shop_order_item"
-WHERE order_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3;
+-- name: ListShopOrderItemsByUserIDOrderID :many
+-- SELECT * FROM "shop_order_item"
+-- WHERE order_id = $1
+-- ORDER BY id;
+SELECT soi.*
+FROM "shop_order_item" AS soi
+LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
+WHERE so.user_id = $1
+AND soi.order_id = $2
+ORDER BY soi.id;
 
 -- name: ListShopOrderItemsByUserID :many
-SELECT so.user_id, soi.* 
+SELECT so.*, soi.* 
 FROM "shop_order" AS so
 LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
 WHERE so.user_id = $3
-ORDER BY id
+ORDER BY so.id
 LIMIT $1
 OFFSET $2;
 

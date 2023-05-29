@@ -5,6 +5,9 @@ INSERT INTO "shipping_method" (
 ) VALUES (
   $1, $2
 )
+ON CONFLICT (name) DO UPDATE SET 
+name = EXCLUDED.name,
+price = EXCLUDED.price
 RETURNING *;
 
 -- name: GetShippingMethod :one
@@ -20,10 +23,10 @@ AND sm.id = $2
 LIMIT 1;
 
 -- name: ListShippingMethods :many
-SELECT * FROM "shipping_method"
-ORDER BY id
-LIMIT $1
-OFFSET $2;
+SELECT * FROM "shipping_method";
+-- ORDER BY id
+-- LIMIT $1
+-- OFFSET $2;
 
 -- name: ListShippingMethodsByUserID :many
 SELECT sm.*, so.user_id

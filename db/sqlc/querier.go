@@ -109,6 +109,7 @@ type Querier interface {
 	GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error)
 	GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error)
 	GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatusByUserIDParams) (GetOrderStatusByUserIDRow, error)
+	// id = $1
 	GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error)
 	GetPaymentType(ctx context.Context, id int64) (PaymentType, error)
 	GetProduct(ctx context.Context, id int64) (Product, error)
@@ -147,10 +148,13 @@ type Querier interface {
 	ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error)
 	ListCategoryPromotions(ctx context.Context, arg ListCategoryPromotionsParams) ([]CategoryPromotion, error)
-	ListOrderStatuses(ctx context.Context, arg ListOrderStatusesParams) ([]OrderStatus, error)
+	ListOrderStatuses(ctx context.Context) ([]OrderStatus, error)
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2;
 	ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error)
 	ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]PaymentMethod, error)
-	ListPaymentTypes(ctx context.Context, arg ListPaymentTypesParams) ([]PaymentType, error)
+	ListPaymentTypes(ctx context.Context) ([]PaymentType, error)
 	ListProductCategories(ctx context.Context, arg ListProductCategoriesParams) ([]ProductCategory, error)
 	ListProductCategoriesByParent(ctx context.Context, arg ListProductCategoriesByParentParams) ([]ProductCategory, error)
 	ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error)
@@ -166,12 +170,19 @@ type Querier interface {
 	// list_products AS (
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
 	ListPromotions(ctx context.Context, arg ListPromotionsParams) ([]Promotion, error)
-	ListShippingMethods(ctx context.Context, arg ListShippingMethodsParams) ([]ShippingMethod, error)
+	ListShippingMethods(ctx context.Context) ([]ShippingMethod, error)
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2;
 	ListShippingMethodsByUserID(ctx context.Context, arg ListShippingMethodsByUserIDParams) ([]ListShippingMethodsByUserIDRow, error)
 	ListShopOrderItems(ctx context.Context, arg ListShopOrderItemsParams) ([]ShopOrderItem, error)
-	ListShopOrderItemsByOrderID(ctx context.Context, arg ListShopOrderItemsByOrderIDParams) ([]ShopOrderItem, error)
 	ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]ListShopOrderItemsByUserIDRow, error)
+	// SELECT * FROM "shop_order_item"
+	// WHERE order_id = $1
+	// ORDER BY id;
+	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ShopOrderItem, error)
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
+	ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]ListShopOrdersByUserIDRow, error)
 	// LIMIT 1;
 	ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error)
 	ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error)
@@ -199,6 +210,9 @@ type Querier interface {
 	UpdateCategoryPromotion(ctx context.Context, arg UpdateCategoryPromotionParams) (CategoryPromotion, error)
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (OrderStatus, error)
 	UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMethodParams) (PaymentMethod, error)
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2;
 	UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error)
 	// )
 	// SELECT *

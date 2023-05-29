@@ -68,18 +68,19 @@ func (q *Queries) DeletePaymentMethod(ctx context.Context, arg DeletePaymentMeth
 
 const getPaymentMethod = `-- name: GetPaymentMethod :one
 SELECT id, user_id, payment_type_id, provider, is_default FROM "payment_method"
-WHERE id = $1 
-AND user_id = $2
-LIMIT 1
+WHERE 
+user_id = $1
+AND payment_type_id = $2
 `
 
 type GetPaymentMethodParams struct {
-	ID     int64 `json:"id"`
-	UserID int64 `json:"user_id"`
+	UserID        int64 `json:"user_id"`
+	PaymentTypeID int64 `json:"payment_type_id"`
 }
 
+// id = $1
 func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error) {
-	row := q.db.QueryRow(ctx, getPaymentMethod, arg.ID, arg.UserID)
+	row := q.db.QueryRow(ctx, getPaymentMethod, arg.UserID, arg.PaymentTypeID)
 	var i PaymentMethod
 	err := row.Scan(
 		&i.ID,

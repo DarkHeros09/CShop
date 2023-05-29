@@ -67,10 +67,15 @@ type getPaymentMethodParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 
+type getPaymentMethodJsonRequest struct {
+	PaymentTypeID int64 `json:"payment_type_id" validate:"required,min=1"`
+}
+
 func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
 	params := &getPaymentMethodParamsRequest{}
+	req := &getPaymentMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -83,8 +88,9 @@ func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.GetPaymentMethodParams{
-		ID:     params.ID,
-		UserID: params.UserID,
+		// ID:            params.ID,
+		UserID:        params.UserID,
+		PaymentTypeID: req.PaymentTypeID,
 	}
 
 	paymentMethod, err := server.store.GetPaymentMethod(ctx.Context(), arg)

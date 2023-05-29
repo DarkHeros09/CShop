@@ -13,7 +13,7 @@ import (
 
 func createRandomUserReview(t *testing.T) UserReview {
 	user := createRandomUser(t)
-	shopOrderItem := createRandomShopOrderItem(t)
+	shopOrderItem, _ := createRandomShopOrderItem(t)
 	arg := CreateUserReviewParams{
 		UserID:           user.ID,
 		OrderedProductID: shopOrderItem.ID,

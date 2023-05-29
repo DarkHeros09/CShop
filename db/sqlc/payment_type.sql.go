@@ -16,14 +16,15 @@ INSERT INTO "payment_type" (
   value
 ) VALUES (
   $1
-)
-RETURNING id, value
+) 
+ON CONFLICT(value) DO UPDATE SET value = $1
+RETURNING id, value, is_active
 `
 
 func (q *Queries) CreatePaymentType(ctx context.Context, value string) (PaymentType, error) {
 	row := q.db.QueryRow(ctx, createPaymentType, value)
 	var i PaymentType
-	err := row.Scan(&i.ID, &i.Value)
+	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
 	return i, err
 }
 
@@ -38,31 +39,23 @@ func (q *Queries) DeletePaymentType(ctx context.Context, id int64) error {
 }
 
 const getPaymentType = `-- name: GetPaymentType :one
-SELECT id, value FROM "payment_type"
+SELECT id, value, is_active FROM "payment_type"
 WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetPaymentType(ctx context.Context, id int64) (PaymentType, error) {
 	row := q.db.QueryRow(ctx, getPaymentType, id)
 	var i PaymentType
-	err := row.Scan(&i.ID, &i.Value)
+	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
 	return i, err
 }
 
 const listPaymentTypes = `-- name: ListPaymentTypes :many
-SELECT id, value FROM "payment_type"
-ORDER BY id
-LIMIT $1
-OFFSET $2
+SELECT id, value, is_active FROM "payment_type"
 `
 
-type ListPaymentTypesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListPaymentTypes(ctx context.Context, arg ListPaymentTypesParams) ([]PaymentType, error) {
-	rows, err := q.db.Query(ctx, listPaymentTypes, arg.Limit, arg.Offset)
+func (q *Queries) ListPaymentTypes(ctx context.Context) ([]PaymentType, error) {
+	rows, err := q.db.Query(ctx, listPaymentTypes)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +63,7 @@ func (q *Queries) ListPaymentTypes(ctx context.Context, arg ListPaymentTypesPara
 	items := []PaymentType{}
 	for rows.Next() {
 		var i PaymentType
-		if err := rows.Scan(&i.ID, &i.Value); err != nil {
+		if err := rows.Scan(&i.ID, &i.Value, &i.IsActive); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -82,21 +75,27 @@ func (q *Queries) ListPaymentTypes(ctx context.Context, arg ListPaymentTypesPara
 }
 
 const updatePaymentType = `-- name: UpdatePaymentType :one
+
 UPDATE "payment_type"
 SET 
-value = COALESCE($1,value)
-WHERE id = $2
-RETURNING id, value
+value = COALESCE($1,value),
+is_active = COALESCE($2,is_active)
+WHERE id = $3
+RETURNING id, value, is_active
 `
 
 type UpdatePaymentTypeParams struct {
-	Value null.String `json:"value"`
-	ID    int64       `json:"id"`
+	Value    null.String `json:"value"`
+	IsActive null.Bool   `json:"is_active"`
+	ID       int64       `json:"id"`
 }
 
+// ORDER BY id
+// LIMIT $1
+// OFFSET $2;
 func (q *Queries) UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error) {
-	row := q.db.QueryRow(ctx, updatePaymentType, arg.Value, arg.ID)
+	row := q.db.QueryRow(ctx, updatePaymentType, arg.Value, arg.IsActive, arg.ID)
 	var i PaymentType
-	err := row.Scan(&i.ID, &i.Value)
+	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
 	return i, err
 }

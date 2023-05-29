@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
@@ -86,6 +87,21 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			return err
 		}
 
+		orderNumber := util.GenerateOrderNumber()
+
+		createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
+			OrderNumber:       orderNumber,
+			UserID:            arg.UserID,
+			PaymentMethodID:   arg.PaymentMethodID,
+			ShippingAddressID: arg.UserAddressID,
+			OrderTotal:        arg.OrderTotal,
+			ShippingMethodID:  arg.ShippingMethodID,
+			OrderStatusID:     null.IntFrom(arg.OrderStatusID),
+		})
+		if err != nil {
+			return err
+		}
+
 		for i := 0; i < len(shopCartItems); i++ {
 
 			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItems[i].ProductItemID)
@@ -101,17 +117,6 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				return errors.New("Stock is Empty")
 			}
 
-			createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
-				UserID:            arg.UserID,
-				PaymentMethodID:   arg.PaymentMethodID,
-				ShippingAddressID: arg.UserAddressID,
-				OrderTotal:        arg.OrderTotal,
-				ShippingMethodID:  arg.ShippingMethodID,
-				OrderStatusID:     null.IntFrom(arg.OrderStatusID),
-			})
-			if err != nil {
-				return err
-			}
 			result.ShopOrderID = createdShopOrder.ID
 
 			updatedProductItem, err := q.UpdateProductItem(ctx, UpdateProductItemParams{

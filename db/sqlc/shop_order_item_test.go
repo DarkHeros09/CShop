@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomShopOrderItem(t *testing.T) ShopOrderItem {
+func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 	shopOrder := createRandomShopOrder(t)
 	productItem := createRandomProductItem(t)
 	arg := CreateShopOrderItemParams{
@@ -31,14 +31,14 @@ func createRandomShopOrderItem(t *testing.T) ShopOrderItem {
 	require.Equal(t, arg.Price, shopOrderItem.Price)
 	require.Equal(t, arg.Price, shopOrderItem.Price)
 
-	return shopOrderItem
+	return shopOrderItem, shopOrder
 }
 func TestCreateShopOrderItem(t *testing.T) {
 	createRandomShopOrderItem(t)
 }
 
 func TestGetShopOrderItem(t *testing.T) {
-	shopOrderItem1 := createRandomShopOrderItem(t)
+	shopOrderItem1, _ := createRandomShopOrderItem(t)
 	shopOrderItem2, err := testQueires.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestGetShopOrderItem(t *testing.T) {
 }
 
 func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
-	shopOrderItem1 := createRandomShopOrderItem(t)
+	shopOrderItem1, _ := createRandomShopOrderItem(t)
 	arg := UpdateShopOrderItemParams{
 		ProductItemID: null.Int{},
 		OrderID:       null.Int{},
@@ -73,7 +73,7 @@ func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 }
 
 func TestDeleteShopOrderItem(t *testing.T) {
-	shopOrderItem1 := createRandomShopOrderItem(t)
+	shopOrderItem1, _ := createRandomShopOrderItem(t)
 	err := testQueires.DeleteShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.NoError(t, err)
@@ -83,6 +83,34 @@ func TestDeleteShopOrderItem(t *testing.T) {
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, shopOrderItem2)
+
+}
+
+func TestListShopOrderItemsByUserIDOrderID(t *testing.T) {
+	// var wg sync.WaitGroup
+	// wg.Add(10)
+	var shopOrderItem ShopOrderItem
+	var shopOrder ShopOrder
+	for i := 0; i < 5; i++ {
+		// go func() {
+		shopOrderItem, shopOrder = createRandomShopOrderItem(t)
+		// wg.Done()
+		// }()
+	}
+	// wg.Wait()
+	arg := ListShopOrderItemsByUserIDOrderIDParams{
+		OrderID: shopOrderItem.OrderID,
+		UserID:  shopOrder.UserID,
+	}
+
+	shopOrderItems, err := testQueires.ListShopOrderItemsByUserIDOrderID(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, shopOrderItems)
+
+	for _, shopOrderItem := range shopOrderItems {
+		require.NotEmpty(t, shopOrderItem)
+	}
 
 }
 

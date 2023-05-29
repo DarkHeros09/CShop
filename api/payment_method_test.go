@@ -164,6 +164,7 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ID            int64
+		body          fiber.Map
 		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
@@ -173,13 +174,17 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			name:   "OK",
 			ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
+			body: fiber.Map{
+				"payment_type_id": paymentMethod.PaymentTypeID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetPaymentMethodParams{
-					ID:     paymentMethod.ID,
-					UserID: paymentMethod.UserID,
+					// ID:            paymentMethod.ID,
+					UserID:        paymentMethod.UserID,
+					PaymentTypeID: paymentMethod.PaymentTypeID,
 				}
 				store.EXPECT().
 					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
@@ -195,6 +200,9 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			name:   "NoAuthorization",
 			ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
+			body: fiber.Map{
+				"payment_type_id": paymentMethod.PaymentTypeID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
@@ -210,13 +218,17 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			name:   "NotFound",
 			ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
+			body: fiber.Map{
+				"payment_type_id": paymentMethod.PaymentTypeID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetPaymentMethodParams{
-					ID:     paymentMethod.ID,
-					UserID: paymentMethod.UserID,
+					// ID:            paymentMethod.ID,
+					UserID:        paymentMethod.UserID,
+					PaymentTypeID: paymentMethod.PaymentTypeID,
 				}
 				store.EXPECT().
 					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
@@ -231,13 +243,17 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			name:   "InternalError",
 			ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
+			body: fiber.Map{
+				"payment_type_id": paymentMethod.PaymentTypeID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.GetPaymentMethodParams{
-					ID:     paymentMethod.ID,
-					UserID: paymentMethod.UserID,
+					// ID:            paymentMethod.ID,
+					UserID:        paymentMethod.UserID,
+					PaymentTypeID: paymentMethod.PaymentTypeID,
 				}
 				store.EXPECT().
 					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
@@ -252,6 +268,9 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			name:   "InvalidID",
 			ID:     0,
 			UserID: paymentMethod.UserID,
+			body: fiber.Map{
+				"payment_type_id": paymentMethod.PaymentTypeID,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -281,8 +300,12 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
 			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
-			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			request, err := http.NewRequest(fiber.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)

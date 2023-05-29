@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-04-25T15:39:53.099Z
+-- Generated at: 2023-05-24T17:16:32.945Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -81,7 +81,8 @@ CREATE TABLE "payment_method" (
 
 CREATE TABLE "payment_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "value" varchar NOT NULL
+  "value" varchar UNIQUE NOT NULL,
+  "is_active" boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE "shopping_cart" (
@@ -195,6 +196,7 @@ CREATE TABLE "product_configuration" (
 
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
+  "order_number" varchar NOT NULL,
   "user_id" bigint NOT NULL,
   "payment_method_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,
@@ -207,14 +209,14 @@ CREATE TABLE "shop_order" (
 
 CREATE TABLE "order_status" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "status" varchar NOT NULL,
+  "status" varchar UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE "shipping_method" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "name" varchar NOT NULL,
+  "name" varchar UNIQUE NOT NULL,
   "price" varchar NOT NULL
 );
 

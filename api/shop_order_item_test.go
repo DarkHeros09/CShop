@@ -22,7 +22,12 @@ import (
 func TestGetShopOrderItemAPI(t *testing.T) {
 	user, _ := randomSOIUser(t)
 	shopOrder := createRandomShopOrder(t, user)
-	shopOrderItem := createRandomShopOrderItemForGet(t, shopOrder)
+	var shopOrderItemsList []db.ShopOrderItem
+	for i := 0; i < 5; i++ {
+		shopOrderItems := createRandomShopOrderItem(t, shopOrder)
+		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
+	}
+	// shopOrderItem := createRandomShopOrderItemForGet(t, shopOrder)
 
 	testCases := []struct {
 		name          string
@@ -41,20 +46,20 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.GetShopOrderItemByUserIDOrderIDParams{
+				arg := db.ListShopOrderItemsByUserIDOrderIDParams{
 					UserID:  user.ID,
 					OrderID: shopOrder.ID,
 				}
 
 				store.EXPECT().
-					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(shopOrderItem, nil)
+					Return(shopOrderItemsList, nil)
 
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchShopOrderItemForGet(t, rsp.Body, shopOrderItem)
+				requireBodyMatchShopOrderItemForList(t, rsp.Body, shopOrderItemsList)
 			},
 		},
 		{
@@ -65,7 +70,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Any()).
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -80,15 +85,15 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.GetShopOrderItemByUserIDOrderIDParams{
+				arg := db.ListShopOrderItemsByUserIDOrderIDParams{
 					UserID:  user.ID,
 					OrderID: shopOrder.ID,
 				}
 
 				store.EXPECT().
-					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetShopOrderItemByUserIDOrderIDRow{}, pgx.ErrTxClosed)
+					Return([]db.ShopOrderItem{}, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -104,7 +109,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetShopOrderItemByUserIDOrderID(gomock.Any(), gomock.Any()).
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -125,7 +130,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/usr/v1/users/%d/shop-orders/%d", tc.UserID, tc.ShopOrderID)
+			url := fmt.Sprintf("/usr/v1/users/%d/shop-order-items/%d", tc.UserID, tc.ShopOrderID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -270,7 +275,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/usr/v1/users/%d/shop-orders", tc.UserID)
+			url := fmt.Sprintf("/usr/v1/users/%d/shop-order-items", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -318,14 +323,25 @@ func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) 
 	return
 }
 
-func createRandomShopOrderItemForGet(t *testing.T, shopOrder db.ShopOrder) (ShopOrderItem db.GetShopOrderItemByUserIDOrderIDRow) {
-	ShopOrderItem = db.GetShopOrderItemByUserIDOrderIDRow{
+func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderItems db.ShopOrderItem) {
+	shopOrderItems = db.ShopOrderItem{
+		ID:            util.RandomMoney(),
+		ProductItemID: util.RandomMoney(),
+		OrderID:       util.RandomMoney(),
+		Quantity:      int32(util.RandomMoney()),
+		Price:         fmt.Sprint(int32(util.RandomMoney())),
+	}
+	return
+}
+
+func createRandomShopOrderItemForGet(t *testing.T, shopOrder db.ShopOrder) (ShopOrderItem db.ShopOrderItem) {
+	ShopOrderItem = db.ShopOrderItem{
 		ID:            util.RandomMoney(),
 		ProductItemID: util.RandomMoney(),
 		OrderID:       shopOrder.ID,
 		Quantity:      int32(util.RandomMoney()),
 		Price:         util.RandomDecimalString(1, 1000),
-		UserID:        null.IntFrom(shopOrder.UserID),
+		// UserID:        null.IntFrom(shopOrder.UserID),
 	}
 	return
 }
@@ -333,7 +349,7 @@ func createRandomShopOrderItemForGet(t *testing.T, shopOrder db.ShopOrder) (Shop
 func createRandomListShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (ShopOrderItem db.ListShopOrderItemsByUserIDRow) {
 	ShopOrderItem = db.ListShopOrderItemsByUserIDRow{
 		UserID:        shopOrder.UserID,
-		ID:            null.IntFrom(util.RandomMoney()),
+		ID:            util.RandomMoney(),
 		ProductItemID: null.IntFrom(util.RandomMoney()),
 		OrderID:       null.IntFrom(shopOrder.ID),
 		Quantity:      null.IntFrom(util.RandomMoney()),
@@ -342,21 +358,23 @@ func createRandomListShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (ShopOr
 	return
 }
 
-func requireBodyMatchShopOrderItemForGet(t *testing.T, body io.ReadCloser, ShopOrderItem db.GetShopOrderItemByUserIDOrderIDRow) {
+func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shopOrderItem []db.ShopOrderItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrderItem db.GetShopOrderItemByUserIDOrderIDRow
+	var gotShopOrderItem []db.ShopOrderItem
 	err = json.Unmarshal(data, &gotShopOrderItem)
 
 	require.NoError(t, err)
-	require.Equal(t, ShopOrderItem.ID, gotShopOrderItem.ID)
-	require.Equal(t, ShopOrderItem.OrderID, gotShopOrderItem.OrderID)
-	require.Equal(t, ShopOrderItem.ProductItemID, gotShopOrderItem.ProductItemID)
-	require.Equal(t, ShopOrderItem.Quantity, gotShopOrderItem.Quantity)
-	require.Equal(t, ShopOrderItem.Price, gotShopOrderItem.Price)
-	require.Equal(t, ShopOrderItem.CreatedAt, gotShopOrderItem.CreatedAt)
-	require.Equal(t, ShopOrderItem.UserID, gotShopOrderItem.UserID)
+	for i := range gotShopOrderItem {
+		require.Equal(t, shopOrderItem[i].ID, gotShopOrderItem[i].ID)
+		require.Equal(t, shopOrderItem[i].OrderID, gotShopOrderItem[i].OrderID)
+		require.Equal(t, shopOrderItem[i].ProductItemID, gotShopOrderItem[i].ProductItemID)
+		require.Equal(t, shopOrderItem[i].Quantity, gotShopOrderItem[i].Quantity)
+		require.Equal(t, shopOrderItem[i].Price, gotShopOrderItem[i].Price)
+		require.Equal(t, shopOrderItem[i].CreatedAt, gotShopOrderItem[i].CreatedAt)
+	}
+	// require.Equal(t, ShopOrderItem.UserID, gotShopOrderItem.UserID)
 }
 
 func requireBodyMatchListShopOrderItem(t *testing.T, body io.ReadCloser, shopOrderItem []db.ListShopOrderItemsByUserIDRow) {

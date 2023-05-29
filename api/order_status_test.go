@@ -160,12 +160,12 @@ func TestGetOrderStatusAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetOrderStatusByUserIDParams{
-					ID:     orderStatus.ID,
-					UserID: user.ID,
-				}
+				// arg := db.GetOrderStatusByUserIDParams{
+				// 	ID:     orderStatus.ID,
+				// 	UserID: user.ID,
+				// }
 				store.EXPECT().
-					GetOrderStatusByUserID(gomock.Any(), gomock.Eq(arg)).
+					GetOrderStatus(gomock.Any(), gomock.Eq(orderStatus.ID)).
 					Times(1).
 					Return(orderStatus, nil)
 			},
@@ -182,7 +182,7 @@ func TestGetOrderStatusAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetOrderStatusByUserID(gomock.Any(), gomock.Any()).
+					GetOrderStatus(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -197,14 +197,14 @@ func TestGetOrderStatusAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetOrderStatusByUserIDParams{
-					ID:     orderStatus.ID,
-					UserID: user.ID,
-				}
+				// arg := db.GetOrderStatusByUserIDParams{
+				// 	ID:     orderStatus.ID,
+				// 	UserID: user.ID,
+				// }
 				store.EXPECT().
-					GetOrderStatusByUserID(gomock.Any(), gomock.Eq(arg)).
+					GetOrderStatus(gomock.Any(), gomock.Eq(orderStatus.ID)).
 					Times(1).
-					Return(db.GetOrderStatusByUserIDRow{}, pgx.ErrNoRows)
+					Return(db.OrderStatus{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -218,14 +218,14 @@ func TestGetOrderStatusAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetOrderStatusByUserIDParams{
-					ID:     orderStatus.ID,
-					UserID: user.ID,
-				}
+				// arg := db.GetOrderStatusByUserIDParams{
+				// 	ID:     orderStatus.ID,
+				// 	UserID: user.ID,
+				// }
 				store.EXPECT().
-					GetOrderStatusByUserID(gomock.Any(), gomock.Eq(arg)).
+					GetOrderStatus(gomock.Any(), gomock.Eq(orderStatus.ID)).
 					Times(1).
-					Return(db.GetOrderStatusByUserIDRow{}, pgx.ErrTxClosed)
+					Return(db.OrderStatus{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -240,7 +240,7 @@ func TestGetOrderStatusAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetOrderStatusByUserID(gomock.Any(), gomock.Any()).
+					GetOrderStatus(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -717,11 +717,11 @@ func createRandomOrderStatusForStatus(t *testing.T) (orderStatus db.OrderStatus)
 	return
 }
 
-func createRandomOrderStatusForGet(t *testing.T, user db.User) (orderStatus db.GetOrderStatusByUserIDRow) {
-	orderStatus = db.GetOrderStatusByUserIDRow{
+func createRandomOrderStatusForGet(t *testing.T, user db.User) (orderStatus db.OrderStatus) {
+	orderStatus = db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
-		UserID: null.IntFrom(user.ID),
+		// UserID: null.IntFrom(user.ID),
 	}
 	return
 }
@@ -747,17 +747,17 @@ func requireBodyMatchOrderStatus(t *testing.T, body io.ReadCloser, orderStatus d
 	require.Equal(t, orderStatus.Status, gotOrderStatus.Status)
 }
 
-func requireBodyMatchOrderStatusForGet(t *testing.T, body io.ReadCloser, orderStatus db.GetOrderStatusByUserIDRow) {
+func requireBodyMatchOrderStatusForGet(t *testing.T, body io.ReadCloser, orderStatus db.OrderStatus) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotOrderStatus db.GetOrderStatusByUserIDRow
+	var gotOrderStatus db.OrderStatus
 	err = json.Unmarshal(data, &gotOrderStatus)
 
 	require.NoError(t, err)
 	require.Equal(t, orderStatus.ID, gotOrderStatus.ID)
 	require.Equal(t, orderStatus.Status, gotOrderStatus.Status)
-	require.Equal(t, orderStatus.UserID.Int64, gotOrderStatus.UserID.Int64)
+	// require.Equal(t, orderStatus.UserID.Int64, gotOrderStatus.UserID.Int64)
 }
 
 func requireBodyMatchOrderStatuses(t *testing.T, body io.ReadCloser, orderStatuses []db.ListOrderStatusesByUserIDRow) {

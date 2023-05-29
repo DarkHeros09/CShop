@@ -144,6 +144,8 @@ func (server *Server) setupRouter() {
 	userRouter.Put("/users/:id/payment-methods/:paymentId", server.updatePaymentMethod)
 	userRouter.Delete("/users/:id/payment-methods/:paymentId", server.deletePaymentMethod)
 
+	userRouter.Get("/users/:id/payment-types", server.listPaymentTypes)
+
 	adminRouter.Post("/products", server.createProduct)              //! Admin Only
 	adminRouter.Put("/products/:productId", server.updateProduct)    //! Admin Only
 	adminRouter.Delete("/products/:productId", server.deleteProduct) //! Admin Only
@@ -180,8 +182,10 @@ func (server *Server) setupRouter() {
 	adminRouter.Put("/product-configurations/:itemId", server.updateProductConfiguration)                                   //! Admin Only
 	adminRouter.Delete("/product-configurations/:itemId/variation-options/:variationId", server.deleteProductConfiguration) //! Admin Only
 
-	userRouter.Get("/users/:id/shop-orders/:orderId", server.getShopOrderItem)
-	userRouter.Get("/users/:id/shop-orders", server.listShopOrderItems)
+	userRouter.Get("/users/:id/shop-order-items/:orderId", server.getShopOrderItems)
+	userRouter.Get("/users/:id/shop-order-items", server.listShopOrderItems)
+
+	userRouter.Get("/users/:id/shop-orders", server.listShopOrders)
 
 	userRouter.Post("/users/:id/order-status", server.createOrderStatus)
 	userRouter.Get("/users/:id/order-status/:statusId", server.getOrderStatus)

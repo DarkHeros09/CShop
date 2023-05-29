@@ -17,6 +17,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
+		OrderNumber:       util.GenerateOrderNumber(),
 		UserID:            paymentMethod.UserID,
 		PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
@@ -113,6 +114,34 @@ func TestListShopOrders(t *testing.T) {
 	}
 
 	shopOrders, err := testQueires.ListShopOrders(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, shopOrders)
+
+	for _, shopOrder := range shopOrders {
+		require.NotEmpty(t, shopOrder)
+	}
+
+}
+
+func TestListShopOrdersByUserID(t *testing.T) {
+	// var wg sync.WaitGroup
+	var shopOrder ShopOrder
+	// wg.Add(10)
+	for i := 0; i < 10; i++ {
+		// go func(i int) {
+		shopOrder = createRandomShopOrder(t)
+		// wg.Done()
+		// }(i)
+	}
+	// wg.Wait()
+	arg := ListShopOrdersByUserIDParams{
+		UserID: shopOrder.UserID,
+		Limit:  5,
+		Offset: 0,
+	}
+
+	shopOrders, err := testQueires.ListShopOrdersByUserID(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrders)

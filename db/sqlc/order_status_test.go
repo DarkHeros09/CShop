@@ -4,17 +4,20 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomOrderStatus(t *testing.T) OrderStatus {
-	orderStatus, err := testQueires.CreateOrderStatus(context.Background(), util.RandomString(5))
-	require.NoError(t, err)
-	require.NotEmpty(t, orderStatus)
-
+	var orderStatus OrderStatus
+	var err error
+	orderStatuses := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
+	for i := 0; i < len(orderStatuses); i++ {
+		orderStatus, err = testQueires.CreateOrderStatus(context.Background(), orderStatuses[i])
+		require.NoError(t, err)
+		require.NotEmpty(t, orderStatus)
+	}
 	return orderStatus
 }
 func TestCreateOrderStatus(t *testing.T) {
@@ -35,8 +38,9 @@ func TestGetOrderStatus(t *testing.T) {
 func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 	orderStatus1 := createRandomOrderStatus(t)
 	arg := UpdateOrderStatusParams{
-		ID:     orderStatus1.ID,
-		Status: null.StringFrom(util.RandomString(5)),
+		ID: orderStatus1.ID,
+		//last value from orderStatus1 otherwise will get duplicate keys becuase of unique constraint
+		Status: null.StringFrom("ملغي"),
 	}
 
 	orderStatus2, err := testQueires.UpdateOrderStatus(context.Background(), arg)
@@ -44,7 +48,7 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 	require.NotEmpty(t, orderStatus2)
 
 	require.Equal(t, orderStatus1.ID, orderStatus2.ID)
-	require.NotEqual(t, orderStatus1.Status, orderStatus2.Status)
+	require.Equal(t, orderStatus1.Status, orderStatus2.Status)
 }
 
 func TestDeleteOrderStatus(t *testing.T) {
@@ -63,15 +67,16 @@ func TestDeleteOrderStatus(t *testing.T) {
 }
 
 func TestListOrderStatuses(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	orderStatuses1 := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
+	for i := 0; i < len(orderStatuses1); i++ {
 		createRandomOrderStatus(t)
 	}
-	arg := ListOrderStatusesParams{
-		Limit:  5,
-		Offset: 5,
-	}
+	// arg := ListOrderStatusesParams{
+	// 	Limit:  int32(len(orderStatuses1)),
+	// 	Offset: int32(len(orderStatuses1)),
+	// }
 
-	orderStatuses, err := testQueires.ListOrderStatuses(context.Background(), arg)
+	orderStatuses, err := testQueires.ListOrderStatuses(context.Background() /* arg*/)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, orderStatuses)

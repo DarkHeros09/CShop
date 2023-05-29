@@ -75,12 +75,12 @@ func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.GetOrderStatusByUserIDParams{
-		ID:     params.StatusID,
-		UserID: params.UserID,
-	}
+	// arg := db.GetOrderStatusByUserIDParams{
+	// 	ID:     params.StatusID,
+	// 	UserID: params.UserID,
+	// }
 
-	orderStatus, err := server.store.GetOrderStatusByUserID(ctx.Context(), arg)
+	orderStatus, err := server.store.GetOrderStatus(ctx.Context(), params.StatusID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

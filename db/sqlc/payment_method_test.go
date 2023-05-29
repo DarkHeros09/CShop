@@ -37,8 +37,9 @@ func TestGetPaymentMethod(t *testing.T) {
 	paymentMethod1 := createRandomPaymentMethod(t)
 
 	arg := GetPaymentMethodParams{
-		ID:     paymentMethod1.ID,
-		UserID: paymentMethod1.UserID,
+		// ID:            paymentMethod1.ID,
+		UserID:        paymentMethod1.UserID,
+		PaymentTypeID: paymentMethod1.PaymentTypeID,
 	}
 
 	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), arg)
@@ -95,9 +96,11 @@ func TestDeletePaymentMethod(t *testing.T) {
 
 func TestListPaymentMethods(t *testing.T) {
 	user := createRandomUser(t)
+	paymentTypes := make(map[int]PaymentType)
 
 	for i := 0; i < 10; i++ {
 		paymentType := createRandomPaymentType(t)
+		paymentTypes[int(paymentType.ID)] = paymentType
 		arg := CreatePaymentMethodParams{
 			UserID:        user.ID,
 			PaymentTypeID: paymentType.ID,
@@ -113,7 +116,7 @@ func TestListPaymentMethods(t *testing.T) {
 
 	PaymentMethods, err := testQueires.ListPaymentMethods(context.Background(), arg)
 	require.NoError(t, err)
-	require.Len(t, PaymentMethods, 5)
+	require.Len(t, PaymentMethods, len(paymentTypes))
 
 	for _, PaymentMethod := range PaymentMethods {
 		require.NotEmpty(t, PaymentMethod)

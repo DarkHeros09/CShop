@@ -10,9 +10,10 @@ RETURNING *;
 
 -- name: GetPaymentMethod :one
 SELECT * FROM "payment_method"
-WHERE id = $1 
-AND user_id = $2
-LIMIT 1;
+WHERE 
+-- id = $1 
+user_id = $1
+AND payment_type_id = $2;
 
 -- name: ListPaymentMethods :many
 SELECT * FROM "payment_method"

@@ -18,6 +18,9 @@ INSERT INTO "shipping_method" (
 ) VALUES (
   $1, $2
 )
+ON CONFLICT (name) DO UPDATE SET 
+name = EXCLUDED.name,
+price = EXCLUDED.price
 RETURNING id, name, price
 `
 
@@ -90,18 +93,10 @@ func (q *Queries) GetShippingMethodByUserID(ctx context.Context, arg GetShipping
 
 const listShippingMethods = `-- name: ListShippingMethods :many
 SELECT id, name, price FROM "shipping_method"
-ORDER BY id
-LIMIT $1
-OFFSET $2
 `
 
-type ListShippingMethodsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListShippingMethods(ctx context.Context, arg ListShippingMethodsParams) ([]ShippingMethod, error) {
-	rows, err := q.db.Query(ctx, listShippingMethods, arg.Limit, arg.Offset)
+func (q *Queries) ListShippingMethods(ctx context.Context) ([]ShippingMethod, error) {
+	rows, err := q.db.Query(ctx, listShippingMethods)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +116,7 @@ func (q *Queries) ListShippingMethods(ctx context.Context, arg ListShippingMetho
 }
 
 const listShippingMethodsByUserID = `-- name: ListShippingMethodsByUserID :many
+
 SELECT sm.id, sm.name, sm.price, so.user_id
 FROM "shipping_method" AS sm
 LEFT JOIN "shop_order" AS so ON so.shipping_method_id = sm.id
@@ -143,6 +139,9 @@ type ListShippingMethodsByUserIDRow struct {
 	UserID null.Int `json:"user_id"`
 }
 
+// ORDER BY id
+// LIMIT $1
+// OFFSET $2;
 func (q *Queries) ListShippingMethodsByUserID(ctx context.Context, arg ListShippingMethodsByUserIDParams) ([]ListShippingMethodsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listShippingMethodsByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {

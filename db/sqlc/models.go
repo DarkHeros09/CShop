@@ -65,7 +65,8 @@ type PaymentMethod struct {
 type PaymentType struct {
 	ID int64 `json:"id"`
 	// for companies payment system like BCD
-	Value string `json:"value"`
+	Value    string `json:"value"`
+	IsActive bool   `json:"is_active"`
 }
 
 type Product struct {
@@ -133,6 +134,7 @@ type ShippingMethod struct {
 
 type ShopOrder struct {
 	ID                int64     `json:"id"`
+	OrderNumber       string    `json:"order_number"`
 	UserID            int64     `json:"user_id"`
 	PaymentMethodID   int64     `json:"payment_method_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`

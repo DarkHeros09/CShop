@@ -18,6 +18,7 @@ INSERT INTO "order_status" (
 ) VALUES (
   $1
 )
+ON CONFLICT(status) DO UPDATE SET status = $1
 RETURNING id, status, created_at, updated_at
 `
 
@@ -97,18 +98,10 @@ func (q *Queries) GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatus
 
 const listOrderStatuses = `-- name: ListOrderStatuses :many
 SELECT id, status, created_at, updated_at FROM "order_status"
-ORDER BY id
-LIMIT $1
-OFFSET $2
 `
 
-type ListOrderStatusesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListOrderStatuses(ctx context.Context, arg ListOrderStatusesParams) ([]OrderStatus, error) {
-	rows, err := q.db.Query(ctx, listOrderStatuses, arg.Limit, arg.Offset)
+func (q *Queries) ListOrderStatuses(ctx context.Context) ([]OrderStatus, error) {
+	rows, err := q.db.Query(ctx, listOrderStatuses)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +126,7 @@ func (q *Queries) ListOrderStatuses(ctx context.Context, arg ListOrderStatusesPa
 }
 
 const listOrderStatusesByUserID = `-- name: ListOrderStatusesByUserID :many
+
 SELECT os.id, os.status, os.created_at, os.updated_at, so.user_id
 FROM "order_status" AS os
 LEFT JOIN "shop_order" AS so ON so.order_status_id = os.id
@@ -156,6 +150,9 @@ type ListOrderStatusesByUserIDRow struct {
 	UserID    null.Int  `json:"user_id"`
 }
 
+// ORDER BY id
+// LIMIT $1
+// OFFSET $2;
 func (q *Queries) ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listOrderStatusesByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {

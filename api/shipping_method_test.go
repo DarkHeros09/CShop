@@ -297,7 +297,7 @@ func TestGetShippingMethodAPI(t *testing.T) {
 
 func TestListShippingMethodAPI(t *testing.T) {
 	n := 5
-	ShippingMethods := make([]db.ListShippingMethodsByUserIDRow, n)
+	ShippingMethods := make([]db.ShippingMethod, n)
 	user, _ := randomSMUser(t)
 	ShippingMethod1 := createRandomShippingMethodForList(t, user)
 	ShippingMethod2 := createRandomShippingMethodForList(t, user)
@@ -305,14 +305,14 @@ func TestListShippingMethodAPI(t *testing.T) {
 
 	ShippingMethods = append(ShippingMethods, ShippingMethod1, ShippingMethod2, ShippingMethod3)
 
-	type Query struct {
-		pageID   int
-		pageSize int
-	}
+	// type Query struct {
+	// 	pageID   int
+	// 	pageSize int
+	// }
 
 	testCases := []struct {
-		name          string
-		query         Query
+		name string
+		// query         Query
 		UserID        int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
@@ -321,22 +321,22 @@ func TestListShippingMethodAPI(t *testing.T) {
 		{
 			name:   "OK",
 			UserID: user.ID,
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
+			// query: Query{
+			// 	pageID:   1,
+			// 	pageSize: n,
+			// },
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListShippingMethodsByUserIDParams{
-					Limit:  int32(n),
-					Offset: 0,
-					UserID: user.ID,
-				}
+				// arg := db.ListShippingMethodsParams{
+				// 	Limit:  int32(n),
+				// 	Offset: 0,
+				// 	UserID: user.ID,
+				// }
 
 				store.EXPECT().
-					ListShippingMethodsByUserID(gomock.Any(), gomock.Eq(arg)).
+					ListShippingMethods(gomock.Any()).
 					Times(1).
 					Return(ShippingMethods, nil)
 			},
@@ -348,61 +348,61 @@ func TestListShippingMethodAPI(t *testing.T) {
 		{
 			name:   "InternalError",
 			UserID: user.ID,
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
+			// query: Query{
+			// 	pageID:   1,
+			// 	pageSize: n,
+			// },
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListShippingMethodsByUserID(gomock.Any(), gomock.Any()).
+					ListShippingMethods(gomock.Any()).
 					Times(1).
-					Return([]db.ListShippingMethodsByUserIDRow{}, pgx.ErrTxClosed)
+					Return([]db.ShippingMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
-		{
-			name:   "InvalidPageID",
-			UserID: user.ID,
-			query: Query{
-				pageID:   -1,
-				pageSize: n,
-			},
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListShippingMethodsByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
-		{
-			name:   "InvalidPageSize",
-			UserID: user.ID,
-			query: Query{
-				pageID:   1,
-				pageSize: 100000,
-			},
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListShippingMethodsByUserID(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
+		// {
+		// 	name:   "InvalidPageID",
+		// 	UserID: user.ID,
+		// 	// query: Query{
+		// 	// 	pageID:   -1,
+		// 	// 	pageSize: n,
+		// 	// },
+		// 	setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+		// 		addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListShippingMethods(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
+		// {
+		// 	name:   "InvalidPageSize",
+		// 	UserID: user.ID,
+		// 	// query: Query{
+		// 	// 	pageID:   1,
+		// 	// 	pageSize: 100000,
+		// 	// },
+		// 	setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+		// 		addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListShippingMethods(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
 	}
 
 	for i := range testCases {
@@ -422,10 +422,10 @@ func TestListShippingMethodAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
-			request.URL.RawQuery = q.Encode()
+			// q := request.URL.Query()
+			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
+			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.tokenMaker)
 			request.Header.Set("Content-Type", "application/json")
@@ -743,12 +743,12 @@ func createRandomShippingMethodForGet(t *testing.T, user db.User) (ShippingMetho
 	return
 }
 
-func createRandomShippingMethodForList(t *testing.T, user db.User) (ShippingMethod db.ListShippingMethodsByUserIDRow) {
-	ShippingMethod = db.ListShippingMethodsByUserIDRow{
-		ID:     util.RandomMoney(),
-		Name:   util.RandomUser(),
-		Price:  util.RandomDecimalString(1, 1000),
-		UserID: null.IntFrom(user.ID),
+func createRandomShippingMethodForList(t *testing.T, user db.User) (ShippingMethod db.ShippingMethod) {
+	ShippingMethod = db.ShippingMethod{
+		ID:    util.RandomMoney(),
+		Name:  util.RandomUser(),
+		Price: util.RandomDecimalString(1, 1000),
+		// UserID: null.IntFrom(user.ID),
 	}
 	return
 }
@@ -780,17 +780,17 @@ func requireBodyMatchShippingMethodForGet(t *testing.T, body io.ReadCloser, ship
 	require.Equal(t, shippingMethod.UserID.Int64, gotShippingMethod.UserID.Int64)
 }
 
-func requireBodyMatchShippingMethods(t *testing.T, body io.ReadCloser, shippingMethods []db.ListShippingMethodsByUserIDRow) {
+func requireBodyMatchShippingMethods(t *testing.T, body io.ReadCloser, shippingMethods []db.ShippingMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShippingMethods []db.ListShippingMethodsByUserIDRow
+	var gotShippingMethods []db.ShippingMethod
 	err = json.Unmarshal(data, &gotShippingMethods)
 	require.NoError(t, err)
 	for i := range gotShippingMethods {
 		require.Equal(t, shippingMethods[i].ID, gotShippingMethods[i].ID)
 		require.Equal(t, shippingMethods[i].Name, gotShippingMethods[i].Name)
 		require.Equal(t, shippingMethods[i].Price, gotShippingMethods[i].Price)
-		require.Equal(t, shippingMethods[i].UserID.Int64, gotShippingMethods[i].UserID.Int64)
+		// require.Equal(t, shippingMethods[i].UserID.Int64, gotShippingMethods[i].UserID.Int64)
 	}
 }

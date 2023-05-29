@@ -105,16 +105,17 @@ func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
 type listShippingMethodsParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
-type listShippingMethodsQueryRequest struct {
-	PageID   int32 `query:"page_id" validate:"required,min=1"`
-	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
-}
+
+// type listShippingMethodsQueryRequest struct {
+// 	PageID   int32 `query:"page_id" validate:"required,min=1"`
+// 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
+// }
 
 func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 	params := &listShippingMethodsParamsRequest{}
-	query := &listShippingMethodsQueryRequest{}
+	// query := &listShippingMethodsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -125,12 +126,12 @@ func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
-	arg := db.ListShippingMethodsByUserIDParams{
-		UserID: authPayload.UserID,
-		Limit:  query.PageSize,
-		Offset: (query.PageID - 1) * query.PageSize,
-	}
-	shippingMethods, err := server.store.ListShippingMethodsByUserID(ctx.Context(), arg)
+	// arg := db.ListShippingMethodsByUserIDParams{
+	// 	UserID: authPayload.UserID,
+	// Limit:  query.PageSize,
+	// Offset: (query.PageID - 1) * query.PageSize,
+	// }
+	shippingMethods, err := server.store.ListShippingMethods(ctx.Context())
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
