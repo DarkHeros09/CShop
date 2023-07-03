@@ -171,8 +171,8 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:   "OK",
-			ID:     paymentMethod.ID,
+			name: "OK",
+			// ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
@@ -197,8 +197,8 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			ID:     paymentMethod.ID,
+			name: "NoAuthorization",
+			// ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
@@ -215,8 +215,8 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NotFound",
-			ID:     paymentMethod.ID,
+			name: "NotFound",
+			// ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
@@ -240,8 +240,8 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			ID:     paymentMethod.ID,
+			name: "InternalError",
+			// ID:     paymentMethod.ID,
 			UserID: paymentMethod.UserID,
 			body: fiber.Map{
 				"payment_type_id": paymentMethod.PaymentTypeID,
@@ -264,26 +264,26 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
-		{
-			name:   "InvalidID",
-			ID:     0,
-			UserID: paymentMethod.UserID,
-			body: fiber.Map{
-				"payment_type_id": paymentMethod.PaymentTypeID,
-			},
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
-			},
-			buildStub: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetPaymentMethod(gomock.Any(), gomock.Any()).
-					Times(0)
+		// {
+		// 	name:   "InvalidID",
+		// 	ID:     0,
+		// 	UserID: paymentMethod.UserID,
+		// 	body: fiber.Map{
+		// 		"payment_type_id": paymentMethod.PaymentTypeID,
+		// 	},
+		// 	setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+		// 		addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+		// 	},
+		// 	buildStub: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			GetPaymentMethod(gomock.Any(), gomock.Any()).
+		// 			Times(0)
 
-			},
-			checkResponse: func(t *testing.T, rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
+		// 	},
+		// 	checkResponse: func(t *testing.T, rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
 	}
 
 	for i := range testCases {
@@ -304,7 +304,8 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
+			// url := fmt.Sprintf("/usr/v1/users/%d/payment-methods/%d", tc.UserID, tc.ID)
+			url := fmt.Sprintf("/usr/v1/users/%d/payment-method", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

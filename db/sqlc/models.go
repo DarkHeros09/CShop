@@ -70,11 +70,10 @@ type PaymentType struct {
 }
 
 type Product struct {
-	ID           int64  `json:"id"`
-	CategoryID   int64  `json:"category_id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	ProductImage string `json:"product_image"`
+	ID          int64  `json:"id"`
+	CategoryID  int64  `json:"category_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 	// default is false
 	Active    bool        `json:"active"`
 	CreatedAt time.Time   `json:"created_at"`
@@ -88,19 +87,32 @@ type ProductCategory struct {
 	CategoryName     string   `json:"category_name"`
 }
 
+type ProductColor struct {
+	ID         int64  `json:"id"`
+	ColorValue string `json:"color_value"`
+}
+
 type ProductConfiguration struct {
 	ProductItemID     int64 `json:"product_item_id"`
 	VariationOptionID int64 `json:"variation_option_id"`
 }
 
+type ProductImage struct {
+	ID            int64  `json:"id"`
+	ProductImage1 string `json:"product_image_1"`
+	ProductImage2 string `json:"product_image_2"`
+	ProductImage3 string `json:"product_image_3"`
+}
+
 type ProductItem struct {
-	ID         int64 `json:"id"`
-	ProductID  int64 `json:"product_id"`
-	ProductSku int64 `json:"product_sku"`
-	QtyInStock int32 `json:"qty_in_stock"`
-	// may be used to show different images than original
-	ProductImage string `json:"product_image"`
-	Price        string `json:"price"`
+	ID         int64  `json:"id"`
+	ProductID  int64  `json:"product_id"`
+	SizeID     int64  `json:"size_id"`
+	ImageID    int64  `json:"image_id"`
+	ColorID    int64  `json:"color_id"`
+	ProductSku int64  `json:"product_sku"`
+	QtyInStock int32  `json:"qty_in_stock"`
+	Price      string `json:"price"`
 	// default is false
 	Active    bool      `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
@@ -112,6 +124,11 @@ type ProductPromotion struct {
 	PromotionID int64 `json:"promotion_id"`
 	// default is false
 	Active bool `json:"active"`
+}
+
+type ProductSize struct {
+	ID        int64  `json:"id"`
+	SizeValue string `json:"size_value"`
 }
 
 type Promotion struct {
@@ -134,7 +151,7 @@ type ShippingMethod struct {
 
 type ShopOrder struct {
 	ID                int64     `json:"id"`
-	OrderNumber       string    `json:"order_number"`
+	TrackNumber       string    `json:"track_number"`
 	UserID            int64     `json:"user_id"`
 	PaymentMethodID   int64     `json:"payment_method_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`
@@ -146,10 +163,12 @@ type ShopOrder struct {
 }
 
 type ShopOrderItem struct {
-	ID            int64 `json:"id"`
-	ProductItemID int64 `json:"product_item_id"`
-	OrderID       int64 `json:"order_id"`
-	Quantity      int32 `json:"quantity"`
+	ID            int64  `json:"id"`
+	ProductItemID int64  `json:"product_item_id"`
+	OrderID       int64  `json:"order_id"`
+	Size          string `json:"size"`
+	Color         string `json:"color"`
+	Quantity      int32  `json:"quantity"`
 	// price of product when ordered
 	Price     string    `json:"price"`
 	CreatedAt time.Time `json:"created_at"`

@@ -106,8 +106,49 @@ func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listWishListItemsRequest struct {
-	UserID     int64 `params:"id" validate:"required,min=1"`
-	WishListID int64 `params:"wishId" validate:"required,min=1"`
+	UserID int64 `params:"id" validate:"required,min=1"`
+	// WishListID int64 `params:"wishId" validate:"required,min=1"`
+}
+
+type listWishListItemsResponse struct {
+	ID            null.Int    `json:"id"`
+	WishListID    null.Int    `json:"wish_list_id"`
+	CreatedAt     null.Time   `json:"created_at"`
+	UpdatedAt     null.Time   `json:"updated_at"`
+	ProductItemID null.Int    `json:"product_item_id"`
+	Name          null.String `json:"name"`
+	Size          null.String `json:"size"`
+	Color         null.String `json:"color"`
+	ProductID     int64       `json:"product_id"`
+	ProductImage  string      `json:"product_image"`
+	Price         string      `json:"price"`
+	Active        bool        `json:"active"`
+}
+
+func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) []listWishListItemsResponse {
+	rsp := make([]listWishListItemsResponse, len(productItems))
+	for i := 0; i < len(productItems); i++ {
+		for j := 0; j < len(wishListItems); j++ {
+			if productItems[i].ID == wishListItems[j].ProductItemID.Int64 {
+				rsp[i] = listWishListItemsResponse{
+					ID:            wishListItems[j].ID,
+					WishListID:    wishListItems[j].WishListID,
+					CreatedAt:     wishListItems[j].CreatedAt,
+					UpdatedAt:     wishListItems[j].UpdatedAt,
+					ProductItemID: wishListItems[j].ProductItemID,
+					Name:          productItems[i].Name,
+					ProductID:     productItems[i].ProductID,
+					ProductImage:  productItems[i].ProductImage1.String,
+					Size:          productItems[i].SizeValue,
+					Color:         productItems[i].ColorValue,
+					Price:         productItems[i].Price,
+					Active:        productItems[i].Active,
+				}
+			}
+		}
+	}
+
+	return rsp
 }
 
 func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
@@ -134,7 +175,23 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(wishListItems)
+	productsItemsIds := make([]int64, len(wishListItems))
+	for i := 0; i < len(wishListItems); i++ {
+		productsItemsIds[i] = wishListItems[i].ProductItemID.Int64
+	}
+
+	productItems, err := server.store.ListProductItemsByIDs(ctx.Context(), productsItemsIds)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newlistWishListItemsResponse(wishListItems, productItems)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
 

@@ -181,6 +181,8 @@ type listShoppingCartItemsResponse struct {
 	// ProductItems  []db.ListProductItemsByIDsRow         `json:"product_items"`
 	ProductItemID null.Int    `json:"product_item_id"`
 	Name          null.String `json:"name"`
+	Size          null.String `json:"size"`
+	Color         null.String `json:"color"`
 	Qty           null.Int    `json:"qty"`
 	ProductID     int64       `json:"product_id"`
 	ProductImage  string      `json:"product_image"`
@@ -202,9 +204,12 @@ func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsBy
 					Name:           productItems[i].Name,
 					Qty:            shopCartItems[j].Qty,
 					ProductID:      productItems[i].ProductID,
-					ProductImage:   productItems[i].ProductImage,
-					Price:          productItems[i].Price,
-					Active:         productItems[i].Active,
+					// ProductImage:   productItems[i].ProductImage,
+					ProductImage: productItems[i].ProductImage1.String,
+					Size:         productItems[i].SizeValue,
+					Color:        productItems[i].ColorValue,
+					Price:        productItems[i].Price,
+					Active:       productItems[i].Active,
 				}
 			}
 		}
@@ -419,7 +424,7 @@ type finishPurshaseParamsRequest struct {
 }
 type finishPurshaseJsonRequest struct {
 	UserAddressID    int64  `json:"user_address_id" validate:"required,min=1"`
-	PaymentMethodID  int64  `json:"payment_method_id" validate:"required,min=1"`
+	PaymentTypeID    int64  `json:"payment_type_id" validate:"required,min=1"`
 	ShippingMethodID int64  `json:"shipping_method_id" validate:"required,min=1"`
 	OrderStatusID    int64  `json:"order_status_id" validate:"required,min=1"`
 	OrderTotal       string `json:"order_total" validate:"required"`
@@ -444,7 +449,7 @@ func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
 	arg := db.FinishedPurchaseTxParams{
 		UserID:           authPayload.UserID,
 		UserAddressID:    req.UserAddressID,
-		PaymentMethodID:  req.PaymentMethodID,
+		PaymentTypeID:    req.PaymentTypeID,
 		ShoppingCartID:   params.ShoppingCartID,
 		ShippingMethodID: req.ShippingMethodID,
 		OrderStatusID:    req.OrderStatusID,

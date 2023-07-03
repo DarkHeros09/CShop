@@ -10,7 +10,7 @@ const (
 	orderNumberCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
-func GenerateOrderNumber() string {
+func GenerateTrackNumber() string {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	orderNumber := make([]byte, orderNumberLength)

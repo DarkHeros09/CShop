@@ -19,12 +19,15 @@ type createProductItemsParamsRequest struct {
 }
 
 type createProductItemsJsonRequest struct {
-	ProductID    int64  `json:"product_id" validate:"required,min=1"`
-	ProductSKU   int64  `json:"product_sku" validate:"required"`
-	QtyInStock   int32  `json:"qty_in_stock" validate:"required"`
-	ProductImage string `json:"product_image" validate:"required,url"`
-	Price        string `json:"price" validate:"required"`
-	Active       bool   `json:"active" validate:"boolean"`
+	ProductID  int64 `json:"product_id" validate:"required,min=1"`
+	SizeID     int64 `json:"size_id" validate:"required,min=1"`
+	ImageID    int64 `json:"image_id" validate:"required,min=1"`
+	ColorID    int64 `json:"color_id" validate:"required,min=1"`
+	ProductSKU int64 `json:"product_sku" validate:"required"`
+	QtyInStock int32 `json:"qty_in_stock" validate:"required"`
+	// ProductImage string `json:"product_image" validate:"required,url"`
+	Price  string `json:"price" validate:"required"`
+	Active bool   `json:"active" validate:"boolean"`
 }
 
 func (server *Server) createProductItem(ctx *fiber.Ctx) error {
@@ -44,12 +47,15 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.CreateProductItemParams{
-		ProductID:    req.ProductID,
-		ProductSku:   req.ProductSKU,
-		QtyInStock:   req.QtyInStock,
-		ProductImage: req.ProductImage,
-		Price:        req.Price,
-		Active:       req.Active,
+		ProductID:  req.ProductID,
+		ProductSku: req.ProductSKU,
+		QtyInStock: req.QtyInStock,
+		// ProductImage: req.ProductImage,
+		SizeID:  req.SizeID,
+		ImageID: req.ImageID,
+		ColorID: req.ColorID,
+		Price:   req.Price,
+		Active:  req.Active,
 	}
 
 	productItem, err := server.store.CreateProductItem(ctx.Context(), arg)
@@ -166,13 +172,13 @@ func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateProductItemParams{
-		ID:           params.ProductItemID,
-		ProductID:    req.ProductID,
-		ProductSku:   null.IntFromPtr(&req.ProductSKU),
-		QtyInStock:   null.IntFromPtr(&req.QtyInStock),
-		ProductImage: null.StringFromPtr(&req.ProductImage),
-		Price:        null.StringFromPtr(&req.Price),
-		Active:       null.BoolFromPtr(&req.Active),
+		ID:         params.ProductItemID,
+		ProductID:  req.ProductID,
+		ProductSku: null.IntFromPtr(&req.ProductSKU),
+		QtyInStock: null.IntFromPtr(&req.QtyInStock),
+		// ProductImage: null.StringFromPtr(&req.ProductImage),
+		Price:  null.StringFromPtr(&req.Price),
+		Active: null.BoolFromPtr(&req.Active),
 	}
 
 	productItem, err := server.store.UpdateProductItem(ctx.Context(), arg)

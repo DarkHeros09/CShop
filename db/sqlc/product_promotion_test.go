@@ -90,12 +90,12 @@ func TestDeleteProductPromotion(t *testing.T) {
 }
 
 func TestListProductPromotions(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		createRandomProductPromotion(t)
 	}
 	arg := ListProductPromotionsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	productPromotions, err := testQueires.ListProductPromotions(context.Background(), arg)

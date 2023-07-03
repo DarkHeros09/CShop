@@ -39,12 +39,12 @@ func createRandomProductCategory(t *testing.T) ProductCategory {
 }
 
 func createRandomProductCategoryParent(t *testing.T) ProductCategory {
-	randomCategoryChan := make(chan ProductCategory)
-	go func() {
-		randomCategory := createRandomProductCategory(t)
-		randomCategoryChan <- randomCategory
-	}()
-	randomCategory := <-randomCategoryChan
+	// randomCategoryChan := make(chan ProductCategory)
+	// go func() {
+	randomCategory := createRandomProductCategory(t)
+	// randomCategoryChan <- randomCategory
+	// }()
+	// randomCategory := <-randomCategoryChan
 	arg := CreateProductCategoryParams{
 		ParentCategoryID: null.IntFromPtr(&randomCategory.ID),
 		CategoryName:     util.RandomString(5),

@@ -51,14 +51,14 @@ func TestGetCategoryPromotion(t *testing.T) {
 }
 
 func TestUpdateCategoryPromotionActive(t *testing.T) {
-	categoryPromotionChan := make(chan CategoryPromotion)
-	go func() {
-		categoryPromotion1 := createRandomCategoryPromotion(t)
+	// categoryPromotionChan := make(chan CategoryPromotion)
+	// go func() {
+	categoryPromotion1 := createRandomCategoryPromotion(t)
 
-		categoryPromotionChan <- categoryPromotion1
+	// 	categoryPromotionChan <- categoryPromotion1
 
-	}()
-	categoryPromotion1 := <-categoryPromotionChan
+	// }()
+	// categoryPromotion1 := <-categoryPromotionChan
 	arg := UpdateCategoryPromotionParams{
 		PromotionID: categoryPromotion1.PromotionID,
 		Active:      null.BoolFrom(!categoryPromotion1.Active),

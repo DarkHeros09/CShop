@@ -15,32 +15,39 @@ import (
 const createProductItem = `-- name: CreateProductItem :one
 INSERT INTO "product_item" (
   product_id,
+  size_id,
+  image_id,
+  color_id,
   product_sku,
   qty_in_stock,
-  product_image,
+  -- product_image,
   price,
   active
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7, $8
 )
-RETURNING id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at
+RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
 `
 
 type CreateProductItemParams struct {
-	ProductID    int64  `json:"product_id"`
-	ProductSku   int64  `json:"product_sku"`
-	QtyInStock   int32  `json:"qty_in_stock"`
-	ProductImage string `json:"product_image"`
-	Price        string `json:"price"`
-	Active       bool   `json:"active"`
+	ProductID  int64  `json:"product_id"`
+	SizeID     int64  `json:"size_id"`
+	ImageID    int64  `json:"image_id"`
+	ColorID    int64  `json:"color_id"`
+	ProductSku int64  `json:"product_sku"`
+	QtyInStock int32  `json:"qty_in_stock"`
+	Price      string `json:"price"`
+	Active     bool   `json:"active"`
 }
 
 func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, createProductItem,
 		arg.ProductID,
+		arg.SizeID,
+		arg.ImageID,
+		arg.ColorID,
 		arg.ProductSku,
 		arg.QtyInStock,
-		arg.ProductImage,
 		arg.Price,
 		arg.Active,
 	)
@@ -48,9 +55,11 @@ func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemPa
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
 		&i.ProductSku,
 		&i.QtyInStock,
-		&i.ProductImage,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -70,7 +79,7 @@ func (q *Queries) DeleteProductItem(ctx context.Context, id int64) error {
 }
 
 const getProductItem = `-- name: GetProductItem :one
-SELECT id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at FROM "product_item"
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at FROM "product_item"
 WHERE id = $1 LIMIT 1
 `
 
@@ -80,9 +89,11 @@ func (q *Queries) GetProductItem(ctx context.Context, id int64) (ProductItem, er
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
 		&i.ProductSku,
 		&i.QtyInStock,
-		&i.ProductImage,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -92,7 +103,7 @@ func (q *Queries) GetProductItem(ctx context.Context, id int64) (ProductItem, er
 }
 
 const getProductItemForUpdate = `-- name: GetProductItemForUpdate :one
-SELECT id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at FROM "product_item"
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at FROM "product_item"
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
@@ -103,9 +114,11 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
 		&i.ProductSku,
 		&i.QtyInStock,
-		&i.ProductImage,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -115,10 +128,15 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 }
 
 const listProductItems = `-- name: ListProductItems :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, COUNT(*) OVER() AS total_count
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.id, p.category_id, p.name, p.description, p.active, p.created_at, p.updated_at, p.search, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
-ORDER BY id
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+ORDER BY pi.id
 LIMIT $1
 OFFSET $2
 `
@@ -129,17 +147,31 @@ type ListProductItemsParams struct {
 }
 
 type ListProductItemsRow struct {
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
-	ProductSku   int64       `json:"product_sku"`
-	QtyInStock   int32       `json:"qty_in_stock"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Name         null.String `json:"name"`
-	TotalCount   int64       `json:"total_count"`
+	ID            int64       `json:"id"`
+	ProductID     int64       `json:"product_id"`
+	SizeID        int64       `json:"size_id"`
+	ImageID       int64       `json:"image_id"`
+	ColorID       int64       `json:"color_id"`
+	ProductSku    int64       `json:"product_sku"`
+	QtyInStock    int32       `json:"qty_in_stock"`
+	Price         string      `json:"price"`
+	Active        bool        `json:"active"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
+	ID_2          null.Int    `json:"id_2"`
+	CategoryID    null.Int    `json:"category_id"`
+	Name          null.String `json:"name"`
+	Description   null.String `json:"description"`
+	Active_2      null.Bool   `json:"active_2"`
+	CreatedAt_2   null.Time   `json:"created_at_2"`
+	UpdatedAt_2   null.Time   `json:"updated_at_2"`
+	Search        null.String `json:"search"`
+	SizeValue     null.String `json:"size_value"`
+	ProductImage1 null.String `json:"product_image_1"`
+	ProductImage2 null.String `json:"product_image_2"`
+	ProductImage3 null.String `json:"product_image_3"`
+	ColorValue    null.String `json:"color_value"`
+	TotalCount    int64       `json:"total_count"`
 }
 
 func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error) {
@@ -154,14 +186,28 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
 			&i.ProductSku,
 			&i.QtyInStock,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ID_2,
+			&i.CategoryID,
 			&i.Name,
+			&i.Description,
+			&i.Active_2,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+			&i.Search,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -176,19 +222,27 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 
 const listProductItemsByIDs = `-- name: ListProductItemsByIDs :many
 SELECT pi.id, p.name, pi.product_id, 
-pi.product_image, pi.price, pi.active
+pi.price, pi.active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 WHERE pi.id = ANY($1::bigint[])
 `
 
 type ListProductItemsByIDsRow struct {
-	ID           int64       `json:"id"`
-	Name         null.String `json:"name"`
-	ProductID    int64       `json:"product_id"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
+	ID            int64       `json:"id"`
+	Name          null.String `json:"name"`
+	ProductID     int64       `json:"product_id"`
+	Price         string      `json:"price"`
+	Active        bool        `json:"active"`
+	SizeValue     null.String `json:"size_value"`
+	ProductImage1 null.String `json:"product_image_1"`
+	ProductImage2 null.String `json:"product_image_2"`
+	ProductImage3 null.String `json:"product_image_3"`
+	ColorValue    null.String `json:"color_value"`
 }
 
 func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error) {
@@ -204,9 +258,13 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 			&i.ID,
 			&i.Name,
 			&i.ProductID,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 		); err != nil {
 			return nil, err
 		}
@@ -221,13 +279,19 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 const listProductItemsNextPage = `-- name: ListProductItemsNextPage :many
 WITH t1 AS (
 SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS p
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
 LIMIT 1
 )
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, (SELECT total_count FROM t1)
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
-WHERE pi.id < $2
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.id < $2 AND pi.active = TRUE AND p.active = TRUE
 ORDER BY pi.id DESC
 LIMIT $1
 `
@@ -238,17 +302,27 @@ type ListProductItemsNextPageParams struct {
 }
 
 type ListProductItemsNextPageRow struct {
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
-	ProductSku   int64       `json:"product_sku"`
-	QtyInStock   int32       `json:"qty_in_stock"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Name         null.String `json:"name"`
-	TotalCount   int64       `json:"total_count"`
+	ID                  int64       `json:"id"`
+	ProductID           int64       `json:"product_id"`
+	SizeID              int64       `json:"size_id"`
+	ImageID             int64       `json:"image_id"`
+	ColorID             int64       `json:"color_id"`
+	ProductSku          int64       `json:"product_sku"`
+	QtyInStock          int32       `json:"qty_in_stock"`
+	Price               string      `json:"price"`
+	Active              bool        `json:"active"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	Name                null.String `json:"name"`
+	Description         null.String `json:"description"`
+	CategoryID          null.Int    `json:"category_id"`
+	ParentProductActive null.Bool   `json:"parent_product_active"`
+	SizeValue           null.String `json:"size_value"`
+	ProductImage1       null.String `json:"product_image_1"`
+	ProductImage2       null.String `json:"product_image_2"`
+	ProductImage3       null.String `json:"product_image_3"`
+	ColorValue          null.String `json:"color_value"`
+	TotalCount          int64       `json:"total_count"`
 }
 
 func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error) {
@@ -263,14 +337,24 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
 			&i.ProductSku,
 			&i.QtyInStock,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -284,25 +368,47 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 }
 
 const listProductItemsV2 = `-- name: ListProductItemsV2 :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE
 ORDER BY pi.id DESC
 LIMIT $1
 `
 
 type ListProductItemsV2Row struct {
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
-	ProductSku   int64       `json:"product_sku"`
-	QtyInStock   int32       `json:"qty_in_stock"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Name         null.String `json:"name"`
-	TotalCount   int64       `json:"total_count"`
+	ID                  int64       `json:"id"`
+	ProductID           int64       `json:"product_id"`
+	SizeID              int64       `json:"size_id"`
+	ImageID             int64       `json:"image_id"`
+	ColorID             int64       `json:"color_id"`
+	ProductSku          int64       `json:"product_sku"`
+	QtyInStock          int32       `json:"qty_in_stock"`
+	Price               string      `json:"price"`
+	Active              bool        `json:"active"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	Name                null.String `json:"name"`
+	Description         null.String `json:"description"`
+	CategoryID          null.Int    `json:"category_id"`
+	ParentProductActive null.Bool   `json:"parent_product_active"`
+	SizeValue           null.String `json:"size_value"`
+	ProductImage1       null.String `json:"product_image_1"`
+	ProductImage2       null.String `json:"product_image_2"`
+	ProductImage3       null.String `json:"product_image_3"`
+	ColorValue          null.String `json:"color_value"`
+	TotalCount          int64       `json:"total_count"`
 }
 
 func (q *Queries) ListProductItemsV2(ctx context.Context, limit int32) ([]ListProductItemsV2Row, error) {
@@ -317,14 +423,24 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, limit int32) ([]ListPr
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
 			&i.ProductSku,
 			&i.QtyInStock,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -338,10 +454,21 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, limit int32) ([]ListPr
 }
 
 const searchProductItems = `-- name: SearchProductItems :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-WHERE p.search @@ 
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
     ELSE to_tsquery($2)
@@ -361,17 +488,27 @@ type SearchProductItemsParams struct {
 }
 
 type SearchProductItemsRow struct {
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
-	ProductSku   int64       `json:"product_sku"`
-	QtyInStock   int32       `json:"qty_in_stock"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Name         null.String `json:"name"`
-	TotalCount   int64       `json:"total_count"`
+	ID                  int64       `json:"id"`
+	ProductID           int64       `json:"product_id"`
+	SizeID              int64       `json:"size_id"`
+	ImageID             int64       `json:"image_id"`
+	ColorID             int64       `json:"color_id"`
+	ProductSku          int64       `json:"product_sku"`
+	QtyInStock          int32       `json:"qty_in_stock"`
+	Price               string      `json:"price"`
+	Active              bool        `json:"active"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	Name                null.String `json:"name"`
+	Description         null.String `json:"description"`
+	CategoryID          null.Int    `json:"category_id"`
+	ParentProductActive null.Bool   `json:"parent_product_active"`
+	SizeValue           null.String `json:"size_value"`
+	ProductImage1       null.String `json:"product_image_1"`
+	ProductImage2       null.String `json:"product_image_2"`
+	ProductImage3       null.String `json:"product_image_3"`
+	ColorValue          null.String `json:"color_value"`
+	TotalCount          int64       `json:"total_count"`
 }
 
 func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error) {
@@ -386,14 +523,24 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
 			&i.ProductSku,
 			&i.QtyInStock,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -407,10 +554,21 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 }
 
 const searchProductItemsNextPage = `-- name: SearchProductItemsNextPage :many
-SELECT pi.id, pi.product_id, pi.product_sku, pi.qty_in_stock, pi.product_image, pi.price, pi.active, pi.created_at, pi.updated_at, p.name,  COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-WHERE p.search @@ 
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
     ELSE to_tsquery($3)
@@ -432,24 +590,29 @@ type SearchProductItemsNextPageParams struct {
 }
 
 type SearchProductItemsNextPageRow struct {
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
-	ProductSku   int64       `json:"product_sku"`
-	QtyInStock   int32       `json:"qty_in_stock"`
-	ProductImage string      `json:"product_image"`
-	Price        string      `json:"price"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Name         null.String `json:"name"`
-	TotalCount   int64       `json:"total_count"`
+	ID                  int64       `json:"id"`
+	ProductID           int64       `json:"product_id"`
+	SizeID              int64       `json:"size_id"`
+	ImageID             int64       `json:"image_id"`
+	ColorID             int64       `json:"color_id"`
+	ProductSku          int64       `json:"product_sku"`
+	QtyInStock          int32       `json:"qty_in_stock"`
+	Price               string      `json:"price"`
+	Active              bool        `json:"active"`
+	CreatedAt           time.Time   `json:"created_at"`
+	UpdatedAt           time.Time   `json:"updated_at"`
+	Name                null.String `json:"name"`
+	Description         null.String `json:"description"`
+	CategoryID          null.Int    `json:"category_id"`
+	ParentProductActive null.Bool   `json:"parent_product_active"`
+	SizeValue           null.String `json:"size_value"`
+	ProductImage1       null.String `json:"product_image_1"`
+	ProductImage2       null.String `json:"product_image_2"`
+	ProductImage3       null.String `json:"product_image_3"`
+	ColorValue          null.String `json:"color_value"`
+	TotalCount          int64       `json:"total_count"`
 }
 
-// WITH t1 AS (
-// SELECT COUNT(*) OVER() AS total_count
-// FROM "product_item" AS p
-// LIMIT 1
-// )
 func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPage, arg.Limit, arg.ID, arg.Query)
 	if err != nil {
@@ -462,14 +625,24 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
 			&i.ProductSku,
 			&i.QtyInStock,
-			&i.ProductImage,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -487,30 +660,36 @@ UPDATE "product_item"
 SET
 product_sku = COALESCE($1,product_sku),
 qty_in_stock = COALESCE($2,qty_in_stock),
-product_image = COALESCE($3,product_image),
-price = COALESCE($4,price),
-active = COALESCE($5,active),
+size_id = COALESCE($3,size_id),
+image_id = COALESCE($4,image_id),
+color_id = COALESCE($5,color_id),
+price = COALESCE($6,price),
+active = COALESCE($7,active),
 updated_at = now()
-WHERE id = $6
-AND product_id = $7
-RETURNING id, product_id, product_sku, qty_in_stock, product_image, price, active, created_at, updated_at
+WHERE id = $8
+AND product_id = $9
+RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
 `
 
 type UpdateProductItemParams struct {
-	ProductSku   null.Int    `json:"product_sku"`
-	QtyInStock   null.Int    `json:"qty_in_stock"`
-	ProductImage null.String `json:"product_image"`
-	Price        null.String `json:"price"`
-	Active       null.Bool   `json:"active"`
-	ID           int64       `json:"id"`
-	ProductID    int64       `json:"product_id"`
+	ProductSku null.Int    `json:"product_sku"`
+	QtyInStock null.Int    `json:"qty_in_stock"`
+	SizeID     null.Int    `json:"size_id"`
+	ImageID    null.Int    `json:"image_id"`
+	ColorID    null.Int    `json:"color_id"`
+	Price      null.String `json:"price"`
+	Active     null.Bool   `json:"active"`
+	ID         int64       `json:"id"`
+	ProductID  int64       `json:"product_id"`
 }
 
 func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, updateProductItem,
 		arg.ProductSku,
 		arg.QtyInStock,
-		arg.ProductImage,
+		arg.SizeID,
+		arg.ImageID,
+		arg.ColorID,
 		arg.Price,
 		arg.Active,
 		arg.ID,
@@ -520,9 +699,11 @@ func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemPa
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
 		&i.ProductSku,
 		&i.QtyInStock,
-		&i.ProductImage,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,

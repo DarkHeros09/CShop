@@ -21,9 +21,12 @@ type Querier interface {
 	CreatePaymentType(ctx context.Context, value string) (PaymentType, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
 	CreateProductCategory(ctx context.Context, arg CreateProductCategoryParams) (ProductCategory, error)
+	CreateProductColor(ctx context.Context, colorValue string) (ProductColor, error)
 	CreateProductConfiguration(ctx context.Context, arg CreateProductConfigurationParams) (ProductConfiguration, error)
+	CreateProductImage(ctx context.Context, arg CreateProductImageParams) (ProductImage, error)
 	CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error)
 	CreateProductPromotion(ctx context.Context, arg CreateProductPromotionParams) (ProductPromotion, error)
+	CreateProductSize(ctx context.Context, sizeValue string) (ProductSize, error)
 	CreatePromotion(ctx context.Context, arg CreatePromotionParams) (Promotion, error)
 	CreateShippingMethod(ctx context.Context, arg CreateShippingMethodParams) (ShippingMethod, error)
 	CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error)
@@ -50,9 +53,12 @@ type Querier interface {
 	DeletePaymentType(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	DeleteProductCategory(ctx context.Context, arg DeleteProductCategoryParams) error
+	DeleteProductColor(ctx context.Context, id int64) error
 	DeleteProductConfiguration(ctx context.Context, arg DeleteProductConfigurationParams) error
+	DeleteProductImage(ctx context.Context, id int64) error
 	DeleteProductItem(ctx context.Context, id int64) error
 	DeleteProductPromotion(ctx context.Context, arg DeleteProductPromotionParams) error
+	DeleteProductSize(ctx context.Context, id int64) error
 	DeletePromotion(ctx context.Context, id int64) error
 	DeleteShippingMethod(ctx context.Context, id int64) error
 	DeleteShopOrder(ctx context.Context, id int64) error
@@ -115,10 +121,13 @@ type Querier interface {
 	GetProduct(ctx context.Context, id int64) (Product, error)
 	GetProductCategory(ctx context.Context, id int64) (ProductCategory, error)
 	GetProductCategoryByParent(ctx context.Context, arg GetProductCategoryByParentParams) (ProductCategory, error)
+	GetProductColor(ctx context.Context, id int64) (ProductColor, error)
 	GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (ProductConfiguration, error)
+	GetProductImage(ctx context.Context, id int64) (ProductImage, error)
 	GetProductItem(ctx context.Context, id int64) (ProductItem, error)
 	GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error)
 	GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error)
+	GetProductSize(ctx context.Context, id int64) (ProductSize, error)
 	GetPromotion(ctx context.Context, id int64) (Promotion, error)
 	GetShippingMethod(ctx context.Context, id int64) (ShippingMethod, error)
 	GetShippingMethodByUserID(ctx context.Context, arg GetShippingMethodByUserIDParams) (GetShippingMethodByUserIDRow, error)
@@ -176,11 +185,13 @@ type Querier interface {
 	// OFFSET $2;
 	ListShippingMethodsByUserID(ctx context.Context, arg ListShippingMethodsByUserIDParams) ([]ListShippingMethodsByUserIDRow, error)
 	ListShopOrderItems(ctx context.Context, arg ListShopOrderItemsParams) ([]ShopOrderItem, error)
+	// ORDER BY soi.id;
 	ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]ListShopOrderItemsByUserIDRow, error)
 	// SELECT * FROM "shop_order_item"
 	// WHERE order_id = $1
 	// ORDER BY id;
-	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ShopOrderItem, error)
+	// pi.product_image,
+	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error)
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
 	ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]ListShopOrdersByUserIDRow, error)
 	// LIMIT 1;
@@ -198,11 +209,6 @@ type Querier interface {
 	ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error)
 	ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error)
 	SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error)
-	// WITH t1 AS (
-	// SELECT COUNT(*) OVER() AS total_count
-	// FROM "product_item" AS p
-	// LIMIT 1
-	// )
 	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
@@ -217,11 +223,15 @@ type Querier interface {
 	// )
 	// SELECT *
 	// FROM list_products, total_records;
+	// product_image = COALESCE(sqlc.narg(product_image),product_image),
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 	UpdateProductCategory(ctx context.Context, arg UpdateProductCategoryParams) (ProductCategory, error)
+	UpdateProductColor(ctx context.Context, arg UpdateProductColorParams) (ProductColor, error)
 	UpdateProductConfiguration(ctx context.Context, arg UpdateProductConfigurationParams) (ProductConfiguration, error)
+	UpdateProductImage(ctx context.Context, arg UpdateProductImageParams) (ProductImage, error)
 	UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error)
 	UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (ProductPromotion, error)
+	UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (ProductSize, error)
 	UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error)
 	UpdateShippingMethod(ctx context.Context, arg UpdateShippingMethodParams) (ShippingMethod, error)
 	UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error)

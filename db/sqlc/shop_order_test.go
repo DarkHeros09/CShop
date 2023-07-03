@@ -17,7 +17,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
-		OrderNumber:       util.GenerateOrderNumber(),
+		TrackNumber:       util.GenerateTrackNumber(),
 		UserID:            paymentMethod.UserID,
 		PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,

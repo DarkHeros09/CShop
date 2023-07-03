@@ -1,13 +1,16 @@
 -- name: CreateProductItem :one
 INSERT INTO "product_item" (
   product_id,
+  size_id,
+  image_id,
+  color_id,
   product_sku,
   qty_in_stock,
-  product_image,
+  -- product_image,
   price,
   active
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7, $8
 )
 RETURNING *;
 
@@ -22,44 +25,82 @@ FOR NO KEY UPDATE;
 
 -- name: ListProductItemsByIDs :many
 SELECT pi.id, p.name, pi.product_id, 
-pi.product_image, pi.price, pi.active
+pi.price, pi.active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 WHERE pi.id = ANY(sqlc.arg(products_ids)::bigint[]);
 
 -- name: ListProductItems :many
-SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+SELECT pi.*, p.*, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
-ORDER BY id
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+ORDER BY pi.id
 LIMIT $1
 OFFSET $2;
 
 -- name: ListProductItemsV2 :many
-SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.*, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE
 ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: ListProductItemsNextPage :many
 WITH t1 AS (
 SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS p
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
 LIMIT 1
 )
-SELECT pi.*, p.name, (SELECT total_count FROM t1)
+SELECT pi.*, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id 
-WHERE pi.id < $2
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.id < $2 AND pi.active = TRUE AND p.active = TRUE
 ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: SearchProductItems :many
-SELECT pi.*, p.name, COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.*, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-WHERE p.search @@ 
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
@@ -73,15 +114,21 @@ END
 LIMIT $1;
 
 -- name: SearchProductItemsNextPage :many
--- WITH t1 AS (
--- SELECT COUNT(*) OVER() AS total_count
--- FROM "product_item" AS p
--- LIMIT 1
--- )
-SELECT pi.*, p.name,  COUNT(*) OVER() AS total_count
+WITH t1 AS (
+SELECT COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+WHERE pi.active = TRUE
+LIMIT 1
+)
+SELECT pi.*, p.name, p.description, p.category_id, p.active as parent_product_active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+(SELECT total_count FROM t1)
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-WHERE p.search @@ 
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+WHERE pi.active = TRUE AND p.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
@@ -100,7 +147,9 @@ UPDATE "product_item"
 SET
 product_sku = COALESCE(sqlc.narg(product_sku),product_sku),
 qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
-product_image = COALESCE(sqlc.narg(product_image),product_image),
+size_id = COALESCE(sqlc.narg(size_id),size_id),
+image_id = COALESCE(sqlc.narg(image_id),image_id),
+color_id = COALESCE(sqlc.narg(color_id),color_id),
 price = COALESCE(sqlc.narg(price),price),
 active = COALESCE(sqlc.narg(active),active),
 updated_at = now()

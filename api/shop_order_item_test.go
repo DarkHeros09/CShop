@@ -22,7 +22,7 @@ import (
 func TestGetShopOrderItemAPI(t *testing.T) {
 	user, _ := randomSOIUser(t)
 	shopOrder := createRandomShopOrder(t, user)
-	var shopOrderItemsList []db.ShopOrderItem
+	var shopOrderItemsList []db.ListShopOrderItemsByUserIDOrderIDRow
 	for i := 0; i < 5; i++ {
 		shopOrderItems := createRandomShopOrderItem(t, shopOrder)
 		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
@@ -93,7 +93,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return([]db.ShopOrderItem{}, pgx.ErrTxClosed)
+					Return([]db.ListShopOrderItemsByUserIDOrderIDRow{}, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -323,13 +323,21 @@ func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) 
 	return
 }
 
-func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderItems db.ShopOrderItem) {
-	shopOrderItems = db.ShopOrderItem{
+func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderItems db.ListShopOrderItemsByUserIDOrderIDRow) {
+	shopOrderItems = db.ListShopOrderItemsByUserIDOrderIDRow{
+		Status:        null.StringFrom(util.RandomUser()),
 		ID:            util.RandomMoney(),
 		ProductItemID: util.RandomMoney(),
 		OrderID:       util.RandomMoney(),
 		Quantity:      int32(util.RandomMoney()),
 		Price:         fmt.Sprint(int32(util.RandomMoney())),
+		ProductName:   null.StringFrom(util.RandomUser()),
+		ProductImage:  null.StringFrom(util.RandomURL()),
+		ProductActive: null.BoolFrom(util.RandomBool()),
+		AddressLine:   null.StringFrom(util.RandomUser()),
+		Region:        null.StringFrom(util.RandomUser()),
+		City:          null.StringFrom(util.RandomUser()),
+		PaymentType:   null.StringFrom(util.RandomUser()),
 	}
 	return
 }
@@ -358,11 +366,11 @@ func createRandomListShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (ShopOr
 	return
 }
 
-func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shopOrderItem []db.ShopOrderItem) {
+func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shopOrderItem []db.ListShopOrderItemsByUserIDOrderIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrderItem []db.ShopOrderItem
+	var gotShopOrderItem []db.ListShopOrderItemsByUserIDOrderIDRow
 	err = json.Unmarshal(data, &gotShopOrderItem)
 
 	require.NoError(t, err)

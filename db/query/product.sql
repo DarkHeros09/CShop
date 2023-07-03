@@ -3,10 +3,10 @@ INSERT INTO "product" (
   category_id,
   name,
   description,
-  product_image,
+  -- product_image,
   active
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -36,7 +36,7 @@ SET
 category_id = COALESCE(sqlc.narg(category_id),category_id),
 name = COALESCE(sqlc.narg(name),name),
 description = COALESCE(sqlc.narg(description),description),
-product_image = COALESCE(sqlc.narg(product_image),product_image),
+-- product_image = COALESCE(sqlc.narg(product_image),product_image),
 active = COALESCE(sqlc.narg(active),active),
 updated_at = now()
 WHERE id = sqlc.arg(id)

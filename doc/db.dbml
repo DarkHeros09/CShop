@@ -134,6 +134,8 @@ Table shop_order_item as SOI {
   id bigserial [pk,not null] // auto-increment
   product_item_id bigint [not null,ref:> PI.id]
   order_id bigint [not null, ref:> SO.id]
+  size varchar [not null, default: '']
+  color varchar [not null, default: '']
   quantity int [not null, default: 0]
   price varchar [not null, note:'price of product when ordered']
   created_at timestamptz [not null, default: `now()`]
@@ -143,9 +145,11 @@ Table shop_order_item as SOI {
 Table product_item as PI {
   id bigserial [pk,not null] // auto-increment
   product_id bigint [not null, ref:> P.id]
+  size_id bigint [not null, ref:> PS.id]
+  image_id bigint [not null, ref:> PIMG.id]
+  color_id bigint [not null, ref:> PCLR.id]
   product_sku bigint [not null]
   qty_in_stock int [not null]
-  product_image varchar [not null,note: 'may be used to show different images than original']
   price varchar [not null]
   active boolean [not null, default: false, note:'default is false']
   created_at timestamptz [not null, default: `now()`]
@@ -157,10 +161,26 @@ Table product as P {
   category_id bigint [not null,ref:> PC.id]
   name varchar [not null]
   description varchar [not null]
-  product_image varchar [not null]
   active boolean [not null, default: false, note:'default is false']
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+}
+
+Table product_size as PS {
+  id bigserial [pk,not null] // auto-increment
+  size_value varchar [not null]
+}
+
+Table product_color as PCLR {
+  id bigserial [pk,not null] // auto-increment
+  color_value varchar [not null]
+}
+
+Table product_image as PIMG {
+  id bigserial [pk,not null] // auto-increment
+  product_image_1 varchar [not null]
+  product_image_2 varchar [not null]
+  product_image_3 varchar [not null]
 }
 
 Table product_promotion as PPROMO {
@@ -210,7 +230,7 @@ Table product_configuration as PCFG {
 
 Table shop_order as SO {
   id bigserial [pk,not null] // auto-increment
-  order_number varchar [not null]
+  track_number varchar [not null]
   user_id bigint [not null]
   payment_method_id bigint [not null]
   shipping_address_id bigint [not null, ref:> A.id]

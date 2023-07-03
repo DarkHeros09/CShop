@@ -14,11 +14,10 @@ import (
 func createRandomProduct(t *testing.T) Product {
 	category := createRandomProductCategoryParent(t)
 	arg := CreateProductParams{
-		CategoryID:   category.ID,
-		Name:         util.RandomUser(),
-		Description:  util.RandomUser(),
-		ProductImage: util.RandomURL(),
-		Active:       true,
+		CategoryID:  category.ID,
+		Name:        util.RandomUser(),
+		Description: util.RandomUser(),
+		Active:      true,
 	}
 
 	product, err := testQueires.CreateProduct(context.Background(), arg)
@@ -29,7 +28,7 @@ func createRandomProduct(t *testing.T) Product {
 	require.Equal(t, arg.CategoryID, product.CategoryID)
 	require.Equal(t, arg.Name, product.Name)
 	require.Equal(t, arg.Description, product.Description)
-	require.Equal(t, arg.ProductImage, product.ProductImage)
+	// require.Equal(t, arg.ProductImage, product.ProductImage)
 	require.Equal(t, arg.Active, product.Active)
 	require.NotEmpty(t, product.CreatedAt)
 	require.True(t, product.UpdatedAt.IsZero())
@@ -52,7 +51,7 @@ func TestGetProduct(t *testing.T) {
 	require.Equal(t, product1.CategoryID, product2.CategoryID)
 	require.Equal(t, product1.Name, product2.Name)
 	require.Equal(t, product1.Description, product2.Description)
-	require.Equal(t, product1.ProductImage, product2.ProductImage)
+	// require.Equal(t, product1.ProductImage, product2.ProductImage)
 	require.Equal(t, product1.Active, product2.Active)
 	require.Equal(t, product1.CreatedAt, product2.CreatedAt)
 	require.Equal(t, product1.UpdatedAt, product2.UpdatedAt)
@@ -63,12 +62,12 @@ func TestGetProduct(t *testing.T) {
 func TestUpdateProductName(t *testing.T) {
 	product1 := createRandomProduct(t)
 	arg := UpdateProductParams{
-		ID:           product1.ID,
-		CategoryID:   null.Int{},
-		Name:         null.StringFrom(util.RandomString(5)),
-		Description:  null.String{},
-		ProductImage: null.String{},
-		Active:       null.Bool{},
+		ID:          product1.ID,
+		CategoryID:  null.Int{},
+		Name:        null.StringFrom(util.RandomString(5)),
+		Description: null.String{},
+		// ProductImage: null.String{},
+		Active: null.Bool{},
 	}
 
 	product2, err := testQueires.UpdateProduct(context.Background(), arg)
@@ -91,12 +90,12 @@ func TestUpdateProductCategoryAndActive(t *testing.T) {
 	product1 := createRandomProduct(t)
 	category := createRandomProductCategoryParent(t)
 	arg := UpdateProductParams{
-		ID:           product1.ID,
-		CategoryID:   null.IntFromPtr(&category.ParentCategoryID.Int64),
-		Name:         null.String{},
-		Description:  null.String{},
-		ProductImage: null.String{},
-		Active:       null.BoolFrom(!product1.Active),
+		ID:          product1.ID,
+		CategoryID:  null.IntFromPtr(&category.ParentCategoryID.Int64),
+		Name:        null.String{},
+		Description: null.String{},
+		// ProductImage: null.String{},
+		Active: null.BoolFrom(!product1.Active),
 	}
 
 	product2, err := testQueires.UpdateProduct(context.Background(), arg)

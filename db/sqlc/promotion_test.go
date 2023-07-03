@@ -86,7 +86,7 @@ func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
 	arg := UpdatePromotionParams{
 		Description:  null.StringFrom(util.RandomString(5)),
-		DiscountRate: null.IntFrom(util.RandomInt(1, 90)),
+		DiscountRate: null.IntFrom(util.RandomInt(1, 99)),
 		ID:           promotion1.ID,
 	}
 

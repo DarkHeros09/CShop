@@ -131,15 +131,15 @@ func (server *Server) setupRouter() {
 	userRouter.Put("/users/:id/carts/:cartId/purchase", server.finishPurchase)
 
 	//? /items is WishListItems ID in the Table
-	userRouter.Post("/users/:id/wish-lists/:wishId", server.createWishListItem)
+	userRouter.Post("/users/:id/wish-lists/:wishId/items", server.createWishListItem)
 	userRouter.Get("/users/:id/wish-lists/:wishId/items/:itemId", server.getWishListItem)
-	userRouter.Get("/users/:id/wish-lists/:wishId", server.listWishListItems)
+	userRouter.Get("/users/:id/wish-lists/items", server.listWishListItems)
 	userRouter.Put("/users/:id/wish-lists/:wishId/items/:itemId", server.updateWishListItem)
 	userRouter.Delete("/users/:id/wish-lists/:wishId/items/:itemId", server.deleteWishListItem)
 	userRouter.Delete("/users/:id/wish-lists/:wishId", server.deleteWishListItemAll)
 
 	userRouter.Post("/users/:id/payment-methods", server.createPaymentMethod)
-	userRouter.Get("/users/:id/payment-methods/:paymentId", server.getPaymentMethod)
+	userRouter.Get("/users/:id/payment-method", server.getPaymentMethod)
 	userRouter.Get("/users/:id/payment-methods", server.listPaymentMethods)
 	userRouter.Put("/users/:id/payment-methods/:paymentId", server.updatePaymentMethod)
 	userRouter.Delete("/users/:id/payment-methods/:paymentId", server.deletePaymentMethod)

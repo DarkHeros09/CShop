@@ -1,6 +1,6 @@
 -- name: CreateShopOrder :one
 INSERT INTO "shop_order" (
-  order_number,
+  track_number,
   user_id,
   payment_method_id,
   shipping_address_id,
@@ -23,9 +23,10 @@ LIMIT $1
 OFFSET $2;
 
 -- name: ListShopOrdersByUserID :many
-SELECT os.status, 
+SELECT os.status,
+ROW_NUMBER() OVER(ORDER BY so.id) as order_number,
 (
-  SELECT count(soi.id) FROM "shop_order_item" AS soi
+  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
 ) AS item_count,so.*
 FROM "shop_order" AS so
@@ -38,7 +39,7 @@ OFFSET $3;
 -- name: UpdateShopOrder :one
 UPDATE "shop_order"
 SET 
-order_number = COALESCE(sqlc.narg(order_number),order_number),
+track_number = COALESCE(sqlc.narg(track_number),track_number),
 user_id = COALESCE(sqlc.narg(user_id),user_id),
 payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_id),

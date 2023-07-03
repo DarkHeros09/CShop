@@ -75,13 +75,18 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		price = decimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
+			size := createRandomProductSize(t)
+			image := createRandomProductImage(t)
+			color := createRandomProductColor(t)
 			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
-				ProductID:    product.ID,
-				ProductSku:   util.RandomInt(5, 100),
-				QtyInStock:   50,
-				ProductImage: util.RandomURL(),
-				Price:        util.RandomDecimalString(1, 100),
-				Active:       true,
+				ProductID:  product.ID,
+				SizeID:     size.ID,
+				ImageID:    image.ID,
+				ColorID:    color.ID,
+				ProductSku: util.RandomInt(5, 100),
+				QtyInStock: 50,
+				Price:      util.RandomDecimalString(1, 100),
+				Active:     true,
 			})
 			if err != nil {
 				log.Fatal("err is: ", err)
@@ -111,7 +116,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserID:           userAddress.UserID,
 				UserAddressID:    userAddress.AddressID,
-				PaymentMethodID:  paymentMethod.ID,
+				PaymentTypeID:    paymentType.ID,
 				ShoppingCartID:   shoppingCart.ID,
 				ShippingMethodID: shippingMethod.ID,
 				OrderStatusID:    orderStatus.ID,
@@ -243,13 +248,18 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		price = decimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
+			size := createRandomProductSize(t)
+			image := createRandomProductImage(t)
+			color := createRandomProductColor(t)
 			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
-				ProductID:    product.ID,
-				ProductSku:   util.RandomInt(5, 100),
-				QtyInStock:   4,
-				ProductImage: util.RandomURL(),
-				Price:        util.RandomDecimalString(1, 100),
-				Active:       true,
+				ProductID:  product.ID,
+				SizeID:     size.ID,
+				ImageID:    image.ID,
+				ColorID:    color.ID,
+				ProductSku: util.RandomInt(5, 100),
+				QtyInStock: 4,
+				Price:      util.RandomDecimalString(1, 100),
+				Active:     true,
 			})
 			if err != nil {
 				log.Fatal("err is: ", err)
@@ -278,7 +288,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserID:           userAddress.UserID,
 				UserAddressID:    userAddress.AddressID,
-				PaymentMethodID:  paymentMethod.ID,
+				PaymentTypeID:    paymentType.ID,
 				ShoppingCartID:   shoppingCart.ID,
 				ShippingMethodID: shippingMethod.ID,
 				OrderStatusID:    orderStatus.ID,
@@ -360,13 +370,18 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		price = decimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
+			size := createRandomProductSize(t)
+			image := createRandomProductImage(t)
+			color := createRandomProductColor(t)
 			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
-				ProductID:    product.ID,
-				ProductSku:   util.RandomInt(5, 100),
-				QtyInStock:   0,
-				ProductImage: util.RandomURL(),
-				Price:        util.RandomDecimalString(1, 100),
-				Active:       true,
+				ProductID:  product.ID,
+				SizeID:     size.ID,
+				ImageID:    image.ID,
+				ColorID:    color.ID,
+				ProductSku: util.RandomInt(5, 100),
+				QtyInStock: 0,
+				Price:      util.RandomDecimalString(1, 100),
+				Active:     true,
 			})
 			if err != nil {
 				log.Fatal("err is: ", err)
@@ -395,7 +410,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserID:           userAddress.UserID,
 				UserAddressID:    userAddress.AddressID,
-				PaymentMethodID:  paymentMethod.ID,
+				PaymentTypeID:    paymentType.ID,
 				ShoppingCartID:   shoppingCart.ID,
 				ShippingMethodID: shippingMethod.ID,
 				OrderStatusID:    orderStatus.ID,

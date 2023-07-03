@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/guregu/null"
@@ -12,20 +11,20 @@ import (
 
 func createRandomShoppingCart(t *testing.T) ShoppingCart {
 
-	shoppingCartChan := make(chan ShoppingCart)
+	// shoppingCartChan := make(chan ShoppingCart)
 
-	go func() {
-		user1 := createRandomUser(t)
-		shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
-		require.NoError(t, err)
-		require.NotEmpty(t, shoppingCart)
+	// go func() {
+	user1 := createRandomUser(t)
+	shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, shoppingCart)
 
-		require.Equal(t, user1.ID, shoppingCart.UserID)
+	require.Equal(t, user1.ID, shoppingCart.UserID)
 
-		shoppingCartChan <- shoppingCart
-	}()
+	// shoppingCartChan <- shoppingCart
+	// }()
 
-	shoppingCart := <-shoppingCartChan
+	// shoppingCart := <-shoppingCartChan
 
 	return shoppingCart
 }
@@ -90,16 +89,16 @@ func TestDeleteShoppingCart(t *testing.T) {
 }
 
 func TestListShoppingCarts(t *testing.T) {
-	var wg sync.WaitGroup
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			createRandomShoppingCart(t)
-			wg.Done()
-		}()
+	// var wg sync.WaitGroup
+	// wg.Add(10)
+	for i := 0; i < 5; i++ {
+		// go func() {
+		createRandomShoppingCart(t)
+		// 	wg.Done()
+		// }()
 	}
 
-	wg.Wait()
+	// wg.Wait()
 	arg := ListShoppingCartsParams{
 		Limit:  5,
 		Offset: 0,

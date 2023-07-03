@@ -294,9 +294,9 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 	n := 5
 	shoppingCartItems := make([]db.ListShoppingCartItemsByUserIDRow, n)
 	// productItems := make([]db.ProductItem, n)
-	var productItems []db.ProductItem
+	var productItems []db.ListProductItemsV2Row
 	for i := 0; i < n; i++ {
-		randomProductItems := randomProductItem()
+		randomProductItems := randomProductItemNew()
 		productItems = append(productItems, randomProductItems)
 		shoppingCartItems[i] = createRandomListShoppingCartItem(t, shoppingCart, randomProductItems)
 	}
@@ -860,8 +860,8 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id":   userAddress.AddressID,
-				"payment_method_id": paymentMethod.ID,
+				"user_address_id": userAddress.AddressID,
+				"payment_type_id": paymentMethod.PaymentTypeID,
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
@@ -875,7 +875,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 				arg := db.FinishedPurchaseTxParams{
 					UserID:           user.ID,
 					UserAddressID:    userAddress.AddressID,
-					PaymentMethodID:  paymentMethod.ID,
+					PaymentTypeID:    paymentMethod.PaymentTypeID,
 					ShoppingCartID:   shoppingCart.ID,
 					ShippingMethodID: shippingMethod.ID,
 					OrderStatusID:    orderStatus.ID,
@@ -897,8 +897,8 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id":   userAddress.AddressID,
-				"payment_method_id": paymentMethod.ID,
+				"user_address_id": userAddress.AddressID,
+				"payment_type_id": paymentMethod.ID,
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
@@ -921,8 +921,8 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id":   userAddress.AddressID,
-				"payment_method_id": paymentMethod.ID,
+				"user_address_id": userAddress.AddressID,
+				"payment_type_id": paymentMethod.PaymentTypeID,
 
 				"shipping_method_id": shippingMethod.ID,
 				"order_status_id":    orderStatus.ID,
@@ -935,7 +935,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 				arg := db.FinishedPurchaseTxParams{
 					UserID:           user.ID,
 					UserAddressID:    userAddress.AddressID,
-					PaymentMethodID:  paymentMethod.ID,
+					PaymentTypeID:    paymentMethod.PaymentTypeID,
 					ShoppingCartID:   shoppingCart.ID,
 					ShippingMethodID: shippingMethod.ID,
 					OrderStatusID:    orderStatus.ID,
@@ -1042,17 +1042,21 @@ func createRandomShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart) (s
 	return
 }
 
-func createRandomListProductsByIds(t *testing.T, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow, productItem []db.ProductItem) (listByIds []db.ListProductItemsByIDsRow) {
+func createRandomListProductsByIds(t *testing.T, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow, productItem []db.ListProductItemsV2Row) (listByIds []db.ListProductItemsByIDsRow) {
 	productsIds := make([]db.ListProductItemsByIDsRow, len(shoppingCartItem))
 
 	for i := 0; i < len(shoppingCartItem); i++ {
 		productsIds = append(productsIds, db.ListProductItemsByIDsRow{
-			ID:           productItem[i].ID,
-			Name:         null.StringFrom(util.RandomString(10)),
-			ProductID:    productItem[i].ProductID,
-			ProductImage: productItem[i].ProductImage,
-			Price:        productItem[i].Price,
-			Active:       productItem[i].Active,
+			ID:            productItem[i].ID,
+			Name:          null.StringFrom(util.RandomString(10)),
+			ProductID:     productItem[i].ProductID,
+			ProductImage1: productItem[i].ProductImage1,
+			ProductImage2: productItem[i].ProductImage2,
+			ProductImage3: productItem[i].ProductImage3,
+			SizeValue:     productItem[i].SizeValue,
+			ColorValue:    productItem[i].ColorValue,
+			Price:         productItem[i].Price,
+			Active:        productItem[i].Active,
 		})
 	}
 
@@ -1079,7 +1083,7 @@ func createFinalRspForCart(t *testing.T, shopCartItems []db.ListShoppingCartItem
 			Name:           productItems[i].Name,
 			Qty:            shopCartItems[i].Qty,
 			ProductID:      productItems[i].ProductID,
-			ProductImage:   productItems[i].ProductImage,
+			ProductImage:   productItems[i].ProductImage1.String,
 			Price:          productItems[i].Price,
 			Active:         productItems[i].Active,
 		})
@@ -1145,7 +1149,7 @@ func createRandomShoppingCartItemForUpdate(t *testing.T, shoppingCart db.Shoppin
 	return
 }
 
-func createRandomListShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart, productItem db.ProductItem) (shoppingCartItem db.ListShoppingCartItemsByUserIDRow) {
+func createRandomListShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart, productItem db.ListProductItemsV2Row) (shoppingCartItem db.ListShoppingCartItemsByUserIDRow) {
 	shoppingCartItem = db.ListShoppingCartItemsByUserIDRow{
 		UserID:         shoppingCart.UserID,
 		ID:             null.IntFrom(util.RandomMoney()),

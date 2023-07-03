@@ -144,7 +144,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishListID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d/items", tc.UserID, tc.WishListID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -292,9 +292,17 @@ func TestListWishListItemAPI(t *testing.T) {
 
 	n := 5
 	wishListItems := make([]db.ListWishListItemsByUserIDRow, n)
+	// productItems := make([]db.ProductItem, n)
+	var productItems []db.ListProductItemsV2Row
 	for i := 0; i < n; i++ {
-		wishListItems[i] = createRandomListWishListItem(t, wishList)
+		randomProductItems := randomProductItemNew()
+		productItems = append(productItems, randomProductItems)
+		wishListItems[i] = createRandomListWishListItem(t, wishList, randomProductItems)
 	}
+
+	productIds := createProductIdsForWishList(t, wishListItems)
+	listProductsByIds := createRandomListProductsByIdsForWishList(t, wishListItems, productItems)
+	finalRsp := createFinalRspForWishList(t, wishListItems, listProductsByIds)
 
 	testCases := []struct {
 		name          string
@@ -307,7 +315,6 @@ func TestListWishListItemAPI(t *testing.T) {
 		{
 			name:   "OK",
 			UserID: user.ID,
-			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -318,16 +325,20 @@ func TestListWishListItemAPI(t *testing.T) {
 					Times(1).
 					Return(wishListItems, nil)
 
+				store.EXPECT().
+					ListProductItemsByIDs(gomock.Any(), gomock.Eq(productIds)).
+					Times(1).
+					Return(listProductsByIds, nil)
+
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchListWishListItem(t, rsp.Body, wishListItems)
+				requireBodyMatchFinalListWishListItem(t, rsp.Body, finalRsp)
 			},
 		},
 		{
 			name:   "NoAuthorization",
 			UserID: user.ID,
-			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -342,7 +353,6 @@ func TestListWishListItemAPI(t *testing.T) {
 		{
 			name:   "InternalError",
 			UserID: user.ID,
-			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
@@ -361,7 +371,6 @@ func TestListWishListItemAPI(t *testing.T) {
 		{
 			name:   "InvalidUserID",
 			UserID: 0,
-			WishID: wishList.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
 			},
@@ -388,7 +397,7 @@ func TestListWishListItemAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/%d", tc.UserID, tc.WishID)
+			url := fmt.Sprintf("/usr/v1/users/%d/wish-lists/items", tc.UserID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -828,6 +837,17 @@ func createRandomWishListItem(t *testing.T, wishList db.WishList) (wishListItem 
 	return
 }
 
+func createRandomListWishListItem(t *testing.T, wishList db.WishList, productItem db.ListProductItemsV2Row) (wishListItem db.ListWishListItemsByUserIDRow) {
+	wishListItem = db.ListWishListItemsByUserIDRow{
+		UserID:        wishList.UserID,
+		ID:            null.IntFrom(util.RandomMoney()),
+		WishListID:    null.IntFrom(wishList.ID),
+		ProductItemID: null.IntFrom(productItem.ID),
+		CreatedAt:     null.TimeFrom(time.Now()),
+	}
+	return
+}
+
 func createRandomWishListItemForGet(t *testing.T, wishList db.WishList) (wishListItem db.WishListItem) {
 	wishListItem = db.WishListItem{
 		ID:            util.RandomMoney(),
@@ -846,16 +866,16 @@ func createRandomWishListItemForUpdate(t *testing.T, wishList db.WishList) (wish
 	return
 }
 
-func createRandomListWishListItem(t *testing.T, wishList db.WishList) (wishListItem db.ListWishListItemsByUserIDRow) {
-	wishListItem = db.ListWishListItemsByUserIDRow{
-		UserID:        wishList.UserID,
-		ID:            null.IntFrom(util.RandomMoney()),
-		WishListID:    null.IntFrom(wishList.ID),
-		ProductItemID: null.IntFrom(util.RandomMoney()),
-		CreatedAt:     null.TimeFrom(time.Now()),
-	}
-	return
-}
+// func createRandomListWishListItem(t *testing.T, wishList db.WishList) (wishListItem db.ListWishListItemsByUserIDRow) {
+// 	wishListItem = db.ListWishListItemsByUserIDRow{
+// 		UserID:        wishList.UserID,
+// 		ID:            null.IntFrom(util.RandomMoney()),
+// 		WishListID:    null.IntFrom(wishList.ID),
+// 		ProductItemID: null.IntFrom(util.RandomMoney()),
+// 		CreatedAt:     null.TimeFrom(time.Now()),
+// 	}
+// 	return
+// }
 
 func requireBodyMatchWishListItem(t *testing.T, body io.ReadCloser, wishListItem db.WishListItem) {
 	data, err := io.ReadAll(body)
@@ -898,5 +918,68 @@ func requireBodyMatchListWishListItem(t *testing.T, body io.ReadCloser, WishList
 		require.Equal(t, WishListItem[i].WishListID, gotCartItem.WishListID)
 		require.Equal(t, WishListItem[i].ProductItemID, gotCartItem.ProductItemID)
 		require.Equal(t, WishListItem[i].UserID, gotCartItem.UserID)
+	}
+}
+
+func createProductIdsForWishList(t *testing.T, wishListItems []db.ListWishListItemsByUserIDRow) (productId []int64) {
+	var productsIds []int64
+
+	for i := 0; i < len(wishListItems); i++ {
+		productsIds = append(productsIds, wishListItems[i].ProductItemID.Int64)
+	}
+
+	return productsIds
+}
+func createFinalRspForWishList(t *testing.T, wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listWishListItemsResponse) {
+	for i := 0; i < len(productItems); i++ {
+		rsp = append(rsp, listWishListItemsResponse{
+			ID:            wishListItems[i].ID,
+			WishListID:    wishListItems[i].WishListID,
+			CreatedAt:     wishListItems[i].CreatedAt,
+			UpdatedAt:     wishListItems[i].UpdatedAt,
+			ProductItemID: wishListItems[i].ProductItemID,
+			Name:          productItems[i].Name,
+			ProductID:     productItems[i].ProductID,
+			ProductImage:  productItems[i].ProductImage1.String,
+			Price:         productItems[i].Price,
+			Active:        productItems[i].Active,
+		})
+	}
+	return
+}
+
+func createRandomListProductsByIdsForWishList(t *testing.T, wishListItem []db.ListWishListItemsByUserIDRow, productItem []db.ListProductItemsV2Row) (listByIds []db.ListProductItemsByIDsRow) {
+	productsIds := make([]db.ListProductItemsByIDsRow, len(wishListItem))
+
+	for i := 0; i < len(wishListItem); i++ {
+		productsIds = append(productsIds, db.ListProductItemsByIDsRow{
+			ID:            productItem[i].ID,
+			Name:          null.StringFrom(util.RandomString(10)),
+			ProductID:     productItem[i].ProductID,
+			ProductImage1: productItem[i].ProductImage1,
+			ProductImage2: productItem[i].ProductImage2,
+			ProductImage3: productItem[i].ProductImage3,
+			SizeValue:     productItem[i].SizeValue,
+			ColorValue:    productItem[i].ColorValue,
+			Price:         productItem[i].Price,
+			Active:        productItem[i].Active,
+		})
+	}
+
+	return
+}
+
+func requireBodyMatchFinalListWishListItem(t *testing.T, body io.ReadCloser, finalRsp []listWishListItemsResponse) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotWishListItems []listWishListItemsResponse
+	err = json.Unmarshal(data, &gotWishListItems)
+
+	require.NoError(t, err)
+	for i, gotWishListItem := range gotWishListItems {
+		require.Equal(t, finalRsp[i].ID, gotWishListItem.ID)
+		require.Equal(t, finalRsp[i].WishListID, gotWishListItem.WishListID)
+		require.Equal(t, finalRsp[i].ProductItemID, gotWishListItem.ProductItemID)
 	}
 }

@@ -20,11 +20,11 @@ type createProductParamsRequest struct {
 }
 
 type createProductJsonRequest struct {
-	Name         string `json:"name" validate:"required,alphanum"`
-	CategoryID   int64  `json:"category_id" validate:"required,min=1"`
-	Description  string `json:"description" validate:"required"`
-	ProductImage string `json:"product_image" validate:"required,url"`
-	Active       bool   `json:"active" validate:"boolean"`
+	Name        string `json:"name" validate:"required,alphanum"`
+	CategoryID  int64  `json:"category_id" validate:"required,min=1"`
+	Description string `json:"description" validate:"required"`
+	// ProductImage string `json:"product_image" validate:"required,url"`
+	Active bool `json:"active" validate:"boolean"`
 }
 
 func (server *Server) createProduct(ctx *fiber.Ctx) error {
@@ -44,11 +44,11 @@ func (server *Server) createProduct(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.CreateProductParams{
-		CategoryID:   req.CategoryID,
-		Name:         req.Name,
-		Description:  req.Description,
-		ProductImage: req.ProductImage,
-		Active:       req.Active,
+		CategoryID:  req.CategoryID,
+		Name:        req.Name,
+		Description: req.Description,
+		// ProductImage: req.ProductImage,
+		Active: req.Active,
 	}
 
 	product, err := server.store.CreateProduct(ctx.Context(), arg)
@@ -178,12 +178,12 @@ func (server *Server) updateProduct(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateProductParams{
-		ID:           params.ProductID,
-		Name:         null.StringFromPtr(&req.Name),
-		CategoryID:   null.IntFromPtr(&req.CategoryID),
-		Description:  null.StringFromPtr(&req.Description),
-		ProductImage: null.StringFromPtr(&req.ProductImage),
-		Active:       null.BoolFromPtr(&req.Active),
+		ID:          params.ProductID,
+		Name:        null.StringFromPtr(&req.Name),
+		CategoryID:  null.IntFromPtr(&req.CategoryID),
+		Description: null.StringFromPtr(&req.Description),
+		// ProductImage: null.StringFromPtr(&req.ProductImage),
+		Active: null.BoolFromPtr(&req.Active),
 	}
 
 	product, err := server.store.UpdateProduct(ctx.Context(), arg)

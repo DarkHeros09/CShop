@@ -131,22 +131,22 @@ func TestCreateProductAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":          product.Name,
-				"description":   product.Description,
-				"category_id":   product.CategoryID,
-				"product_image": product.ProductImage,
-				"active":        product.Active,
+				"name":        product.Name,
+				"description": product.Description,
+				"category_id": product.CategoryID,
+				// "product_image": product.ProductImage,
+				"active": product.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateProductParams{
-					CategoryID:   product.CategoryID,
-					Name:         product.Name,
-					Description:  product.Description,
-					ProductImage: product.ProductImage,
-					Active:       product.Active,
+					CategoryID:  product.CategoryID,
+					Name:        product.Name,
+					Description: product.Description,
+					// ProductImage: product.ProductImage,
+					Active: product.Active,
 				}
 
 				store.EXPECT().
@@ -166,11 +166,11 @@ func TestCreateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateProductParams{
-					CategoryID:   product.CategoryID,
-					Name:         product.Name,
-					Description:  product.Description,
-					ProductImage: product.ProductImage,
-					Active:       product.Active,
+					CategoryID:  product.CategoryID,
+					Name:        product.Name,
+					Description: product.Description,
+					// ProductImage: product.ProductImage,
+					Active: product.Active,
 				}
 
 				store.EXPECT().
@@ -189,19 +189,19 @@ func TestCreateProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			body: fiber.Map{
-				"name":          product.Name,
-				"description":   product.Description,
-				"category_id":   product.CategoryID,
-				"product_image": product.ProductImage,
-				"active":        product.Active,
+				"name":        product.Name,
+				"description": product.Description,
+				"category_id": product.CategoryID,
+				// "product_image": product.ProductImage,
+				"active": product.Active,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateProductParams{
-					CategoryID:   product.CategoryID,
-					Name:         product.Name,
-					Description:  product.Description,
-					ProductImage: product.ProductImage,
-					Active:       product.Active,
+					CategoryID:  product.CategoryID,
+					Name:        product.Name,
+					Description: product.Description,
+					// ProductImage: product.ProductImage,
+					Active: product.Active,
 				}
 
 				store.EXPECT().
@@ -216,11 +216,11 @@ func TestCreateProductAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"name":          product.Name,
-				"description":   product.Description,
-				"category_id":   product.CategoryID,
-				"product_image": product.ProductImage,
-				"active":        product.Active,
+				"name":        product.Name,
+				"description": product.Description,
+				"category_id": product.CategoryID,
+				// "product_image": product.ProductImage,
+				"active": product.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -433,12 +433,12 @@ func TestUpdateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductParams{
-					CategoryID:   null.IntFromPtr(&product.CategoryID),
-					Name:         null.StringFromPtr(&product.Name),
-					Description:  null.StringFrom("new product Description"),
-					ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
-					Active:       null.BoolFromPtr(&product.Active),
-					ID:           product.ID,
+					CategoryID:  null.IntFromPtr(&product.CategoryID),
+					Name:        null.StringFromPtr(&product.Name),
+					Description: null.StringFrom("new product Description"),
+					// ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
+					Active: null.BoolFromPtr(&product.Active),
+					ID:     product.ID,
 				}
 
 				store.EXPECT().
@@ -466,12 +466,12 @@ func TestUpdateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductParams{
-					CategoryID:   null.IntFromPtr(&product.CategoryID),
-					Name:         null.StringFromPtr(&product.Name),
-					Description:  null.StringFrom("new product Description"),
-					ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
-					Active:       null.BoolFromPtr(&product.Active),
-					ID:           product.ID,
+					CategoryID:  null.IntFromPtr(&product.CategoryID),
+					Name:        null.StringFromPtr(&product.Name),
+					Description: null.StringFrom("new product Description"),
+					// ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
+					Active: null.BoolFromPtr(&product.Active),
+					ID:     product.ID,
 				}
 
 				store.EXPECT().
@@ -497,12 +497,12 @@ func TestUpdateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductParams{
-					CategoryID:   null.IntFromPtr(&product.CategoryID),
-					Name:         null.StringFromPtr(&product.Name),
-					Description:  null.StringFrom("new product Description"),
-					ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
-					Active:       null.BoolFromPtr(&product.Active),
-					ID:           product.ID,
+					CategoryID:  null.IntFromPtr(&product.CategoryID),
+					Name:        null.StringFromPtr(&product.Name),
+					Description: null.StringFrom("new product Description"),
+					// ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
+					Active: null.BoolFromPtr(&product.Active),
+					ID:     product.ID,
 				}
 
 				store.EXPECT().
@@ -529,12 +529,12 @@ func TestUpdateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateProductParams{
-					CategoryID:   null.IntFromPtr(&product.CategoryID),
-					Name:         null.StringFromPtr(&product.Name),
-					Description:  null.StringFrom("new product Description"),
-					ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
-					Active:       null.BoolFromPtr(&product.Active),
-					ID:           product.ID,
+					CategoryID:  null.IntFromPtr(&product.CategoryID),
+					Name:        null.StringFromPtr(&product.Name),
+					Description: null.StringFrom("new product Description"),
+					// ProductImage: null.StringFrom("https://newproduct.com/ProductImage"),
+					Active: null.BoolFromPtr(&product.Active),
+					ID:     product.ID,
 				}
 				store.EXPECT().
 					UpdateProduct(gomock.Any(), gomock.Eq(arg)).
@@ -755,23 +755,23 @@ func randomPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 
 func randomProduct() db.Product {
 	return db.Product{
-		ID:           util.RandomInt(1, 1000),
-		CategoryID:   util.RandomInt(1, 500),
-		Name:         util.RandomUser(),
-		Description:  util.RandomUser(),
-		ProductImage: util.RandomURL(),
-		Active:       util.RandomBool(),
+		ID:          util.RandomInt(1, 1000),
+		CategoryID:  util.RandomInt(1, 500),
+		Name:        util.RandomUser(),
+		Description: util.RandomUser(),
+		// ProductImage: util.RandomURL(),
+		Active: util.RandomBool(),
 	}
 }
 func randomProductForList() db.ListProductsRow {
 	return db.ListProductsRow{
-		ID:           util.RandomInt(1, 1000),
-		CategoryID:   util.RandomInt(1, 500),
-		Name:         util.RandomUser(),
-		Description:  util.RandomUser(),
-		ProductImage: util.RandomURL(),
-		Active:       util.RandomBool(),
-		TotalCount:   util.RandomMoney(),
+		ID:          util.RandomInt(1, 1000),
+		CategoryID:  util.RandomInt(1, 500),
+		Name:        util.RandomUser(),
+		Description: util.RandomUser(),
+		// ProductImage: util.RandomURL(),
+		Active:     util.RandomBool(),
+		TotalCount: util.RandomMoney(),
 	}
 }
 

@@ -236,7 +236,7 @@ func createRandomShopOrderForList(t *testing.T, user db.User, orderStatus db.Ord
 	shopOrder = db.ListShopOrdersByUserIDRow{
 		Status:            null.StringFrom(orderStatus.Status),
 		ID:                util.RandomMoney(),
-		OrderNumber:       util.RandomString(5),
+		TrackNumber:       util.RandomString(5),
 		UserID:            user.ID,
 		PaymentMethodID:   util.RandomMoney(),
 		ShippingAddressID: util.RandomMoney(),

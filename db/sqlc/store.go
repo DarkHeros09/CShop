@@ -53,9 +53,10 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction
 type FinishedPurchaseTxParams struct {
-	UserID           int64  `json:"user_id"`
-	UserAddressID    int64  `json:"user_address_id"`
-	PaymentMethodID  int64  `json:"payment_method_id"`
+	UserID        int64 `json:"user_id"`
+	UserAddressID int64 `json:"user_address_id"`
+	// PaymentMethodID  int64  `json:"payment_method_id"`
+	PaymentTypeID    int64  `json:"payment_type_id"`
 	ShoppingCartID   int64  `json:"shopping_cart_id"`
 	ShippingMethodID int64  `json:"shipping_method_id"`
 	OrderStatusID    int64  `json:"order_status_id"`
@@ -87,12 +88,22 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			return err
 		}
 
-		orderNumber := util.GenerateOrderNumber()
+		trackNumber := util.GenerateTrackNumber()
+
+		argPM := GetPaymentMethodParams{
+			UserID:        arg.UserID,
+			PaymentTypeID: arg.PaymentTypeID,
+		}
+
+		paymentMethod, err := q.GetPaymentMethod(ctx, argPM)
+		if err != nil {
+			return err
+		}
 
 		createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
-			OrderNumber:       orderNumber,
+			TrackNumber:       trackNumber,
 			UserID:            arg.UserID,
-			PaymentMethodID:   arg.PaymentMethodID,
+			PaymentMethodID:   paymentMethod.ID,
 			ShippingAddressID: arg.UserAddressID,
 			OrderTotal:        arg.OrderTotal,
 			ShippingMethodID:  arg.ShippingMethodID,

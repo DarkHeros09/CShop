@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-05-24T17:16:32.945Z
+-- Generated at: 2023-06-12T17:16:53.082Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -120,6 +120,8 @@ CREATE TABLE "shop_order_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_item_id" bigint NOT NULL,
   "order_id" bigint NOT NULL,
+  "size" varchar NOT NULL DEFAULT '',
+  "color" varchar NOT NULL DEFAULT '',
   "quantity" int NOT NULL DEFAULT 0,
   "price" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -129,9 +131,11 @@ CREATE TABLE "shop_order_item" (
 CREATE TABLE "product_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_id" bigint NOT NULL,
+  "size_id" bigint NOT NULL,
+  "image_id" bigint NOT NULL,
+  "color_id" bigint NOT NULL,
   "product_sku" bigint NOT NULL,
   "qty_in_stock" int NOT NULL,
-  "product_image" varchar NOT NULL,
   "price" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -143,10 +147,26 @@ CREATE TABLE "product" (
   "category_id" bigint NOT NULL,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
-  "product_image" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "product_size" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "size_value" varchar NOT NULL
+);
+
+CREATE TABLE "product_color" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "color_value" varchar NOT NULL
+);
+
+CREATE TABLE "product_image" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "product_image_1" varchar NOT NULL,
+  "product_image_2" varchar NOT NULL,
+  "product_image_3" varchar NOT NULL
 );
 
 CREATE TABLE "product_promotion" (
@@ -196,7 +216,7 @@ CREATE TABLE "product_configuration" (
 
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "order_number" varchar NOT NULL,
+  "track_number" varchar NOT NULL,
   "user_id" bigint NOT NULL,
   "payment_method_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,
@@ -229,8 +249,6 @@ CREATE INDEX ON "user" ("telephone");
 COMMENT ON COLUMN "payment_type"."value" IS 'for companies payment system like BCD';
 
 COMMENT ON COLUMN "shop_order_item"."price" IS 'price of product when ordered';
-
-COMMENT ON COLUMN "product_item"."product_image" IS 'may be used to show different images than original';
 
 COMMENT ON COLUMN "product_item"."active" IS 'default is false';
 
@@ -283,6 +301,12 @@ ALTER TABLE "shop_order_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "pr
 ALTER TABLE "shop_order_item" ADD FOREIGN KEY ("order_id") REFERENCES "shop_order" ("id");
 
 ALTER TABLE "product_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
+
+ALTER TABLE "product_item" ADD FOREIGN KEY ("size_id") REFERENCES "product_size" ("id");
+
+ALTER TABLE "product_item" ADD FOREIGN KEY ("image_id") REFERENCES "product_image" ("id");
+
+ALTER TABLE "product_item" ADD FOREIGN KEY ("color_id") REFERENCES "product_color" ("id");
 
 ALTER TABLE "product" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 

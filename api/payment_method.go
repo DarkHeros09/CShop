@@ -63,7 +63,7 @@ func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
 // //////////////* Get API //////////////
 
 type getPaymentMethodParamsRequest struct {
-	ID     int64 `params:"paymentId" validate:"required,min=1"`
+	// ID     int64 `params:"paymentId" validate:"required,min=1"`
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 

@@ -14,6 +14,7 @@ var testQueires *Queries
 var testDB *pgxpool.Pool
 
 func TestMain(m *testing.M) {
+	// goleak.VerifyTestMain(m)
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		log.Fatal("cannot load config:", err)

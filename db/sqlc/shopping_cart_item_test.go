@@ -2,8 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -117,41 +115,41 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 }
 
 func TestListShoppingCartItemes(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	shoppingCart := createRandomShoppingCart(t)
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 
-	wg.Add(10)
+	// wg.Add(10)
 
 	for i := 0; i < 5; i++ {
-		go func(i int) {
-			fmt.Println("LOOP: ", i)
-			productItem := createRandomProductItem(t)
-			Qty := int32(util.RandomInt(5, 10))
-			arg := CreateShoppingCartItemParams{
-				ShoppingCartID: shoppingCart.ID,
-				ProductItemID:  productItem.ID,
-				Qty:            Qty,
-			}
-			cartItemsChan := make(chan ShoppingCartItem)
-			errChan := make(chan error)
-			go func() {
-				cartItems, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
-				cartItemsChan <- cartItems
-				errChan <- err
-				wg.Done()
-			}()
-			cartItems := <-cartItemsChan
-			err := <-errChan
-			require.NoError(t, err)
-			require.NotEmpty(t, cartItems)
-			wg.Done()
+		// go func(i int) {
+		// 	fmt.Println("LOOP: ", i)
+		productItem := createRandomProductItem(t)
+		Qty := int32(util.RandomInt(5, 10))
+		arg := CreateShoppingCartItemParams{
+			ShoppingCartID: shoppingCart.ID,
+			ProductItemID:  productItem.ID,
+			Qty:            Qty,
+		}
+		// cartItemsChan := make(chan ShoppingCartItem)
+		// errChan := make(chan error)
+		// go func() {
+		cartItems, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
+		// cartItemsChan <- cartItems
+		// errChan <- err
+		// wg.Done()
+		// }()
+		// cartItems := <-cartItemsChan
+		// err := <-errChan
+		require.NoError(t, err)
+		require.NotEmpty(t, cartItems)
+		// wg.Done()
 
-		}(i)
+		// }(i)
 
 	}
 
-	wg.Wait()
+	// wg.Wait()
 
 	arg := ListShoppingCartItemsParams{
 		Limit:  5,

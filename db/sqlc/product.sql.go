@@ -17,20 +17,19 @@ INSERT INTO "product" (
   category_id,
   name,
   description,
-  product_image,
+  -- product_image,
   active
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4
 )
-RETURNING id, category_id, name, description, product_image, active, created_at, updated_at, search
+RETURNING id, category_id, name, description, active, created_at, updated_at, search
 `
 
 type CreateProductParams struct {
-	CategoryID   int64  `json:"category_id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	ProductImage string `json:"product_image"`
-	Active       bool   `json:"active"`
+	CategoryID  int64  `json:"category_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -38,7 +37,6 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		arg.CategoryID,
 		arg.Name,
 		arg.Description,
-		arg.ProductImage,
 		arg.Active,
 	)
 	var i Product
@@ -47,7 +45,6 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.CategoryID,
 		&i.Name,
 		&i.Description,
-		&i.ProductImage,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -67,7 +64,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, category_id, name, description, product_image, active, created_at, updated_at, search FROM "product"
+SELECT id, category_id, name, description, active, created_at, updated_at, search FROM "product"
 WHERE id = $1 LIMIT 1
 `
 
@@ -79,7 +76,6 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.CategoryID,
 		&i.Name,
 		&i.Description,
-		&i.ProductImage,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -89,7 +85,7 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, category_id, name, description, product_image, active, created_at, updated_at, search ,
+SELECT id, category_id, name, description, active, created_at, updated_at, search ,
 COUNT(*) OVER() AS total_count
 FROM "product"
 ORDER BY id
@@ -103,16 +99,15 @@ type ListProductsParams struct {
 }
 
 type ListProductsRow struct {
-	ID           int64       `json:"id"`
-	CategoryID   int64       `json:"category_id"`
-	Name         string      `json:"name"`
-	Description  string      `json:"description"`
-	ProductImage string      `json:"product_image"`
-	Active       bool        `json:"active"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-	Search       null.String `json:"search"`
-	TotalCount   int64       `json:"total_count"`
+	ID          int64       `json:"id"`
+	CategoryID  int64       `json:"category_id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Active      bool        `json:"active"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
+	Search      null.String `json:"search"`
+	TotalCount  int64       `json:"total_count"`
 }
 
 // WITH total_records AS (
@@ -136,7 +131,6 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]L
 			&i.CategoryID,
 			&i.Name,
 			&i.Description,
-			&i.ProductImage,
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -160,31 +154,29 @@ SET
 category_id = COALESCE($1,category_id),
 name = COALESCE($2,name),
 description = COALESCE($3,description),
-product_image = COALESCE($4,product_image),
-active = COALESCE($5,active),
+active = COALESCE($4,active),
 updated_at = now()
-WHERE id = $6
-RETURNING id, category_id, name, description, product_image, active, created_at, updated_at, search
+WHERE id = $5
+RETURNING id, category_id, name, description, active, created_at, updated_at, search
 `
 
 type UpdateProductParams struct {
-	CategoryID   null.Int    `json:"category_id"`
-	Name         null.String `json:"name"`
-	Description  null.String `json:"description"`
-	ProductImage null.String `json:"product_image"`
-	Active       null.Bool   `json:"active"`
-	ID           int64       `json:"id"`
+	CategoryID  null.Int    `json:"category_id"`
+	Name        null.String `json:"name"`
+	Description null.String `json:"description"`
+	Active      null.Bool   `json:"active"`
+	ID          int64       `json:"id"`
 }
 
 // )
 // SELECT *
 // FROM list_products, total_records;
+// product_image = COALESCE(sqlc.narg(product_image),product_image),
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
 	row := q.db.QueryRow(ctx, updateProduct,
 		arg.CategoryID,
 		arg.Name,
 		arg.Description,
-		arg.ProductImage,
 		arg.Active,
 		arg.ID,
 	)
@@ -194,7 +186,6 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.CategoryID,
 		&i.Name,
 		&i.Description,
-		&i.ProductImage,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
