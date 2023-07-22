@@ -2,16 +2,16 @@ package db
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomUserReview(t *testing.T) UserReview {
+	t.Helper()
 	user := createRandomUser(t)
 	shopOrderItem, _ := createRandomShopOrderItem(t)
 	arg := CreateUserReviewParams{
@@ -19,7 +19,7 @@ func createRandomUserReview(t *testing.T) UserReview {
 		OrderedProductID: shopOrderItem.ID,
 		RatingValue:      int32(util.RandomInt(1, 5)),
 	}
-	userReview, err := testQueires.CreateUserReview(context.Background(), arg)
+	userReview, err := testStore.CreateUserReview(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userReview)
 
@@ -30,6 +30,7 @@ func createRandomUserReview(t *testing.T) UserReview {
 	return userReview
 }
 func TestCreateUserReview(t *testing.T) {
+	t.Parallel()
 	createRandomUserReview(t)
 }
 
@@ -40,7 +41,7 @@ func TestGetUserReview(t *testing.T) {
 		ID:     userReview1.ID,
 		UserID: userReview1.UserID,
 	}
-	userReview2, err := testQueires.GetUserReview(context.Background(), arg)
+	userReview2, err := testStore.GetUserReview(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userReview2)
@@ -52,6 +53,7 @@ func TestGetUserReview(t *testing.T) {
 }
 
 func TestUpdateUserReviewRating(t *testing.T) {
+	t.Parallel()
 	userReview1 := createRandomUserReview(t)
 	arg := UpdateUserReviewParams{
 		UserID:           userReview1.UserID,
@@ -60,7 +62,7 @@ func TestUpdateUserReviewRating(t *testing.T) {
 		ID:               userReview1.ID,
 	}
 
-	userReview2, err := testQueires.UpdateUserReview(context.Background(), arg)
+	userReview2, err := testStore.UpdateUserReview(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userReview2)
 
@@ -71,13 +73,14 @@ func TestUpdateUserReviewRating(t *testing.T) {
 }
 
 func TestDeleteUserReview(t *testing.T) {
+	t.Parallel()
 	userReview1 := createRandomUserReview(t)
 
 	arg1 := DeleteUserReviewParams{
 		ID:     userReview1.ID,
 		UserID: userReview1.UserID,
 	}
-	_, err := testQueires.DeleteUserReview(context.Background(), arg1)
+	_, err := testStore.DeleteUserReview(context.Background(), arg1)
 
 	require.NoError(t, err)
 
@@ -85,7 +88,7 @@ func TestDeleteUserReview(t *testing.T) {
 		ID:     userReview1.ID,
 		UserID: userReview1.UserID,
 	}
-	userReview2, err := testQueires.GetUserReview(context.Background(), arg)
+	userReview2, err := testStore.GetUserReview(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -94,36 +97,38 @@ func TestDeleteUserReview(t *testing.T) {
 }
 
 func TestListUserReviews(t *testing.T) {
-	lastUserReviewChan := make(chan UserReview)
-	var wg sync.WaitGroup
-	wg.Add(5)
+	t.Parallel()
+	var lastUserReview UserReview
+	// lastUserReviewChan := make(chan UserReview)
+	// var wg sync.WaitGroup
+	// wg.Add(5)
 	for i := 0; i < 5; i++ {
-		go func(i int) {
-			lastUserReview := createRandomUserReview(t)
-			wg.Done()
-			if i == 4 {
+		// go func(i int) {
+		lastUserReview = createRandomUserReview(t)
+		// wg.Done()
+		// 	if i == 4 {
 
-				lastUserReviewChan <- lastUserReview
-			}
-		}(i)
+		// 		lastUserReviewChan <- lastUserReview
+		// 	}
+		// }(i)
 	}
-	lastUserReview := <-lastUserReviewChan
-	wg.Wait()
+	// lastUserReview := <-lastUserReviewChan
+	// wg.Wait()
 	arg := ListUserReviewsParams{
 		Limit:  5,
 		Offset: 0,
 		UserID: lastUserReview.UserID,
 	}
 
-	userReviewsChan := make(chan []UserReview)
-	errChan := make(chan error)
-	go func() {
-		userReviews, err := testQueires.ListUserReviews(context.Background(), arg)
-		userReviewsChan <- userReviews
-		errChan <- err
-	}()
-	userReviews := <-userReviewsChan
-	err := <-errChan
+	// userReviewsChan := make(chan []UserReview)
+	// errChan := make(chan error)
+	// go func() {
+	userReviews, err := testStore.ListUserReviews(context.Background(), arg)
+	// 	userReviewsChan <- userReviews
+	// 	errChan <- err
+	// }()
+	// userReviews := <-userReviewsChan
+	// err := <-errChan
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userReviews)

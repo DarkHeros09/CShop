@@ -16,7 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -453,8 +453,15 @@ func TestListProductItemsV2API(t *testing.T) {
 				Limit: n,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.ListProductItemsV2Params{
+					Limit:      10,
+					CategoryID: null.IntFromPtr(nil),
+					BrandID:    null.IntFromPtr(nil),
+					ColorID:    null.IntFromPtr(nil),
+					SizeID:     null.IntFromPtr(nil),
+				}
 				store.EXPECT().
-					ListProductItemsV2(gomock.Any(), gomock.Eq(int32(n))).
+					ListProductItemsV2(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(productItems, nil)
 			},
@@ -555,8 +562,12 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.ListProductItemsNextPageParams{
-					Limit: int32(n),
-					ID:    productItems1[len(productItems1)-1].ID,
+					Limit:      int32(n),
+					ID:         productItems1[len(productItems1)-1].ID,
+					CategoryID: null.IntFromPtr(nil),
+					BrandID:    null.IntFromPtr(nil),
+					ColorID:    null.IntFromPtr(nil),
+					SizeID:     null.IntFromPtr(nil),
 				}
 
 				store.EXPECT().

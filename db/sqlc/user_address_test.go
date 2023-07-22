@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,7 +19,7 @@ func createRandomUserAddress(t *testing.T) UserAddress {
 		// DefaultAddress: null.IntFromPtr(&address1.ID),
 	}
 
-	userAddress, err := testQueires.CreateUserAddress(context.Background(), arg)
+	userAddress, err := testStore.CreateUserAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress)
 
@@ -36,6 +36,7 @@ func TestCreateUserAddress(t *testing.T) {
 }
 
 func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddressRow {
+	t.Helper()
 	user1 := createRandomUser(t)
 	address1 := createRandomAddress(t)
 
@@ -47,7 +48,7 @@ func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddre
 		DefaultAddress: null.IntFromPtr(&address1.ID),
 	}
 
-	userAddress, err := testQueires.CreateUserAddressWithAddress(context.Background(), arg)
+	userAddress, err := testStore.CreateUserAddressWithAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress)
 
@@ -62,16 +63,18 @@ func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddre
 }
 
 func TestCreateUserAddressWithAddress(t *testing.T) {
+	t.Parallel()
 	createRandomUserAddressWithAddress(t)
 }
 
 func TestGetUserAddress(t *testing.T) {
+	t.Parallel()
 	userAddress1 := createRandomUserAddress(t)
 	arg := GetUserAddressParams{
 		UserID:    userAddress1.UserID,
 		AddressID: userAddress1.AddressID,
 	}
-	userAddress2, err := testQueires.GetUserAddress(context.Background(), arg)
+	userAddress2, err := testStore.GetUserAddress(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress2)
@@ -90,7 +93,7 @@ func TestGetUserAddressWithAddress(t *testing.T) {
 		AddressID: userAddress1.AddressID,
 	}
 
-	userAddress2, err := testQueires.GetUserAddressWithAddress(context.Background(), arg)
+	userAddress2, err := testStore.GetUserAddressWithAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress2)
 
@@ -105,7 +108,7 @@ func TestGetUserAddressWithAddress(t *testing.T) {
 func TestCheckUserAddressDefaultAddress(t *testing.T) {
 	userAddress1 := createRandomUserAddressWithAddress(t)
 
-	userAddressLength, err := testQueires.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
+	userAddressLength, err := testStore.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddressLength)
 
@@ -115,11 +118,11 @@ func TestCheckUserAddressDefaultAddress(t *testing.T) {
 		UserID:    userAddress1.UserID,
 		AddressID: userAddress1.AddressID,
 	}
-	userAddress2, err := testQueires.DeleteUserAddress(context.Background(), arg)
+	userAddress2, err := testStore.DeleteUserAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress2)
 
-	userAddressLength2, err := testQueires.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
+	userAddressLength2, err := testStore.CheckUserAddressDefaultAddress(context.Background(), userAddress1.UserID)
 	require.NoError(t, err)
 	require.Empty(t, userAddressLength2)
 
@@ -134,7 +137,7 @@ func TestUpdateUserAddress(t *testing.T) {
 		DefaultAddress: null.IntFromPtr(&userAddress1.DefaultAddress.Int64),
 	}
 
-	userAddress2, err := testQueires.UpdateUserAddress(context.Background(), arg)
+	userAddress2, err := testStore.UpdateUserAddress(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress2)
@@ -151,12 +154,12 @@ func TestDeleteUserAddress(t *testing.T) {
 		UserID:    userAddress1.UserID,
 		AddressID: userAddress1.AddressID,
 	}
-	userAddress2, err := testQueires.DeleteUserAddress(context.Background(), arg)
+	userAddress2, err := testStore.DeleteUserAddress(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userAddress2)
 
-	userAddress3, err := testQueires.DeleteUserAddress(context.Background(), arg)
+	userAddress3, err := testStore.DeleteUserAddress(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -164,6 +167,7 @@ func TestDeleteUserAddress(t *testing.T) {
 }
 
 func TestListUserAddresses(t *testing.T) {
+	t.Parallel()
 	lastUserAddressChan := make(chan UserAddress)
 	for i := 0; i < 10; i++ {
 		go func(i int) {
@@ -184,7 +188,7 @@ func TestListUserAddresses(t *testing.T) {
 		Offset: 0,
 	}
 
-	userAddresses, err := testQueires.ListUserAddresses(context.Background(), arg)
+	userAddresses, err := testStore.ListUserAddresses(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, userAddresses, 1)
 

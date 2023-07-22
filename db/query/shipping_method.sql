@@ -33,7 +33,7 @@ SELECT sm.*, so.user_id
 FROM "shipping_method" AS sm
 LEFT JOIN "shop_order" AS so ON so.shipping_method_id = sm.id
 WHERE so.user_id = $3
-ORDER BY id
+ORDER BY sm.id
 LIMIT $1
 OFFSET $2;
 

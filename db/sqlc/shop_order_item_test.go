@@ -2,12 +2,11 @@ package db
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +20,7 @@ func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 		Price:         util.RandomDecimalString(1, 100),
 	}
 
-	shopOrderItem, err := testQueires.CreateShopOrderItem(context.Background(), arg)
+	shopOrderItem, err := testStore.CreateShopOrderItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrderItem)
 
@@ -38,8 +37,9 @@ func TestCreateShopOrderItem(t *testing.T) {
 }
 
 func TestGetShopOrderItem(t *testing.T) {
+	t.Parallel()
 	shopOrderItem1, _ := createRandomShopOrderItem(t)
-	shopOrderItem2, err := testQueires.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
+	shopOrderItem2, err := testStore.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrderItem2)
@@ -61,7 +61,7 @@ func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 		ID:            shopOrderItem1.ID,
 	}
 
-	shopOrderItem2, err := testQueires.UpdateShopOrderItem(context.Background(), arg)
+	shopOrderItem2, err := testStore.UpdateShopOrderItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrderItem2)
 
@@ -74,11 +74,11 @@ func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 
 func TestDeleteShopOrderItem(t *testing.T) {
 	shopOrderItem1, _ := createRandomShopOrderItem(t)
-	err := testQueires.DeleteShopOrderItem(context.Background(), shopOrderItem1.ID)
+	err := testStore.DeleteShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.NoError(t, err)
 
-	shopOrderItem2, err := testQueires.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
+	shopOrderItem2, err := testStore.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -103,7 +103,7 @@ func TestListShopOrderItemsByUserIDOrderID(t *testing.T) {
 		UserID:  shopOrder.UserID,
 	}
 
-	shopOrderItems, err := testQueires.ListShopOrderItemsByUserIDOrderID(context.Background(), arg)
+	shopOrderItems, err := testStore.ListShopOrderItemsByUserIDOrderID(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrderItems)
@@ -115,21 +115,22 @@ func TestListShopOrderItemsByUserIDOrderID(t *testing.T) {
 }
 
 func TestListShopOrderItems(t *testing.T) {
-	var wg sync.WaitGroup
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			createRandomShopOrderItem(t)
-			wg.Done()
-		}()
+	t.Parallel()
+	// var wg sync.WaitGroup
+	// wg.Add(10)
+	for i := 0; i < 5; i++ {
+		// go func() {
+		createRandomShopOrderItem(t)
+		// 	wg.Done()
+		// }()
 	}
-	wg.Wait()
+	// wg.Wait()
 	arg := ListShopOrderItemsParams{
 		Limit:  5,
 		Offset: 0,
 	}
 
-	shopOrderItems, err := testQueires.ListShopOrderItems(context.Background(), arg)
+	shopOrderItems, err := testStore.ListShopOrderItems(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrderItems)

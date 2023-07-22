@@ -6,19 +6,19 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomAddress(t *testing.T) Address {
-
+	// defer goleak.VerifyNone(t)
 	arg := CreateAddressParams{
 		AddressLine: util.RandomString(5),
 		Region:      util.RandomString(5),
 		City:        util.RandomString(5),
 	}
 
-	address, err := testQueires.CreateAddress(context.Background(), arg)
+	address, err := testStore.CreateAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, address)
 
@@ -35,7 +35,7 @@ func TestCreateAddress(t *testing.T) {
 
 func TestGetAddress(t *testing.T) {
 	address1 := createRandomAddress(t)
-	address2, err := testQueires.GetAddress(context.Background(), address1.ID)
+	address2, err := testStore.GetAddress(context.Background(), address1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, address2)
@@ -55,7 +55,7 @@ func TestUpdateAddressLine(t *testing.T) {
 		Region:      null.String{},
 		City:        null.String{},
 	}
-	address2, err := testQueires.UpdateAddress(context.Background(), arg)
+	address2, err := testStore.UpdateAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, address1)
 
@@ -75,7 +75,7 @@ func TestUpdateAddressCity(t *testing.T) {
 		City:        null.StringFrom("New Benghazi"),
 	}
 
-	address2, err := testQueires.UpdateAddress(context.Background(), arg)
+	address2, err := testStore.UpdateAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, address1)
 
@@ -95,7 +95,7 @@ func TestUpdateAddressLineAndCity(t *testing.T) {
 		City:        null.StringFrom("New Tubroq"),
 	}
 
-	address2, err := testQueires.UpdateAddress(context.Background(), arg)
+	address2, err := testStore.UpdateAddress(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, address1)
 
@@ -108,12 +108,12 @@ func TestUpdateAddressLineAndCity(t *testing.T) {
 
 func TestDeleteAddress(t *testing.T) {
 	address1 := createRandomAddress(t)
-	err := testQueires.DeleteAddress(context.Background(), address1.ID)
+	err := testStore.DeleteAddress(context.Background(), address1.ID)
 
 	require.NoError(t, err)
 
 	arg := address1.ID
-	useraddress2, err := testQueires.GetAddress(context.Background(), arg)
+	useraddress2, err := testStore.GetAddress(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -132,7 +132,7 @@ func TestListAddresses(t *testing.T) {
 		Offset: 0,
 	}
 
-	addresses, err := testQueires.ListAddressesByCity(context.Background(), arg)
+	addresses, err := testStore.ListAddressesByCity(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, addresses, 1)
 

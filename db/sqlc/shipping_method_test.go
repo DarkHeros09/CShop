@@ -19,7 +19,7 @@ func createRandomShippingMethod(t *testing.T) ShippingMethod {
 			Price: util.RandomDecimalString(1, 100),
 		}
 
-		shippingMethod, err = testQueires.CreateShippingMethod(context.Background(), arg)
+		shippingMethod, err = testStore.CreateShippingMethod(context.Background(), arg)
 		require.NoError(t, err)
 		require.NotEmpty(t, shippingMethod)
 
@@ -35,7 +35,7 @@ func TestCreateShippingMethod(t *testing.T) {
 
 func TestGetShippingMethod(t *testing.T) {
 	shippingMethod1 := createRandomShippingMethod(t)
-	shippingMethod2, err := testQueires.GetShippingMethod(context.Background(), shippingMethod1.ID)
+	shippingMethod2, err := testStore.GetShippingMethod(context.Background(), shippingMethod1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shippingMethod2)
@@ -53,7 +53,7 @@ func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 		Price: null.StringFrom(util.RandomDecimalString(1, 100)),
 	}
 
-	shippingMethod2, err := testQueires.UpdateShippingMethod(context.Background(), arg)
+	shippingMethod2, err := testStore.UpdateShippingMethod(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shippingMethod2)
 
@@ -64,11 +64,11 @@ func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 
 // func TestDeleteShippingMethod(t *testing.T) {
 // 	shippingMethod1 := createRandomShippingMethod(t)
-// 	err := testQueires.DeleteShippingMethod(context.Background(), shippingMethod1.ID)
+// 	err := testStore.DeleteShippingMethod(context.Background(), shippingMethod1.ID)
 
 // 	require.NoError(t, err)
 
-// 	shippingMethod2, err := testQueires.GetShippingMethod(context.Background(), shippingMethod1.ID)
+// 	shippingMethod2, err := testStore.GetShippingMethod(context.Background(), shippingMethod1.ID)
 
 // 	require.Error(t, err)
 // 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -87,7 +87,7 @@ func TestListShippingMethods(t *testing.T) {
 	// 	Offset: 0,
 	// }
 
-	shippingMethods, err := testQueires.ListShippingMethods(context.Background())
+	shippingMethods, err := testStore.ListShippingMethods(context.Background())
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shippingMethods)

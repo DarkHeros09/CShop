@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"

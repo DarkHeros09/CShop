@@ -30,7 +30,7 @@ SELECT os.*, so.user_id
 FROM "order_status" AS os
 LEFT JOIN "shop_order" AS so ON so.order_status_id = os.id
 WHERE so.user_id = $3
-ORDER BY id
+ORDER BY os.id
 LIMIT $1
 OFFSET $2;
 

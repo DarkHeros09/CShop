@@ -12,6 +12,7 @@ import (
 )
 
 func createRandomUserSession(t *testing.T) UserSession {
+	t.Helper()
 	user1 := createRandomUser(t)
 	arg := CreateUserSessionParams{
 		ID:           uuid.New(),
@@ -23,7 +24,7 @@ func createRandomUserSession(t *testing.T) UserSession {
 		ExpiresAt:    time.Now().Local().UTC(),
 	}
 
-	userSession, err := testQueires.CreateUserSession(context.Background(), arg)
+	userSession, err := testStore.CreateUserSession(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userSession)
 
@@ -41,13 +42,15 @@ func createRandomUserSession(t *testing.T) UserSession {
 }
 
 func TestCreateUserSession(t *testing.T) {
+	t.Parallel()
 	createRandomUserSession(t)
 }
 
 func TestGetUserSession(t *testing.T) {
+	t.Parallel()
 	userSession1 := createRandomUserSession(t)
 
-	userSession2, err := testQueires.GetUserSession(context.Background(), userSession1.ID)
+	userSession2, err := testStore.GetUserSession(context.Background(), userSession1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, userSession2)
 
@@ -71,7 +74,7 @@ func TestUpdateUserSession(t *testing.T) {
 		RefreshToken: userSession1.RefreshToken,
 	}
 
-	userSession2, err := testQueires.UpdateUserSession(context.Background(), arg)
+	userSession2, err := testStore.UpdateUserSession(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, userSession2)
 

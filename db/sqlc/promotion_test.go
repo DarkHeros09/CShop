@@ -8,7 +8,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +22,7 @@ func createRandomPromotion(t *testing.T) Promotion {
 		EndDate:      util.RandomEndDate(),
 	}
 
-	promotion, err := testQueires.CreatePromotion(context.Background(), arg)
+	promotion, err := testStore.CreatePromotion(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, promotion)
 
@@ -41,7 +41,7 @@ func TestCreatePromotion(t *testing.T) {
 
 func TestGetPromotion(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
-	promotion2, err := testQueires.GetPromotion(context.Background(), promotion1.ID)
+	promotion2, err := testStore.GetPromotion(context.Background(), promotion1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, promotion2)
@@ -67,7 +67,7 @@ func TestUpdatePromotionName(t *testing.T) {
 		ID:           promotion1.ID,
 	}
 
-	promotion2, err := testQueires.UpdatePromotion(context.Background(), arg)
+	promotion2, err := testStore.UpdatePromotion(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, promotion2)
@@ -90,7 +90,7 @@ func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 		ID:           promotion1.ID,
 	}
 
-	promotion2, err := testQueires.UpdatePromotion(context.Background(), arg)
+	promotion2, err := testStore.UpdatePromotion(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, promotion2)
 
@@ -107,11 +107,11 @@ func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 
 func TestDeletePromotion(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
-	err := testQueires.DeletePromotion(context.Background(), promotion1.ID)
+	err := testStore.DeletePromotion(context.Background(), promotion1.ID)
 
 	require.NoError(t, err)
 
-	promotion2, err := testQueires.GetPromotion(context.Background(), promotion1.ID)
+	promotion2, err := testStore.GetPromotion(context.Background(), promotion1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -135,7 +135,7 @@ func TestListPromotions(t *testing.T) {
 		Offset: 5,
 	}
 
-	promotions, err := testQueires.ListPromotions(context.Background(), arg)
+	promotions, err := testStore.ListPromotions(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, promotions)

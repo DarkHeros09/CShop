@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func createRandomOrderStatus(t *testing.T) OrderStatus {
 	var err error
 	orderStatuses := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
 	for i := 0; i < len(orderStatuses); i++ {
-		orderStatus, err = testQueires.CreateOrderStatus(context.Background(), orderStatuses[i])
+		orderStatus, err = testStore.CreateOrderStatus(context.Background(), orderStatuses[i])
 		require.NoError(t, err)
 		require.NotEmpty(t, orderStatus)
 	}
@@ -26,7 +26,7 @@ func TestCreateOrderStatus(t *testing.T) {
 
 func TestGetOrderStatus(t *testing.T) {
 	orderStatus1 := createRandomOrderStatus(t)
-	orderStatus2, err := testQueires.GetOrderStatus(context.Background(), orderStatus1.ID)
+	orderStatus2, err := testStore.GetOrderStatus(context.Background(), orderStatus1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, orderStatus2)
@@ -43,7 +43,7 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 		Status: null.StringFrom("ملغي"),
 	}
 
-	orderStatus2, err := testQueires.UpdateOrderStatus(context.Background(), arg)
+	orderStatus2, err := testStore.UpdateOrderStatus(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, orderStatus2)
 
@@ -54,11 +54,11 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 func TestDeleteOrderStatus(t *testing.T) {
 	orderStatus1 := createRandomOrderStatus(t)
 
-	err := testQueires.DeleteOrderStatus(context.Background(), orderStatus1.ID)
+	err := testStore.DeleteOrderStatus(context.Background(), orderStatus1.ID)
 
 	require.NoError(t, err)
 
-	orderStatus2, err := testQueires.GetOrderStatus(context.Background(), orderStatus1.ID)
+	orderStatus2, err := testStore.GetOrderStatus(context.Background(), orderStatus1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -76,7 +76,7 @@ func TestListOrderStatuses(t *testing.T) {
 	// 	Offset: int32(len(orderStatuses1)),
 	// }
 
-	orderStatuses, err := testQueires.ListOrderStatuses(context.Background() /* arg*/)
+	orderStatuses, err := testStore.ListOrderStatuses(context.Background() /* arg*/)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, orderStatuses)

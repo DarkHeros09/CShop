@@ -6,13 +6,13 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomProductColor(t *testing.T) ProductColor {
 	arg := util.RandomColor()
-	productColor, err := testQueires.CreateProductColor(context.Background(), arg)
+	productColor, err := testStore.CreateProductColor(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productColor)
 
@@ -26,7 +26,7 @@ func TestCreateProductColor(t *testing.T) {
 
 func TestGetProductColor(t *testing.T) {
 	productColor1 := createRandomProductColor(t)
-	productColor2, err := testQueires.GetProductColor(context.Background(), productColor1.ID)
+	productColor2, err := testStore.GetProductColor(context.Background(), productColor1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productColor2)
@@ -48,7 +48,7 @@ func TestUpdateProductColor(t *testing.T) {
 		ColorValue: null.StringFrom(updatedColorValue),
 	}
 
-	productColor2, err := testQueires.UpdateProductColor(context.Background(), arg)
+	productColor2, err := testStore.UpdateProductColor(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productColor2)
 
@@ -58,11 +58,11 @@ func TestUpdateProductColor(t *testing.T) {
 
 func TestDeleteProductColor(t *testing.T) {
 	productColor1 := createRandomProductColor(t)
-	err := testQueires.DeleteProductColor(context.Background(), productColor1.ID)
+	err := testStore.DeleteProductColor(context.Background(), productColor1.ID)
 
 	require.NoError(t, err)
 
-	productColor2, err := testQueires.GetProductColor(context.Background(), productColor1.ID)
+	productColor2, err := testStore.GetProductColor(context.Background(), productColor1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

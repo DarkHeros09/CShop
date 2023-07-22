@@ -16,7 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -414,7 +414,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 				arg := db.UpdateVariationOptionParams{
 					Value:       null.StringFrom("new name"),
 					ID:          variationOption.ID,
-					VariationID: null.IntFrom(variationOption.VariationID),
+					VariationID: variationOption.VariationID,
 				}
 
 				store.EXPECT().
@@ -441,7 +441,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 				arg := db.UpdateVariationOptionParams{
 					Value:       null.StringFrom("new name"),
 					ID:          variationOption.ID,
-					VariationID: null.IntFrom(variationOption.VariationID),
+					VariationID: variationOption.VariationID,
 				}
 
 				store.EXPECT().
@@ -466,7 +466,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 				arg := db.UpdateVariationOptionParams{
 					Value:       null.StringFrom("new name"),
 					ID:          variationOption.ID,
-					VariationID: null.IntFrom(variationOption.VariationID),
+					VariationID: variationOption.VariationID,
 				}
 
 				store.EXPECT().
@@ -492,7 +492,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 				arg := db.UpdateVariationOptionParams{
 					Value:       null.StringFrom("new name"),
 					ID:          variationOption.ID,
-					VariationID: null.IntFrom(variationOption.VariationID),
+					VariationID: variationOption.VariationID,
 				}
 				store.EXPECT().
 					UpdateVariationOption(gomock.Any(), gomock.Eq(arg)).
@@ -719,7 +719,7 @@ func randomVariationOptionSuperAdmin(t *testing.T) (admin db.Admin, password str
 func randomVariationOption() db.VariationOption {
 	return db.VariationOption{
 		ID:          util.RandomInt(1, 1000),
-		VariationID: util.RandomMoney(),
+		VariationID: null.IntFrom(util.RandomMoney()),
 		Value:       util.RandomUser(),
 	}
 }

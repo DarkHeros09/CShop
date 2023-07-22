@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // ////////////* Create API //////////////
@@ -88,24 +88,24 @@ func (server *Server) getProductCategory(ctx *fiber.Ctx) error {
 
 //////////////* List API //////////////
 
-type listProductCategoriesQueryRequest struct {
-	PageID   int32 `query:"page_id" validate:"required,min=1"`
-	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
-}
+// type listProductCategoriesQueryRequest struct {
+// 	PageID   int32 `query:"page_id" validate:"required,min=1"`
+// 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
+// }
 
 func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
-	query := &listProductCategoriesQueryRequest{}
+	// query := &listProductCategoriesQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
+	// if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+	// 	return nil
+	// }
 
-	arg := db.ListProductCategoriesParams{
-		Limit:  query.PageSize,
-		Offset: (query.PageID - 1) * query.PageSize,
-	}
-	productCategorys, err := server.store.ListProductCategories(ctx.Context(), arg)
+	// arg := db.ListProductCategoriesParams{
+	// 	Limit:  query.PageSize,
+	// 	Offset: (query.PageID - 1) * query.PageSize,
+	// }
+	productCategorys, err := server.store.ListProductCategories(ctx.Context())
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

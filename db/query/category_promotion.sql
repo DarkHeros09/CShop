@@ -5,7 +5,9 @@ INSERT INTO "category_promotion" (
   active
 ) VALUES (
   $1, $2, $3
-)
+) ON CONFLICT(category_id) DO UPDATE SET 
+promotion_id = EXCLUDED.promotion_id,
+active = EXCLUDED.active
 RETURNING *;
 
 -- name: GetCategoryPromotion :one

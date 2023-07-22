@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func createRandomProductConfiguration(t *testing.T) ProductConfiguration {
 		VariationOptionID: variationOption.ID,
 	}
 
-	productConfiguration, err := testQueires.CreateProductConfiguration(context.Background(), arg)
+	productConfiguration, err := testStore.CreateProductConfiguration(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productConfiguration)
 
@@ -37,7 +37,7 @@ func TestGetProductConfiguration(t *testing.T) {
 		ProductItemID:     productConfiguration1.ProductItemID,
 		VariationOptionID: productConfiguration1.VariationOptionID,
 	}
-	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), arg)
+	productConfiguration2, err := testStore.GetProductConfiguration(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productConfiguration2)
@@ -54,7 +54,7 @@ func TestUpdateProductConfiguration(t *testing.T) {
 		ProductItemID:     productConfiguration1.ProductItemID,
 	}
 
-	productConfiguration2, err := testQueires.UpdateProductConfiguration(context.Background(), arg)
+	productConfiguration2, err := testStore.UpdateProductConfiguration(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productConfiguration2)
 
@@ -68,14 +68,14 @@ func TestDeleteProductConfiguration(t *testing.T) {
 		ProductItemID:     productConfiguration1.ProductItemID,
 		VariationOptionID: productConfiguration1.VariationOptionID,
 	}
-	err := testQueires.DeleteProductConfiguration(context.Background(), arg1)
+	err := testStore.DeleteProductConfiguration(context.Background(), arg1)
 
 	require.NoError(t, err)
 	arg := GetProductConfigurationParams{
 		ProductItemID:     productConfiguration1.ProductItemID,
 		VariationOptionID: productConfiguration1.VariationOptionID,
 	}
-	productConfiguration2, err := testQueires.GetProductConfiguration(context.Background(), arg)
+	productConfiguration2, err := testStore.GetProductConfiguration(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -92,7 +92,7 @@ func TestListProductConfigurations(t *testing.T) {
 		Offset: 5,
 	}
 
-	productConfigurations, err := testQueires.ListProductConfigurations(context.Background(), arg)
+	productConfigurations, err := testStore.ListProductConfigurations(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productConfigurations)

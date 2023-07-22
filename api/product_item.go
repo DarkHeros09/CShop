@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // ////////////* Create API //////////////
@@ -242,18 +242,31 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 //////////////* Pagination List API //////////////
 
 type listProductItemsV2QueryRequest struct {
-	Limit int32 `query:"limit" validate:"required,min=5,max=10"`
+	Limit      int32    `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID null.Int `query:"category_id" validate:"omitempty,min=1"`
+	BrandID    null.Int `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID     null.Int `query:"size_id" validate:"omitempty,min=1"`
+	ColorID    null.Int `query:"color_id" validate:"omitempty,min=1"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	query := &listProductItemsV2QueryRequest{}
+	var maxPage int64
 
 	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
 
-	productItems, err := server.store.ListProductItemsV2(ctx.Context(), query.Limit)
+	arg := db.ListProductItemsV2Params{
+		Limit:      query.Limit,
+		CategoryID: query.CategoryID,
+		BrandID:    query.BrandID,
+		ColorID:    query.ColorID,
+		SizeID:     query.SizeID,
+	}
+
+	productItems, err := server.store.ListProductItemsV2(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -262,8 +275,11 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-
-	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	if len(productItems) != 0 {
+		maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	} else {
+		maxPage = 0
+	}
 
 	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
@@ -272,12 +288,17 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 }
 
 type listProductItemsNextPageQueryRequest struct {
-	Cursor int64 `query:"cursor" validate:"required,min=1"`
-	Limit  int32 `query:"limit" validate:"required,min=5,max=10"`
+	Cursor     int64    `query:"cursor" validate:"required,min=1"`
+	Limit      int32    `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID null.Int `query:"category_id" validate:"omitempty,min=1"`
+	BrandID    null.Int `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID     null.Int `query:"size_id" validate:"omitempty,min=1"`
+	ColorID    null.Int `query:"color_id" validate:"omitempty,min=1"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsNextPageQueryRequest{}
+	var maxPage int64
 
 	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -285,8 +306,12 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.ListProductItemsNextPageParams{
-		Limit: query.Limit,
-		ID:    query.Cursor,
+		Limit:      query.Limit,
+		ID:         query.Cursor,
+		CategoryID: query.CategoryID,
+		BrandID:    query.BrandID,
+		ColorID:    query.ColorID,
+		SizeID:     query.SizeID,
 	}
 
 	productItems, err := server.store.ListProductItemsNextPage(ctx.Context(), arg)
@@ -298,8 +323,11 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-
-	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	if len(productItems) != 0 {
+		maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	} else {
+		maxPage = 0
+	}
 
 	ctx.Set("Max-Page", fmt.Sprint(maxPage))
 	ctx.Status(fiber.StatusOK).JSON(productItems)

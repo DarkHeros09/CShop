@@ -8,11 +8,12 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomUser(t *testing.T) User {
+	t.Helper()
 	hashedPassword, err := util.HashPassword(util.RandomString(6))
 	require.NoError(t, err)
 	require.NotEmpty(t, hashedPassword)
@@ -25,7 +26,7 @@ func createRandomUser(t *testing.T) User {
 		IsBlocked: util.RandomBool(),
 	}
 
-	user, err := testQueires.CreateUser(context.Background(), arg)
+	user, err := testStore.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
@@ -43,6 +44,7 @@ func createRandomUser(t *testing.T) User {
 
 }
 func TestCreateUser(t *testing.T) {
+	t.Parallel()
 	createRandomUser(t)
 }
 
@@ -59,7 +61,7 @@ func TestCreateUserWithCart(t *testing.T) {
 		IsBlocked: util.RandomBool(),
 	}
 
-	user, err := testQueires.CreateUserWithCartAndWishList(context.Background(), arg)
+	user, err := testStore.CreateUserWithCartAndWishList(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
@@ -78,15 +80,16 @@ func TestCreateUserWithCart(t *testing.T) {
 		ID:     user.ShoppingCartID,
 	}
 
-	shoppingCart, err := testQueires.GetShoppingCartByUserIDCartID(context.Background(), arg1)
+	shoppingCart, err := testStore.GetShoppingCartByUserIDCartID(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart)
 
 }
 
 func TestGetUser(t *testing.T) {
+	t.Parallel()
 	user1 := createRandomUser(t)
-	user2, err := testQueires.GetUser(context.Background(), user1.ID)
+	user2, err := testStore.GetUser(context.Background(), user1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
@@ -101,8 +104,9 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestGetUserByEmail(t *testing.T) {
+	t.Parallel()
 	user1 := createRandomUser(t)
-	user2, err := testQueires.GetUserByEmail(context.Background(), user1.Email)
+	user2, err := testStore.GetUserByEmail(context.Background(), user1.Email)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
@@ -117,6 +121,7 @@ func TestGetUserByEmail(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
+	t.Parallel()
 	user1 := createRandomUser(t)
 
 	arg := UpdateUserParams{
@@ -124,7 +129,7 @@ func TestUpdateUser(t *testing.T) {
 		Telephone: null.IntFrom(util.RandomInt(0, 1000000)),
 	}
 
-	user2, err := testQueires.UpdateUser(context.Background(), arg)
+	user2, err := testStore.UpdateUser(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
@@ -140,13 +145,13 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	user1 := createRandomUser(t)
 
-	user2, err := testQueires.DeleteUser(context.Background(), user1.ID)
+	user2, err := testStore.DeleteUser(context.Background(), user1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
 	require.Equal(t, user1, user2)
 
-	user3, err := testQueires.DeleteUser(context.Background(), user1.ID)
+	user3, err := testStore.DeleteUser(context.Background(), user1.ID)
 
 	require.Error(t, err)
 	require.Empty(t, user3)
@@ -154,6 +159,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
+	t.Parallel()
 	var wg sync.WaitGroup
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
@@ -168,7 +174,7 @@ func TestListUsers(t *testing.T) {
 		Offset: 0,
 	}
 
-	users, err := testQueires.ListUsers(context.Background(), arg)
+	users, err := testStore.ListUsers(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, users, 5)
 

@@ -16,7 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -132,6 +132,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 			AdminID: admin.ID,
 			body: fiber.Map{
 				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -181,6 +182,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 			},
 			body: fiber.Map{
 				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
@@ -202,6 +204,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 			AdminID: admin.ID,
 			body: fiber.Map{
 				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
 				"parent_category_id": productCategory.ParentCategoryID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -280,25 +283,25 @@ func TestListProductCategoriesAPI(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name          string
-		query         Query
+		name string
+		// query         Query
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
+			// query: Query{
+			// 	pageID:   1,
+			// 	pageSize: n,
+			// },
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListProductCategoriesParams{
-					Limit:  int32(n),
-					Offset: 0,
-				}
+				// arg := db.ListProductCategoriesParams{
+				// 	Limit:  int32(n),
+				// 	Offset: 0,
+				// }
 
 				store.EXPECT().
-					ListProductCategories(gomock.Any(), gomock.Eq(arg)).
+					ListProductCategories(gomock.Any()).
 					Times(1).
 					Return(productCategories, nil)
 			},
@@ -309,13 +312,13 @@ func TestListProductCategoriesAPI(t *testing.T) {
 		},
 		{
 			name: "InternalError",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
+			// query: Query{
+			// 	pageID:   1,
+			// 	pageSize: n,
+			// },
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListProductCategories(gomock.Any(), gomock.Any()).
+					ListProductCategories(gomock.Any()).
 					Times(1).
 					Return([]db.ProductCategory{}, pgx.ErrTxClosed)
 			},
@@ -323,36 +326,36 @@ func TestListProductCategoriesAPI(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
-		{
-			name: "InvalidPageID",
-			query: Query{
-				pageID:   -1,
-				pageSize: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductCategories(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidPageSize",
-			query: Query{
-				pageID:   1,
-				pageSize: 100000,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductCategories(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
+		// {
+		// 	name: "InvalidPageID",
+		// 	query: Query{
+		// 		pageID:   -1,
+		// 		pageSize: n,
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListProductCategories(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
+		// {
+		// 	name: "InvalidPageSize",
+		// 	query: Query{
+		// 		pageID:   1,
+		// 		pageSize: 100000,
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListProductCategories(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
 	}
 
 	for i := range testCases {
@@ -372,10 +375,10 @@ func TestListProductCategoriesAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
-			request.URL.RawQuery = q.Encode()
+			// q := request.URL.Query()
+			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
+			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
 
@@ -759,6 +762,7 @@ func randomProductCategory() db.ProductCategory {
 		ID:               util.RandomInt(1, 1000),
 		ParentCategoryID: null.IntFrom(util.RandomMoney()),
 		CategoryName:     util.RandomUser(),
+		CategoryImage:    util.RandomURL(),
 	}
 }
 

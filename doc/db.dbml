@@ -159,6 +159,7 @@ Table product_item as PI {
 Table product as P {
   id bigserial [pk,not null] // auto-increment
   category_id bigint [not null,ref:> PC.id]
+  brand_id bigint [not null,ref:> PB.id]
   name varchar [not null]
   description varchar [not null]
   active boolean [not null, default: false, note:'default is false']
@@ -185,14 +186,25 @@ Table product_image as PIMG {
 
 Table product_promotion as PPROMO {
   product_id bigint [not null,ref:> P.id]
-  promotion_id bigint [not null,unique,ref:> PROMO.id]
+  promotion_id bigint [not null,ref:> PROMO.id]
   active boolean [not null, default: false, note:'default is false']
+
+  indexes {
+  (product_id, promotion_id) [unique]
+  }
 }
 
 Table product_category as PC {
   id bigserial [pk,not null] // auto-increment
   parent_category_id bigint [ref:> PC.id]
-  category_name varchar [not null]
+  category_name varchar [not null, unique]
+  category_image varchar [not null]
+}
+
+Table product_brand as PB {
+  id bigserial [pk,not null] // auto-increment
+  brand_name varchar [not null, unique]
+  brand_image varchar [not null]
 }
 
 Table promotion as PROMO {
@@ -206,9 +218,23 @@ Table promotion as PROMO {
 }
 
 Table category_promotion as CPROMO {
-  category_id bigint [not null,unique,ref:> PC.id]
-  promotion_id bigint [not null,unique,ref:> PROMO.id]
+  category_id bigint [not null, unique,ref:> PC.id]
+  promotion_id bigint [not null, unique, ref:> PROMO.id]
   active boolean [not null, default: false, note:'default is false']
+
+  indexes {
+  (category_id, promotion_id) [unique]
+  }
+}
+
+Table brand_promotion as BPROMO {
+  brand_id bigint [not null, unique,ref:> PB.id]
+  promotion_id bigint [not null, unique, ref:> PROMO.id]
+  active boolean [not null, default: false, note:'default is false']
+
+  indexes {
+    (brand_id, promotion_id) [unique]
+  }
 }
 
 Table variation as V {
@@ -219,9 +245,10 @@ Table variation as V {
 
 Table variation_option as VO {
   id bigserial [pk,not null] // auto-increment
-  variation_id bigint [not null,ref:> V.id]
+  variation_id bigint 
   value varchar [not null,note:'variation values like Red, ans Size XL']
 }
+Ref: VO.variation_id > V.id [delete: set null]
 
 Table product_configuration as PCFG {
   product_item_id bigint [not null,ref:> PI.id]

@@ -6,7 +6,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +18,7 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 		PaymentTypeID: paymentType.ID,
 		Provider:      util.RandomString(5),
 	}
-	paymentMethod, err := testQueires.CreatePaymentMethod(context.Background(), arg)
+	paymentMethod, err := testStore.CreatePaymentMethod(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, paymentMethod)
 
@@ -42,7 +42,7 @@ func TestGetPaymentMethod(t *testing.T) {
 		PaymentTypeID: paymentMethod1.PaymentTypeID,
 	}
 
-	paymentMethod2, err := testQueires.GetPaymentMethod(context.Background(), arg)
+	paymentMethod2, err := testStore.GetPaymentMethod(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, paymentMethod2)
 
@@ -63,7 +63,7 @@ func TestUpdatePaymentMethodIsDefaultAndProvider(t *testing.T) {
 		ID: paymentMethod1.ID,
 	}
 
-	paymentMethod2, err := testQueires.UpdatePaymentMethod(context.Background(), arg)
+	paymentMethod2, err := testStore.UpdatePaymentMethod(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, paymentMethod2)
 
@@ -81,12 +81,12 @@ func TestDeletePaymentMethod(t *testing.T) {
 		UserID: paymentMethod1.UserID,
 	}
 
-	paymentMethod2, err := testQueires.DeletePaymentMethod(context.Background(), arg)
+	paymentMethod2, err := testStore.DeletePaymentMethod(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, paymentMethod2)
 
-	paymentMethod3, err := testQueires.DeletePaymentMethod(context.Background(), arg)
+	paymentMethod3, err := testStore.DeletePaymentMethod(context.Background(), arg)
 
 	require.Error(t, err)
 	require.Empty(t, paymentMethod3)
@@ -106,7 +106,7 @@ func TestListPaymentMethods(t *testing.T) {
 			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
 		}
-		testQueires.CreatePaymentMethod(context.Background(), arg)
+		testStore.CreatePaymentMethod(context.Background(), arg)
 	}
 	arg := ListPaymentMethodsParams{
 		Limit:  5,
@@ -114,7 +114,7 @@ func TestListPaymentMethods(t *testing.T) {
 		UserID: user.ID,
 	}
 
-	PaymentMethods, err := testQueires.ListPaymentMethods(context.Background(), arg)
+	PaymentMethods, err := testStore.ListPaymentMethods(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, PaymentMethods, len(paymentTypes))
 

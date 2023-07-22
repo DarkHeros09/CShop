@@ -6,14 +6,15 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomWishList(t *testing.T) WishList {
+	t.Helper()
 	user1 := createRandomUser(t)
 
-	wishList, err := testQueires.CreateWishList(context.Background(), user1.ID)
+	wishList, err := testStore.CreateWishList(context.Background(), user1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishList)
 
@@ -23,13 +24,14 @@ func createRandomWishList(t *testing.T) WishList {
 }
 
 func TestCreateWishList(t *testing.T) {
+	t.Parallel()
 	createRandomWishList(t)
 }
 
 func TestGetWishList(t *testing.T) {
 	wishList1 := createRandomWishList(t)
 
-	wishList2, err := testQueires.GetWishList(context.Background(), wishList1.ID)
+	wishList2, err := testStore.GetWishList(context.Background(), wishList1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishList2)
 
@@ -44,7 +46,7 @@ func TestUpdateWishList(t *testing.T) {
 		ID:     wishList1.ID,
 	}
 
-	wishList2, err := testQueires.UpdateWishList(context.Background(), arg)
+	wishList2, err := testStore.UpdateWishList(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishList2)
 
@@ -52,13 +54,14 @@ func TestUpdateWishList(t *testing.T) {
 }
 
 func TestDeleteWishList(t *testing.T) {
+	t.Parallel()
 	wishList1 := createRandomWishList(t)
 
-	err := testQueires.DeleteWishList(context.Background(), wishList1.ID)
+	err := testStore.DeleteWishList(context.Background(), wishList1.ID)
 
 	require.NoError(t, err)
 
-	wishList2, err := testQueires.GetWishList(context.Background(), wishList1.ID)
+	wishList2, err := testStore.GetWishList(context.Background(), wishList1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -81,7 +84,7 @@ func TestListWishLists(t *testing.T) {
 		Offset: 0,
 	}
 
-	wishLists, err := testQueires.ListWishLists(context.Background(), arg)
+	wishLists, err := testStore.ListWishLists(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, wishLists, 5)
 

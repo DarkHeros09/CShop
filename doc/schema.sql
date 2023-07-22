@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-06-12T17:16:53.082Z
+-- Generated at: 2023-07-18T18:17:43.437Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -145,6 +145,7 @@ CREATE TABLE "product_item" (
 CREATE TABLE "product" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "category_id" bigint NOT NULL,
+  "brand_id" bigint NOT NULL,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
@@ -171,14 +172,21 @@ CREATE TABLE "product_image" (
 
 CREATE TABLE "product_promotion" (
   "product_id" bigint NOT NULL,
-  "promotion_id" bigint UNIQUE NOT NULL,
+  "promotion_id" bigint NOT NULL,
   "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "product_category" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "parent_category_id" bigint,
-  "category_name" varchar NOT NULL
+  "category_name" varchar UNIQUE NOT NULL,
+  "category_image" varchar NOT NULL
+);
+
+CREATE TABLE "product_brand" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "brand_name" varchar UNIQUE NOT NULL,
+  "brand_image" varchar NOT NULL
 );
 
 CREATE TABLE "promotion" (
@@ -197,6 +205,12 @@ CREATE TABLE "category_promotion" (
   "active" boolean NOT NULL DEFAULT false
 );
 
+CREATE TABLE "brand_promotion" (
+  "brand_id" bigint UNIQUE NOT NULL,
+  "promotion_id" bigint UNIQUE NOT NULL,
+  "active" boolean NOT NULL DEFAULT false
+);
+
 CREATE TABLE "variation" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "category_id" bigint NOT NULL,
@@ -205,7 +219,7 @@ CREATE TABLE "variation" (
 
 CREATE TABLE "variation_option" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "variation_id" bigint NOT NULL,
+  "variation_id" bigint,
   "value" varchar NOT NULL
 );
 
@@ -246,6 +260,12 @@ CREATE INDEX ON "user" ("email");
 
 CREATE INDEX ON "user" ("telephone");
 
+CREATE UNIQUE INDEX ON "product_promotion" ("product_id", "promotion_id");
+
+CREATE UNIQUE INDEX ON "category_promotion" ("category_id", "promotion_id");
+
+CREATE UNIQUE INDEX ON "brand_promotion" ("brand_id", "promotion_id");
+
 COMMENT ON COLUMN "payment_type"."value" IS 'for companies payment system like BCD';
 
 COMMENT ON COLUMN "shop_order_item"."price" IS 'price of product when ordered';
@@ -259,6 +279,8 @@ COMMENT ON COLUMN "product_promotion"."active" IS 'default is false';
 COMMENT ON COLUMN "promotion"."active" IS 'default is false';
 
 COMMENT ON COLUMN "category_promotion"."active" IS 'default is false';
+
+COMMENT ON COLUMN "brand_promotion"."active" IS 'default is false';
 
 COMMENT ON COLUMN "variation"."name" IS 'variation names like color, and size';
 
@@ -310,6 +332,8 @@ ALTER TABLE "product_item" ADD FOREIGN KEY ("color_id") REFERENCES "product_colo
 
 ALTER TABLE "product" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 
+ALTER TABLE "product" ADD FOREIGN KEY ("brand_id") REFERENCES "product_brand" ("id");
+
 ALTER TABLE "product_promotion" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 
 ALTER TABLE "product_promotion" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
@@ -320,9 +344,13 @@ ALTER TABLE "category_promotion" ADD FOREIGN KEY ("category_id") REFERENCES "pro
 
 ALTER TABLE "category_promotion" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
 
+ALTER TABLE "brand_promotion" ADD FOREIGN KEY ("brand_id") REFERENCES "product_brand" ("id");
+
+ALTER TABLE "brand_promotion" ADD FOREIGN KEY ("promotion_id") REFERENCES "promotion" ("id");
+
 ALTER TABLE "variation" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 
-ALTER TABLE "variation_option" ADD FOREIGN KEY ("variation_id") REFERENCES "variation" ("id");
+ALTER TABLE "variation_option" ADD FOREIGN KEY ("variation_id") REFERENCES "variation" ("id") ON DELETE SET NULL;
 
 ALTER TABLE "product_configuration" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 

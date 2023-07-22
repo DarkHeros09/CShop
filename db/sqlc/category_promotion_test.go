@@ -6,7 +6,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,7 +19,7 @@ func createRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 		Active:      util.RandomBool(),
 	}
 
-	CategoryPromotion, err := testQueires.CreateCategoryPromotion(context.Background(), arg)
+	CategoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, CategoryPromotion)
 
@@ -40,7 +40,7 @@ func TestGetCategoryPromotion(t *testing.T) {
 		CategoryID:  CategoryPromotion1.CategoryID,
 		PromotionID: CategoryPromotion1.PromotionID,
 	}
-	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), arg)
+	CategoryPromotion2, err := testStore.GetCategoryPromotion(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, CategoryPromotion2)
@@ -65,7 +65,7 @@ func TestUpdateCategoryPromotionActive(t *testing.T) {
 		CategoryID:  categoryPromotion1.CategoryID,
 	}
 
-	categoryPromotion2, err := testQueires.UpdateCategoryPromotion(context.Background(), arg)
+	categoryPromotion2, err := testStore.UpdateCategoryPromotion(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, categoryPromotion2)
 
@@ -80,7 +80,7 @@ func TestDeleteCategoryPromotion(t *testing.T) {
 		CategoryID:  CategoryPromotion1.CategoryID,
 		PromotionID: CategoryPromotion1.PromotionID,
 	}
-	err := testQueires.DeleteCategoryPromotion(context.Background(), arg1)
+	err := testStore.DeleteCategoryPromotion(context.Background(), arg1)
 
 	require.NoError(t, err)
 
@@ -89,7 +89,7 @@ func TestDeleteCategoryPromotion(t *testing.T) {
 		PromotionID: CategoryPromotion1.PromotionID,
 	}
 
-	CategoryPromotion2, err := testQueires.GetCategoryPromotion(context.Background(), arg)
+	CategoryPromotion2, err := testStore.GetCategoryPromotion(context.Background(), arg)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -106,7 +106,7 @@ func TestListCategoryPromotions(t *testing.T) {
 		Offset: 5,
 	}
 
-	CategoryPromotions, err := testQueires.ListCategoryPromotions(context.Background(), arg)
+	CategoryPromotions, err := testStore.ListCategoryPromotions(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, CategoryPromotions)

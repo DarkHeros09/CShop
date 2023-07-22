@@ -2,12 +2,11 @@ package db
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +25,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 		OrderStatusID:     null.IntFromPtr(&orderStatus.ID),
 	}
 
-	shopOrder, err := testQueires.CreateShopOrder(context.Background(), arg)
+	shopOrder, err := testStore.CreateShopOrder(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrder)
 
@@ -45,7 +44,7 @@ func TestCreateShopOrder(t *testing.T) {
 
 func TestGetShopOrder(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
-	shopOrder2, err := testQueires.GetShopOrder(context.Background(), shopOrder1.ID)
+	shopOrder2, err := testStore.GetShopOrder(context.Background(), shopOrder1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrder2)
@@ -71,7 +70,7 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 		ID:                shopOrder1.ID,
 	}
 
-	shopOrder2, err := testQueires.UpdateShopOrder(context.Background(), arg)
+	shopOrder2, err := testStore.UpdateShopOrder(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrder2)
 
@@ -86,11 +85,11 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 
 func TestDeleteShopOrder(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
-	err := testQueires.DeleteShopOrder(context.Background(), shopOrder1.ID)
+	err := testStore.DeleteShopOrder(context.Background(), shopOrder1.ID)
 
 	require.NoError(t, err)
 
-	shopOrder2, err := testQueires.GetShopOrder(context.Background(), shopOrder1.ID)
+	shopOrder2, err := testStore.GetShopOrder(context.Background(), shopOrder1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -99,21 +98,22 @@ func TestDeleteShopOrder(t *testing.T) {
 }
 
 func TestListShopOrders(t *testing.T) {
-	var wg sync.WaitGroup
-	wg.Add(10)
+	t.Parallel()
+	// var wg sync.WaitGroup
+	// wg.Add(10)
 	for i := 0; i < 10; i++ {
-		go func(i int) {
-			createRandomShopOrder(t)
-			wg.Done()
-		}(i)
+		// go func(i int) {
+		createRandomShopOrder(t)
+		// wg.Done()
+		// 	}(i)
 	}
-	wg.Wait()
+	// wg.Wait()
 	arg := ListShopOrdersParams{
 		Limit:  5,
 		Offset: 0,
 	}
 
-	shopOrders, err := testQueires.ListShopOrders(context.Background(), arg)
+	shopOrders, err := testStore.ListShopOrders(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrders)
@@ -125,6 +125,7 @@ func TestListShopOrders(t *testing.T) {
 }
 
 func TestListShopOrdersByUserID(t *testing.T) {
+	t.Parallel()
 	// var wg sync.WaitGroup
 	var shopOrder ShopOrder
 	// wg.Add(10)
@@ -141,7 +142,7 @@ func TestListShopOrdersByUserID(t *testing.T) {
 		Offset: 0,
 	}
 
-	shopOrders, err := testQueires.ListShopOrdersByUserID(context.Background(), arg)
+	shopOrders, err := testStore.ListShopOrdersByUserID(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrders)

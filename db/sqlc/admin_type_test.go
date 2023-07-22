@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomAdminType(t *testing.T) AdminType {
 	arg := util.RandomString(6)
 
-	adminType, err := testQueires.CreateAdminType(context.Background(), arg)
+	adminType, err := testStore.CreateAdminType(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, adminType)
@@ -32,7 +32,7 @@ func TestCreateAdminType(t *testing.T) {
 
 func TestGetAdminType(t *testing.T) {
 	adminType1 := createRandomAdminType(t)
-	adminType2, err := testQueires.GetAdminType(context.Background(), adminType1.ID)
+	adminType2, err := testStore.GetAdminType(context.Background(), adminType1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, adminType2)
@@ -50,7 +50,7 @@ func TestUpdateAdminType(t *testing.T) {
 		AdminType: util.RandomString(6),
 	}
 
-	adminType2, err := testQueires.UpdateAdminType(context.Background(), arg)
+	adminType2, err := testStore.UpdateAdminType(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, adminType2)
@@ -63,11 +63,11 @@ func TestUpdateAdminType(t *testing.T) {
 
 func TestDeleteAdminTypeByID(t *testing.T) {
 	adminType1 := createRandomAdminType(t)
-	err := testQueires.DeleteAdminTypeByID(context.Background(), adminType1.ID)
+	err := testStore.DeleteAdminTypeByID(context.Background(), adminType1.ID)
 
 	require.NoError(t, err)
 
-	adminType2, err := testQueires.GetAdminType(context.Background(), adminType1.ID)
+	adminType2, err := testStore.GetAdminType(context.Background(), adminType1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -77,11 +77,11 @@ func TestDeleteAdminTypeByID(t *testing.T) {
 
 func TestDeleteAdminTypeByType(t *testing.T) {
 	adminType1 := createRandomAdminType(t)
-	err := testQueires.DeleteAdminTypeByType(context.Background(), adminType1.AdminType)
+	err := testStore.DeleteAdminTypeByType(context.Background(), adminType1.AdminType)
 
 	require.NoError(t, err)
 
-	adminType2, err := testQueires.GetAdminType(context.Background(), adminType1.ID)
+	adminType2, err := testStore.GetAdminType(context.Background(), adminType1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -98,7 +98,7 @@ func TestListAdminTypes(t *testing.T) {
 		Offset: 5,
 	}
 
-	adminTypes, err := testQueires.ListAdminTypes(context.Background(), arg)
+	adminTypes, err := testStore.ListAdminTypes(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, adminTypes, 5)
 

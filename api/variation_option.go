@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // ////////////* Create API //////////////
@@ -37,7 +37,7 @@ func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.CreateVariationOptionParams{
-		VariationID: req.VariationID,
+		VariationID: null.IntFrom(req.VariationID),
 		Value:       req.Value,
 	}
 

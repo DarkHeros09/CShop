@@ -72,6 +72,10 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/categories/:categoryId", server.getProductCategory) //? no auth required
 	app.Get("/api/v1/categories", server.listProductCategories)          //? no auth required
 
+	//* Product-Brands
+	app.Get("/api/v1/brands/:brandId", server.getProductBrand) //? no auth required
+	app.Get("/api/v1/brands", server.listProductBrands)        //? no auth required
+
 	//* Products-Promotions
 	app.Get("/api/v1/product-promotions/:promotionId/products/:productId", server.getProductPromotion) //? no auth required
 	app.Get("/api/v1/product-promotions/products", server.listProductPromotions)                       //? no auth required
@@ -79,6 +83,10 @@ func (server *Server) setupRouter() {
 	//* Category-Promotions
 	app.Get("/api/v1/category-promotions/:promotionId/categories/:categoryId", server.getCategoryPromotion) //? no auth required
 	app.Get("/api/v1/category-promotions/categories", server.listCategoryPromotions)                        //? no auth required
+
+	//* Brand-Promotions
+	app.Get("/api/v1/brand-promotions/:promotionId/brands/:brandId", server.getBrandPromotion) //? no auth required
+	app.Get("/api/v1/brand-promotions/brands", server.listBrandPromotions)                     //? no auth required
 
 	//* Variations
 	app.Get("/api/v1/variations/:variationId", server.getVariation) //? no auth required
@@ -158,6 +166,10 @@ func (server *Server) setupRouter() {
 	adminRouter.Put("/categories/:categoryId", server.updateProductCategory)    //! Admin Only
 	adminRouter.Delete("/categories/:categoryId", server.deleteProductCategory) //! Admin Only
 
+	adminRouter.Post("/brands", server.createProductBrand)            //! Admin Only
+	adminRouter.Put("/brands/:brandId", server.updateProductBrand)    //! Admin Only
+	adminRouter.Delete("/brands/:brandId", server.deleteProductBrand) //! Admin Only
+
 	adminRouter.Post("/product-promotions/:promotionId/products/:productId", server.createProductPromotion)   //! Admin Only
 	adminRouter.Put("/product-promotions/:promotionId/products/:productId", server.updateProductPromotion)    //! Admin Only
 	adminRouter.Delete("/product-promotions/:promotionId/products/:productId", server.deleteProductPromotion) //! Admin Only
@@ -165,6 +177,10 @@ func (server *Server) setupRouter() {
 	adminRouter.Post("/category-promotions/:promotionId/categories/:categoryId", server.createCategoryPromotion)   //! Admin Only
 	adminRouter.Put("/category-promotions/:promotionId/categories/:categoryId", server.updateCategoryPromotion)    //! Admin Only
 	adminRouter.Delete("/category-promotions/:promotionId/categories/:categoryId", server.deleteCategoryPromotion) //! Admin Only
+
+	adminRouter.Post("/brand-promotions/:promotionId/brands/:brandId", server.createBrandPromotion)   //! Admin Only
+	adminRouter.Put("/brand-promotions/:promotionId/brands/:brandId", server.updateBrandPromotion)    //! Admin Only
+	adminRouter.Delete("/brand-promotions/:promotionId/brands/:brandId", server.deleteBrandPromotion) //! Admin Only
 
 	adminRouter.Post("/variations", server.createVariation)                //! Admin Only
 	adminRouter.Put("/variations/:variationId", server.updateVariation)    //! Admin Only

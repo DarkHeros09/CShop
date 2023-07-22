@@ -6,13 +6,13 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomProductSize(t *testing.T) ProductSize {
 	arg := util.RandomSize()
-	productSize, err := testQueires.CreateProductSize(context.Background(), arg)
+	productSize, err := testStore.CreateProductSize(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productSize)
 
@@ -26,7 +26,7 @@ func TestCreateProductSize(t *testing.T) {
 
 func TestGetProductSize(t *testing.T) {
 	productSize1 := createRandomProductSize(t)
-	productSize2, err := testQueires.GetProductSize(context.Background(), productSize1.ID)
+	productSize2, err := testStore.GetProductSize(context.Background(), productSize1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productSize2)
@@ -46,7 +46,7 @@ func TestUpdateProductSize(t *testing.T) {
 		SizeValue: updatedSize,
 	}
 
-	productSize2, err := testQueires.UpdateProductSize(context.Background(), arg)
+	productSize2, err := testStore.UpdateProductSize(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productSize2)
 
@@ -56,11 +56,11 @@ func TestUpdateProductSize(t *testing.T) {
 
 func TestDeleteProductSize(t *testing.T) {
 	productSize1 := createRandomProductSize(t)
-	err := testQueires.DeleteProductSize(context.Background(), productSize1.ID)
+	err := testStore.DeleteProductSize(context.Background(), productSize1.ID)
 
 	require.NoError(t, err)
 
-	productSize2, err := testQueires.GetProductSize(context.Background(), productSize1.ID)
+	productSize2, err := testStore.GetProductSize(context.Background(), productSize1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

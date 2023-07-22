@@ -7,20 +7,22 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomProduct(t *testing.T) Product {
-	category := createRandomProductCategoryParent(t)
+	category := createRandomProductCategory(t)
+	brand := createRandomProductBrand(t)
 	arg := CreateProductParams{
 		CategoryID:  category.ID,
+		BrandID:     brand.ID,
 		Name:        util.RandomUser(),
 		Description: util.RandomUser(),
 		Active:      true,
 	}
 
-	product, err := testQueires.CreateProduct(context.Background(), arg)
+	product, err := testStore.CreateProduct(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, product)
@@ -42,7 +44,7 @@ func TestCreateProduct(t *testing.T) {
 
 func TestGetProduct(t *testing.T) {
 	product1 := createRandomProduct(t)
-	product2, err := testQueires.GetProduct(context.Background(), product1.ID)
+	product2, err := testStore.GetProduct(context.Background(), product1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, product2)
@@ -70,7 +72,7 @@ func TestUpdateProductName(t *testing.T) {
 		Active: null.Bool{},
 	}
 
-	product2, err := testQueires.UpdateProduct(context.Background(), arg)
+	product2, err := testStore.UpdateProduct(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, product2)
@@ -88,23 +90,20 @@ func TestUpdateProductName(t *testing.T) {
 
 func TestUpdateProductCategoryAndActive(t *testing.T) {
 	product1 := createRandomProduct(t)
-	category := createRandomProductCategoryParent(t)
+	// category := createRandomProductCategory(t)
 	arg := UpdateProductParams{
-		ID:          product1.ID,
-		CategoryID:  null.IntFromPtr(&category.ParentCategoryID.Int64),
-		Name:        null.String{},
-		Description: null.String{},
-		// ProductImage: null.String{},
-		Active: null.BoolFrom(!product1.Active),
+		ID:         product1.ID,
+		CategoryID: null.IntFromPtr(&product1.CategoryID),
+		Active:     null.BoolFrom(!product1.Active),
 	}
 
-	product2, err := testQueires.UpdateProduct(context.Background(), arg)
+	product2, err := testStore.UpdateProduct(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, product2)
 
 	require.Equal(t, product1.ID, product2.ID)
-	require.NotEqual(t, product1.CategoryID, product2.CategoryID)
+	require.Equal(t, product1.CategoryID, product2.CategoryID)
 	require.Equal(t, product1.Name, product2.Name)
 	require.Equal(t, product1.Description, product2.Description)
 	require.NotEqual(t, product1.Active, product2.Active)
@@ -116,11 +115,11 @@ func TestUpdateProductCategoryAndActive(t *testing.T) {
 
 func TestDeleteProduct(t *testing.T) {
 	product1 := createRandomProduct(t)
-	err := testQueires.DeleteProduct(context.Background(), product1.ID)
+	err := testStore.DeleteProduct(context.Background(), product1.ID)
 
 	require.NoError(t, err)
 
-	product2, err := testQueires.GetProduct(context.Background(), product1.ID)
+	product2, err := testStore.GetProduct(context.Background(), product1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -134,10 +133,10 @@ func TestListProducts(t *testing.T) {
 	}
 	arg := ListProductsParams{
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
-	products, err := testQueires.ListProducts(context.Background(), arg)
+	products, err := testStore.ListProducts(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, products)

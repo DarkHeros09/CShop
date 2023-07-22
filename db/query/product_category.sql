@@ -1,10 +1,14 @@
 -- name: CreateProductCategory :one
 INSERT INTO "product_category" (
   parent_category_id,
-  category_name
+  category_name,
+  category_image
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
+ON CONFLICT(category_name) DO UPDATE SET 
+category_name = EXCLUDED.category_name,
+category_image = EXCLUDED.category_image
 RETURNING *;
 
 -- name: GetProductCategory :one
@@ -19,22 +23,22 @@ LIMIT 1;
 
 -- name: ListProductCategories :many
 SELECT * FROM "product_category"
-ORDER BY id
-LIMIT $1
-OFFSET $2;
+ORDER BY id;
+-- LIMIT $1
+-- OFFSET $2;
 
 -- name: ListProductCategoriesByParent :many
 SELECT * FROM "product_category"
 WHERE parent_category_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3;
+ORDER BY id;
+-- LIMIT $2
+-- OFFSET $3;
 
 -- name: UpdateProductCategory :one
 UPDATE "product_category"
 SET category_name = sqlc.arg(category_name)
 WHERE id = sqlc.arg(id)
-And
+AND
 ( parent_category_id is NULL OR parent_category_id = sqlc.arg(parent_category_id) )
 RETURNING *;
 

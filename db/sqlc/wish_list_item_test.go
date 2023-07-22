@@ -6,11 +6,12 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomWishListItem(t *testing.T) WishListItem {
+	t.Helper()
 	wishList := createRandomWishList(t)
 	productItem := createRandomProductItem(t)
 
@@ -18,7 +19,7 @@ func createRandomWishListItem(t *testing.T) WishListItem {
 		WishListID:    wishList.ID,
 		ProductItemID: productItem.ID,
 	}
-	wishListItem, err := testQueires.CreateWishListItem(context.Background(), arg)
+	wishListItem, err := testStore.CreateWishListItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishListItem)
 
@@ -29,13 +30,15 @@ func createRandomWishListItem(t *testing.T) WishListItem {
 }
 
 func TestCreateWishListItem(t *testing.T) {
+	t.Parallel()
 	createRandomWishListItem(t)
 }
 
 func TestGetWishListItem(t *testing.T) {
+	t.Parallel()
 	wishListItem1 := createRandomWishListItem(t)
 
-	wishListItem2, err := testQueires.GetWishListItem(context.Background(), wishListItem1.ID)
+	wishListItem2, err := testStore.GetWishListItem(context.Background(), wishListItem1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishListItem2)
 
@@ -44,9 +47,10 @@ func TestGetWishListItem(t *testing.T) {
 }
 
 func TestGetWishListItemByUserIDWishID(t *testing.T) {
+	t.Parallel()
 	wishListItem1 := createRandomWishListItem(t)
 
-	wishList, err := testQueires.GetWishList(context.Background(), wishListItem1.WishListID)
+	wishList, err := testStore.GetWishList(context.Background(), wishListItem1.WishListID)
 	require.NoError(t, err)
 
 	arg := GetWishListItemByUserIDCartIDParams{
@@ -54,7 +58,7 @@ func TestGetWishListItemByUserIDWishID(t *testing.T) {
 		ID:         wishListItem1.ID,
 		WishListID: wishListItem1.WishListID,
 	}
-	wishListItem2, err := testQueires.GetWishListItemByUserIDCartID(context.Background(), arg)
+	wishListItem2, err := testStore.GetWishListItemByUserIDCartID(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishListItem2)
 
@@ -63,7 +67,7 @@ func TestGetWishListItemByUserIDWishID(t *testing.T) {
 }
 
 func TestUpdateWishListItem(t *testing.T) {
-
+	t.Parallel()
 	wishListItem := createRandomWishListItem(t)
 	newProduct := createRandomProductItem(t)
 	arg := UpdateWishListItemParams{
@@ -72,7 +76,7 @@ func TestUpdateWishListItem(t *testing.T) {
 		WishListID:    wishListItem.WishListID,
 	}
 
-	wishListItem2, err := testQueires.UpdateWishListItem(context.Background(), arg)
+	wishListItem2, err := testStore.UpdateWishListItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, wishListItem2)
 
@@ -81,9 +85,10 @@ func TestUpdateWishListItem(t *testing.T) {
 }
 
 func TestDeleteWishListItem(t *testing.T) {
+	t.Parallel()
 	wishListItem1 := createRandomWishListItem(t)
 
-	wishList, err := testQueires.GetWishList(context.Background(), wishListItem1.WishListID)
+	wishList, err := testStore.GetWishList(context.Background(), wishListItem1.WishListID)
 	require.NoError(t, err)
 
 	arg := DeleteWishListItemParams{
@@ -91,11 +96,11 @@ func TestDeleteWishListItem(t *testing.T) {
 		WishListID: wishList.ID,
 	}
 
-	err = testQueires.DeleteWishListItem(context.Background(), arg)
+	err = testStore.DeleteWishListItem(context.Background(), arg)
 
 	require.NoError(t, err)
 
-	wishListItem2, err := testQueires.GetWishListItem(context.Background(), wishListItem1.ID)
+	wishListItem2, err := testStore.GetWishListItem(context.Background(), wishListItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -104,13 +109,14 @@ func TestDeleteWishListItem(t *testing.T) {
 }
 
 func TestDeleteWishListItemAll(t *testing.T) {
+	t.Parallel()
 	wishListItem1 := createRandomWishListItem(t)
 
-	_, err := testQueires.DeleteWishListItemAll(context.Background(), wishListItem1.WishListID)
+	_, err := testStore.DeleteWishListItemAll(context.Background(), wishListItem1.WishListID)
 
 	require.NoError(t, err)
 
-	wishListItem2, err := testQueires.GetWishListItem(context.Background(), wishListItem1.ID)
+	wishListItem2, err := testStore.GetWishListItem(context.Background(), wishListItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -119,6 +125,7 @@ func TestDeleteWishListItemAll(t *testing.T) {
 }
 
 func TestListWishListItemes(t *testing.T) {
+	t.Parallel()
 	var wg sync.WaitGroup
 	wg.Add(5)
 	for i := 0; i < 5; i++ {
@@ -133,7 +140,7 @@ func TestListWishListItemes(t *testing.T) {
 		Offset: 0,
 	}
 
-	wishListItems, err := testQueires.ListWishListItems(context.Background(), arg)
+	wishListItems, err := testStore.ListWishListItems(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, wishListItems, 5)
 

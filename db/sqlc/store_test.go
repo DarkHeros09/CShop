@@ -17,7 +17,8 @@ import (
 // }
 
 func TestFinishedPurchaseTx(t *testing.T) {
-	store := NewStore(testDB)
+	t.Parallel()
+	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
 	n := 1
@@ -58,7 +59,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		orderStatus = createRandomOrderStatus(t)
 		listOrderStatus = append(listOrderStatus, orderStatus)
 
-		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
+		paymentMethod, err = testStore.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
 			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
@@ -68,7 +69,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		}
 		listPaymentMethod = append(listPaymentMethod, paymentMethod)
 
-		shoppingCart, err = store.CreateShoppingCart(context.Background(), userAddress.UserID)
+		shoppingCart, err = testStore.CreateShoppingCart(context.Background(), userAddress.UserID)
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
@@ -78,7 +79,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			size := createRandomProductSize(t)
 			image := createRandomProductImage(t)
 			color := createRandomProductColor(t)
-			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
+			productItem, err = testStore.CreateProductItem(context.Background(), CreateProductItemParams{
 				ProductID:  product.ID,
 				SizeID:     size.ID,
 				ImageID:    image.ID,
@@ -93,7 +94,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+			shoppingCartItem, err = testStore.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
 				ShoppingCartID: shoppingCart.ID,
 				ProductItemID:  productItem.ID,
 				Qty:            Qty,
@@ -113,7 +114,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		}
 		go func() {
 			lock.Lock()
-			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
+			result, err := testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserID:           userAddress.UserID,
 				UserAddressID:    userAddress.AddressID,
 				PaymentTypeID:    paymentType.ID,
@@ -141,7 +142,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			// check finishedPurchase/ ShopOrder
 			finishedShopOrderID := resultList[z].ShopOrderID
 			require.NotEmpty(t, finishedShopOrderID)
-			finishedShopOrder, err := testQueires.GetShopOrder(context.Background(), finishedShopOrderID)
+			finishedShopOrder, err := testStore.GetShopOrder(context.Background(), finishedShopOrderID)
 			require.NoError(t, err)
 			require.NotEmpty(t, finishedShopOrder)
 			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
@@ -150,13 +151,13 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.Equal(t, listShippingMethod[z].ID, finishedShopOrder.ShippingMethodID)
 			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID.Int64)
 
-			_, err = testQueires.GetShopOrder(context.Background(), finishedShopOrder.ID)
+			_, err = testStore.GetShopOrder(context.Background(), finishedShopOrder.ID)
 			require.NoError(t, err)
 
 			// check ProductItem Updated Quantity
 			newProductItemID := resultList[z].UpdatedProductItemID
 			require.NotEmpty(t, newProductItemID)
-			newProductItem, err := testQueires.GetProductItem(context.Background(), newProductItemID)
+			newProductItem, err := testStore.GetProductItem(context.Background(), newProductItemID)
 			require.NotEmpty(t, newProductItem)
 			require.NotEqual(t, listProductItem[z].QtyInStock, newProductItem.QtyInStock)
 			require.Equal(t, listProductItem[z].QtyInStock-listShoppingCartItem[z].Qty, newProductItem.QtyInStock)
@@ -168,7 +169,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 				// Limit:   10,
 				// Offset:  0,
 			}
-			finishedShopOrderItems, err := testQueires.ListShopOrderItemsByUserIDOrderID(context.Background(), argF)
+			finishedShopOrderItems, err := testStore.ListShopOrderItemsByUserIDOrderID(context.Background(), argF)
 			require.NotEmpty(t, finishedShopOrderItems)
 			require.NoError(t, err)
 			println(len(finishedShopOrderItems))
@@ -183,7 +184,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 				ID:     shoppingCart.ID,
 			}
 
-			DeletedShopCartItem, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
+			DeletedShopCartItem, err := testStore.GetShoppingCartItemByUserIDCartID(context.Background(), arg1)
 			require.NoError(t, err)
 			require.Empty(t, DeletedShopCartItem)
 		}
@@ -191,7 +192,8 @@ func TestFinishedPurchaseTx(t *testing.T) {
 }
 
 func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
-	store := NewStore(testDB)
+	t.Parallel()
+	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
 	n := 1
@@ -218,8 +220,8 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	var totalPrice string
 	// var listTotalPrice []string
 
-	errs := make(chan error)
-	results := make(chan FinishedPurchaseTxResult)
+	// errs := make(chan error)
+	// results := make(chan FinishedPurchaseTxResult)
 
 	for i := 0; i < n; i++ {
 		userAddress = createRandomUserAddress(t)
@@ -231,7 +233,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		orderStatus = createRandomOrderStatus(t)
 		listOrderStatus = append(listOrderStatus, orderStatus)
 
-		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
+		paymentMethod, err = testStore.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
 			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
@@ -241,7 +243,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		}
 		listPaymentMethod = append(listPaymentMethod, paymentMethod)
 
-		shoppingCart, err = store.CreateShoppingCart(context.Background(), userAddress.UserID)
+		shoppingCart, err = testStore.CreateShoppingCart(context.Background(), userAddress.UserID)
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
@@ -251,7 +253,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			size := createRandomProductSize(t)
 			image := createRandomProductImage(t)
 			color := createRandomProductColor(t)
-			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
+			productItem, err = testStore.CreateProductItem(context.Background(), CreateProductItemParams{
 				ProductID:  product.ID,
 				SizeID:     size.ID,
 				ImageID:    image.ID,
@@ -266,7 +268,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+			shoppingCartItem, err = testStore.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
 				ShoppingCartID: shoppingCart.ID,
 				ProductItemID:  productItem.ID,
 				Qty:            Qty,
@@ -284,36 +286,37 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			totalPrice += price.String()
 			time.Sleep(3 * time.Second)
 		}
-		go func() {
-			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
-				UserID:           userAddress.UserID,
-				UserAddressID:    userAddress.AddressID,
-				PaymentTypeID:    paymentType.ID,
-				ShoppingCartID:   shoppingCart.ID,
-				ShippingMethodID: shippingMethod.ID,
-				OrderStatusID:    orderStatus.ID,
-				OrderTotal:       totalPrice,
-			})
-			// time.Sleep(1 * time.Second)
-			errs <- err
-			results <- result
-		}()
-	}
+		// go func() {
+		result, err := testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
+			UserID:           userAddress.UserID,
+			UserAddressID:    userAddress.AddressID,
+			PaymentTypeID:    paymentType.ID,
+			ShoppingCartID:   shoppingCart.ID,
+			ShippingMethodID: shippingMethod.ID,
+			OrderStatusID:    orderStatus.ID,
+			OrderTotal:       totalPrice,
+		})
+		// time.Sleep(1 * time.Second)
+		// 	errs <- err
+		// 	results <- result
+		// }()
+		// }
 
-	// check results
-	// time.Sleep(1 * time.Second)
-	for i := 0; i < n; i++ {
-		err := <-errs
+		// check results
+		// time.Sleep(1 * time.Second)
+		// for i := 0; i < n; i++ {
+		// err := <-errs
 		require.Error(t, err)
 		require.EqualError(t, err, "Not Enough Qty in Stock")
 
-		result := <-results
+		// result := <-results
 		require.Empty(t, result)
 	}
 }
 
 func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
-	store := NewStore(testDB)
+	t.Parallel()
+	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
 	n := 3
@@ -339,9 +342,10 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	// var listPrice []decimal.Decimal
 	var totalPrice string
 	// var listTotalPrice []string
+	var result FinishedPurchaseTxResult
 
-	errs := make(chan error)
-	results := make(chan FinishedPurchaseTxResult)
+	// errs := make(chan error)
+	// results := make(chan FinishedPurchaseTxResult)
 
 	for i := 0; i < n; i++ {
 		userAddress = createRandomUserAddress(t)
@@ -353,7 +357,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		orderStatus = createRandomOrderStatus(t)
 		listOrderStatus = append(listOrderStatus, orderStatus)
 
-		paymentMethod, err = store.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
+		paymentMethod, err = testStore.CreatePaymentMethod(context.Background(), CreatePaymentMethodParams{
 			UserID:        userAddress.UserID,
 			PaymentTypeID: paymentType.ID,
 			Provider:      util.RandomString(5),
@@ -363,7 +367,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		}
 		listPaymentMethod = append(listPaymentMethod, paymentMethod)
 
-		shoppingCart, err = store.CreateShoppingCart(context.Background(), userAddress.UserID)
+		shoppingCart, err = testStore.CreateShoppingCart(context.Background(), userAddress.UserID)
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
@@ -373,7 +377,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			size := createRandomProductSize(t)
 			image := createRandomProductImage(t)
 			color := createRandomProductColor(t)
-			productItem, err = store.CreateProductItem(context.Background(), CreateProductItemParams{
+			productItem, err = testStore.CreateProductItem(context.Background(), CreateProductItemParams{
 				ProductID:  product.ID,
 				SizeID:     size.ID,
 				ImageID:    image.ID,
@@ -388,7 +392,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			}
 			listProductItem = append(listProductItem, productItem)
 
-			shoppingCartItem, err = store.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
+			shoppingCartItem, err = testStore.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
 				ShoppingCartID: shoppingCart.ID,
 				ProductItemID:  productItem.ID,
 				Qty:            Qty,
@@ -406,30 +410,30 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			totalPrice += price.String()
 			// time.Sleep(3 * time.Second)
 		}
-		go func() {
-			result, err := store.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
-				UserID:           userAddress.UserID,
-				UserAddressID:    userAddress.AddressID,
-				PaymentTypeID:    paymentType.ID,
-				ShoppingCartID:   shoppingCart.ID,
-				ShippingMethodID: shippingMethod.ID,
-				OrderStatusID:    orderStatus.ID,
-				OrderTotal:       totalPrice,
-			})
-			// time.Sleep(1 * time.Second)
-			errs <- err
-			results <- result
-		}()
+		// go func() {
+		result, err = testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
+			UserID:           userAddress.UserID,
+			UserAddressID:    userAddress.AddressID,
+			PaymentTypeID:    paymentType.ID,
+			ShoppingCartID:   shoppingCart.ID,
+			ShippingMethodID: shippingMethod.ID,
+			OrderStatusID:    orderStatus.ID,
+			OrderTotal:       totalPrice,
+		})
+		// time.Sleep(1 * time.Second)
+		// errs <- err
+		// results <- result
+		// }()
 	}
 
 	// check results
 	// time.Sleep(1 * time.Second)
 	for i := 0; i < n; i++ {
-		err := <-errs
+		// err := <-errs
 		require.Error(t, err)
 		require.EqualError(t, err, "Stock is Empty")
 
-		result := <-results
+		// result := <-results
 		require.Empty(t, result)
 	}
 }

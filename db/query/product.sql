@@ -1,12 +1,13 @@
 -- name: CreateProduct :one
 INSERT INTO "product" (
   category_id,
+  brand_id,
   name,
   description,
   -- product_image,
   active
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -34,6 +35,7 @@ OFFSET $2;
 UPDATE "product"
 SET
 category_id = COALESCE(sqlc.narg(category_id),category_id),
+brand_id = COALESCE(sqlc.narg(brand_id),brand_id),
 name = COALESCE(sqlc.narg(name),name),
 description = COALESCE(sqlc.narg(description),description),
 -- product_image = COALESCE(sqlc.narg(product_image),product_image),

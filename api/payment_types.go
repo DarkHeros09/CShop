@@ -5,7 +5,7 @@ import (
 
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // //////////////* List API //////////////

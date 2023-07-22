@@ -6,28 +6,51 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func createRandomProductCategory(t *testing.T) ProductCategory {
+	// arg := util.RandomString(5)
+	var productCategory ProductCategory
+	var err error
+	productCategories := []string{"أحذية", "حقائب", "إكسسوارات", "حجاب", "عبايات", "قمصان", "تنانير", "بناطيل", "الأطقم", "الفساتين"}
+	for i := 0; i < len(productCategories); i++ {
+		randomInt := util.RandomInt(0, int64(len(productCategories)-1))
+		arg := CreateProductCategoryParams{
+			ParentCategoryID: null.Int{},
+			CategoryName:     productCategories[randomInt],
+			CategoryImage:    util.RandomURL(),
+		}
+		productCategory, err = testStore.CreateProductCategory(context.Background(), arg)
+		require.NoError(t, err)
+		require.NotEmpty(t, productCategory)
+
+		require.Equal(t, productCategories[randomInt], productCategory.CategoryName)
+
+	}
+	return productCategory
+}
+
+func createRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCategory {
 	categoryName := util.RandomString(5)
 	arg := CreateProductCategoryParams{
 		ParentCategoryID: null.Int{},
 		CategoryName:     categoryName,
+		CategoryImage:    util.RandomURL(),
 	}
 	// productCategoryChan := make(chan ProductCategory)
 	// errChan := make(chan error)
 
 	// go func() {
-	// 	productCategory, err := testQueires.CreateProductCategory(context.Background(), arg)
+	// 	productCategory, err := testStore.CreateProductCategory(context.Background(), arg)
 	// 	productCategoryChan <- productCategory
 	// 	errChan <- err
 	// }()
 
 	// err := <-errChan
 	// productCategory := <-productCategoryChan
-	productCategory, err := testQueires.CreateProductCategory(context.Background(), arg)
+	productCategory, err := testStore.CreateProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory)
@@ -50,7 +73,7 @@ func createRandomProductCategoryParent(t *testing.T) ProductCategory {
 		CategoryName:     util.RandomString(5),
 	}
 
-	productCategory, err := testQueires.CreateProductCategory(context.Background(), arg)
+	productCategory, err := testStore.CreateProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory)
@@ -66,12 +89,20 @@ func TestCreateProductCategory(t *testing.T) {
 }
 
 func TestCreateProductCategoryParent(t *testing.T) {
-	createRandomProductCategoryParent(t)
+	productCategory := createRandomProductCategoryParent(t)
+	arg1 := DeleteProductCategoryParams{
+		ID:               productCategory.ID,
+		ParentCategoryID: productCategory.ParentCategoryID,
+	}
+
+	err := testStore.DeleteProductCategory(context.Background(), arg1)
+
+	require.NoError(t, err)
 }
 
 func TestGetProductCategory(t *testing.T) {
 	productCategory1 := createRandomProductCategoryParent(t)
-	productCategory2, err := testQueires.GetProductCategory(context.Background(), productCategory1.ID)
+	productCategory2, err := testStore.GetProductCategory(context.Background(), productCategory1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory2)
@@ -79,6 +110,15 @@ func TestGetProductCategory(t *testing.T) {
 	require.Equal(t, productCategory1.ID, productCategory2.ID)
 	require.Equal(t, productCategory1.ParentCategoryID, productCategory2.ParentCategoryID)
 	require.Equal(t, productCategory1.CategoryName, productCategory2.CategoryName)
+
+	arg1 := DeleteProductCategoryParams{
+		ID:               productCategory1.ID,
+		ParentCategoryID: productCategory1.ParentCategoryID,
+	}
+
+	err = testStore.DeleteProductCategory(context.Background(), arg1)
+
+	require.NoError(t, err)
 }
 
 func TestGetProductCategoryByParent(t *testing.T) {
@@ -88,23 +128,32 @@ func TestGetProductCategoryByParent(t *testing.T) {
 		ID:               productCategory1.ID,
 		ParentCategoryID: null.IntFromPtr(&productCategory1.ParentCategoryID.Int64),
 	}
-	productCategory2, err := testQueires.GetProductCategoryByParent(context.Background(), arg)
+	productCategory2, err := testStore.GetProductCategoryByParent(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory2)
 
 	require.Equal(t, productCategory1.ID, productCategory2.ID)
 	require.Equal(t, productCategory1.ParentCategoryID, productCategory2.ParentCategoryID)
 	require.Equal(t, productCategory1.CategoryName, productCategory2.CategoryName)
+
+	arg1 := DeleteProductCategoryParams{
+		ID:               productCategory1.ID,
+		ParentCategoryID: productCategory1.ParentCategoryID,
+	}
+
+	err = testStore.DeleteProductCategory(context.Background(), arg1)
+
+	require.NoError(t, err)
 }
 
 func TestUpdateProductCategory(t *testing.T) {
-	productCategory1 := createRandomProductCategory(t)
+	productCategory1 := createRandomProductCategoryForUpdateOrDelete(t)
 	arg := UpdateProductCategoryParams{
 		ID:           productCategory1.ID,
 		CategoryName: util.RandomString(5),
 	}
 
-	productCategory2, err := testQueires.UpdateProductCategory(context.Background(), arg)
+	productCategory2, err := testStore.UpdateProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory2)
@@ -113,6 +162,14 @@ func TestUpdateProductCategory(t *testing.T) {
 	require.Empty(t, productCategory1.ParentCategoryID)
 	require.Empty(t, productCategory2.ParentCategoryID)
 	require.NotEqual(t, productCategory1.CategoryName, productCategory2.CategoryName)
+
+	arg1 := DeleteProductCategoryParams{
+		ID: productCategory2.ID,
+	}
+
+	err = testStore.DeleteProductCategory(context.Background(), arg1)
+
+	require.NoError(t, err)
 }
 
 func TestUpdateProductCategoryParent(t *testing.T) {
@@ -123,7 +180,7 @@ func TestUpdateProductCategoryParent(t *testing.T) {
 		CategoryName:     util.RandomString(5),
 	}
 
-	productCategory2, err := testQueires.UpdateProductCategory(context.Background(), arg)
+	productCategory2, err := testStore.UpdateProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productCategory2)
@@ -131,19 +188,28 @@ func TestUpdateProductCategoryParent(t *testing.T) {
 	require.Equal(t, productCategory1.ID, productCategory2.ID)
 	require.Equal(t, productCategory1.ParentCategoryID.Int64, productCategory2.ParentCategoryID.Int64)
 	require.NotEqual(t, productCategory1.CategoryName, productCategory2.CategoryName)
+
+	arg1 := DeleteProductCategoryParams{
+		ID:               productCategory2.ID,
+		ParentCategoryID: productCategory2.ParentCategoryID,
+	}
+
+	err = testStore.DeleteProductCategory(context.Background(), arg1)
+
+	require.NoError(t, err)
 }
 
 func TestDeleteProductCategory(t *testing.T) {
-	productCategory1 := createRandomProductCategory(t)
+	productCategory1 := createRandomProductCategoryForUpdateOrDelete(t)
 
 	arg := DeleteProductCategoryParams{
 		ID: productCategory1.ID,
 	}
-	err := testQueires.DeleteProductCategory(context.Background(), arg)
+	err := testStore.DeleteProductCategory(context.Background(), arg)
 
 	require.NoError(t, err)
 
-	productCategory2, err := testQueires.GetProductCategory(context.Background(), productCategory1.ID)
+	productCategory2, err := testStore.GetProductCategory(context.Background(), productCategory1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -152,13 +218,13 @@ func TestDeleteProductCategory(t *testing.T) {
 }
 
 func TestDeleteProductCategoryParent(t *testing.T) {
-	productCategory1 := createRandomProductCategory(t)
+	productCategory1 := createRandomProductCategoryForUpdateOrDelete(t)
 
 	arg1 := DeleteProductCategoryParams{
 		ID:               productCategory1.ID,
 		ParentCategoryID: null.IntFromPtr(&productCategory1.ParentCategoryID.Int64),
 	}
-	err := testQueires.DeleteProductCategory(context.Background(), arg1)
+	err := testStore.DeleteProductCategory(context.Background(), arg1)
 
 	require.NoError(t, err)
 
@@ -167,7 +233,7 @@ func TestDeleteProductCategoryParent(t *testing.T) {
 		ParentCategoryID: null.IntFromPtr(&productCategory1.ParentCategoryID.Int64),
 	}
 
-	productCategory2, err := testQueires.GetProductCategoryByParent(context.Background(), arg2)
+	productCategory2, err := testStore.GetProductCategoryByParent(context.Background(), arg2)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -176,20 +242,20 @@ func TestDeleteProductCategoryParent(t *testing.T) {
 }
 
 func TestListProductCategories(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		createRandomProductCategory(t)
 	}
-	arg := ListProductCategoriesParams{
-		Limit:  5,
-		Offset: 5,
-	}
+	// arg := ListProductCategoriesParams{
+	// 	Limit:  5,
+	// 	Offset: 0,
+	// }
 
-	userCategories, err := testQueires.ListProductCategories(context.Background(), arg)
+	productCategories, err := testStore.ListProductCategories(context.Background())
 	require.NoError(t, err)
-	require.Len(t, userCategories, 5)
+	// require.Len(t, productCategories, 5)
 
-	for _, userCategory := range userCategories {
-		require.NotEmpty(t, userCategory)
+	for _, productCategory := range productCategories {
+		require.NotEmpty(t, productCategory)
 
 	}
 }

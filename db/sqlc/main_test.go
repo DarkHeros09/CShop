@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var testQueires *Queries
-var testDB *pgxpool.Pool
+// var testStore.*Queries
+// var testDB *pgxpool.Pool
+
+var testStore Store
 
 func TestMain(m *testing.M) {
 	// goleak.VerifyTestMain(m)
@@ -29,13 +31,14 @@ func TestMain(m *testing.M) {
 
 	// testDB := <-testDBChan
 	// err = <-errChan
-	testDB, err = pgxpool.Connect(context.Background(), config.DBSource)
+	testDB, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}
 	// defer testDB.Close()
 
-	testQueires = New(testDB)
+	// testStore.= New(testDB)
+	testStore = NewStore(testDB)
 
 	os.Exit(m.Run())
 }

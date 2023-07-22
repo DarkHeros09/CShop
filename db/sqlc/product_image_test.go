@@ -6,7 +6,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func createRandomProductImage(t *testing.T) ProductImage {
 		ProductImage2: util.RandomURL(),
 		ProductImage3: util.RandomURL(),
 	}
-	productImage, err := testQueires.CreateProductImage(context.Background(), arg)
+	productImage, err := testStore.CreateProductImage(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productImage)
 
@@ -32,7 +32,7 @@ func TestCreateProductImage(t *testing.T) {
 
 func TestGetProductImage(t *testing.T) {
 	productImage1 := createRandomProductImage(t)
-	productImage2, err := testQueires.GetProductImage(context.Background(), productImage1.ID)
+	productImage2, err := testStore.GetProductImage(context.Background(), productImage1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productImage2)
@@ -52,7 +52,7 @@ func TestUpdateProductImage(t *testing.T) {
 		ProductImage3: null.StringFrom(productImage1.ProductImage2),
 	}
 
-	productImage2, err := testQueires.UpdateProductImage(context.Background(), arg)
+	productImage2, err := testStore.UpdateProductImage(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productImage2)
 
@@ -64,11 +64,11 @@ func TestUpdateProductImage(t *testing.T) {
 
 func TestDeleteProductImage(t *testing.T) {
 	productImage1 := createRandomProductImage(t)
-	err := testQueires.DeleteProductImage(context.Background(), productImage1.ID)
+	err := testStore.DeleteProductImage(context.Background(), productImage1.ID)
 
 	require.NoError(t, err)
 
-	productImage2, err := testQueires.GetProductImage(context.Background(), productImage1.ID)
+	productImage2, err := testStore.GetProductImage(context.Background(), productImage1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())

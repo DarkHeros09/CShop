@@ -8,7 +8,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +29,7 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		Active: true,
 	}
 
-	productItem, err := testQueires.CreateProductItem(context.Background(), arg)
+	productItem, err := testStore.CreateProductItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem)
 
@@ -46,6 +46,61 @@ func createRandomProductItem(t *testing.T) ProductItem {
 	require.True(t, productItem.UpdatedAt.IsZero())
 	require.True(t, productItem.Active)
 
+	if util.RandomBool() {
+		promotion := createRandomPromotion(t)
+
+		rand := util.RandomInt(1, 3)
+
+		switch rand {
+		case 1:
+
+			arg1 := CreateCategoryPromotionParams{
+				CategoryID:  product.CategoryID,
+				PromotionID: promotion.ID,
+				Active:      util.RandomBool(),
+			}
+
+			categoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, categoryPromotion)
+
+			require.Equal(t, arg1.CategoryID, categoryPromotion.CategoryID)
+			require.Equal(t, arg1.PromotionID, categoryPromotion.PromotionID)
+			require.Equal(t, arg1.Active, categoryPromotion.Active)
+
+		case 2:
+
+			arg1 := CreateBrandPromotionParams{
+				BrandID:     product.BrandID,
+				PromotionID: promotion.ID,
+				Active:      util.RandomBool(),
+			}
+
+			brandPromotion, err := testStore.CreateBrandPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, brandPromotion)
+
+			require.Equal(t, arg1.BrandID, brandPromotion.BrandID)
+			require.Equal(t, arg1.PromotionID, brandPromotion.PromotionID)
+			require.Equal(t, arg1.Active, brandPromotion.Active)
+
+		case 3:
+			arg1 := CreateProductPromotionParams{
+				ProductID:   product.ID,
+				PromotionID: promotion.ID,
+				Active:      util.RandomBool(),
+			}
+
+			productPromotion, err := testStore.CreateProductPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, productPromotion)
+
+			require.Equal(t, arg1.ProductID, productPromotion.ProductID)
+			require.Equal(t, arg1.PromotionID, productPromotion.PromotionID)
+			require.Equal(t, arg1.Active, productPromotion.Active)
+		}
+	}
+
 	return productItem
 }
 func TestCreateProductItem(t *testing.T) {
@@ -55,7 +110,7 @@ func TestCreateProductItem(t *testing.T) {
 func TestGetProductItem(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
 
-	productItem2, err := testQueires.GetProductItem(context.Background(), productItem1.ID)
+	productItem2, err := testStore.GetProductItem(context.Background(), productItem1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem2)
 
@@ -86,7 +141,7 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 		ID:     productItem1.ID,
 	}
 
-	productItem2, err := testQueires.UpdateProductItem(context.Background(), arg)
+	productItem2, err := testStore.UpdateProductItem(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem2)
@@ -107,11 +162,11 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 
 func TestDeleteProductItem(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
-	err := testQueires.DeleteProductItem(context.Background(), productItem1.ID)
+	err := testStore.DeleteProductItem(context.Background(), productItem1.ID)
 
 	require.NoError(t, err)
 
-	productItem2, err := testQueires.GetProductItem(context.Background(), productItem1.ID)
+	productItem2, err := testStore.GetProductItem(context.Background(), productItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -120,7 +175,8 @@ func TestDeleteProductItem(t *testing.T) {
 }
 
 func TestListProductItems(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	t.Parallel()
+	for i := 0; i < 5; i++ {
 		createRandomProductItem(t)
 	}
 	arg := ListProductItemsParams{
@@ -128,7 +184,7 @@ func TestListProductItems(t *testing.T) {
 		Offset: 0,
 	}
 
-	productItems, err := testQueires.ListProductItems(context.Background(), arg)
+	productItems, err := testStore.ListProductItems(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, productItems)
@@ -149,13 +205,13 @@ func TestListProductItemsByIDs(t *testing.T) {
 
 	fmt.Println("ProductsIDS", productsIds)
 
-	productItems, err := testQueires.ListProductItemsByIDs(context.Background(), productsIds)
+	productItems, err := testStore.ListProductItemsByIDs(context.Background(), productsIds)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItems)
 
 	for i, productItem := range productItems {
 		require.NotEmpty(t, productItem)
-		require.Equal(t, productItem.ID, productsIds[i])
+		require.Equal(t, productItems[i].ID, productsIds[i])
 	}
 
 }
@@ -165,7 +221,11 @@ func TestListProductItemsV2(t *testing.T) {
 		createRandomProductItem(t)
 	}
 
-	initialSearchResult, err := testQueires.ListProductItemsV2(context.Background(), 10)
+	arg := ListProductItemsV2Params{
+		Limit: 10,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, initialSearchResult)
@@ -176,7 +236,7 @@ func TestListProductItemsV2(t *testing.T) {
 		ID:    initialSearchResult[len(initialSearchResult)-1].ID,
 	}
 
-	secondPage, err := testQueires.ListProductItemsNextPage(context.Background(), arg1)
+	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
 	require.Equal(t, len(initialSearchResult), 10)
@@ -187,7 +247,7 @@ func TestListProductItemsV2(t *testing.T) {
 		ID:    secondPage[len(initialSearchResult)-1].ID,
 	}
 
-	thirdPage, err := testQueires.ListProductItemsNextPage(context.Background(), arg2)
+	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
 	require.Equal(t, len(initialSearchResult), 10)
@@ -199,7 +259,7 @@ func TestSearchProductItems(t *testing.T) {
 
 	productItem := createRandomProductItem(t)
 
-	product, err := testQueires.GetProduct(context.Background(), productItem.ProductID)
+	product, err := testStore.GetProduct(context.Background(), productItem.ProductID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, product)
@@ -209,7 +269,7 @@ func TestSearchProductItems(t *testing.T) {
 		Query: product.Name,
 	}
 
-	searchedProductItem, err := testQueires.SearchProductItems(context.Background(), arg1)
+	searchedProductItem, err := testStore.SearchProductItems(context.Background(), arg1)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, searchedProductItem)
@@ -221,7 +281,7 @@ func TestSearchProductItems(t *testing.T) {
 		Query: product.Name,
 	}
 
-	searchedRestProductItem, err := testQueires.SearchProductItemsNextPage(context.Background(), arg2)
+	searchedRestProductItem, err := testStore.SearchProductItemsNextPage(context.Background(), arg2)
 
 	require.NoError(t, err)
 	require.Empty(t, searchedRestProductItem)

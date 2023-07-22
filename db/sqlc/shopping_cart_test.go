@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +15,7 @@ func createRandomShoppingCart(t *testing.T) ShoppingCart {
 
 	// go func() {
 	user1 := createRandomUser(t)
-	shoppingCart, err := testQueires.CreateShoppingCart(context.Background(), user1.ID)
+	shoppingCart, err := testStore.CreateShoppingCart(context.Background(), user1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart)
 
@@ -34,9 +34,10 @@ func TestCreateShoppingCart(t *testing.T) {
 }
 
 func TestGetShoppingCart(t *testing.T) {
+	t.Parallel()
 	shoppingCart1 := createRandomShoppingCart(t)
 
-	shoppingCart2, err := testQueires.GetShoppingCart(context.Background(), shoppingCart1.ID)
+	shoppingCart2, err := testStore.GetShoppingCart(context.Background(), shoppingCart1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart2)
 
@@ -51,7 +52,7 @@ func TestGetShoppingCartByUser(t *testing.T) {
 		ID:     shoppingCart1.ID,
 	}
 
-	shoppingCart2, err := testQueires.GetShoppingCartByUserIDCartID(context.Background(), arg)
+	shoppingCart2, err := testStore.GetShoppingCartByUserIDCartID(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart2)
 
@@ -66,7 +67,7 @@ func TestUpdateShoppingCart(t *testing.T) {
 		ID:     shoppingCart1.ID,
 	}
 
-	shoppingCart2, err := testQueires.UpdateShoppingCart(context.Background(), arg)
+	shoppingCart2, err := testStore.UpdateShoppingCart(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCart2)
 
@@ -76,11 +77,11 @@ func TestUpdateShoppingCart(t *testing.T) {
 func TestDeleteShoppingCart(t *testing.T) {
 	shoppingCart1 := createRandomShoppingCart(t)
 
-	err := testQueires.DeleteShoppingCart(context.Background(), shoppingCart1.ID)
+	err := testStore.DeleteShoppingCart(context.Background(), shoppingCart1.ID)
 
 	require.NoError(t, err)
 
-	shoppingCart2, err := testQueires.GetShoppingCart(context.Background(), shoppingCart1.ID)
+	shoppingCart2, err := testStore.GetShoppingCart(context.Background(), shoppingCart1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -104,7 +105,7 @@ func TestListShoppingCarts(t *testing.T) {
 		Offset: 0,
 	}
 
-	shoppingCarts, err := testQueires.ListShoppingCarts(context.Background(), arg)
+	shoppingCarts, err := testStore.ListShoppingCarts(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, shoppingCarts, 5)
 

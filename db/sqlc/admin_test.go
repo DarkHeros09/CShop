@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +23,7 @@ func createRandomAdmin(t *testing.T) Admin {
 		Password: hashedPassword,
 		TypeID:   adminType.ID,
 	}
-	admin, err := testQueires.CreateAdmin(context.Background(), arg)
+	admin, err := testStore.CreateAdmin(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, admin)
 
@@ -45,7 +45,7 @@ func TestCreateAdmin(t *testing.T) {
 
 func TestGetAdmin(t *testing.T) {
 	admin1 := createRandomAdmin(t)
-	admin2, err := testQueires.GetAdmin(context.Background(), admin1.ID)
+	admin2, err := testStore.GetAdmin(context.Background(), admin1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, admin2)
@@ -68,7 +68,7 @@ func TestUpdateAdmin(t *testing.T) {
 		Active: false,
 	}
 
-	admin2, err := testQueires.UpdateAdmin(context.Background(), arg)
+	admin2, err := testStore.UpdateAdmin(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, admin2)
@@ -84,11 +84,11 @@ func TestUpdateAdmin(t *testing.T) {
 func TestDeleteAdmin(t *testing.T) {
 	admin1 := createRandomAdmin(t)
 
-	err := testQueires.DeleteAdmin(context.Background(), admin1.ID)
+	err := testStore.DeleteAdmin(context.Background(), admin1.ID)
 
 	require.NoError(t, err)
 
-	admin2, err := testQueires.GetAdmin(context.Background(), admin1.ID)
+	admin2, err := testStore.GetAdmin(context.Background(), admin1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -110,7 +110,7 @@ func TestListAdmins(t *testing.T) {
 		Offset: 0,
 	}
 
-	admins, err := testQueires.ListAdmins(context.Background(), arg)
+	admins, err := testStore.ListAdmins(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, admins, 5)
 

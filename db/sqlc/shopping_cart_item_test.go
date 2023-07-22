@@ -6,7 +6,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func createRandomShoppingCartItem(t *testing.T) (ShoppingCartItem, ShoppingCart)
 		Qty:            int32(util.RandomInt(0, 10)),
 	}
 
-	// result := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	// result := testStore.CreateShoppingCartItem(context.Background(), arg)
 
 	// result.Query(func(i int, sci []ShoppingCartItem, err error) {
 	// 	require.NoError(t, err)
@@ -31,7 +31,7 @@ func createRandomShoppingCartItem(t *testing.T) (ShoppingCartItem, ShoppingCart)
 	// 	shoppingCartItems = sci
 	// })
 
-	shoppingCartItem, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	shoppingCartItem, err := testStore.CreateShoppingCartItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem)
 
@@ -49,7 +49,7 @@ func TestCreateShoppingCartItem(t *testing.T) {
 func TestGetShoppingCartItem(t *testing.T) {
 	shoppingCartItem1, _ := createRandomShoppingCartItem(t)
 
-	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
+	shoppingCartItem2, err := testStore.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem2)
 
@@ -66,7 +66,7 @@ func TestGetShoppingCartItem(t *testing.T) {
 // 		ID:     shoppingCartItem1.ShoppingCartID,
 // 	}
 
-// 	shoppingCartItem2, err := testQueires.GetShoppingCartItemByUserIDCartID(context.Background(), arg)
+// 	shoppingCartItem2, err := testStore.GetShoppingCartItemByUserIDCartID(context.Background(), arg)
 // 	require.NoError(t, err)
 // 	require.NotEmpty(t, shoppingCartItem2)
 
@@ -76,24 +76,25 @@ func TestGetShoppingCartItem(t *testing.T) {
 // }
 
 func TestUpdateShoppingCartItem(t *testing.T) {
+	t.Parallel()
 	shoppingCartItem1, _ := createRandomShoppingCartItem(t)
 	arg := UpdateShoppingCartItemParams{
-		ProductItemID:  null.Int{},
-		Qty:            null.Int{},
+		Qty:            null.IntFrom(int64(shoppingCartItem1.Qty) + 1),
 		ID:             shoppingCartItem1.ID,
 		ShoppingCartID: shoppingCartItem1.ShoppingCartID,
 	}
 
-	shoppingCartItem2, err := testQueires.UpdateShoppingCartItem(context.Background(), arg)
+	shoppingCartItem2, err := testStore.UpdateShoppingCartItem(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem2)
 
 	require.Equal(t, shoppingCartItem1.ShoppingCartID, shoppingCartItem2.ShoppingCartID)
 	require.Equal(t, shoppingCartItem1.ProductItemID, shoppingCartItem2.ProductItemID)
-	require.Equal(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
+	require.NotEqual(t, shoppingCartItem1.Qty, shoppingCartItem2.Qty)
 }
 
 func TestDeleteShoppingCartItem(t *testing.T) {
+	t.Parallel()
 	shoppingCartItem1, shoppingCart := createRandomShoppingCartItem(t)
 
 	arg := DeleteShoppingCartItemParams{
@@ -102,11 +103,11 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 		ShoppingCartID:     shoppingCart.ID,
 	}
 
-	err := testQueires.DeleteShoppingCartItem(context.Background(), arg)
+	err := testStore.DeleteShoppingCartItem(context.Background(), arg)
 
 	require.NoError(t, err)
 
-	shoppingCartItem2, err := testQueires.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
+	shoppingCartItem2, err := testStore.GetShoppingCartItem(context.Background(), shoppingCartItem1.ID)
 
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
@@ -115,7 +116,7 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 }
 
 func TestListShoppingCartItemes(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 	shoppingCart := createRandomShoppingCart(t)
 	// var wg sync.WaitGroup
 
@@ -134,7 +135,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 		// cartItemsChan := make(chan ShoppingCartItem)
 		// errChan := make(chan error)
 		// go func() {
-		cartItems, err := testQueires.CreateShoppingCartItem(context.Background(), arg)
+		cartItems, err := testStore.CreateShoppingCartItem(context.Background(), arg)
 		// cartItemsChan <- cartItems
 		// errChan <- err
 		// wg.Done()
@@ -158,7 +159,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 	shoppingCartItemsChan := make(chan []ShoppingCartItem)
 	errChan := make(chan error)
 	go func() {
-		shoppingCartItems, err := testQueires.ListShoppingCartItems(context.Background(), arg)
+		shoppingCartItems, err := testStore.ListShoppingCartItems(context.Background(), arg)
 		shoppingCartItemsChan <- shoppingCartItems
 		errChan <- err
 	}()
@@ -174,8 +175,9 @@ func TestListShoppingCartItemes(t *testing.T) {
 }
 
 func TestListShoppingCartItemsByCartID(t *testing.T) {
+	t.Parallel()
 	shoppingCart := createRandomShoppingCart(t)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		// time.Sleep(time.Millisecond * 500)
 		productItem := createRandomProductItem(t)
 		arg := CreateShoppingCartItemParams{
@@ -183,13 +185,13 @@ func TestListShoppingCartItemsByCartID(t *testing.T) {
 			ProductItemID:  productItem.ID,
 			Qty:            int32(util.RandomInt(5, 10)),
 		}
-		testQueires.CreateShoppingCartItem(context.Background(), arg)
+		testStore.CreateShoppingCartItem(context.Background(), arg)
 
 	}
 
-	shoppingCartItems, err := testQueires.ListShoppingCartItemsByCartID(context.Background(), shoppingCart.ID)
+	shoppingCartItems, err := testStore.ListShoppingCartItemsByCartID(context.Background(), shoppingCart.ID)
 	require.NoError(t, err)
-	require.Len(t, shoppingCartItems, 10)
+	require.Len(t, shoppingCartItems, 5)
 
 	for _, shoppingCartItem := range shoppingCartItems {
 		require.NotEmpty(t, shoppingCartItem)
@@ -198,12 +200,24 @@ func TestListShoppingCartItemsByCartID(t *testing.T) {
 }
 
 func TestListShoppingCartItemsByUserID(t *testing.T) {
+	t.Parallel()
 	// var shoppingCartItems []ListShoppingCartItemsByUserIDRow
 	// var totalShoppingCartItems []ListShoppingCartItemsByUserIDRow
-	shoppingCartItemsChan := make(chan []ListShoppingCartItemsByUserIDRow)
-	errChan := make(chan error)
+	// shoppingCartItemsChan := make(chan []ListShoppingCartItemsByUserIDRow)
+	// errChan := make(chan error)
 	// var shoppingCart ShoppingCart
 	shoppingCart := createRandomShoppingCart(t)
+	for i := 0; i < 5; i++ {
+		// time.Sleep(time.Millisecond * 500)
+		productItem := createRandomProductItem(t)
+		arg := CreateShoppingCartItemParams{
+			ShoppingCartID: shoppingCart.ID,
+			ProductItemID:  productItem.ID,
+			Qty:            int32(util.RandomInt(5, 10)),
+		}
+		testStore.CreateShoppingCartItem(context.Background(), arg)
+
+	}
 
 	// go func() {
 	// 	for i := 0; i < 5; i++ {
@@ -213,7 +227,7 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 	// 				ProductItemID: productItem.ID,
 	// 				Qty:           int32(util.RandomInt(1, 10))},
 	// 		}
-	// 		result := testQueires.CreateShoppingCartItem(context.Background(), arg)
+	// 		result := testStore.CreateShoppingCartItem(context.Background(), arg)
 	// 		result.Query(func(i int, sci []ShoppingCartItem, err error) {
 
 	// 			require.Equal(t, arg[i].ProductItemID, sci[i].ProductItemID)
@@ -223,14 +237,14 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 	// 		// totalShoppingCartItems = append(totalShoppingCartItems, shoppingCartItems...)
 	// 	}
 	// }()
-	go func() {
-		shoppingCartItems, err := testQueires.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
-		shoppingCartItemsChan <- shoppingCartItems
-		errChan <- err
+	// go func() {
+	shoppingCartItems, err := testStore.ListShoppingCartItemsByUserID(context.Background(), shoppingCart.UserID)
+	// shoppingCartItemsChan <- shoppingCartItems
+	// errChan <- err
 
-	}()
-	shoppingCartItems := <-shoppingCartItemsChan
-	err := <-errChan
+	// }()
+	// shoppingCartItems := <-shoppingCartItemsChan
+	// err := <-errChan
 
 	require.NoError(t, err)
 	// require.Len(t, totalShoppingCartItems, 10)
@@ -242,15 +256,16 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 }
 
 func TestDeleteALLShoppingCartItemes(t *testing.T) {
+	t.Parallel()
 	shoppingCart := createRandomShoppingCart(t)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		productItem := createRandomProductItem(t)
 		arg := CreateShoppingCartItemParams{
 			ShoppingCartID: shoppingCart.ID,
 			ProductItemID:  productItem.ID,
 			Qty:            int32(util.RandomInt(1, 10)),
 		}
-		testQueires.CreateShoppingCartItem(context.Background(), arg)
+		testStore.CreateShoppingCartItem(context.Background(), arg)
 
 	}
 
@@ -258,11 +273,11 @@ func TestDeleteALLShoppingCartItemes(t *testing.T) {
 		UserID:         shoppingCart.UserID,
 		ShoppingCartID: shoppingCart.ID,
 	}
-	shoppingCartItem1, err := testQueires.DeleteShoppingCartItemAllByUser(context.Background(), arg1)
+	shoppingCartItem1, err := testStore.DeleteShoppingCartItemAllByUser(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, shoppingCartItem1)
 
-	// shoppingCartItem2, err := testQueires.DeleteShoppingCartItemAllByUser(context.Background(), arg1)
+	// shoppingCartItem2, err := testStore.DeleteShoppingCartItemAllByUser(context.Background(), arg1)
 	// require.Error(t, err)
 	// require.Empty(t, shoppingCartItem2)
 	// require.EqualError(t, err, pgx.ErrNoRows.Error())
