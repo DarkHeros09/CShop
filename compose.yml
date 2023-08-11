@@ -6,8 +6,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: cshop
-      TZ: 'UTC+2'
-      PGTZ: 'UTC+2'
+      TZ: 'Africa/Tripoli'
+      PGTZ: 'Africa/Tripoli'
 
   migrate:
     build:
@@ -29,7 +29,7 @@ services:
       - postgres
       - migrate
     environment:
-      GIN_MODE: release
+      # GIN_MODE: release
       DB_SOURCE: postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
     entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--"]
     command: ["/app/main"]

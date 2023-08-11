@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-07-18T18:17:43.437Z
+-- Generated at: 2023-07-23T20:32:58.380Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -173,6 +173,7 @@ CREATE TABLE "product_image" (
 CREATE TABLE "product_promotion" (
   "product_id" bigint NOT NULL,
   "promotion_id" bigint NOT NULL,
+  "product_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 
@@ -189,6 +190,12 @@ CREATE TABLE "product_brand" (
   "brand_image" varchar NOT NULL
 );
 
+CREATE TABLE "home_page_text_banner" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "name" varchar UNIQUE NOT NULL,
+  "description" varchar NOT NULL
+);
+
 CREATE TABLE "promotion" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
@@ -202,12 +209,14 @@ CREATE TABLE "promotion" (
 CREATE TABLE "category_promotion" (
   "category_id" bigint UNIQUE NOT NULL,
   "promotion_id" bigint UNIQUE NOT NULL,
+  "category_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "brand_promotion" (
   "brand_id" bigint UNIQUE NOT NULL,
   "promotion_id" bigint UNIQUE NOT NULL,
+  "brand_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 
@@ -352,12 +361,3 @@ ALTER TABLE "variation" ADD FOREIGN KEY ("category_id") REFERENCES "product_cate
 
 ALTER TABLE "variation_option" ADD FOREIGN KEY ("variation_id") REFERENCES "variation" ("id") ON DELETE SET NULL;
 
-ALTER TABLE "product_configuration" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
-
-ALTER TABLE "product_configuration" ADD FOREIGN KEY ("variation_option_id") REFERENCES "variation_option" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "address" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status_id") REFERENCES "order_status" ("id") ON DELETE SET NULL;

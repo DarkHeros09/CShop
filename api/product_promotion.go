@@ -129,6 +129,25 @@ func (server *Server) listProductPromotions(ctx *fiber.Ctx) error {
 
 }
 
+//////////////* List API with Images //////////////
+
+func (server *Server) listProductPromotionsWithImages(ctx *fiber.Ctx) error {
+
+	productPromotions, err := server.store.ListProductPromotionsWithImages(ctx.Context())
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(productPromotions)
+	return nil
+
+}
+
 //////////////* Update API //////////////
 
 type updateProductPromotionParamsRequest struct {

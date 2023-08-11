@@ -242,11 +242,13 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 //////////////* Pagination List API //////////////
 
 type listProductItemsV2QueryRequest struct {
-	Limit      int32    `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID null.Int `query:"category_id" validate:"omitempty,min=1"`
-	BrandID    null.Int `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID     null.Int `query:"size_id" validate:"omitempty,min=1"`
-	ColorID    null.Int `query:"color_id" validate:"omitempty,min=1"`
+	Limit      int32     `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID null.Int  `query:"category_id" validate:"omitempty,min=1"`
+	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
+	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
+	IsNew      null.Bool `query:"is_new" validate:"boolean"`
+	IsPromoted null.Bool `query:"is_promoted" validate:"boolean"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
@@ -264,6 +266,8 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		BrandID:    query.BrandID,
 		ColorID:    query.ColorID,
 		SizeID:     query.SizeID,
+		IsNew:      query.IsNew,
+		IsPromoted: query.IsPromoted,
 	}
 
 	productItems, err := server.store.ListProductItemsV2(ctx.Context(), arg)
@@ -277,8 +281,12 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	}
 	if len(productItems) != 0 {
 		maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+		// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+		// ctx.Status(fiber.StatusOK).JSON(productItems)
 	} else {
 		maxPage = 0
+		// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+		// ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
 	}
 
 	ctx.Set("Max-Page", fmt.Sprint(maxPage))
@@ -288,12 +296,14 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 }
 
 type listProductItemsNextPageQueryRequest struct {
-	Cursor     int64    `query:"cursor" validate:"required,min=1"`
-	Limit      int32    `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID null.Int `query:"category_id" validate:"omitempty,min=1"`
-	BrandID    null.Int `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID     null.Int `query:"size_id" validate:"omitempty,min=1"`
-	ColorID    null.Int `query:"color_id" validate:"omitempty,min=1"`
+	Cursor     int64     `query:"cursor" validate:"required,min=1"`
+	Limit      int32     `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID null.Int  `query:"category_id" validate:"omitempty,min=1"`
+	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
+	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
+	IsNew      null.Bool `query:"is_new" validate:"boolean"`
+	IsPromoted null.Bool `query:"is_promoted" validate:"boolean"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
@@ -312,6 +322,8 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		BrandID:    query.BrandID,
 		ColorID:    query.ColorID,
 		SizeID:     query.SizeID,
+		IsNew:      query.IsNew,
+		IsPromoted: query.IsPromoted,
 	}
 
 	productItems, err := server.store.ListProductItemsNextPage(ctx.Context(), arg)

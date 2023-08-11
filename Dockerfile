@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.19.5-alpine AS builder
+FROM golang:1.20-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN go build -tags=go_json,nomsgpack -o main main.go
@@ -16,6 +16,7 @@ COPY app.env .
 # Run stage
 FROM alpine:latest
 WORKDIR /app
+ENV TZ=Africa/Tripoli
 COPY --from=copier /app .
 EXPOSE 8080
 CMD [ "/app/main" ]

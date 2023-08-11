@@ -14,9 +14,10 @@ func createRandomProductPromotion(t *testing.T) ProductPromotion {
 	product := createRandomProduct(t)
 	promotion := createRandomPromotion(t)
 	arg := CreateProductPromotionParams{
-		ProductID:   product.ID,
-		PromotionID: promotion.ID,
-		Active:      util.RandomBool(),
+		ProductID:             product.ID,
+		PromotionID:           promotion.ID,
+		ProductPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+		Active:                util.RandomBool(),
 	}
 
 	productPromotion, err := testStore.CreateProductPromotion(context.Background(), arg)
@@ -105,6 +106,23 @@ func TestListProductPromotions(t *testing.T) {
 
 	for _, productPromotion := range productPromotions {
 		require.NotEmpty(t, productPromotion)
+	}
+
+}
+
+func TestListProductPromotionsWithImages(t *testing.T) {
+
+	for i := 0; i < 5; i++ {
+		createRandomProductPromotion(t)
+	}
+
+	ProductPromotions, err := testStore.ListProductPromotionsWithImages(context.Background())
+
+	require.NoError(t, err)
+	require.NotEmpty(t, ProductPromotions)
+
+	for _, ProductPromotion := range ProductPromotions {
+		require.NotEmpty(t, ProductPromotion)
 	}
 
 }

@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS "variation" CASCADE;
 DROP TABLE IF EXISTS "category_promotion" CASCADE;
 DROP TABLE IF EXISTS "brand_promotion" CASCADE;
 DROP TABLE IF EXISTS "promotion" CASCADE;
+DROP TABLE IF EXISTS "home_page_text_banner" CASCADE;
 DROP TABLE IF EXISTS "product_category" CASCADE;
 DROP TABLE IF EXISTS "product_brand" CASCADE;
 DROP TABLE IF EXISTS "product_promotion" CASCADE;

@@ -60,6 +60,10 @@ func (server *Server) setupRouter() {
 	//* Tokens
 	app.Post("/api/v1/auth/access-token", server.renewAccessToken)
 
+	//*HomePageTextBanner
+	app.Get("/api/v1/text-banners/:textBannerId", server.getHomePageTextBanner) //? no auth required
+	app.Get("/api/v1/text-banners", server.listHomePageTextBanners)             //? no auth required
+
 	//*Products
 	app.Get("/api/v1/products/:productId", server.getProduct) //? no auth required
 	app.Get("/api/v1/products", server.listProducts)          //? no auth required
@@ -78,15 +82,18 @@ func (server *Server) setupRouter() {
 
 	//* Products-Promotions
 	app.Get("/api/v1/product-promotions/:promotionId/products/:productId", server.getProductPromotion) //? no auth required
-	app.Get("/api/v1/product-promotions/products", server.listProductPromotions)                       //? no auth required
+	app.Get("/api/v1/product-promotions", server.listProductPromotions)                                //? no auth required
+	app.Get("/api/v1/product-promotions-images", server.listProductPromotionsWithImages)               //? no auth required
 
 	//* Category-Promotions
 	app.Get("/api/v1/category-promotions/:promotionId/categories/:categoryId", server.getCategoryPromotion) //? no auth required
-	app.Get("/api/v1/category-promotions/categories", server.listCategoryPromotions)                        //? no auth required
+	app.Get("/api/v1/category-promotions", server.listCategoryPromotions)                                   //? no auth required
+	app.Get("/api/v1/category-promotions-images", server.listCategoryPromotionsWithImages)                  //? no auth required
 
 	//* Brand-Promotions
 	app.Get("/api/v1/brand-promotions/:promotionId/brands/:brandId", server.getBrandPromotion) //? no auth required
-	app.Get("/api/v1/brand-promotions/brands", server.listBrandPromotions)                     //? no auth required
+	app.Get("/api/v1/brand-promotions", server.listBrandPromotions)                            //? no auth required
+	app.Get("/api/v1/brand-promotions-images", server.listBrandPromotionsWithImages)           //? no auth required
 
 	//* Variations
 	app.Get("/api/v1/variations/:variationId", server.getVariation) //? no auth required
@@ -153,6 +160,10 @@ func (server *Server) setupRouter() {
 	userRouter.Delete("/users/:id/payment-methods/:paymentId", server.deletePaymentMethod)
 
 	userRouter.Get("/users/:id/payment-types", server.listPaymentTypes)
+
+	adminRouter.Post("/text-banners", server.createHomePageTextBanner)                 //! Admin Only
+	adminRouter.Put("/text-banners/:textBannerId", server.updateHomePageTextBanner)    //! Admin Only
+	adminRouter.Delete("/text-banners/:textBannerId", server.deleteHomePageTextBanner) //! Admin Only
 
 	adminRouter.Post("/products", server.createProduct)              //! Admin Only
 	adminRouter.Put("/products/:productId", server.updateProduct)    //! Admin Only

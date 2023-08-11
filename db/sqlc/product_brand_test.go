@@ -10,6 +10,7 @@ import (
 )
 
 func createRandomProductBrand(t *testing.T) ProductBrand {
+	t.Helper()
 	// arg := util.RandomString(5)
 	var productBrand ProductBrand
 	var err error
@@ -29,6 +30,9 @@ func createRandomProductBrand(t *testing.T) ProductBrand {
 			BrandImage: brandsLogo[i],
 		}
 		productBrand, err = testStore.CreateProductBrand(context.Background(), arg)
+		if err != nil {
+			t.Fatalf("Failed to kill test process: %v", err)
+		}
 		require.NoError(t, err)
 		require.NotEmpty(t, productBrand)
 
@@ -39,6 +43,7 @@ func createRandomProductBrand(t *testing.T) ProductBrand {
 }
 
 func createRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
+	t.Helper()
 	brandName := util.RandomString(5)
 	// arg := CreateProductBrandParams{
 	// 	BrandName:     brandName,

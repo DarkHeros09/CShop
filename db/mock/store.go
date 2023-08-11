@@ -127,6 +127,21 @@ func (mr *MockStoreMockRecorder) CreateCategoryPromotion(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCategoryPromotion", reflect.TypeOf((*MockStore)(nil).CreateCategoryPromotion), arg0, arg1)
 }
 
+// CreateHomePageTextBanner mocks base method.
+func (m *MockStore) CreateHomePageTextBanner(arg0 context.Context, arg1 db.CreateHomePageTextBannerParams) (db.HomePageTextBanner, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateHomePageTextBanner", arg0, arg1)
+	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateHomePageTextBanner indicates an expected call of CreateHomePageTextBanner.
+func (mr *MockStoreMockRecorder) CreateHomePageTextBanner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).CreateHomePageTextBanner), arg0, arg1)
+}
+
 // CreateOrderStatus mocks base method.
 func (m *MockStore) CreateOrderStatus(arg0 context.Context, arg1 string) (db.OrderStatus, error) {
 	m.ctrl.T.Helper()
@@ -631,6 +646,20 @@ func (mr *MockStoreMockRecorder) DeleteCategoryPromotion(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCategoryPromotion", reflect.TypeOf((*MockStore)(nil).DeleteCategoryPromotion), arg0, arg1)
 }
 
+// DeleteHomePageTextBanner mocks base method.
+func (m *MockStore) DeleteHomePageTextBanner(arg0 context.Context, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteHomePageTextBanner", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteHomePageTextBanner indicates an expected call of DeleteHomePageTextBanner.
+func (mr *MockStoreMockRecorder) DeleteHomePageTextBanner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).DeleteHomePageTextBanner), arg0, arg1)
+}
+
 // DeleteOrderStatus mocks base method.
 func (m *MockStore) DeleteOrderStatus(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -1133,6 +1162,21 @@ func (m *MockStore) GetCategoryPromotion(arg0 context.Context, arg1 db.GetCatego
 func (mr *MockStoreMockRecorder) GetCategoryPromotion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoryPromotion", reflect.TypeOf((*MockStore)(nil).GetCategoryPromotion), arg0, arg1)
+}
+
+// GetHomePageTextBanner mocks base method.
+func (m *MockStore) GetHomePageTextBanner(arg0 context.Context, arg1 int64) (db.HomePageTextBanner, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHomePageTextBanner", arg0, arg1)
+	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHomePageTextBanner indicates an expected call of GetHomePageTextBanner.
+func (mr *MockStoreMockRecorder) GetHomePageTextBanner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).GetHomePageTextBanner), arg0, arg1)
 }
 
 // GetOrderStatus mocks base method.
@@ -1765,6 +1809,21 @@ func (mr *MockStoreMockRecorder) ListBrandPromotions(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBrandPromotions", reflect.TypeOf((*MockStore)(nil).ListBrandPromotions), arg0, arg1)
 }
 
+// ListBrandPromotionsWithImages mocks base method.
+func (m *MockStore) ListBrandPromotionsWithImages(arg0 context.Context) ([]db.ListBrandPromotionsWithImagesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBrandPromotionsWithImages", arg0)
+	ret0, _ := ret[0].([]db.ListBrandPromotionsWithImagesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBrandPromotionsWithImages indicates an expected call of ListBrandPromotionsWithImages.
+func (mr *MockStoreMockRecorder) ListBrandPromotionsWithImages(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBrandPromotionsWithImages", reflect.TypeOf((*MockStore)(nil).ListBrandPromotionsWithImages), arg0)
+}
+
 // ListCategoryPromotions mocks base method.
 func (m *MockStore) ListCategoryPromotions(arg0 context.Context, arg1 db.ListCategoryPromotionsParams) ([]db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
@@ -1778,6 +1837,36 @@ func (m *MockStore) ListCategoryPromotions(arg0 context.Context, arg1 db.ListCat
 func (mr *MockStoreMockRecorder) ListCategoryPromotions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCategoryPromotions", reflect.TypeOf((*MockStore)(nil).ListCategoryPromotions), arg0, arg1)
+}
+
+// ListCategoryPromotionsWithImages mocks base method.
+func (m *MockStore) ListCategoryPromotionsWithImages(arg0 context.Context) ([]db.ListCategoryPromotionsWithImagesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListCategoryPromotionsWithImages", arg0)
+	ret0, _ := ret[0].([]db.ListCategoryPromotionsWithImagesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCategoryPromotionsWithImages indicates an expected call of ListCategoryPromotionsWithImages.
+func (mr *MockStoreMockRecorder) ListCategoryPromotionsWithImages(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCategoryPromotionsWithImages", reflect.TypeOf((*MockStore)(nil).ListCategoryPromotionsWithImages), arg0)
+}
+
+// ListHomePageTextBanners mocks base method.
+func (m *MockStore) ListHomePageTextBanners(arg0 context.Context) ([]db.HomePageTextBanner, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListHomePageTextBanners", arg0)
+	ret0, _ := ret[0].([]db.HomePageTextBanner)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListHomePageTextBanners indicates an expected call of ListHomePageTextBanners.
+func (mr *MockStoreMockRecorder) ListHomePageTextBanners(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListHomePageTextBanners", reflect.TypeOf((*MockStore)(nil).ListHomePageTextBanners), arg0)
 }
 
 // ListOrderStatuses mocks base method.
@@ -1973,6 +2062,21 @@ func (m *MockStore) ListProductPromotions(arg0 context.Context, arg1 db.ListProd
 func (mr *MockStoreMockRecorder) ListProductPromotions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductPromotions", reflect.TypeOf((*MockStore)(nil).ListProductPromotions), arg0, arg1)
+}
+
+// ListProductPromotionsWithImages mocks base method.
+func (m *MockStore) ListProductPromotionsWithImages(arg0 context.Context) ([]db.ListProductPromotionsWithImagesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListProductPromotionsWithImages", arg0)
+	ret0, _ := ret[0].([]db.ListProductPromotionsWithImagesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListProductPromotionsWithImages indicates an expected call of ListProductPromotionsWithImages.
+func (mr *MockStoreMockRecorder) ListProductPromotionsWithImages(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductPromotionsWithImages", reflect.TypeOf((*MockStore)(nil).ListProductPromotionsWithImages), arg0)
 }
 
 // ListProducts mocks base method.
@@ -2408,6 +2512,21 @@ func (m *MockStore) UpdateCategoryPromotion(arg0 context.Context, arg1 db.Update
 func (mr *MockStoreMockRecorder) UpdateCategoryPromotion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCategoryPromotion", reflect.TypeOf((*MockStore)(nil).UpdateCategoryPromotion), arg0, arg1)
+}
+
+// UpdateHomePageTextBanner mocks base method.
+func (m *MockStore) UpdateHomePageTextBanner(arg0 context.Context, arg1 db.UpdateHomePageTextBannerParams) (db.HomePageTextBanner, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateHomePageTextBanner", arg0, arg1)
+	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateHomePageTextBanner indicates an expected call of UpdateHomePageTextBanner.
+func (mr *MockStoreMockRecorder) UpdateHomePageTextBanner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).UpdateHomePageTextBanner), arg0, arg1)
 }
 
 // UpdateOrderStatus mocks base method.

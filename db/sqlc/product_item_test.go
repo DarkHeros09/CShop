@@ -55,9 +55,10 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		case 1:
 
 			arg1 := CreateCategoryPromotionParams{
-				CategoryID:  product.CategoryID,
-				PromotionID: promotion.ID,
-				Active:      util.RandomBool(),
+				CategoryID:             product.CategoryID,
+				PromotionID:            promotion.ID,
+				CategoryPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:                 util.RandomBool(),
 			}
 
 			categoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg1)
@@ -71,9 +72,10 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		case 2:
 
 			arg1 := CreateBrandPromotionParams{
-				BrandID:     product.BrandID,
-				PromotionID: promotion.ID,
-				Active:      util.RandomBool(),
+				BrandID:             product.BrandID,
+				PromotionID:         promotion.ID,
+				BrandPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:              util.RandomBool(),
 			}
 
 			brandPromotion, err := testStore.CreateBrandPromotion(context.Background(), arg1)
@@ -86,9 +88,10 @@ func createRandomProductItem(t *testing.T) ProductItem {
 
 		case 3:
 			arg1 := CreateProductPromotionParams{
-				ProductID:   product.ID,
-				PromotionID: promotion.ID,
-				Active:      util.RandomBool(),
+				ProductID:             product.ID,
+				PromotionID:           promotion.ID,
+				ProductPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:                util.RandomBool(),
 			}
 
 			productPromotion, err := testStore.CreateProductPromotion(context.Background(), arg1)

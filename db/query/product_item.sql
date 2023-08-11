@@ -73,12 +73,13 @@ LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id AND cp.active = true
-LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = true
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
-LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+
 WHERE pi.active = TRUE
 
 AND CASE
@@ -142,12 +143,13 @@ LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id AND cp.active = true
-LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = true
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
-LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+
 WHERE pi.id < $2
 AND pi.active = TRUE
 
@@ -212,12 +214,13 @@ LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id AND cp.active = true
-LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = true
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
-LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+
 WHERE pi.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
@@ -257,12 +260,12 @@ LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id AND cp.active = true
-LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id AND cpromo.active =true AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = true
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
-LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
 WHERE pi.active = TRUE AND p.search @@  
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))

@@ -187,6 +187,7 @@ Table product_image as PIMG {
 Table product_promotion as PPROMO {
   product_id bigint [not null,ref:> P.id]
   promotion_id bigint [not null,ref:> PROMO.id]
+  product_promotion_image varchar
   active boolean [not null, default: false, note:'default is false']
 
   indexes {
@@ -207,6 +208,12 @@ Table product_brand as PB {
   brand_image varchar [not null]
 }
 
+Table home_page_text_banner as HPTB {
+  id bigserial [pk,not null] // auto-increment
+  name varchar [not null, unique]
+  description varchar [not null]
+}
+
 Table promotion as PROMO {
   id bigserial [pk,not null] // auto-increment
   name varchar [not null]
@@ -220,6 +227,7 @@ Table promotion as PROMO {
 Table category_promotion as CPROMO {
   category_id bigint [not null, unique,ref:> PC.id]
   promotion_id bigint [not null, unique, ref:> PROMO.id]
+  category_promotion_image varchar
   active boolean [not null, default: false, note:'default is false']
 
   indexes {
@@ -230,6 +238,7 @@ Table category_promotion as CPROMO {
 Table brand_promotion as BPROMO {
   brand_id bigint [not null, unique,ref:> PB.id]
   promotion_id bigint [not null, unique, ref:> PROMO.id]
+  brand_promotion_image varchar
   active boolean [not null, default: false, note:'default is false']
 
   indexes {

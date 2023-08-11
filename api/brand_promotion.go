@@ -114,7 +114,7 @@ func (server *Server) listBrandPromotions(ctx *fiber.Ctx) error {
 		Limit:  query.PageSize,
 		Offset: (query.PageID - 1) * query.PageSize,
 	}
-	BrandPromotions, err := server.store.ListBrandPromotions(ctx.Context(), arg)
+	brandPromotions, err := server.store.ListBrandPromotions(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -124,7 +124,26 @@ func (server *Server) listBrandPromotions(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Status(fiber.StatusOK).JSON(BrandPromotions)
+	ctx.Status(fiber.StatusOK).JSON(brandPromotions)
+	return nil
+
+}
+
+//////////////* List API with Images //////////////
+
+func (server *Server) listBrandPromotionsWithImages(ctx *fiber.Ctx) error {
+
+	brandPromotions, err := server.store.ListBrandPromotionsWithImages(ctx.Context())
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(brandPromotions)
 	return nil
 
 }

@@ -399,7 +399,7 @@ func TestListProductPromotionsAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := "/api/v1/product-promotions/products"
+			url := "/api/v1/product-promotions"
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 

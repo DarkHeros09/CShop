@@ -107,6 +107,20 @@ func RandomSize() string {
 	return sizes[rand.Intn(n)]
 }
 
+func RandomPromotionURL() string {
+	urls := []string{
+		"https://i.pinimg.com/originals/a7/ce/56/a7ce56e472d4c16f4ba47ef6ba4bea18.png",
+		"https://genxfinance.com/genesis/wp-content/uploads/2010/12/clothing-sale.jpg",
+		"https://i.pinimg.com/originals/19/0c/d9/190cd9d43f4477db4b422dc9e3b6e347.jpg",
+		"https://cdn.dribbble.com/users/2548571/screenshots/5408903/sale_offer-01-01.jpg",
+		"https://bestofyou.gr/sites/default/files/styles/article_inner/public/2022-11/iStock-1085149318.jpg",
+		"https://1.bp.blogspot.com/_hXYbJNRnLrI/Swo7KmZyxlI/AAAAAAAAACo/nVtdePZYJAg/s1600/hp_us.jpg",
+		"https://img.freepik.com/free-vector/abstract-sale-promotion-banner-template_23-2148217955.jpg",
+	}
+	n := len(urls)
+	return urls[rand.Intn(n)]
+}
+
 // RandomURL generates a random URL for products
 func RandomURL() string {
 	urls := []string{

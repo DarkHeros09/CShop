@@ -20,80 +20,78 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetBrandPromotionAPI(t *testing.T) {
-	brandPromotion := randomBrandPromotion()
+func TestGetHomePageTextBannerAPI(t *testing.T) {
+	textBanner := randomHomePageTextBanner()
 
 	testCases := []struct {
-		name          string
-		BrandID       int64
-		PromotionID   int64
-		AdminID       int64
-		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, rsp *http.Response)
+		name                 string
+		AdminID              int64
+		HomePageTextBannerID int64
+		buildStub            func(store *mockdb.MockStore)
+		checkResponse        func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
+			name: "OK",
+
+			HomePageTextBannerID: textBanner.ID,
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.GetHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					GetBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					GetHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
-					Return(brandPromotion, nil)
+					Return(textBanner, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchBrandPromotion(t, rsp.Body, brandPromotion)
+				requireBodyMatchHomePageTextBanner(t, rsp.Body, textBanner)
 			},
 		},
 
 		{
-			name:        "NotFound",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
+			name: "NotFound",
+
+			HomePageTextBannerID: textBanner.ID,
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.GetHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					GetBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					GetHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrNoRows)
+					Return(db.HomePageTextBanner{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name:        "InternalError",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
+			name: "InternalError",
+
+			HomePageTextBannerID: textBanner.ID,
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.GetHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					GetBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					GetHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:        "InvalidID",
-			PromotionID: 0,
-			BrandID:     brandPromotion.BrandID,
+			name:                 "InvalidID",
+			HomePageTextBannerID: 0,
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetBrandPromotion(gomock.Any(), gomock.Any()).
+					GetHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -118,7 +116,7 @@ func TestGetBrandPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/brand-promotions/%d/brands/%d", tc.PromotionID, tc.BrandID)
+			url := fmt.Sprintf("/api/v1/text-banners/%d", tc.HomePageTextBannerID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -133,67 +131,61 @@ func TestGetBrandPromotionAPI(t *testing.T) {
 
 }
 
-func TestCreateBrandPromotionAPI(t *testing.T) {
-	admin, _ := randomBrandPromotionSuperAdmin(t)
-	brandPromotion := randomBrandPromotion()
+func TestCreateHomePageTextBannerAPI(t *testing.T) {
+	admin, _ := randomHomePageTextBannerSuperAdmin(t)
+	textBanner := randomHomePageTextBanner()
 
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		BrandID       int64
-		PromotionID   int64
 		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        textBanner.Name,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.CreateHomePageTextBannerParams{
+					Name:        textBanner.Name,
+					Description: textBanner.Description,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					CreateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(brandPromotion, nil)
+					Return(textBanner, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchBrandPromotion(t, rsp.Body, brandPromotion)
+				requireBodyMatchHomePageTextBanner(t, rsp.Body, textBanner)
 			},
 		},
 		{
-			name:        "NoAuthorization",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        textBanner.Name,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.CreateHomePageTextBannerParams{
+					Name:        textBanner.Name,
+					Description: textBanner.Description,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					CreateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -202,25 +194,23 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "Unauthorized",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "Unauthorized",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        textBanner.Name,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.CreateHomePageTextBannerParams{
+					Name:        textBanner.Name,
+					Description: textBanner.Description,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					CreateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -228,40 +218,38 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InternalError",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        textBanner.Name,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Any()).
+					CreateHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:        "InvalidID",
-			BrandID:     0,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InvalidID",
+			AdminID: 0,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        nil,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Any()).
+					CreateHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -286,7 +274,7 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/brand-promotions/%d/brands/%d", tc.AdminID, tc.PromotionID, tc.BrandID)
+			url := fmt.Sprintf("/admin/%d/v1/text-banners", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -300,90 +288,43 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 	}
 }
 
-func TestListBrandPromotionsAPI(t *testing.T) {
+func TestListHomePageTextBannersAPI(t *testing.T) {
 	n := 5
-	brandPromotions := make([]db.BrandPromotion, n)
+	textBanners := make([]db.HomePageTextBanner, n)
 	for i := 0; i < n; i++ {
-		brandPromotions[i] = randomBrandPromotion()
-	}
-
-	type Query struct {
-		pageID   int
-		pageSize int
+		textBanners[i] = randomHomePageTextBanner()
 	}
 
 	testCases := []struct {
 		name          string
-		query         Query
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
 			name: "OK",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListBrandPromotionsParams{
-					Limit:  int32(n),
-					Offset: 0,
-				}
 
 				store.EXPECT().
-					ListBrandPromotions(gomock.Any(), gomock.Eq(arg)).
+					ListHomePageTextBanners(gomock.Any()).
 					Times(1).
-					Return(brandPromotions, nil)
+					Return(textBanners, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchBrandPromotions(t, rsp.Body, brandPromotions)
+				requireBodyMatchHomePageTextBanners(t, rsp.Body, textBanners)
 			},
 		},
 		{
 			name: "InternalError",
-			query: Query{
-				pageID:   1,
-				pageSize: n,
-			},
+
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListBrandPromotions(gomock.Any(), gomock.Any()).
+					ListHomePageTextBanners(gomock.Any()).
 					Times(1).
-					Return([]db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return([]db.HomePageTextBanner{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidPageID",
-			query: Query{
-				pageID:   -1,
-				pageSize: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListBrandPromotions(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidPageSize",
-			query: Query{
-				pageID:   1,
-				pageSize: 100000,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListBrandPromotions(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
 			},
 		},
 	}
@@ -400,15 +341,15 @@ func TestListBrandPromotionsAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := "/api/v1/brand-promotions"
+			url := "/api/v1/text-banners"
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
-			request.URL.RawQuery = q.Encode()
+			// // Add query parameters to request URL
+			// q := request.URL.Query()
+			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
+			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
 
@@ -419,67 +360,69 @@ func TestListBrandPromotionsAPI(t *testing.T) {
 	}
 }
 
-func TestUpdateBrandPromotionAPI(t *testing.T) {
-	admin, _ := randomBrandPromotionSuperAdmin(t)
-	brandPromotion := randomBrandPromotion()
+func TestUpdateHomePageTextBannerAPI(t *testing.T) {
+	admin, _ := randomHomePageTextBannerSuperAdmin(t)
+	textBanner := randomHomePageTextBanner()
+
+	changedName := util.RandomUser()
 
 	testCases := []struct {
-		name          string
-		body          fiber.Map
-		BrandID       int64
-		PromotionID   int64
-		AdminID       int64
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, rsp *http.Response)
+		name                 string
+		body                 fiber.Map
+		HomePageTextBannerID int64
+		AdminID              int64
+		setupAuth            func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs           func(store *mockdb.MockStore)
+		checkResponse        func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:                 "OK",
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        changedName,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateBrandPromotionParams{
-					PromotionID: brandPromotion.PromotionID,
-					Active:      null.BoolFromPtr(&brandPromotion.Active),
-					BrandID:     brandPromotion.BrandID,
+				arg := db.UpdateHomePageTextBannerParams{
+					ID:          textBanner.ID,
+					Name:        null.StringFrom(changedName),
+					Description: null.StringFrom(textBanner.Description),
 				}
 
 				store.EXPECT().
-					UpdateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(brandPromotion, nil)
+					Return(textBanner, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:        "Unauthorized",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:                 "Unauthorized",
+			HomePageTextBannerID: textBanner.ID,
+
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        changedName,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateBrandPromotionParams{
-					PromotionID: brandPromotion.PromotionID,
-					Active:      null.BoolFromPtr(&brandPromotion.Active),
-					BrandID:     brandPromotion.BrandID,
+				arg := db.UpdateHomePageTextBannerParams{
+					ID:          textBanner.ID,
+					Name:        null.StringFrom(changedName),
+					Description: null.StringFrom(textBanner.Description),
 				}
 
 				store.EXPECT().
-					UpdateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -487,24 +430,25 @@ func TestUpdateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "NoAuthorization",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:                 "NoAuthorization",
+			HomePageTextBannerID: textBanner.ID,
+
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        changedName,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateBrandPromotionParams{
-					PromotionID: brandPromotion.PromotionID,
-					Active:      null.BoolFromPtr(&brandPromotion.Active),
-					BrandID:     brandPromotion.BrandID,
+				arg := db.UpdateHomePageTextBannerParams{
+					ID:          textBanner.ID,
+					Name:        null.StringFrom(changedName),
+					Description: null.StringFrom(textBanner.Description),
 				}
 
 				store.EXPECT().
-					UpdateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -512,45 +456,45 @@ func TestUpdateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InternalError",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:                 "InternalError",
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        changedName,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateBrandPromotionParams{
-					PromotionID: brandPromotion.PromotionID,
-					Active:      null.BoolFromPtr(&brandPromotion.Active),
-					BrandID:     brandPromotion.BrandID,
+				arg := db.UpdateHomePageTextBannerParams{
+					ID:          textBanner.ID,
+					Name:        null.StringFrom(changedName),
+					Description: null.StringFrom(textBanner.Description),
 				}
 				store.EXPECT().
-					UpdateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:        "InvalidID",
-			BrandID:     0,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:                 "InvalidID",
+			HomePageTextBannerID: 0,
+			AdminID:              admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"name":        changedName,
+				"description": textBanner.Description,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateBrandPromotion(gomock.Any(), gomock.Any()).
+					UpdateHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -575,7 +519,7 @@ func TestUpdateBrandPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/brand-promotions/%d/brands/%d", tc.AdminID, tc.PromotionID, tc.BrandID)
+			url := fmt.Sprintf("/admin/%d/v1/text-banners/%d", tc.AdminID, tc.HomePageTextBannerID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -589,34 +533,32 @@ func TestUpdateBrandPromotionAPI(t *testing.T) {
 	}
 }
 
-func TestDeleteBrandPromotionAPI(t *testing.T) {
-	admin, _ := randomBrandPromotionSuperAdmin(t)
-	brandPromotion := randomBrandPromotion()
+func TestDeleteHomePageTextBannerAPI(t *testing.T) {
+	admin, _ := randomHomePageTextBannerSuperAdmin(t)
+	textBanner := randomHomePageTextBanner()
 
 	testCases := []struct {
-		name          string
-		PromotionID   int64
-		BrandID       int64
-		AdminID       int64
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-		buildStub     func(store *mockdb.MockStore)
-		checkResponse func(t *testing.T, rsp *http.Response)
+		name                 string
+		HomePageTextBannerID int64
+		AdminID              int64
+		setupAuth            func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStub            func(store *mockdb.MockStore)
+		checkResponse        func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name:                 "OK",
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.DeleteHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
 					Return(nil)
 			},
@@ -625,20 +567,20 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "Unauthorized",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name: "Unauthorized",
+
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.DeleteHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -646,19 +588,19 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "NoAuthorization",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name: "NoAuthorization",
+
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.DeleteHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -666,20 +608,20 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "NotFound",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name: "NotFound",
+
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.DeleteHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
@@ -688,20 +630,20 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InternalError",
-			PromotionID: brandPromotion.PromotionID,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name: "InternalError",
+
+			HomePageTextBannerID: textBanner.ID,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-				}
+				// arg := db.DeleteHomePageTextBannerParams{
+				// 	HomePageTextBannerID:     textBanner.ID,
+
+				// }
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
@@ -710,16 +652,15 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InvalidID",
-			PromotionID: 0,
-			BrandID:     brandPromotion.BrandID,
-			AdminID:     admin.ID,
+			name:                 "InvalidID",
+			HomePageTextBannerID: 0,
+			AdminID:              admin.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteBrandPromotion(gomock.Any(), gomock.Any()).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -744,7 +685,7 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/brand-promotions/%d/brands/%d", tc.AdminID, tc.PromotionID, tc.BrandID)
+			url := fmt.Sprintf("/admin/%d/v1/text-banners/%d", tc.AdminID, tc.HomePageTextBannerID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -760,7 +701,7 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 
 }
 
-func randomBrandPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomHomePageTextBannerSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
@@ -776,30 +717,30 @@ func randomBrandPromotionSuperAdmin(t *testing.T) (admin db.Admin, password stri
 	return
 }
 
-func randomBrandPromotion() db.BrandPromotion {
-	return db.BrandPromotion{
-		BrandID:     util.RandomMoney(),
-		PromotionID: util.RandomMoney(),
-		Active:      util.RandomBool(),
+func randomHomePageTextBanner() db.HomePageTextBanner {
+	return db.HomePageTextBanner{
+		ID:          util.RandomMoney(),
+		Name:        util.RandomUser(),
+		Description: util.RandomUser(),
 	}
 }
 
-func requireBodyMatchBrandPromotion(t *testing.T, body io.ReadCloser, brandPromotion db.BrandPromotion) {
+func requireBodyMatchHomePageTextBanner(t *testing.T, body io.ReadCloser, textBanner db.HomePageTextBanner) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotBrandPromotion db.BrandPromotion
-	err = json.Unmarshal(data, &gotBrandPromotion)
+	var gotHomePageTextBanner db.HomePageTextBanner
+	err = json.Unmarshal(data, &gotHomePageTextBanner)
 	require.NoError(t, err)
-	require.Equal(t, brandPromotion, gotBrandPromotion)
+	require.Equal(t, textBanner, gotHomePageTextBanner)
 }
 
-func requireBodyMatchBrandPromotions(t *testing.T, body io.ReadCloser, BrandPromotions []db.BrandPromotion) {
+func requireBodyMatchHomePageTextBanners(t *testing.T, body io.ReadCloser, HomePageTextBanners []db.HomePageTextBanner) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotBrandPromotions []db.BrandPromotion
-	err = json.Unmarshal(data, &gotBrandPromotions)
+	var gotHomePageTextBanners []db.HomePageTextBanner
+	err = json.Unmarshal(data, &gotHomePageTextBanners)
 	require.NoError(t, err)
-	require.Equal(t, BrandPromotions, gotBrandPromotions)
+	require.Equal(t, HomePageTextBanners, gotHomePageTextBanners)
 }

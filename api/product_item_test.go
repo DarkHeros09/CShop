@@ -459,6 +459,8 @@ func TestListProductItemsV2API(t *testing.T) {
 					BrandID:    null.IntFromPtr(nil),
 					ColorID:    null.IntFromPtr(nil),
 					SizeID:     null.IntFromPtr(nil),
+					IsNew:      null.BoolFromPtr(nil),
+					IsPromoted: null.BoolFromPtr(nil),
 				}
 				store.EXPECT().
 					ListProductItemsV2(gomock.Any(), gomock.Eq(arg)).
@@ -568,6 +570,8 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 					BrandID:    null.IntFromPtr(nil),
 					ColorID:    null.IntFromPtr(nil),
 					SizeID:     null.IntFromPtr(nil),
+					IsNew:      null.BoolFromPtr(nil),
+					IsPromoted: null.BoolFromPtr(nil),
 				}
 
 				store.EXPECT().

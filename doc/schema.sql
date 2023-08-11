@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-07-18T18:17:43.437Z
+-- Generated at: 2023-07-23T20:32:58.380Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -173,6 +173,7 @@ CREATE TABLE "product_image" (
 CREATE TABLE "product_promotion" (
   "product_id" bigint NOT NULL,
   "promotion_id" bigint NOT NULL,
+  "product_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 
@@ -189,6 +190,12 @@ CREATE TABLE "product_brand" (
   "brand_image" varchar NOT NULL
 );
 
+CREATE TABLE "home_page_text_banner" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "name" varchar UNIQUE NOT NULL,
+  "description" varchar NOT NULL
+);
+
 CREATE TABLE "promotion" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
@@ -202,12 +209,14 @@ CREATE TABLE "promotion" (
 CREATE TABLE "category_promotion" (
   "category_id" bigint UNIQUE NOT NULL,
   "promotion_id" bigint UNIQUE NOT NULL,
+  "category_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "brand_promotion" (
   "brand_id" bigint UNIQUE NOT NULL,
   "promotion_id" bigint UNIQUE NOT NULL,
+  "brand_promotion_image" varchar,
   "active" boolean NOT NULL DEFAULT false
 );
 

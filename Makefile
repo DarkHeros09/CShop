@@ -4,14 +4,14 @@ DB_PORT ?= 6666
 DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
 
 postgres:
-	docker run --name psql_14.5-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
-	-e POSTGRES_PASSWORD=secret -d -e "TZ=UTC+2" -e "PGTZ=UTC+2" postgres:14.5-alpine
+	docker run --name psql_15.3-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
+	-e POSTGRES_PASSWORD=secret -d -e "TZ=Africa/Tripoli" -e "PGTZ=Africa/Tripoli" postgres:15.3-alpine
 
 create_db:
-	docker exec -it psql_14.5-cshop createdb --username=postgres --owner=postgres cshop
+	docker exec -it psql_15.3-cshop createdb --username=postgres --owner=postgres cshop
 
 drop_db:
-	docker exec -it psql_14.5-cshop dropdb cshop --username=postgres
+	docker exec -it psql_15.3-cshop dropdb cshop --username=postgres
 
 init_migrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
