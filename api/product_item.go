@@ -247,8 +247,8 @@ type listProductItemsV2QueryRequest struct {
 	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
 	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
 	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew      null.Bool `query:"is_new" validate:"boolean"`
-	IsPromoted null.Bool `query:"is_promoted" validate:"boolean"`
+	IsNew      null.Bool `query:"is_new" validate:"omitempty,boolean"`
+	IsPromoted null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
@@ -302,8 +302,8 @@ type listProductItemsNextPageQueryRequest struct {
 	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
 	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
 	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew      null.Bool `query:"is_new" validate:"boolean"`
-	IsPromoted null.Bool `query:"is_promoted" validate:"boolean"`
+	IsNew      null.Bool `query:"is_new" validate:"omitempty,boolean"`
+	IsPromoted null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {

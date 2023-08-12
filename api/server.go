@@ -209,10 +209,14 @@ func (server *Server) setupRouter() {
 	adminRouter.Put("/product-configurations/:itemId", server.updateProductConfiguration)                                   //! Admin Only
 	adminRouter.Delete("/product-configurations/:itemId/variation-options/:variationId", server.deleteProductConfiguration) //! Admin Only
 
+	//? ShopOrderItems
 	userRouter.Get("/users/:id/shop-order-items/:orderId", server.getShopOrderItems)
 	userRouter.Get("/users/:id/shop-order-items", server.listShopOrderItems)
 
+	//? ShopOrders
 	userRouter.Get("/users/:id/shop-orders", server.listShopOrders)
+	userRouter.Get("/users/:id/shop-orders-v2", server.listShopOrdersV2)
+	userRouter.Get("/users/:id/shop-orders-next-page", server.listShopOrdersNextPage)
 
 	userRouter.Post("/users/:id/order-status", server.createOrderStatus)
 	userRouter.Get("/users/:id/order-status/:statusId", server.getOrderStatus)

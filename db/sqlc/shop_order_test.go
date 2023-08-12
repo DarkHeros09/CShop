@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -38,8 +39,43 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 
 	return shopOrder
 }
+func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
+	var shopOrder ShopOrder
+	var err error
+	paymentMethod := createRandomPaymentMethod(t)
+	address := createRandomAddress(t)
+	shippingMethod := createRandomShippingMethod(t)
+	orderStatus := createRandomOrderStatus(t)
+	arg := CreateShopOrderParams{
+		TrackNumber:       util.GenerateTrackNumber(),
+		UserID:            paymentMethod.UserID,
+		PaymentMethodID:   paymentMethod.ID,
+		ShippingAddressID: address.ID,
+		OrderTotal:        util.RandomDecimalString(1, 100),
+		ShippingMethodID:  shippingMethod.ID,
+		OrderStatusID:     null.IntFromPtr(&orderStatus.ID),
+	}
+
+	for i := 0; i < 30; i++ {
+		shopOrder, err = testStore.CreateShopOrder(context.Background(), arg)
+		require.NoError(t, err)
+		require.NotEmpty(t, shopOrder)
+
+		require.Equal(t, arg.UserID, shopOrder.UserID)
+		require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
+		require.Equal(t, arg.ShippingAddressID, shopOrder.ShippingAddressID)
+		require.Equal(t, arg.OrderTotal, shopOrder.OrderTotal)
+		require.Equal(t, arg.ShippingMethodID, shopOrder.ShippingMethodID)
+		require.Equal(t, arg.OrderStatusID, shopOrder.OrderStatusID)
+	}
+
+	return shopOrder
+}
 func TestCreateShopOrder(t *testing.T) {
 	createRandomShopOrder(t)
+}
+func TestCreateShopOrderForListV2(t *testing.T) {
+	createRandomShopOrderForListV2(t)
 }
 
 func TestGetShopOrder(t *testing.T) {
@@ -151,4 +187,47 @@ func TestListShopOrdersByUserID(t *testing.T) {
 		require.NotEmpty(t, shopOrder)
 	}
 
+}
+
+func TestListShopOrdersByUserIDV2(t *testing.T) {
+
+	shopOrder := createRandomShopOrderForListV2(t)
+
+	fmt.Println(shopOrder.UserID)
+
+	arg := ListShopOrdersByUserIDV2Params{
+		UserID: shopOrder.UserID,
+		Limit:  10,
+	}
+
+	initialSearchResult, err := testStore.ListShopOrdersByUserIDV2(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListShopOrdersByUserIDNextPageParams{
+		UserID:      shopOrder.UserID,
+		ShopOrderID: initialSearchResult[len(initialSearchResult)-1].ID,
+		Limit:       10,
+	}
+
+	secondPage, err := testStore.ListShopOrdersByUserIDNextPage(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+	arg2 := ListShopOrdersByUserIDNextPageParams{
+		UserID:      shopOrder.UserID,
+		ShopOrderID: secondPage[len(initialSearchResult)-1].ID,
+		Limit:       10,
+	}
+
+	thirdPage, err := testStore.ListShopOrdersByUserIDNextPage(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, secondPage[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
 }

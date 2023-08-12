@@ -48,15 +48,15 @@ LIMIT $1
 OFFSET $2;
 
 -- name: ListProductItemsV2 :many
-WITH t1 (total_count) AS (
-SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-WHERE pi.active = TRUE
-LIMIT 1
-)
+-- WITH t1 (total_count) AS (
+-- SELECT COUNT(*) OVER() AS total_count
+-- FROM "product_item" AS pi
+-- WHERE pi.active = TRUE
+-- LIMIT 1
+-- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
- pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, total_count,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
@@ -66,7 +66,7 @@ SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
-FROM t1, "product_item" AS pi
+FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
@@ -118,15 +118,15 @@ ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: ListProductItemsNextPage :many
-WITH t1 AS (
-SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-WHERE pi.active = TRUE
-LIMIT 1
-)
+-- WITH t1 AS (
+-- SELECT COUNT(*) OVER() AS total_count
+-- FROM "product_item" AS pi
+-- WHERE pi.active = TRUE
+-- LIMIT 1
+-- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
- pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, total_count,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
@@ -136,7 +136,7 @@ SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
-FROM t1, "product_item" AS pi
+FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
@@ -189,15 +189,15 @@ ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: SearchProductItems :many
-WITH t1 AS (
-SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-WHERE pi.active = TRUE
-LIMIT 1
-)
+-- WITH t1 AS (
+-- SELECT COUNT(*) OVER() AS total_count
+-- FROM "product_item" AS pi
+-- WHERE pi.active = TRUE
+-- LIMIT 1
+-- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
- pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, total_count,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
@@ -207,7 +207,7 @@ SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
-FROM t1, "product_item" AS pi
+FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
@@ -235,15 +235,15 @@ END
 LIMIT $1;
 
 -- name: SearchProductItemsNextPage :many
-WITH t1 AS (
-SELECT COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-WHERE pi.active = TRUE
-LIMIT 1
-)
+-- WITH t1 AS (
+-- SELECT COUNT(*) OVER() AS total_count
+-- FROM "product_item" AS pi
+-- WHERE pi.active = TRUE
+-- LIMIT 1
+-- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
- pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, total_count,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
@@ -253,7 +253,7 @@ SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
-FROM t1, "product_item" AS pi
+FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id

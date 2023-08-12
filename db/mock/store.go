@@ -2214,6 +2214,36 @@ func (mr *MockStoreMockRecorder) ListShopOrdersByUserID(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShopOrdersByUserID", reflect.TypeOf((*MockStore)(nil).ListShopOrdersByUserID), arg0, arg1)
 }
 
+// ListShopOrdersByUserIDNextPage mocks base method.
+func (m *MockStore) ListShopOrdersByUserIDNextPage(arg0 context.Context, arg1 db.ListShopOrdersByUserIDNextPageParams) ([]db.ListShopOrdersByUserIDNextPageRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListShopOrdersByUserIDNextPage", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListShopOrdersByUserIDNextPageRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListShopOrdersByUserIDNextPage indicates an expected call of ListShopOrdersByUserIDNextPage.
+func (mr *MockStoreMockRecorder) ListShopOrdersByUserIDNextPage(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShopOrdersByUserIDNextPage", reflect.TypeOf((*MockStore)(nil).ListShopOrdersByUserIDNextPage), arg0, arg1)
+}
+
+// ListShopOrdersByUserIDV2 mocks base method.
+func (m *MockStore) ListShopOrdersByUserIDV2(arg0 context.Context, arg1 db.ListShopOrdersByUserIDV2Params) ([]db.ListShopOrdersByUserIDV2Row, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListShopOrdersByUserIDV2", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListShopOrdersByUserIDV2Row)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListShopOrdersByUserIDV2 indicates an expected call of ListShopOrdersByUserIDV2.
+func (mr *MockStoreMockRecorder) ListShopOrdersByUserIDV2(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShopOrdersByUserIDV2", reflect.TypeOf((*MockStore)(nil).ListShopOrdersByUserIDV2), arg0, arg1)
+}
+
 // ListShoppingCartItems mocks base method.
 func (m *MockStore) ListShoppingCartItems(arg0 context.Context, arg1 db.ListShoppingCartItemsParams) ([]db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()

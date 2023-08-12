@@ -36,6 +36,45 @@ ORDER BY so.id DESC
 LIMIT $2
 OFFSET $3;
 
+-- name: ListShopOrdersByUserIDV2 :many
+SELECT os.status,
+ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
+(
+  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count
+, so.*, COUNT(so.id) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+WHERE so.user_id = sqlc.arg(user_id)
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status), '') != ''
+THEN os.status = sqlc.narg(order_status)
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1;
+
+-- name: ListShopOrdersByUserIDNextPage :many
+SELECT os.status,
+ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
+(
+  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count
+, so.*, COUNT(so.id) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+WHERE so.user_id = sqlc.arg(user_id)
+AND so.id < sqlc.arg(shop_order_id)
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status), '') != ''
+THEN os.status = sqlc.narg(order_status)
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1;
+
 -- name: UpdateShopOrder :one
 UPDATE "shop_order"
 SET 

@@ -22,7 +22,7 @@ func main() {
 	platform := dagger.Platform("linux/amd64")
 
 	// Database service used for application tests
-	database := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:15.3-alpine").
+	database := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:15.4-alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("POSTGRES_USER", "postgres").
 		WithEnvVariable("POSTGRES_PASSWORD", "secret").
@@ -46,7 +46,7 @@ func main() {
 	// 	WithExec([]string{"migrate", "-path", "db/migration", "-database", "postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable", "-verbose", "up"}).Stdout(ctx)
 
 	// Run Service with tests
-	container := client.Container(dagger.ContainerOpts{Platform: platform}).From("golang:1.20").
+	container := client.Container(dagger.ContainerOpts{Platform: platform}).From("golang:1.21").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db
