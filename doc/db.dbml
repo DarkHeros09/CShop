@@ -267,6 +267,7 @@ Table product_configuration as PCFG {
 Table shop_order as SO {
   id bigserial [pk,not null] // auto-increment
   track_number varchar [not null]
+  order_number int [not null]
   user_id bigint [not null]
   payment_method_id bigint [not null]
   shipping_address_id bigint [not null, ref:> A.id]

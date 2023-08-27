@@ -176,6 +176,7 @@ type ShippingMethod struct {
 type ShopOrder struct {
 	ID                int64     `json:"id"`
 	TrackNumber       string    `json:"track_number"`
+	OrderNumber       int32     `json:"order_number"`
 	UserID            int64     `json:"user_id"`
 	PaymentMethodID   int64     `json:"payment_method_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`

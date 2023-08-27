@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-07-23T20:32:58.380Z
+-- Generated at: 2023-08-21T19:26:01.572Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -240,6 +240,7 @@ CREATE TABLE "product_configuration" (
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "track_number" varchar NOT NULL,
+  "order_number" int NOT NULL,
   "user_id" bigint NOT NULL,
   "payment_method_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,

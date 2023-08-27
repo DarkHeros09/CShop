@@ -474,7 +474,7 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDV2Row {
 	return db.ListShopOrdersByUserIDV2Row{
 		Status:            null.StringFrom(orderStatus.Status),
-		OrderNumber:       util.RandomMoney(),
+		OrderNumber:       int32(util.RandomMoney()),
 		ItemCount:         util.RandomMoney(),
 		ID:                util.RandomMoney(),
 		TrackNumber:       util.GenerateTrackNumber(),
@@ -491,7 +491,7 @@ func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListSho
 func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDNextPageRow {
 	return db.ListShopOrdersByUserIDNextPageRow{
 		Status:            null.StringFrom(orderStatus.Status),
-		OrderNumber:       util.RandomMoney(),
+		OrderNumber:       int32(util.RandomMoney()),
 		ItemCount:         util.RandomMoney(),
 		ID:                util.RandomMoney(),
 		TrackNumber:       util.GenerateTrackNumber(),

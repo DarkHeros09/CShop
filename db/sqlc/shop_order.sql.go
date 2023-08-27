@@ -15,6 +15,7 @@ import (
 const createShopOrder = `-- name: CreateShopOrder :one
 INSERT INTO "shop_order" (
   track_number,
+  order_number,
   user_id,
   payment_method_id,
   shipping_address_id,
@@ -22,9 +23,14 @@ INSERT INTO "shop_order" (
   shipping_method_id,
   order_status_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, 
+  (
+    SELECT COUNT(*) FROM "shop_order" so
+    WHERE so.user_id = $2
+     ) + 1, 
+    $2, $3, $4, $5, $6, $7
 )
-RETURNING id, track_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at
+RETURNING id, track_number, order_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at
 `
 
 type CreateShopOrderParams struct {
@@ -51,6 +57,7 @@ func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams
 	err := row.Scan(
 		&i.ID,
 		&i.TrackNumber,
+		&i.OrderNumber,
 		&i.UserID,
 		&i.PaymentMethodID,
 		&i.ShippingAddressID,
@@ -74,7 +81,7 @@ func (q *Queries) DeleteShopOrder(ctx context.Context, id int64) error {
 }
 
 const getShopOrder = `-- name: GetShopOrder :one
-SELECT id, track_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at FROM "shop_order"
+SELECT id, track_number, order_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at FROM "shop_order"
 WHERE id = $1 LIMIT 1
 `
 
@@ -84,6 +91,7 @@ func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
 	err := row.Scan(
 		&i.ID,
 		&i.TrackNumber,
+		&i.OrderNumber,
 		&i.UserID,
 		&i.PaymentMethodID,
 		&i.ShippingAddressID,
@@ -97,7 +105,7 @@ func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
 }
 
 const listShopOrders = `-- name: ListShopOrders :many
-SELECT id, track_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at FROM "shop_order"
+SELECT id, track_number, order_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at FROM "shop_order"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -120,6 +128,7 @@ func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.TrackNumber,
+			&i.OrderNumber,
 			&i.UserID,
 			&i.PaymentMethodID,
 			&i.ShippingAddressID,
@@ -143,9 +152,9 @@ const listShopOrdersByUserID = `-- name: ListShopOrdersByUserID :many
 SELECT os.status,
 ROW_NUMBER() OVER(ORDER BY so.id) as order_number,
 (
-  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
-) AS item_count,so.id, so.track_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at
+) AS item_count,so.id, so.track_number, so.order_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $1
@@ -166,6 +175,7 @@ type ListShopOrdersByUserIDRow struct {
 	ItemCount         int64       `json:"item_count"`
 	ID                int64       `json:"id"`
 	TrackNumber       string      `json:"track_number"`
+	OrderNumber_2     int32       `json:"order_number_2"`
 	UserID            int64       `json:"user_id"`
 	PaymentMethodID   int64       `json:"payment_method_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
@@ -191,6 +201,7 @@ func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrders
 			&i.ItemCount,
 			&i.ID,
 			&i.TrackNumber,
+			&i.OrderNumber_2,
 			&i.UserID,
 			&i.PaymentMethodID,
 			&i.ShippingAddressID,
@@ -212,12 +223,11 @@ func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrders
 
 const listShopOrdersByUserIDNextPage = `-- name: ListShopOrdersByUserIDNextPage :many
 SELECT os.status,
-ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 (
-  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
 ) AS item_count
-, so.id, so.track_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, COUNT(so.id) OVER() AS total_count
+, so.id, so.track_number, so.order_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, COUNT(*) OVER() AS total_count
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $2
@@ -240,10 +250,10 @@ type ListShopOrdersByUserIDNextPageParams struct {
 
 type ListShopOrdersByUserIDNextPageRow struct {
 	Status            null.String `json:"status"`
-	OrderNumber       int64       `json:"order_number"`
 	ItemCount         int64       `json:"item_count"`
 	ID                int64       `json:"id"`
 	TrackNumber       string      `json:"track_number"`
+	OrderNumber       int32       `json:"order_number"`
 	UserID            int64       `json:"user_id"`
 	PaymentMethodID   int64       `json:"payment_method_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
@@ -255,6 +265,7 @@ type ListShopOrdersByUserIDNextPageRow struct {
 	TotalCount        int64       `json:"total_count"`
 }
 
+// ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListShopOrdersByUserIDNextPageParams) ([]ListShopOrdersByUserIDNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listShopOrdersByUserIDNextPage,
 		arg.Limit,
@@ -271,10 +282,10 @@ func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListSh
 		var i ListShopOrdersByUserIDNextPageRow
 		if err := rows.Scan(
 			&i.Status,
-			&i.OrderNumber,
 			&i.ItemCount,
 			&i.ID,
 			&i.TrackNumber,
+			&i.OrderNumber,
 			&i.UserID,
 			&i.PaymentMethodID,
 			&i.ShippingAddressID,
@@ -297,12 +308,11 @@ func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListSh
 
 const listShopOrdersByUserIDV2 = `-- name: ListShopOrdersByUserIDV2 :many
 SELECT os.status,
-ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 (
-  SELECT COUNT(soi.id) FROM "shop_order_item" AS soi
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
 ) AS item_count
-, so.id, so.track_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, COUNT(so.id) OVER() AS total_count
+, so.id, so.track_number, so.order_number, so.user_id, so.payment_method_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, COUNT(*) OVER() AS total_count
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $2
@@ -323,10 +333,10 @@ type ListShopOrdersByUserIDV2Params struct {
 
 type ListShopOrdersByUserIDV2Row struct {
 	Status            null.String `json:"status"`
-	OrderNumber       int64       `json:"order_number"`
 	ItemCount         int64       `json:"item_count"`
 	ID                int64       `json:"id"`
 	TrackNumber       string      `json:"track_number"`
+	OrderNumber       int32       `json:"order_number"`
 	UserID            int64       `json:"user_id"`
 	PaymentMethodID   int64       `json:"payment_method_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
@@ -338,6 +348,7 @@ type ListShopOrdersByUserIDV2Row struct {
 	TotalCount        int64       `json:"total_count"`
 }
 
+// ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrdersByUserIDV2Params) ([]ListShopOrdersByUserIDV2Row, error) {
 	rows, err := q.db.Query(ctx, listShopOrdersByUserIDV2, arg.Limit, arg.UserID, arg.OrderStatus)
 	if err != nil {
@@ -349,10 +360,10 @@ func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrde
 		var i ListShopOrdersByUserIDV2Row
 		if err := rows.Scan(
 			&i.Status,
-			&i.OrderNumber,
 			&i.ItemCount,
 			&i.ID,
 			&i.TrackNumber,
+			&i.OrderNumber,
 			&i.UserID,
 			&i.PaymentMethodID,
 			&i.ShippingAddressID,
@@ -385,7 +396,7 @@ shipping_method_id = COALESCE($6,shipping_method_id),
 order_status_id = COALESCE($7,order_status_id),
 updated_at = now()
 WHERE id = $8
-RETURNING id, track_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at
+RETURNING id, track_number, order_number, user_id, payment_method_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at
 `
 
 type UpdateShopOrderParams struct {
@@ -414,6 +425,7 @@ func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams
 	err := row.Scan(
 		&i.ID,
 		&i.TrackNumber,
+		&i.OrderNumber,
 		&i.UserID,
 		&i.PaymentMethodID,
 		&i.ShippingAddressID,

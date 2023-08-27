@@ -7,12 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	// firebase "firebase.google.com/go"
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
+	// gofiberfirebaseauth "github.com/sacsand/gofiber-firebaseauth"
+	// "google.golang.org/api/option"
 )
 
 type Server struct {
@@ -51,6 +54,22 @@ func (server *Server) setupRouter() {
 	app.Use(etag.New(
 		etag.Config{},
 	))
+
+	// // Get google service account credentials
+	// serviceAccount, fileExi := os.LookupEnv("GOOGLE_SERVICE_ACCOUNT")
+
+	// if !fileExi {
+	// 	log.Fatalf("Please provide valid firebbase auth credential json!")
+	// }
+
+	// // Initialize the firebase app.
+	// opt := option.WithCredentialsFile(serviceAccount)
+	// fireApp, _ := firebase.NewApp(context.Background(), nil, opt)
+
+	// app.Use(gofiberfirebaseauth.New(
+	// 	gofiberfirebaseauth.Config{
+	// 		FirebaseApp: fireApp,
+	// 	}))
 
 	//* Users
 	app.Post("/api/v1/users", server.createUser)

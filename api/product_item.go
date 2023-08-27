@@ -376,7 +376,7 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-
+	//Todo: should be copied to other functions??
 	if len(productItems) > 0 {
 		pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
 		if len(productItems) == int(productItems[0].TotalCount) {

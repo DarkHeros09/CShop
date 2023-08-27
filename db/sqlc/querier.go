@@ -224,7 +224,9 @@ type Querier interface {
 	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error)
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
 	ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]ListShopOrdersByUserIDRow, error)
+	// ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 	ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListShopOrdersByUserIDNextPageParams) ([]ListShopOrdersByUserIDNextPageRow, error)
+	// ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
 	ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrdersByUserIDV2Params) ([]ListShopOrdersByUserIDV2Row, error)
 	// LIMIT 1;
 	ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error)
