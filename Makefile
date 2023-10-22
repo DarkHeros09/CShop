@@ -1,17 +1,18 @@
 DB_HOST ?= localhost
 DB_PORT ?= 6666
+DB_VERSION ?= 16.0
 
 DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
 
 postgres:
-	docker run --name psql_15.3-cshop -p 6666:5432 -e POSTGRES_USER=postgres \
-	-e POSTGRES_PASSWORD=secret -d -e "TZ=Africa/Tripoli" -e "PGTZ=Africa/Tripoli" postgres:15.3-alpine
+	docker run --name psql_$(DB_VERSION)-cshop -p $(DB_PORT):5432 -e POSTGRES_USER=postgres \
+	-e POSTGRES_PASSWORD=secret -d -e "TZ=Africa/Tripoli" -e "PGTZ=Africa/Tripoli" postgres:$(DB_VERSION)-alpine
 
 create_db:
-	docker exec -it psql_15.3-cshop createdb --username=postgres --owner=postgres cshop
+	docker exec -it psql_$(DB_VERSION)-cshop createdb --username=postgres --owner=postgres cshop
 
 drop_db:
-	docker exec -it psql_15.3-cshop dropdb cshop --username=postgres
+	docker exec -it psql_$(DB_VERSION)-cshop dropdb cshop --username=postgres
 
 init_migrate:
 	migrate create -ext sql -dir db/migration -seq init_schema
@@ -44,17 +45,29 @@ migrate_fix:
 	migrate -path db/migration -database \
 	"$(DB_URL)" -verbose force 1
 
+migrate_up_docker:
+	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose up
+
+migrate_down_docker:
+	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose down
+
+migrate_fix_docker:
+	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose force 1
+
 sqlc:
 	sqlc generate
 
 sqlcversion:
-	docker run --rm -v ${CURDIR}:/src -w /src kjconroy/sqlc version
+	docker run --rm -v "${CURDIR}":/src -w /src sqlc/sqlc version
 
 sqlcwin:
-	docker run --rm -v ${pwd}:/src -w /src kjconroy/sqlc generate
+	docker run --rm -v ${pwd}:/src -w /src sqlc/sqlc generate
 
 sqlcfix:
-	docker run --rm -v ${CURDIR}:/src -w /src kjconroy/sqlc generate
+	docker run --rm -v "${CURDIR}":/src -w /src sqlc/sqlc generate
 
 test:
 	go test -v -cover -timeout 1m -shuffle on -count=1 ./...

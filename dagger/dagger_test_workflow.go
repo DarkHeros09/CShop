@@ -22,7 +22,7 @@ func main() {
 	platform := dagger.Platform("linux/amd64")
 
 	// Database service used for application tests
-	database := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:15.4-alpine").
+	database, err := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:16.0-alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("POSTGRES_USER", "postgres").
 		WithEnvVariable("POSTGRES_PASSWORD", "secret").
@@ -30,9 +30,16 @@ func main() {
 		WithEnvVariable("PGPORT", "6666").
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithEnvVariable("PGTZ", "Africa/Tripoli").
-		WithExec([]string{"postgres"})
-		// WithExec(nil).
-		// WithExposedPort(5432)
+		WithExec([]string{"postgres"}).
+		WithExposedPort(6666).
+		AsService().
+		Start(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+	// WithExec(nil).
+	// WithExposedPort(5432)
 
 	// Project to test
 	src := client.Host().Directory(".")
@@ -73,3 +80,12 @@ func main() {
 	}
 	fmt.Print(out)
 }
+
+// migrate := client.Container(dagger.ContainerOpts{Platform: platform}).From("migrate/migrate:latest").
+// 		WithServiceBinding("localhost", database). // bind database with the name db
+// 		WithEnvVariable("DB_HOST", "localhost").   // db refers to the service binding
+// 		WithEnvVariable("DB_PASSWORD", "secret").  // password set in db container
+// 		WithEnvVariable("DB_USER", "postgres").    // default user in postgres image
+// 		WithEnvVariable("DB_NAME", "cshop").       // default db name in postgres image
+// 		WithDirectory("/src", src).
+// 		WithWorkdir("/src")
