@@ -14,9 +14,9 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGetProductBrandAPI(t *testing.T) {

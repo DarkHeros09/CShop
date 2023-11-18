@@ -62,17 +62,30 @@ func main() {
 		WithEnvVariable("DB_USER", "postgres").    // default user in postgres image
 		WithEnvVariable("DB_NAME", "cshop")        // default db name in postgres image
 
-	build := container.
+	migrate := client.Container(dagger.ContainerOpts{Platform: platform}).
+		From("migrate/migrate:latest").
+		// WithServiceBinding("localhost", database). // bind database with the name db
+		// WithEnvVariable("DB_HOST", "localhost").   // db refers to the service binding
+		// WithEnvVariable("DB_PASSWORD", "secret").  // password set in db container
+		// WithEnvVariable("DB_USER", "postgres").    // default user in postgres image
+		// WithEnvVariable("DB_NAME", "cshop").       // default db name in postgres image
 		WithDirectory("/src", src).
 		WithWorkdir("/src").
-		WithFile("migrate.tar.gz", client.HTTP("https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz")).
-		WithExec([]string{"tar", "fxvz", "migrate.tar.gz", "-C", "/usr/bin/"}). // move to executables
-		WithExec([]string{"rm", "-rf", "migrate.tar.gz"}).                      // delete unused files
-		WithExec([]string{"which", "migrate"})                                  // test go migrate
+		WithEntrypoint([]string{}).
+		WithServiceBinding("localhost", database). // bind database with the name db
+		WithEnvVariable("DB_HOST", "localhost").   // db refers to the service binding
+		WithEnvVariable("DB_PASSWORD", "secret").  // password set in db container
+		WithEnvVariable("DB_USER", "postgres").    // default user in postgres image
+		WithEnvVariable("DB_NAME", "cshop").       // default db name in postgres image
+		WithExec([]string{"which", "migrate"}).
+		WithExec([]string{"migrate", "-path", "db/migration", "-database", "postgresql://postgres:secret@localhost:6666/cshop?sslmode=disable", "-verbose", "up"})
 
-	out, err := build.
-		WithExec([]string{"make", "migrate_up"}). // run migrations
-		WithExec([]string{"make", "test"}).       // execute go test
+	out, err := container.
+		WithDirectory("/src", migrate.Directory("/src")).
+		WithWorkdir("/src").
+
+		// WithExec([]string{"make", "migrate_up"}). // run migrations
+		WithExec([]string{"make", "test"}). // execute go test
 		Stdout(ctx)
 
 	if err != nil {

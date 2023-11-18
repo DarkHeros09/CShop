@@ -14,10 +14,10 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang/mock/gomock"
 	"github.com/guregu/null"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGetProductItemAPI(t *testing.T) {
@@ -1302,7 +1302,7 @@ func randomListProductItemV2() db.ListProductItemsV2Row {
 		ProductImage3: null.StringFrom(util.RandomURL()),
 		Price:         util.RandomDecimalString(0, 1000),
 		Active:        util.RandomBool(),
-		Name:          null.StringFrom(util.RandomUser()),
+		Name:          util.RandomUser(),
 	}
 }
 
