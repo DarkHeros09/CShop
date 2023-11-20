@@ -235,27 +235,29 @@ func TestListProductItemsV2(t *testing.T) {
 	require.Equal(t, len(initialSearchResult), 10)
 
 	arg1 := ListProductItemsNextPageParams{
-		Limit: 10,
-		ID:    initialSearchResult[len(initialSearchResult)-1].ID,
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
 	}
 
 	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg1)
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
-	require.Equal(t, len(initialSearchResult), 10)
+	require.Equal(t, len(secondPage), 10)
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
 
 	arg2 := ListProductItemsNextPageParams{
-		Limit: 10,
-		ID:    secondPage[len(initialSearchResult)-1].ID,
+		Limit:         10,
+		ProductItemID: secondPage[len(secondPage)-1].ID,
+		ProductID:     secondPage[len(secondPage)-1].ProductID,
 	}
 
 	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
 	require.Equal(t, len(initialSearchResult), 10)
-	require.Greater(t, secondPage[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
-	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+	require.Greater(t, secondPage[len(secondPage)-1].ID, thirdPage[len(thirdPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
 }
 
 func TestSearchProductItems(t *testing.T) {
@@ -279,9 +281,10 @@ func TestSearchProductItems(t *testing.T) {
 	require.Equal(t, productItem.ID, searchedProductItem[len(searchedProductItem)-1].ID)
 
 	arg2 := SearchProductItemsNextPageParams{
-		Limit: 10,
-		ID:    searchedProductItem[len(searchedProductItem)-1].ID,
-		Query: product.Name,
+		Limit:         10,
+		ProductItemID: searchedProductItem[len(searchedProductItem)-1].ID,
+		ProductID:     searchedProductItem[len(searchedProductItem)-1].ProductID,
+		Query:         product.Name,
 	}
 
 	searchedRestProductItem, err := testStore.SearchProductItemsNextPage(context.Background(), arg2)

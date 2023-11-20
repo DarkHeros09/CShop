@@ -242,13 +242,16 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 //////////////* Pagination List API //////////////
 
 type listProductItemsV2QueryRequest struct {
-	Limit      int32     `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID null.Int  `query:"category_id" validate:"omitempty,min=1"`
-	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
-	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew      null.Bool `query:"is_new" validate:"omitempty,boolean"`
-	IsPromoted null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
+	Limit            int32     `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID       null.Int  `query:"category_id" validate:"omitempty,min=1"`
+	BrandID          null.Int  `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID           null.Int  `query:"size_id" validate:"omitempty,min=1"`
+	ColorID          null.Int  `query:"color_id" validate:"omitempty,min=1"`
+	IsNew            null.Bool `query:"is_new" validate:"omitempty,boolean"`
+	IsPromoted       null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
+	OrderByID        null.Bool `query:"order_by_id" validate:"omitempty,boolean"`
+	OrderByLowPrice  null.Bool `query:"order_by_low_price" validate:"omitempty,boolean"`
+	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty,boolean"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
@@ -261,13 +264,16 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.ListProductItemsV2Params{
-		Limit:      query.Limit,
-		CategoryID: query.CategoryID,
-		BrandID:    query.BrandID,
-		ColorID:    query.ColorID,
-		SizeID:     query.SizeID,
-		IsNew:      query.IsNew,
-		IsPromoted: query.IsPromoted,
+		Limit:            query.Limit,
+		CategoryID:       query.CategoryID,
+		BrandID:          query.BrandID,
+		ColorID:          query.ColorID,
+		SizeID:           query.SizeID,
+		IsNew:            query.IsNew,
+		IsPromoted:       query.IsPromoted,
+		OrderByID:        query.OrderByID,
+		OrderByLowPrice:  query.OrderByLowPrice,
+		OrderByHighPrice: query.OrderByHighPrice,
 	}
 
 	productItems, err := server.store.ListProductItemsV2(ctx.Context(), arg)
@@ -296,14 +302,18 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 }
 
 type listProductItemsNextPageQueryRequest struct {
-	Cursor     int64     `query:"cursor" validate:"required,min=1"`
-	Limit      int32     `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID null.Int  `query:"category_id" validate:"omitempty,min=1"`
-	BrandID    null.Int  `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID     null.Int  `query:"size_id" validate:"omitempty,min=1"`
-	ColorID    null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew      null.Bool `query:"is_new" validate:"omitempty,boolean"`
-	IsPromoted null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
+	ProductItemCursor int64     `query:"product_item_cursor" validate:"required,min=1"`
+	ProductCursor     int64     `query:"product_cursor" validate:"required,min=1"`
+	Limit             int32     `query:"limit" validate:"required,min=5,max=10"`
+	CategoryID        null.Int  `query:"category_id" validate:"omitempty,min=1"`
+	BrandID           null.Int  `query:"brand_id" validate:"omitempty,min=1"`
+	SizeID            null.Int  `query:"size_id" validate:"omitempty,min=1"`
+	ColorID           null.Int  `query:"color_id" validate:"omitempty,min=1"`
+	IsNew             null.Bool `query:"is_new" validate:"omitempty,boolean"`
+	IsPromoted        null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
+	OrderByID         null.Bool `query:"order_by_id" validate:"omitempty,boolean"`
+	OrderByLowPrice   null.Bool `query:"order_by_low_price" validate:"omitempty,boolean"`
+	OrderByHighPrice  null.Bool `query:"order_by_high_price" validate:"omitempty,boolean"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
@@ -316,14 +326,18 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.ListProductItemsNextPageParams{
-		Limit:      query.Limit,
-		ID:         query.Cursor,
-		CategoryID: query.CategoryID,
-		BrandID:    query.BrandID,
-		ColorID:    query.ColorID,
-		SizeID:     query.SizeID,
-		IsNew:      query.IsNew,
-		IsPromoted: query.IsPromoted,
+		Limit:            query.Limit,
+		ProductItemID:    query.ProductItemCursor,
+		ProductID:        query.ProductCursor,
+		CategoryID:       query.CategoryID,
+		BrandID:          query.BrandID,
+		ColorID:          query.ColorID,
+		SizeID:           query.SizeID,
+		IsNew:            query.IsNew,
+		IsPromoted:       query.IsPromoted,
+		OrderByID:        query.OrderByID,
+		OrderByLowPrice:  query.OrderByLowPrice,
+		OrderByHighPrice: query.OrderByHighPrice,
 	}
 
 	productItems, err := server.store.ListProductItemsNextPage(ctx.Context(), arg)
@@ -395,9 +409,10 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 }
 
 type searchProductItemsNextPageQueryRequest struct {
-	Cursor int64  `query:"cursor" validate:"required,min=1"`
-	Limit  int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query  string `query:"query" validate:"omitempty,required,alphanum"`
+	ProductItemCursor int64  `query:"product_item_cursor" validate:"required,min=1"`
+	ProductCursor     int64  `query:"product_cursor" validate:"required,min=1"`
+	Limit             int32  `query:"limit" validate:"required,min=5,max=10"`
+	Query             string `query:"query" validate:"omitempty,required,alphanum"`
 }
 
 func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
@@ -409,9 +424,10 @@ func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.SearchProductItemsNextPageParams{
-		Limit: query.Limit,
-		ID:    query.Cursor,
-		Query: query.Query,
+		Limit:         query.Limit,
+		ProductItemID: query.ProductItemCursor,
+		ProductID:     query.ProductCursor,
+		Query:         query.Query,
 	}
 
 	productItems, err := server.store.SearchProductItemsNextPage(ctx.Context(), arg)

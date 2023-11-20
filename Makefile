@@ -75,6 +75,9 @@ test:
 dagger_test:
 	go run ./dagger/dagger_test_workflow.go
 
+dagger_test2:
+	go run ./dagger2/dagger_test_workflow.go
+
 server:
 	go run main.go
 

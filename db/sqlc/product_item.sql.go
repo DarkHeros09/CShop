@@ -279,6 +279,314 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 }
 
 const listProductItemsNextPage = `-- name: ListProductItemsNextPage :many
+WITH t1 AS (
+SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+FROM "product_category" AS pc
+INNER JOIN
+"category_promotion" AS cp ON cp.category_id = pc.id
+INNER JOIN
+"promotion" AS cpromo ON cpromo.id = cp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN cp.active = TRUE
+AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($3, 0) > 0 
+    THEN pc.id = $3
+    ELSE 1=1
+END 
+)
+, t2 AS(
+SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
+bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+FROM "product_brand" AS pb
+INNER JOIN
+"brand_promotion" AS bp ON bp.brand_id = pb.id
+INNER JOIN
+"promotion" AS bpromo ON bpromo.id = bp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN bp.active = TRUE
+AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($4, 0) > 0 
+    THEN pb.id = $4
+    ELSE 1=1
+END 
+)
+, t3 AS(
+SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, 
+pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
+ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+t1.product_category_id, t1.parent_category_id, t1.category_name, t1.category_image, t1.category_promotion_image, t1.category_promotion_active, t1.category_promo_id, t1.category_promo_name, t1.category_promo_description, t1.category_promo_discount_rate, t1.category_promo_active, t1.category_promo_start_date, t1.category_promo_end_date, t2.product_brand_id, t2.brand_name, t2.brand_image, t2.brand_promotion_image, t2.brand_promotion_active, t2.brand_promo_id, t2.brand_promo_name, t2.brand_promo_description, t2.brand_promo_discount_rate, t2.brand_promo_active, t2.brand_promo_start_date, t2.brand_promo_end_date
+ FROM "product" AS p
+ LEFT JOIN
+ "product_promotion" AS pp ON pp.product_id = p.id
+LEFT JOIN
+"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
+LEFT JOIN t1 ON t1.product_category_id = p.category_id
+LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
+WHERE 
+p.id < $5 AND
+p.active = TRUE
+AND
+CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN 
+pp.active = TRUE AND 
+(
+    pp.product_id IS NOT NULL OR
+    t1.product_category_id IS NOT NULL OR
+    t2.product_brand_id IS NOT NULL
+)
+AND
+ppromo.active = TRUE 
+AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
+ELSE 1=1
+END 
+)
+, t4 AS (
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, pid, name, description, category_id, brand_id, parent_product_active, promotion_product_id, product_promotion_image, product_promotion_active, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date, product_category_id, parent_category_id, category_name, category_image, category_promotion_image, category_promotion_active, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, product_brand_id, brand_name, brand_image, brand_promotion_image, brand_promotion_active, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+INNER JOIN t3 ON t3.pid = pi.product_id
+WHERE 
+pi.id < $6 AND
+pi.active = TRUE AND
+CASE
+WHEN COALESCE($7, FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($8, 0) > 0 
+    THEN pi.color_id = $8
+    ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($9, 0) > 0 
+    THEN pi.size_id = $9
+    ELSE 1=1
+END
+ORDER BY 
+	CASE
+	WHEN COALESCE($10, TRUE) = TRUE
+	THEN pi.id
+	ELSE 0
+END DESC,
+CASE
+	WHEN COALESCE($11, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END ASC,
+CASE
+	WHEN COALESCE($12, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END DESC
+)
+, t5 AS (
+SELECT t4.id, t4.product_id, t4.size_id, t4.image_id, t4.color_id, t4.product_sku, t4.qty_in_stock, t4.price, t4.active, t4.created_at, t4.updated_at, t4.pid, t4.name, t4.description, t4.category_id, t4.brand_id, t4.parent_product_active, t4.promotion_product_id, t4.product_promotion_image, t4.product_promotion_active, t4.product_promo_id, t4.product_promo_name, t4.product_promo_description, t4.product_promo_discount_rate, t4.product_promo_active, t4.product_promo_start_date, t4.product_promo_end_date, t4.product_category_id, t4.parent_category_id, t4.category_name, t4.category_image, t4.category_promotion_image, t4.category_promotion_active, t4.category_promo_id, t4.category_promo_name, t4.category_promo_description, t4.category_promo_discount_rate, t4.category_promo_active, t4.category_promo_start_date, t4.category_promo_end_date, t4.product_brand_id, t4.brand_name, t4.brand_image, t4.brand_promotion_image, t4.brand_promotion_active, t4.brand_promo_id, t4.brand_promo_name, t4.brand_promo_description, t4.brand_promo_discount_rate, t4.brand_promo_active, t4.brand_promo_start_date, t4.brand_promo_end_date, t4.total_count, ps.size_value FROM t4
+LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
+WHERE CASE
+    WHEN COALESCE($9, 0) > 0 
+    THEN ps.id = $9
+    ELSE 1=1
+END
+)
+, t6 AS (
+SELECT t5.id, t5.product_id, t5.size_id, t5.image_id, t5.color_id, t5.product_sku, t5.qty_in_stock, t5.price, t5.active, t5.created_at, t5.updated_at, t5.pid, t5.name, t5.description, t5.category_id, t5.brand_id, t5.parent_product_active, t5.promotion_product_id, t5.product_promotion_image, t5.product_promotion_active, t5.product_promo_id, t5.product_promo_name, t5.product_promo_description, t5.product_promo_discount_rate, t5.product_promo_active, t5.product_promo_start_date, t5.product_promo_end_date, t5.product_category_id, t5.parent_category_id, t5.category_name, t5.category_image, t5.category_promotion_image, t5.category_promotion_active, t5.category_promo_id, t5.category_promo_name, t5.category_promo_description, t5.category_promo_discount_rate, t5.category_promo_active, t5.category_promo_start_date, t5.category_promo_end_date, t5.product_brand_id, t5.brand_name, t5.brand_image, t5.brand_promotion_image, t5.brand_promotion_active, t5.brand_promo_id, t5.brand_promo_name, t5.brand_promo_description, t5.brand_promo_discount_rate, t5.brand_promo_active, t5.brand_promo_start_date, t5.brand_promo_end_date, t5.total_count, t5.size_value, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM t5
+LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
+)
+, t7 AS (
+SELECT t6.id, t6.product_id, t6.size_id, t6.image_id, t6.color_id, t6.product_sku, t6.qty_in_stock, t6.price, t6.active, t6.created_at, t6.updated_at, t6.pid, t6.name, t6.description, t6.category_id, t6.brand_id, t6.parent_product_active, t6.promotion_product_id, t6.product_promotion_image, t6.product_promotion_active, t6.product_promo_id, t6.product_promo_name, t6.product_promo_description, t6.product_promo_discount_rate, t6.product_promo_active, t6.product_promo_start_date, t6.product_promo_end_date, t6.product_category_id, t6.parent_category_id, t6.category_name, t6.category_image, t6.category_promotion_image, t6.category_promotion_active, t6.category_promo_id, t6.category_promo_name, t6.category_promo_description, t6.category_promo_discount_rate, t6.category_promo_active, t6.category_promo_start_date, t6.category_promo_end_date, t6.product_brand_id, t6.brand_name, t6.brand_image, t6.brand_promotion_image, t6.brand_promotion_active, t6.brand_promo_id, t6.brand_promo_name, t6.brand_promo_description, t6.brand_promo_discount_rate, t6.brand_promo_active, t6.brand_promo_start_date, t6.brand_promo_end_date, t6.total_count, t6.size_value, t6.product_image_1, t6.product_image_2, t6.product_image_3, pclr.color_value FROM t6
+LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
+WHERE CASE
+    WHEN COALESCE($8, 0) > 0 
+    THEN pclr.id = $8
+    ELSE 1=1
+END
+)
+
+SELECT
+t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
+t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
+ t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
+ t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
+ t7.total_count,
+ t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
+ t7.category_promo_discount_rate, t7.category_promo_active,
+ t7.category_promo_start_date, t7.category_promo_end_date,
+ t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
+ t7.brand_promo_discount_rate, t7.brand_promo_active,
+ t7.brand_promo_start_date, t7.brand_promo_end_date,
+ t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
+ t7.product_promo_discount_rate, t7.product_promo_active,
+ t7.product_promo_start_date, t7.product_promo_end_date
+FROM t7
+LIMIT $1
+`
+
+type ListProductItemsNextPageParams struct {
+	Limit            int32       `json:"limit"`
+	IsPromoted       interface{} `json:"is_promoted"`
+	CategoryID       interface{} `json:"category_id"`
+	BrandID          interface{} `json:"brand_id"`
+	ProductID        int64       `json:"product_id"`
+	ProductItemID    int64       `json:"product_item_id"`
+	IsNew            interface{} `json:"is_new"`
+	ColorID          interface{} `json:"color_id"`
+	SizeID           interface{} `json:"size_id"`
+	OrderByID        interface{} `json:"order_by_id"`
+	OrderByLowPrice  interface{} `json:"order_by_low_price"`
+	OrderByHighPrice interface{} `json:"order_by_high_price"`
+}
+
+type ListProductItemsNextPageRow struct {
+	ID                        int64       `json:"id"`
+	ProductID                 int64       `json:"product_id"`
+	SizeID                    int64       `json:"size_id"`
+	ImageID                   int64       `json:"image_id"`
+	ColorID                   int64       `json:"color_id"`
+	ProductSku                int64       `json:"product_sku"`
+	QtyInStock                int32       `json:"qty_in_stock"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	CreatedAt                 time.Time   `json:"created_at"`
+	UpdatedAt                 time.Time   `json:"updated_at"`
+	Name                      string      `json:"name"`
+	Description               string      `json:"description"`
+	CategoryID                int64       `json:"category_id"`
+	CategoryName              null.String `json:"category_name"`
+	ParentCategoryID          null.Int    `json:"parent_category_id"`
+	CategoryImage             null.String `json:"category_image"`
+	BrandID                   int64       `json:"brand_id"`
+	BrandName                 null.String `json:"brand_name"`
+	BrandImage                null.String `json:"brand_image"`
+	ParentProductActive       bool        `json:"parent_product_active"`
+	SizeValue                 null.String `json:"size_value"`
+	ProductImage1             null.String `json:"product_image_1"`
+	ProductImage2             null.String `json:"product_image_2"`
+	ProductImage3             null.String `json:"product_image_3"`
+	ColorValue                null.String `json:"color_value"`
+	TotalCount                int64       `json:"total_count"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       null.Bool   `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          null.Bool   `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
+}
+
+func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error) {
+	rows, err := q.db.Query(ctx, listProductItemsNextPage,
+		arg.Limit,
+		arg.IsPromoted,
+		arg.CategoryID,
+		arg.BrandID,
+		arg.ProductID,
+		arg.ProductItemID,
+		arg.IsNew,
+		arg.ColorID,
+		arg.SizeID,
+		arg.OrderByID,
+		arg.OrderByLowPrice,
+		arg.OrderByHighPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductItemsNextPageRow{}
+	for rows.Next() {
+		var i ListProductItemsNextPageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
+			&i.ProductSku,
+			&i.QtyInStock,
+			&i.Price,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.ParentCategoryID,
+			&i.CategoryImage,
+			&i.BrandID,
+			&i.BrandName,
+			&i.BrandImage,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
+			&i.TotalCount,
+			&i.CategoryPromoID,
+			&i.CategoryPromoName,
+			&i.CategoryPromoDescription,
+			&i.CategoryPromoDiscountRate,
+			&i.CategoryPromoActive,
+			&i.CategoryPromoStartDate,
+			&i.CategoryPromoEndDate,
+			&i.BrandPromoID,
+			&i.BrandPromoName,
+			&i.BrandPromoDescription,
+			&i.BrandPromoDiscountRate,
+			&i.BrandPromoActive,
+			&i.BrandPromoStartDate,
+			&i.BrandPromoEndDate,
+			&i.ProductPromoID,
+			&i.ProductPromoName,
+			&i.ProductPromoDescription,
+			&i.ProductPromoDiscountRate,
+			&i.ProductPromoActive,
+			&i.ProductPromoStartDate,
+			&i.ProductPromoEndDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductItemsNextPageOld = `-- name: ListProductItemsNextPageOld :many
 SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
@@ -344,7 +652,7 @@ ORDER BY pi.id DESC
 LIMIT $1
 `
 
-type ListProductItemsNextPageParams struct {
+type ListProductItemsNextPageOldParams struct {
 	Limit      int32       `json:"limit"`
 	ID         int64       `json:"id"`
 	IsPromoted interface{} `json:"is_promoted"`
@@ -355,7 +663,7 @@ type ListProductItemsNextPageParams struct {
 	SizeID     interface{} `json:"size_id"`
 }
 
-type ListProductItemsNextPageRow struct {
+type ListProductItemsNextPageOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
 	SizeID                    int64       `json:"size_id"`
@@ -412,8 +720,8 @@ type ListProductItemsNextPageRow struct {
 // WHERE pi.active = TRUE
 // LIMIT 1
 // )
-func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error) {
-	rows, err := q.db.Query(ctx, listProductItemsNextPage,
+func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error) {
+	rows, err := q.db.Query(ctx, listProductItemsNextPageOld,
 		arg.Limit,
 		arg.ID,
 		arg.IsPromoted,
@@ -427,9 +735,9 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsNextPageRow{}
+	items := []ListProductItemsNextPageOldRow{}
 	for rows.Next() {
-		var i ListProductItemsNextPageRow
+		var i ListProductItemsNextPageOldRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
@@ -547,8 +855,8 @@ t1.product_category_id, t1.parent_category_id, t1.category_name, t1.category_ima
  "product_promotion" AS pp ON pp.product_id = p.id
 LEFT JOIN
 "promotion" AS ppromo ON ppromo.id = pp.promotion_id 
-LEFT join t1 ON t1.product_category_id = p.category_id
-LEFT join t2 ON t2.product_brand_id = p.brand_id
+LEFT JOIN t1 ON t1.product_category_id = p.category_id
+LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
 WHERE 
 p.active = TRUE
 AND
@@ -556,9 +864,10 @@ CASE
 WHEN COALESCE($2, FALSE) = TRUE
 THEN 
 pp.active = TRUE AND 
-(pp.product_id IS NOT NULL OR
-t1.product_category_id IS NOT NULL OR
-t2.product_brand_id IS NOT NULL
+(
+    pp.product_id IS NOT NULL OR
+    t1.product_category_id IS NOT NULL OR
+    t2.product_brand_id IS NOT NULL
 )
 AND
 ppromo.active = TRUE 
@@ -1001,6 +1310,638 @@ func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItem
 }
 
 const searchProductItems = `-- name: SearchProductItems :many
+WITH t1 AS (
+SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+FROM "product_category" AS pc
+INNER JOIN
+"category_promotion" AS cp ON cp.category_id = pc.id
+INNER JOIN
+"promotion" AS cpromo ON cpromo.id = cp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN cp.active = TRUE
+AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($3, 0) > 0 
+    THEN pc.id = $3
+    ELSE 1=1
+END 
+)
+, t2 AS(
+SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
+bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+FROM "product_brand" AS pb
+INNER JOIN
+"brand_promotion" AS bp ON bp.brand_id = pb.id
+INNER JOIN
+"promotion" AS bpromo ON bpromo.id = bp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN bp.active = TRUE
+AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($4, 0) > 0 
+    THEN pb.id = $4
+    ELSE 1=1
+END 
+)
+, t3 AS(
+SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, p.search,
+pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
+ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+t1.product_category_id, t1.parent_category_id, t1.category_name, t1.category_image, t1.category_promotion_image, t1.category_promotion_active, t1.category_promo_id, t1.category_promo_name, t1.category_promo_description, t1.category_promo_discount_rate, t1.category_promo_active, t1.category_promo_start_date, t1.category_promo_end_date, t2.product_brand_id, t2.brand_name, t2.brand_image, t2.brand_promotion_image, t2.brand_promotion_active, t2.brand_promo_id, t2.brand_promo_name, t2.brand_promo_description, t2.brand_promo_discount_rate, t2.brand_promo_active, t2.brand_promo_start_date, t2.brand_promo_end_date
+ FROM "product" AS p
+ LEFT JOIN
+ "product_promotion" AS pp ON pp.product_id = p.id
+LEFT JOIN
+"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
+LEFT JOIN t1 ON t1.product_category_id = p.category_id
+LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
+WHERE 
+p.active = TRUE AND p.search @@ 
+CASE
+    WHEN char_length($5) > 0 THEN to_tsquery(concat($5, ':*'))
+    ELSE to_tsquery($5)
+END
+AND
+CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN 
+pp.active = TRUE AND 
+(
+    pp.product_id IS NOT NULL OR
+    t1.product_category_id IS NOT NULL OR
+    t2.product_brand_id IS NOT NULL
+)
+AND
+ppromo.active = TRUE 
+AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
+ELSE 1=1
+END 
+)
+, t4 AS (
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, pid, name, description, category_id, brand_id, parent_product_active, search, promotion_product_id, product_promotion_image, product_promotion_active, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date, product_category_id, parent_category_id, category_name, category_image, category_promotion_image, category_promotion_active, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, product_brand_id, brand_name, brand_image, brand_promotion_image, brand_promotion_active, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+INNER JOIN t3 ON t3.pid = pi.product_id
+WHERE 
+pi.active = TRUE AND
+CASE
+WHEN COALESCE($6, FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($7, 0) > 0 
+    THEN pi.color_id = $7
+    ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($8, 0) > 0 
+    THEN pi.size_id = $8
+    ELSE 1=1
+END
+ORDER BY 
+	CASE
+	WHEN COALESCE($9, TRUE) = TRUE
+	THEN pi.id
+	ELSE 0
+END DESC,
+CASE
+	WHEN COALESCE($10, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END ASC,
+CASE
+	WHEN COALESCE($11, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END DESC , ts_rank(t3.search, 
+CASE
+    WHEN char_length($5) > 0 THEN to_tsquery(concat($5, ':*'))
+    ELSE to_tsquery($5)
+END
+) DESC
+)
+, t5 AS (
+SELECT t4.id, t4.product_id, t4.size_id, t4.image_id, t4.color_id, t4.product_sku, t4.qty_in_stock, t4.price, t4.active, t4.created_at, t4.updated_at, t4.pid, t4.name, t4.description, t4.category_id, t4.brand_id, t4.parent_product_active, t4.search, t4.promotion_product_id, t4.product_promotion_image, t4.product_promotion_active, t4.product_promo_id, t4.product_promo_name, t4.product_promo_description, t4.product_promo_discount_rate, t4.product_promo_active, t4.product_promo_start_date, t4.product_promo_end_date, t4.product_category_id, t4.parent_category_id, t4.category_name, t4.category_image, t4.category_promotion_image, t4.category_promotion_active, t4.category_promo_id, t4.category_promo_name, t4.category_promo_description, t4.category_promo_discount_rate, t4.category_promo_active, t4.category_promo_start_date, t4.category_promo_end_date, t4.product_brand_id, t4.brand_name, t4.brand_image, t4.brand_promotion_image, t4.brand_promotion_active, t4.brand_promo_id, t4.brand_promo_name, t4.brand_promo_description, t4.brand_promo_discount_rate, t4.brand_promo_active, t4.brand_promo_start_date, t4.brand_promo_end_date, t4.total_count, ps.size_value FROM t4
+LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
+WHERE CASE
+    WHEN COALESCE($8, 0) > 0 
+    THEN ps.id = $8
+    ELSE 1=1
+END
+)
+, t6 AS (
+SELECT t5.id, t5.product_id, t5.size_id, t5.image_id, t5.color_id, t5.product_sku, t5.qty_in_stock, t5.price, t5.active, t5.created_at, t5.updated_at, t5.pid, t5.name, t5.description, t5.category_id, t5.brand_id, t5.parent_product_active, t5.search, t5.promotion_product_id, t5.product_promotion_image, t5.product_promotion_active, t5.product_promo_id, t5.product_promo_name, t5.product_promo_description, t5.product_promo_discount_rate, t5.product_promo_active, t5.product_promo_start_date, t5.product_promo_end_date, t5.product_category_id, t5.parent_category_id, t5.category_name, t5.category_image, t5.category_promotion_image, t5.category_promotion_active, t5.category_promo_id, t5.category_promo_name, t5.category_promo_description, t5.category_promo_discount_rate, t5.category_promo_active, t5.category_promo_start_date, t5.category_promo_end_date, t5.product_brand_id, t5.brand_name, t5.brand_image, t5.brand_promotion_image, t5.brand_promotion_active, t5.brand_promo_id, t5.brand_promo_name, t5.brand_promo_description, t5.brand_promo_discount_rate, t5.brand_promo_active, t5.brand_promo_start_date, t5.brand_promo_end_date, t5.total_count, t5.size_value, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM t5
+LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
+)
+, t7 AS (
+SELECT t6.id, t6.product_id, t6.size_id, t6.image_id, t6.color_id, t6.product_sku, t6.qty_in_stock, t6.price, t6.active, t6.created_at, t6.updated_at, t6.pid, t6.name, t6.description, t6.category_id, t6.brand_id, t6.parent_product_active, t6.search, t6.promotion_product_id, t6.product_promotion_image, t6.product_promotion_active, t6.product_promo_id, t6.product_promo_name, t6.product_promo_description, t6.product_promo_discount_rate, t6.product_promo_active, t6.product_promo_start_date, t6.product_promo_end_date, t6.product_category_id, t6.parent_category_id, t6.category_name, t6.category_image, t6.category_promotion_image, t6.category_promotion_active, t6.category_promo_id, t6.category_promo_name, t6.category_promo_description, t6.category_promo_discount_rate, t6.category_promo_active, t6.category_promo_start_date, t6.category_promo_end_date, t6.product_brand_id, t6.brand_name, t6.brand_image, t6.brand_promotion_image, t6.brand_promotion_active, t6.brand_promo_id, t6.brand_promo_name, t6.brand_promo_description, t6.brand_promo_discount_rate, t6.brand_promo_active, t6.brand_promo_start_date, t6.brand_promo_end_date, t6.total_count, t6.size_value, t6.product_image_1, t6.product_image_2, t6.product_image_3, pclr.color_value FROM t6
+LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
+WHERE CASE
+    WHEN COALESCE($7, 0) > 0 
+    THEN pclr.id = $7
+    ELSE 1=1
+END
+)
+
+SELECT
+t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
+t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
+ t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
+ t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
+ t7.total_count,
+ t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
+ t7.category_promo_discount_rate, t7.category_promo_active,
+ t7.category_promo_start_date, t7.category_promo_end_date,
+ t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
+ t7.brand_promo_discount_rate, t7.brand_promo_active,
+ t7.brand_promo_start_date, t7.brand_promo_end_date,
+ t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
+ t7.product_promo_discount_rate, t7.product_promo_active,
+ t7.product_promo_start_date, t7.product_promo_end_date
+FROM t7
+LIMIT $1
+`
+
+type SearchProductItemsParams struct {
+	Limit            int32       `json:"limit"`
+	IsPromoted       interface{} `json:"is_promoted"`
+	CategoryID       interface{} `json:"category_id"`
+	BrandID          interface{} `json:"brand_id"`
+	Query            interface{} `json:"query"`
+	IsNew            interface{} `json:"is_new"`
+	ColorID          interface{} `json:"color_id"`
+	SizeID           interface{} `json:"size_id"`
+	OrderByID        interface{} `json:"order_by_id"`
+	OrderByLowPrice  interface{} `json:"order_by_low_price"`
+	OrderByHighPrice interface{} `json:"order_by_high_price"`
+}
+
+type SearchProductItemsRow struct {
+	ID                        int64       `json:"id"`
+	ProductID                 int64       `json:"product_id"`
+	SizeID                    int64       `json:"size_id"`
+	ImageID                   int64       `json:"image_id"`
+	ColorID                   int64       `json:"color_id"`
+	ProductSku                int64       `json:"product_sku"`
+	QtyInStock                int32       `json:"qty_in_stock"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	CreatedAt                 time.Time   `json:"created_at"`
+	UpdatedAt                 time.Time   `json:"updated_at"`
+	Name                      string      `json:"name"`
+	Description               string      `json:"description"`
+	CategoryID                int64       `json:"category_id"`
+	CategoryName              null.String `json:"category_name"`
+	ParentCategoryID          null.Int    `json:"parent_category_id"`
+	CategoryImage             null.String `json:"category_image"`
+	BrandID                   int64       `json:"brand_id"`
+	BrandName                 null.String `json:"brand_name"`
+	BrandImage                null.String `json:"brand_image"`
+	ParentProductActive       bool        `json:"parent_product_active"`
+	SizeValue                 null.String `json:"size_value"`
+	ProductImage1             null.String `json:"product_image_1"`
+	ProductImage2             null.String `json:"product_image_2"`
+	ProductImage3             null.String `json:"product_image_3"`
+	ColorValue                null.String `json:"color_value"`
+	TotalCount                int64       `json:"total_count"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       null.Bool   `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          null.Bool   `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
+}
+
+func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error) {
+	rows, err := q.db.Query(ctx, searchProductItems,
+		arg.Limit,
+		arg.IsPromoted,
+		arg.CategoryID,
+		arg.BrandID,
+		arg.Query,
+		arg.IsNew,
+		arg.ColorID,
+		arg.SizeID,
+		arg.OrderByID,
+		arg.OrderByLowPrice,
+		arg.OrderByHighPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchProductItemsRow{}
+	for rows.Next() {
+		var i SearchProductItemsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
+			&i.ProductSku,
+			&i.QtyInStock,
+			&i.Price,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.ParentCategoryID,
+			&i.CategoryImage,
+			&i.BrandID,
+			&i.BrandName,
+			&i.BrandImage,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
+			&i.TotalCount,
+			&i.CategoryPromoID,
+			&i.CategoryPromoName,
+			&i.CategoryPromoDescription,
+			&i.CategoryPromoDiscountRate,
+			&i.CategoryPromoActive,
+			&i.CategoryPromoStartDate,
+			&i.CategoryPromoEndDate,
+			&i.BrandPromoID,
+			&i.BrandPromoName,
+			&i.BrandPromoDescription,
+			&i.BrandPromoDiscountRate,
+			&i.BrandPromoActive,
+			&i.BrandPromoStartDate,
+			&i.BrandPromoEndDate,
+			&i.ProductPromoID,
+			&i.ProductPromoName,
+			&i.ProductPromoDescription,
+			&i.ProductPromoDiscountRate,
+			&i.ProductPromoActive,
+			&i.ProductPromoStartDate,
+			&i.ProductPromoEndDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchProductItemsNextPage = `-- name: SearchProductItemsNextPage :many
+WITH t1 AS (
+SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+FROM "product_category" AS pc
+INNER JOIN
+"category_promotion" AS cp ON cp.category_id = pc.id
+INNER JOIN
+"promotion" AS cpromo ON cpromo.id = cp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN cp.active = TRUE
+AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($3, 0) > 0 
+    THEN pc.id = $3
+    ELSE 1=1
+END 
+)
+, t2 AS(
+SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
+bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+FROM "product_brand" AS pb
+INNER JOIN
+"brand_promotion" AS bp ON bp.brand_id = pb.id
+INNER JOIN
+"promotion" AS bpromo ON bpromo.id = bp.promotion_id
+WHERE CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN bp.active = TRUE
+AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($4, 0) > 0 
+    THEN pb.id = $4
+    ELSE 1=1
+END 
+)
+, t3 AS(
+SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, p.search,
+pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
+ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+t1.product_category_id, t1.parent_category_id, t1.category_name, t1.category_image, t1.category_promotion_image, t1.category_promotion_active, t1.category_promo_id, t1.category_promo_name, t1.category_promo_description, t1.category_promo_discount_rate, t1.category_promo_active, t1.category_promo_start_date, t1.category_promo_end_date, t2.product_brand_id, t2.brand_name, t2.brand_image, t2.brand_promotion_image, t2.brand_promotion_active, t2.brand_promo_id, t2.brand_promo_name, t2.brand_promo_description, t2.brand_promo_discount_rate, t2.brand_promo_active, t2.brand_promo_start_date, t2.brand_promo_end_date
+ FROM "product" AS p
+ LEFT JOIN
+ "product_promotion" AS pp ON pp.product_id = p.id
+LEFT JOIN
+"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
+LEFT JOIN t1 ON t1.product_category_id = p.category_id
+LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
+WHERE 
+p.id < $5 AND
+p.active = TRUE AND p.search @@  
+CASE
+    WHEN char_length($6) > 0 THEN to_tsquery(concat($6, ':*'))
+    ELSE to_tsquery($6)
+END
+AND
+CASE
+WHEN COALESCE($2, FALSE) = TRUE
+THEN 
+pp.active = TRUE AND 
+(
+    pp.product_id IS NOT NULL OR
+    t1.product_category_id IS NOT NULL OR
+    t2.product_brand_id IS NOT NULL
+)
+AND
+ppromo.active = TRUE 
+AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
+ELSE 1=1
+END 
+)
+, t4 AS (
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, pid, name, description, category_id, brand_id, parent_product_active, search, promotion_product_id, product_promotion_image, product_promotion_active, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date, product_category_id, parent_category_id, category_name, category_image, category_promotion_image, category_promotion_active, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, product_brand_id, brand_name, brand_image, brand_promotion_image, brand_promotion_active, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, COUNT(*) OVER() AS total_count
+FROM "product_item" AS pi
+INNER JOIN t3 ON t3.pid = pi.product_id
+WHERE 
+pi.id < $7 AND
+pi.active = TRUE AND
+CASE
+WHEN COALESCE($8, FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($9, 0) > 0 
+    THEN pi.color_id = $9
+    ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($10, 0) > 0 
+    THEN pi.size_id = $10
+    ELSE 1=1
+END
+ORDER BY 
+	CASE
+	WHEN COALESCE($11, TRUE) = TRUE
+	THEN pi.id
+	ELSE 0
+END DESC,
+CASE
+	WHEN COALESCE($12, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END ASC,
+CASE
+	WHEN COALESCE($13, FALSE) = TRUE
+		THEN pi.price
+	ELSE ''
+END DESC, ts_rank(t3.search, 
+CASE
+    WHEN char_length($6) > 0 THEN to_tsquery(concat($6, ':*'))
+    ELSE to_tsquery($6)
+END
+) DESC
+)
+, t5 AS (
+SELECT t4.id, t4.product_id, t4.size_id, t4.image_id, t4.color_id, t4.product_sku, t4.qty_in_stock, t4.price, t4.active, t4.created_at, t4.updated_at, t4.pid, t4.name, t4.description, t4.category_id, t4.brand_id, t4.parent_product_active, t4.search, t4.promotion_product_id, t4.product_promotion_image, t4.product_promotion_active, t4.product_promo_id, t4.product_promo_name, t4.product_promo_description, t4.product_promo_discount_rate, t4.product_promo_active, t4.product_promo_start_date, t4.product_promo_end_date, t4.product_category_id, t4.parent_category_id, t4.category_name, t4.category_image, t4.category_promotion_image, t4.category_promotion_active, t4.category_promo_id, t4.category_promo_name, t4.category_promo_description, t4.category_promo_discount_rate, t4.category_promo_active, t4.category_promo_start_date, t4.category_promo_end_date, t4.product_brand_id, t4.brand_name, t4.brand_image, t4.brand_promotion_image, t4.brand_promotion_active, t4.brand_promo_id, t4.brand_promo_name, t4.brand_promo_description, t4.brand_promo_discount_rate, t4.brand_promo_active, t4.brand_promo_start_date, t4.brand_promo_end_date, t4.total_count, ps.size_value FROM t4
+LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
+WHERE CASE
+    WHEN COALESCE($10, 0) > 0 
+    THEN ps.id = $10
+    ELSE 1=1
+END
+)
+, t6 AS (
+SELECT t5.id, t5.product_id, t5.size_id, t5.image_id, t5.color_id, t5.product_sku, t5.qty_in_stock, t5.price, t5.active, t5.created_at, t5.updated_at, t5.pid, t5.name, t5.description, t5.category_id, t5.brand_id, t5.parent_product_active, t5.search, t5.promotion_product_id, t5.product_promotion_image, t5.product_promotion_active, t5.product_promo_id, t5.product_promo_name, t5.product_promo_description, t5.product_promo_discount_rate, t5.product_promo_active, t5.product_promo_start_date, t5.product_promo_end_date, t5.product_category_id, t5.parent_category_id, t5.category_name, t5.category_image, t5.category_promotion_image, t5.category_promotion_active, t5.category_promo_id, t5.category_promo_name, t5.category_promo_description, t5.category_promo_discount_rate, t5.category_promo_active, t5.category_promo_start_date, t5.category_promo_end_date, t5.product_brand_id, t5.brand_name, t5.brand_image, t5.brand_promotion_image, t5.brand_promotion_active, t5.brand_promo_id, t5.brand_promo_name, t5.brand_promo_description, t5.brand_promo_discount_rate, t5.brand_promo_active, t5.brand_promo_start_date, t5.brand_promo_end_date, t5.total_count, t5.size_value, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM t5
+LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
+)
+, t7 AS (
+SELECT t6.id, t6.product_id, t6.size_id, t6.image_id, t6.color_id, t6.product_sku, t6.qty_in_stock, t6.price, t6.active, t6.created_at, t6.updated_at, t6.pid, t6.name, t6.description, t6.category_id, t6.brand_id, t6.parent_product_active, t6.search, t6.promotion_product_id, t6.product_promotion_image, t6.product_promotion_active, t6.product_promo_id, t6.product_promo_name, t6.product_promo_description, t6.product_promo_discount_rate, t6.product_promo_active, t6.product_promo_start_date, t6.product_promo_end_date, t6.product_category_id, t6.parent_category_id, t6.category_name, t6.category_image, t6.category_promotion_image, t6.category_promotion_active, t6.category_promo_id, t6.category_promo_name, t6.category_promo_description, t6.category_promo_discount_rate, t6.category_promo_active, t6.category_promo_start_date, t6.category_promo_end_date, t6.product_brand_id, t6.brand_name, t6.brand_image, t6.brand_promotion_image, t6.brand_promotion_active, t6.brand_promo_id, t6.brand_promo_name, t6.brand_promo_description, t6.brand_promo_discount_rate, t6.brand_promo_active, t6.brand_promo_start_date, t6.brand_promo_end_date, t6.total_count, t6.size_value, t6.product_image_1, t6.product_image_2, t6.product_image_3, pclr.color_value FROM t6
+LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
+WHERE CASE
+    WHEN COALESCE($9, 0) > 0 
+    THEN pclr.id = $9
+    ELSE 1=1
+END
+)
+
+SELECT
+t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
+t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
+ t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
+ t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
+ t7.total_count,
+ t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
+ t7.category_promo_discount_rate, t7.category_promo_active,
+ t7.category_promo_start_date, t7.category_promo_end_date,
+ t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
+ t7.brand_promo_discount_rate, t7.brand_promo_active,
+ t7.brand_promo_start_date, t7.brand_promo_end_date,
+ t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
+ t7.product_promo_discount_rate, t7.product_promo_active,
+ t7.product_promo_start_date, t7.product_promo_end_date
+FROM t7
+LIMIT $1
+`
+
+type SearchProductItemsNextPageParams struct {
+	Limit            int32       `json:"limit"`
+	IsPromoted       interface{} `json:"is_promoted"`
+	CategoryID       interface{} `json:"category_id"`
+	BrandID          interface{} `json:"brand_id"`
+	ProductID        int64       `json:"product_id"`
+	Query            interface{} `json:"query"`
+	ProductItemID    int64       `json:"product_item_id"`
+	IsNew            interface{} `json:"is_new"`
+	ColorID          interface{} `json:"color_id"`
+	SizeID           interface{} `json:"size_id"`
+	OrderByID        interface{} `json:"order_by_id"`
+	OrderByLowPrice  interface{} `json:"order_by_low_price"`
+	OrderByHighPrice interface{} `json:"order_by_high_price"`
+}
+
+type SearchProductItemsNextPageRow struct {
+	ID                        int64       `json:"id"`
+	ProductID                 int64       `json:"product_id"`
+	SizeID                    int64       `json:"size_id"`
+	ImageID                   int64       `json:"image_id"`
+	ColorID                   int64       `json:"color_id"`
+	ProductSku                int64       `json:"product_sku"`
+	QtyInStock                int32       `json:"qty_in_stock"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	CreatedAt                 time.Time   `json:"created_at"`
+	UpdatedAt                 time.Time   `json:"updated_at"`
+	Name                      string      `json:"name"`
+	Description               string      `json:"description"`
+	CategoryID                int64       `json:"category_id"`
+	CategoryName              null.String `json:"category_name"`
+	ParentCategoryID          null.Int    `json:"parent_category_id"`
+	CategoryImage             null.String `json:"category_image"`
+	BrandID                   int64       `json:"brand_id"`
+	BrandName                 null.String `json:"brand_name"`
+	BrandImage                null.String `json:"brand_image"`
+	ParentProductActive       bool        `json:"parent_product_active"`
+	SizeValue                 null.String `json:"size_value"`
+	ProductImage1             null.String `json:"product_image_1"`
+	ProductImage2             null.String `json:"product_image_2"`
+	ProductImage3             null.String `json:"product_image_3"`
+	ColorValue                null.String `json:"color_value"`
+	TotalCount                int64       `json:"total_count"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       null.Bool   `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          null.Bool   `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
+}
+
+func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
+	rows, err := q.db.Query(ctx, searchProductItemsNextPage,
+		arg.Limit,
+		arg.IsPromoted,
+		arg.CategoryID,
+		arg.BrandID,
+		arg.ProductID,
+		arg.Query,
+		arg.ProductItemID,
+		arg.IsNew,
+		arg.ColorID,
+		arg.SizeID,
+		arg.OrderByID,
+		arg.OrderByLowPrice,
+		arg.OrderByHighPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchProductItemsNextPageRow{}
+	for rows.Next() {
+		var i SearchProductItemsNextPageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
+			&i.ProductSku,
+			&i.QtyInStock,
+			&i.Price,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.ParentCategoryID,
+			&i.CategoryImage,
+			&i.BrandID,
+			&i.BrandName,
+			&i.BrandImage,
+			&i.ParentProductActive,
+			&i.SizeValue,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.ColorValue,
+			&i.TotalCount,
+			&i.CategoryPromoID,
+			&i.CategoryPromoName,
+			&i.CategoryPromoDescription,
+			&i.CategoryPromoDiscountRate,
+			&i.CategoryPromoActive,
+			&i.CategoryPromoStartDate,
+			&i.CategoryPromoEndDate,
+			&i.BrandPromoID,
+			&i.BrandPromoName,
+			&i.BrandPromoDescription,
+			&i.BrandPromoDiscountRate,
+			&i.BrandPromoActive,
+			&i.BrandPromoStartDate,
+			&i.BrandPromoEndDate,
+			&i.ProductPromoID,
+			&i.ProductPromoName,
+			&i.ProductPromoDescription,
+			&i.ProductPromoDiscountRate,
+			&i.ProductPromoActive,
+			&i.ProductPromoStartDate,
+			&i.ProductPromoEndDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchProductItemsNextPageOld = `-- name: SearchProductItemsNextPageOld :many
 SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
@@ -1026,27 +1967,28 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
-
-WHERE pi.active = TRUE AND p.search @@ 
+WHERE pi.active = TRUE AND p.search @@  
 CASE
-    WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
-    ELSE to_tsquery($2)
+    WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
+    ELSE to_tsquery($3)
 END
+AND pi.id < $2
 ORDER BY pi.id DESC, ts_rank(p.search, 
 CASE
-    WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
-    ELSE to_tsquery($2)
+    WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
+    ELSE to_tsquery($3)
 END
 ) DESC
 LIMIT $1
 `
 
-type SearchProductItemsParams struct {
+type SearchProductItemsNextPageOldParams struct {
 	Limit int32       `json:"limit"`
+	ID    int64       `json:"id"`
 	Query interface{} `json:"query"`
 }
 
-type SearchProductItemsRow struct {
+type SearchProductItemsNextPageOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
 	SizeID                    int64       `json:"size_id"`
@@ -1103,15 +2045,15 @@ type SearchProductItemsRow struct {
 // WHERE pi.active = TRUE
 // LIMIT 1
 // )
-func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error) {
-	rows, err := q.db.Query(ctx, searchProductItems, arg.Limit, arg.Query)
+func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error) {
+	rows, err := q.db.Query(ctx, searchProductItemsNextPageOld, arg.Limit, arg.ID, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsRow{}
+	items := []SearchProductItemsNextPageOldRow{}
 	for rows.Next() {
-		var i SearchProductItemsRow
+		var i SearchProductItemsNextPageOldRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
@@ -1172,7 +2114,7 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 	return items, nil
 }
 
-const searchProductItemsNextPage = `-- name: SearchProductItemsNextPage :many
+const searchProductItemsOld = `-- name: SearchProductItemsOld :many
 SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
@@ -1198,28 +2140,27 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
-WHERE pi.active = TRUE AND p.search @@  
+
+WHERE pi.active = TRUE AND p.search @@ 
 CASE
-    WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
-    ELSE to_tsquery($3)
+    WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
+    ELSE to_tsquery($2)
 END
-AND pi.id < $2
 ORDER BY pi.id DESC, ts_rank(p.search, 
 CASE
-    WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
-    ELSE to_tsquery($3)
+    WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
+    ELSE to_tsquery($2)
 END
 ) DESC
 LIMIT $1
 `
 
-type SearchProductItemsNextPageParams struct {
+type SearchProductItemsOldParams struct {
 	Limit int32       `json:"limit"`
-	ID    int64       `json:"id"`
 	Query interface{} `json:"query"`
 }
 
-type SearchProductItemsNextPageRow struct {
+type SearchProductItemsOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
 	SizeID                    int64       `json:"size_id"`
@@ -1276,15 +2217,15 @@ type SearchProductItemsNextPageRow struct {
 // WHERE pi.active = TRUE
 // LIMIT 1
 // )
-func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
-	rows, err := q.db.Query(ctx, searchProductItemsNextPage, arg.Limit, arg.ID, arg.Query)
+func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error) {
+	rows, err := q.db.Query(ctx, searchProductItemsOld, arg.Limit, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsNextPageRow{}
+	items := []SearchProductItemsOldRow{}
 	for rows.Next() {
-		var i SearchProductItemsNextPageRow
+		var i SearchProductItemsOldRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,

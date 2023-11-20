@@ -454,13 +454,16 @@ func TestListProductItemsV2API(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListProductItemsV2Params{
-					Limit:      10,
-					CategoryID: null.IntFromPtr(nil),
-					BrandID:    null.IntFromPtr(nil),
-					ColorID:    null.IntFromPtr(nil),
-					SizeID:     null.IntFromPtr(nil),
-					IsNew:      null.BoolFromPtr(nil),
-					IsPromoted: null.BoolFromPtr(nil),
+					Limit:            10,
+					CategoryID:       null.IntFromPtr(nil),
+					BrandID:          null.IntFromPtr(nil),
+					ColorID:          null.IntFromPtr(nil),
+					SizeID:           null.IntFromPtr(nil),
+					IsNew:            null.BoolFromPtr(nil),
+					IsPromoted:       null.BoolFromPtr(nil),
+					OrderByID:        null.BoolFromPtr(nil),
+					OrderByLowPrice:  null.BoolFromPtr(nil),
+					OrderByHighPrice: null.BoolFromPtr(nil),
 				}
 				store.EXPECT().
 					ListProductItemsV2(gomock.Any(), gomock.Eq(arg)).
@@ -545,8 +548,9 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 	}
 
 	type Query struct {
-		Cursor int
-		Limit  int
+		ProductItemCursor int
+		ProductCursor     int
+		Limit             int
 	}
 
 	testCases := []struct {
@@ -558,20 +562,25 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "OK",
 			query: Query{
-				Limit:  n,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Limit:             n,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.ListProductItemsNextPageParams{
-					Limit:      int32(n),
-					ID:         productItems1[len(productItems1)-1].ID,
-					CategoryID: null.IntFromPtr(nil),
-					BrandID:    null.IntFromPtr(nil),
-					ColorID:    null.IntFromPtr(nil),
-					SizeID:     null.IntFromPtr(nil),
-					IsNew:      null.BoolFromPtr(nil),
-					IsPromoted: null.BoolFromPtr(nil),
+					Limit:            int32(n),
+					ProductItemID:    productItems1[len(productItems1)-1].ID,
+					ProductID:        productItems1[len(productItems1)-1].ProductID,
+					CategoryID:       null.IntFromPtr(nil),
+					BrandID:          null.IntFromPtr(nil),
+					ColorID:          null.IntFromPtr(nil),
+					SizeID:           null.IntFromPtr(nil),
+					IsNew:            null.BoolFromPtr(nil),
+					IsPromoted:       null.BoolFromPtr(nil),
+					OrderByID:        null.BoolFromPtr(nil),
+					OrderByLowPrice:  null.BoolFromPtr(nil),
+					OrderByHighPrice: null.BoolFromPtr(nil),
 				}
 
 				store.EXPECT().
@@ -587,8 +596,9 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			query: Query{
-				Limit:  10,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Limit:             10,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
@@ -604,8 +614,9 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "InvalidLimit",
 			query: Query{
-				Limit:  11,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Limit:             11,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -637,7 +648,8 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 			// Add query parameters to request URL
 			q := request.URL.Query()
 			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			q.Add("product_item_cursor", fmt.Sprintf("%d", tc.query.ProductItemCursor))
+			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -765,9 +777,10 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 	}
 
 	type Query struct {
-		Cursor int
-		Limit  int
-		Query  string
+		ProductItemCursor int
+		ProductCursor     int
+		Limit             int
+		Query             string
 	}
 
 	testCases := []struct {
@@ -779,16 +792,18 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "OK",
 			query: Query{
-				Limit:  n,
-				Query:  q,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
+				Limit:             n,
+				Query:             q,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.SearchProductItemsNextPageParams{
-					Limit: int32(n),
-					ID:    productItems1[len(productItems1)-1].ID,
-					Query: q,
+					Limit:         int32(n),
+					ProductItemID: productItems1[len(productItems1)-1].ID,
+					ProductID:     productItems1[len(productItems1)-1].ProductID,
+					Query:         q,
 				}
 
 				store.EXPECT().
@@ -804,9 +819,10 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			query: Query{
-				Limit:  10,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
-				Query:  q,
+				Limit:             10,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
+				Query:             q,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
@@ -822,9 +838,10 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 		{
 			name: "InvalidLimit",
 			query: Query{
-				Limit:  11,
-				Cursor: int(productItems1[len(productItems1)-1].ID),
-				Query:  q,
+				Limit:             11,
+				ProductItemCursor: int(productItems1[len(productItems1)-1].ID),
+				ProductCursor:     int(productItems1[len(productItems1)-1].ProductID),
+				Query:             q,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -856,7 +873,8 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 			// Add query parameters to request URL
 			q := request.URL.Query()
 			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			q.Add("product_item_cursor", fmt.Sprintf("%d", tc.query.ProductItemCursor))
+			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
 			q.Add("query", tc.query.Query)
 			request.URL.RawQuery = q.Encode()
 
@@ -1319,7 +1337,7 @@ func randomRestProductItemSearch() db.ListProductItemsNextPageRow {
 		ProductImage3: null.StringFrom(util.RandomURL()),
 		Price:         util.RandomDecimalString(0, 1000),
 		Active:        util.RandomBool(),
-		Name:          null.StringFrom(util.RandomUser()),
+		Name:          util.RandomUser(),
 	}
 }
 
@@ -1336,7 +1354,7 @@ func randomSearchProductItems() db.SearchProductItemsRow {
 		ProductImage3: null.StringFrom(util.RandomURL()),
 		Price:         util.RandomDecimalString(0, 1000),
 		Active:        util.RandomBool(),
-		Name:          null.StringFrom("abc" + util.RandomUser()),
+		Name:          "abc" + util.RandomUser(),
 	}
 }
 
@@ -1353,7 +1371,7 @@ func randomSearchProductItemNextPage() db.SearchProductItemsNextPageRow {
 		ProductImage3: null.StringFrom(util.RandomURL()),
 		Price:         util.RandomDecimalString(0, 1000),
 		Active:        util.RandomBool(),
-		Name:          null.StringFrom("abc" + util.RandomUser()),
+		Name:          "abc" + util.RandomUser(),
 	}
 }
 

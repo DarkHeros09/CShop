@@ -186,13 +186,14 @@ type Querier interface {
 	ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error)
 	ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error)
 	ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error)
+	ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error)
 	// WITH t1 AS (
 	// SELECT COUNT(*) OVER() AS total_count
 	// FROM "product_item" AS pi
 	// WHERE pi.active = TRUE
 	// LIMIT 1
 	// )
-	ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error)
+	ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error)
 	ListProductItemsV2(ctx context.Context, arg ListProductItemsV2Params) ([]ListProductItemsV2Row, error)
 	// WITH t1 (total_count) AS (
 	// SELECT COUNT(*) OVER() AS total_count
@@ -243,20 +244,22 @@ type Querier interface {
 	ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]WishListItem, error)
 	ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error)
 	ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error)
-	// WITH t1 AS (
-	// SELECT COUNT(*) OVER() AS total_count
-	// FROM "product_item" AS pi
-	// WHERE pi.active = TRUE
-	// LIMIT 1
-	// )
 	SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error)
+	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
 	// WITH t1 AS (
 	// SELECT COUNT(*) OVER() AS total_count
 	// FROM "product_item" AS pi
 	// WHERE pi.active = TRUE
 	// LIMIT 1
 	// )
-	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
+	SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error)
+	// WITH t1 AS (
+	// SELECT COUNT(*) OVER() AS total_count
+	// FROM "product_item" AS pi
+	// WHERE pi.active = TRUE
+	// LIMIT 1
+	// )
+	SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
 	UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error)
