@@ -21,25 +21,26 @@ import (
 )
 
 func TestCreateOrderStatusAPI(t *testing.T) {
-	user, _ := randomOSUser(t)
+	// user, _ := randomOSUser(t)
+	admin, _ := randomOrderStatusSuperAdmin(t)
 	orderStatus := createRandomOrderStatusForStatus(t)
 
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		UserID        int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:   "OK",
-			UserID: user.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"status": orderStatus.Status,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
@@ -54,12 +55,13 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			UserID: user.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"status": orderStatus.Status,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -71,13 +73,13 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: user.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"status": orderStatus.Status,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
@@ -91,13 +93,13 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InvalidUserID",
-			UserID: 0,
+			name:    "InvalidUserID",
+			AdminID: 0,
 			body: fiber.Map{
 				"status": orderStatus.Status,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -126,7 +128,7 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/order-status", tc.UserID)
+			url := fmt.Sprintf("/admin/%d/v1/order-status", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -423,13 +425,13 @@ func TestListOrderStatusAPI(t *testing.T) {
 }
 
 func TestUpdateOrderStatusAPI(t *testing.T) {
-	user, _ := randomOSUser(t)
+	admin, _ := randomOrderStatusSuperAdmin(t)
 	orderStatus := createRandomOrderStatusForStatus(t)
 
 	testCases := []struct {
 		name          string
 		StatusID      int64
-		UserID        int64
+		AdminID       int64
 		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
@@ -438,12 +440,12 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 		{
 			name:     "OK",
 			StatusID: orderStatus.ID,
-			UserID:   user.ID,
+			AdminID:  admin.ID,
 			body: fiber.Map{
 				"status": "new status",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
@@ -464,7 +466,7 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 		{
 			name:     "NoAuthorization",
 			StatusID: orderStatus.ID,
-			UserID:   user.ID,
+			AdminID:  admin.ID,
 			body: fiber.Map{
 				"status": "new status",
 			},
@@ -482,12 +484,12 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 		{
 			name:     "InternalError",
 			StatusID: orderStatus.ID,
-			UserID:   user.ID,
+			AdminID:  admin.ID,
 			body: fiber.Map{
 				"status": "new status",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateOrderStatusParams{
@@ -507,12 +509,12 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 		{
 			name:     "InvalidUserID",
 			StatusID: orderStatus.ID,
-			UserID:   0,
+			AdminID:  0,
 			body: fiber.Map{
 				"status": "new status",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -541,7 +543,7 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/order-status/%d", tc.UserID, tc.StatusID)
+			url := fmt.Sprintf("/admin/%d/v1/order-status/%d", tc.AdminID, tc.StatusID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -564,7 +566,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		StatusID      int64
-		AdminD        int64
+		AdminID       int64
 		UserD         int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
@@ -573,7 +575,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 		{
 			name:     "OK",
 			StatusID: orderStatus.ID,
-			AdminD:   admin.ID,
+			AdminID:  admin.ID,
 			UserD:    userID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -592,7 +594,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 		{
 			name:     "NotFound",
 			StatusID: orderStatus.ID,
-			AdminD:   admin.ID,
+			AdminID:  admin.ID,
 			UserD:    userID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -611,7 +613,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 		{
 			name:     "InternalError",
 			StatusID: orderStatus.ID,
-			AdminD:   admin.ID,
+			AdminID:  admin.ID,
 			UserD:    userID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -630,7 +632,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 		{
 			name:     "InvalidID",
 			StatusID: 0,
-			AdminD:   admin.ID,
+			AdminID:  admin.ID,
 			UserD:    userID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -662,7 +664,7 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/order-status/%d", tc.AdminD, tc.StatusID)
+			url := fmt.Sprintf("/admin/%d/v1/order-status/%d", tc.AdminID, tc.StatusID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

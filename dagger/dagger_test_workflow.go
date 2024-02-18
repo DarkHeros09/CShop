@@ -26,7 +26,7 @@ func main() {
 	platform := dagger.Platform("linux/amd64")
 
 	// Database service used for application tests
-	database, err := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:16.1-alpine").
+	database, err := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("POSTGRES_USER", "postgres").
 		WithEnvVariable("POSTGRES_PASSWORD", "secret").
@@ -65,7 +65,7 @@ func main() {
 	// multi stage build - stage 2
 	// golang image with cached dependencies
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).
-		From("golang:1.21").
+		From("golang:1.22").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db

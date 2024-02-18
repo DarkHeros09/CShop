@@ -146,6 +146,21 @@ func (mr *MockStoreMockRecorder) CreateHomePageTextBanner(arg0, arg1 any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).CreateHomePageTextBanner), arg0, arg1)
 }
 
+// CreateNotification mocks base method.
+func (m *MockStore) CreateNotification(arg0 context.Context, arg1 db.CreateNotificationParams) (db.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNotification", arg0, arg1)
+	ret0, _ := ret[0].(db.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateNotification indicates an expected call of CreateNotification.
+func (mr *MockStoreMockRecorder) CreateNotification(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNotification", reflect.TypeOf((*MockStore)(nil).CreateNotification), arg0, arg1)
+}
+
 // CreateOrderStatus mocks base method.
 func (m *MockStore) CreateOrderStatus(arg0 context.Context, arg1 string) (db.OrderStatus, error) {
 	m.ctrl.T.Helper()
@@ -662,6 +677,35 @@ func (m *MockStore) DeleteHomePageTextBanner(arg0 context.Context, arg1 int64) e
 func (mr *MockStoreMockRecorder) DeleteHomePageTextBanner(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).DeleteHomePageTextBanner), arg0, arg1)
+}
+
+// DeleteNotification mocks base method.
+func (m *MockStore) DeleteNotification(arg0 context.Context, arg1 db.DeleteNotificationParams) (db.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNotification", arg0, arg1)
+	ret0, _ := ret[0].(db.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteNotification indicates an expected call of DeleteNotification.
+func (mr *MockStoreMockRecorder) DeleteNotification(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotification", reflect.TypeOf((*MockStore)(nil).DeleteNotification), arg0, arg1)
+}
+
+// DeleteNotificationAllByUser mocks base method.
+func (m *MockStore) DeleteNotificationAllByUser(arg0 context.Context, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNotificationAllByUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNotificationAllByUser indicates an expected call of DeleteNotificationAllByUser.
+func (mr *MockStoreMockRecorder) DeleteNotificationAllByUser(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotificationAllByUser", reflect.TypeOf((*MockStore)(nil).DeleteNotificationAllByUser), arg0, arg1)
 }
 
 // DeleteOrderStatus mocks base method.
@@ -1181,6 +1225,21 @@ func (m *MockStore) GetHomePageTextBanner(arg0 context.Context, arg1 int64) (db.
 func (mr *MockStoreMockRecorder) GetHomePageTextBanner(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).GetHomePageTextBanner), arg0, arg1)
+}
+
+// GetNotification mocks base method.
+func (m *MockStore) GetNotification(arg0 context.Context, arg1 db.GetNotificationParams) (db.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotification", arg0, arg1)
+	ret0, _ := ret[0].(db.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotification indicates an expected call of GetNotification.
+func (mr *MockStoreMockRecorder) GetNotification(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotification", reflect.TypeOf((*MockStore)(nil).GetNotification), arg0, arg1)
 }
 
 // GetOrderStatus mocks base method.
@@ -2621,6 +2680,21 @@ func (m *MockStore) UpdateHomePageTextBanner(arg0 context.Context, arg1 db.Updat
 func (mr *MockStoreMockRecorder) UpdateHomePageTextBanner(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).UpdateHomePageTextBanner), arg0, arg1)
+}
+
+// UpdateNotification mocks base method.
+func (m *MockStore) UpdateNotification(arg0 context.Context, arg1 db.UpdateNotificationParams) (db.Notification, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateNotification", arg0, arg1)
+	ret0, _ := ret[0].(db.Notification)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNotification indicates an expected call of UpdateNotification.
+func (mr *MockStoreMockRecorder) UpdateNotification(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotification", reflect.TypeOf((*MockStore)(nil).UpdateNotification), arg0, arg1)
 }
 
 // UpdateOrderStatus mocks base method.

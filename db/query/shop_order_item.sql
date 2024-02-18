@@ -37,7 +37,8 @@ SELECT os.status, so.track_number, sm.price AS delivery_price, so.order_total, s
 -- pi.product_image, 
 pimg.product_image_1 AS product_image,
 pi.active AS product_active, a.address_line, a.region, a.city,
-DENSE_RANK() OVER(ORDER BY so.id) as order_number, pt.value AS payment_type 
+DENSE_RANK() OVER(ORDER BY so.id) as order_number
+-- , pt.value AS payment_type 
 FROM "shop_order_item" AS soi
 LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
 LEFT JOIN "product_item" AS pi ON pi.id = soi.product_item_id
@@ -45,8 +46,8 @@ LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "address" AS a ON a.id = so.shipping_address_id
-LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
-LEFT JOIN "payment_type" AS pt ON pt.id = pm.payment_type_id
+-- LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
+-- LEFT JOIN "payment_type" AS pt ON pt.id = pm.payment_type_id
 LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
 WHERE so.user_id = $1
 AND soi.order_id = $2;

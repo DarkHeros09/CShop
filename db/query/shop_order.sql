@@ -3,7 +3,7 @@ INSERT INTO "shop_order" (
   track_number,
   order_number,
   user_id,
-  payment_method_id,
+  -- payment_method_id,
   shipping_address_id,
   order_total,
   shipping_method_id,
@@ -14,7 +14,7 @@ INSERT INTO "shop_order" (
     SELECT COUNT(*) FROM "shop_order" so
     WHERE so.user_id = $2
      ) + 1, 
-    $2, $3, $4, $5, $6, $7
+    $2, $3, $4, $5, $6
 )
 RETURNING *;
 
@@ -86,7 +86,7 @@ UPDATE "shop_order"
 SET 
 track_number = COALESCE(sqlc.narg(track_number),track_number),
 user_id = COALESCE(sqlc.narg(user_id),user_id),
-payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
+-- payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_id),
 order_total = COALESCE(sqlc.narg(order_total),order_total),
 shipping_method_id = COALESCE(sqlc.narg(shipping_method_id),shipping_method_id),

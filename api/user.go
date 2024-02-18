@@ -22,6 +22,8 @@ type createUserRequest struct {
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=6"`
 	Telephone int32  `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
+	// FcmToken  string `json:"fcm_token" validate:"omitempty,required"`
+	// DeviceID  string `json:"device_id" validate:"omitempty,required"`
 }
 
 type userResponse struct {
@@ -54,7 +56,7 @@ func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userRespo
 }
 
 type createUserResponse struct {
-	UserSessionID         uuid.UUID    `json:"user_session_id"`
+	UserSessionID         string       `json:"user_session_id"`
 	AccessToken           string       `json:"access_token"`
 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
 	RefreshToken          string       `json:"refresh_token"`
@@ -131,9 +133,21 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	// arg2 := db.CreateNotificationParams{
+	// 	UserID:   user.ID,
+	// 	DeviceID: null.StringFromPtr(&req.DeviceID),
+	// 	FcmToken: null.StringFromPtr(&req.FcmToken),
+	// }
+
+	// _, err = server.store.CreateNotification(ctx.Context(), arg2)
+	// if err != nil {
+	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+	// 	return nil
+	// }
+
 	createdUser := newUserWithCartResponse(user)
 	rsp := createUserResponse{
-		UserSessionID:         userSession.ID,
+		UserSessionID:         userSession.ID.String(),
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
@@ -404,7 +418,7 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	UserSessionID         uuid.UUID    `json:"user_session_id"`
+	UserSessionID         string       `json:"user_session_id"`
 	AccessToken           string       `json:"access_token"`
 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
 	RefreshToken          string       `json:"refresh_token"`
@@ -489,7 +503,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	}
 
 	rsp := loginUserResponse{
-		UserSessionID:         userSession.ID,
+		UserSessionID:         userSession.ID.String(),
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,

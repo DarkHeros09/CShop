@@ -90,20 +90,20 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 
 		trackNumber := util.GenerateTrackNumber()
 
-		argPM := GetPaymentMethodParams{
-			UserID:        arg.UserID,
-			PaymentTypeID: arg.PaymentTypeID,
-		}
+		// argPM := GetPaymentMethodParams{
+		// 	UserID:        arg.UserID,
+		// 	PaymentTypeID: arg.PaymentTypeID,
+		// }
 
-		paymentMethod, err := q.GetPaymentMethod(ctx, argPM)
-		if err != nil {
-			return err
-		}
+		// paymentMethod, err := q.GetPaymentMethod(ctx, argPM)
+		// if err != nil {
+		// 	return err
+		// }
 
 		createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
-			TrackNumber:       trackNumber,
-			UserID:            arg.UserID,
-			PaymentMethodID:   paymentMethod.ID,
+			TrackNumber: trackNumber,
+			UserID:      arg.UserID,
+			// PaymentMethodID:   paymentMethod.ID,
 			ShippingAddressID: arg.UserAddressID,
 			OrderTotal:        arg.OrderTotal,
 			ShippingMethodID:  arg.ShippingMethodID,

@@ -229,7 +229,7 @@ func TestListProductItemsV2(t *testing.T) {
 	}
 
 	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg)
-
+	// fmt.Println(initialSearchResult)
 	require.NoError(t, err)
 	require.NotEmpty(t, initialSearchResult)
 	require.Equal(t, len(initialSearchResult), 10)
@@ -241,6 +241,7 @@ func TestListProductItemsV2(t *testing.T) {
 	}
 
 	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
 	require.Equal(t, len(secondPage), 10)

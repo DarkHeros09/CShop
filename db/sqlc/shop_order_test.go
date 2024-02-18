@@ -17,9 +17,9 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
-		TrackNumber:       util.GenerateTrackNumber(),
-		UserID:            paymentMethod.UserID,
-		PaymentMethodID:   paymentMethod.ID,
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      paymentMethod.UserID,
+		// PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
@@ -31,7 +31,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	require.NotEmpty(t, shopOrder)
 
 	require.Equal(t, arg.UserID, shopOrder.UserID)
-	require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
+	// // require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
 	require.Equal(t, arg.ShippingAddressID, shopOrder.ShippingAddressID)
 	require.Equal(t, arg.OrderTotal, shopOrder.OrderTotal)
 	require.Equal(t, arg.ShippingMethodID, shopOrder.ShippingMethodID)
@@ -47,9 +47,9 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
-		TrackNumber:       util.GenerateTrackNumber(),
-		UserID:            paymentMethod.UserID,
-		PaymentMethodID:   paymentMethod.ID,
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      paymentMethod.UserID,
+		// PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
@@ -62,7 +62,7 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 		require.NotEmpty(t, shopOrder)
 
 		require.Equal(t, arg.UserID, shopOrder.UserID)
-		require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
+		// // require.Equal(t, arg.PaymentMethodID, shopOrder.PaymentMethodID)
 		require.Equal(t, arg.ShippingAddressID, shopOrder.ShippingAddressID)
 		require.Equal(t, arg.OrderTotal, shopOrder.OrderTotal)
 		require.Equal(t, arg.ShippingMethodID, shopOrder.ShippingMethodID)
@@ -87,7 +87,7 @@ func TestGetShopOrder(t *testing.T) {
 
 	require.Equal(t, shopOrder1.ID, shopOrder2.ID)
 	require.Equal(t, shopOrder1.UserID, shopOrder2.UserID)
-	require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
+	// // require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
 	require.Equal(t, shopOrder1.ShippingAddressID, shopOrder2.ShippingAddressID)
 	require.Equal(t, shopOrder1.OrderTotal, shopOrder2.OrderTotal)
 	require.Equal(t, shopOrder1.ShippingMethodID, shopOrder2.ShippingMethodID)
@@ -97,8 +97,8 @@ func TestGetShopOrder(t *testing.T) {
 func TestUpdateShopOrderOrderTotal(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
 	arg := UpdateShopOrderParams{
-		UserID:            null.Int{},
-		PaymentMethodID:   null.Int{},
+		UserID: null.Int{},
+		// PaymentMethodID:   null.Int{},
 		ShippingAddressID: null.Int{},
 		OrderTotal:        null.StringFrom(util.RandomDecimalString(1, 100)),
 		ShippingMethodID:  null.Int{},
@@ -112,7 +112,7 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 
 	require.Equal(t, shopOrder1.ID, shopOrder2.ID)
 	require.Equal(t, shopOrder1.UserID, shopOrder2.UserID)
-	require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
+	// // require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
 	require.Equal(t, shopOrder1.ShippingAddressID, shopOrder2.ShippingAddressID)
 	require.NotEqual(t, shopOrder1.OrderTotal, shopOrder2.OrderTotal)
 	require.Equal(t, shopOrder1.ShippingMethodID, shopOrder2.ShippingMethodID)

@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-08-21T19:26:01.572Z
+-- Generated at: 2024-02-01T23:08:24.454Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -43,6 +43,14 @@ CREATE TABLE "user_session" (
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "expires_at" timestamptz NOT NULL
+);
+
+CREATE TABLE "notification" (
+  "user_id" bigint NOT NULL,
+  "device_id" varchar,
+  "fcm_token" varchar,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE "address" (
@@ -242,7 +250,6 @@ CREATE TABLE "shop_order" (
   "track_number" varchar NOT NULL,
   "order_number" int NOT NULL,
   "user_id" bigint NOT NULL,
-  "payment_method_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,
   "order_total" varchar NOT NULL,
   "shipping_method_id" bigint NOT NULL,
@@ -303,6 +310,8 @@ COMMENT ON COLUMN "shipping_method"."name" IS 'values like normal, or free';
 ALTER TABLE "admin" ADD FOREIGN KEY ("type_id") REFERENCES "admin_type" ("id");
 
 ALTER TABLE "user_session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+ALTER TABLE "notification" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "user_address" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 

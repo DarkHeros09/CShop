@@ -30,9 +30,6 @@ func createRandomProductBrand(t *testing.T) ProductBrand {
 			BrandImage: brandsLogo[i],
 		}
 		productBrand, err = testStore.CreateProductBrand(context.Background(), arg)
-		if err != nil {
-			t.Fatalf("Failed to kill test process: %v", err)
-		}
 		require.NoError(t, err)
 		require.NotEmpty(t, productBrand)
 

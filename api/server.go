@@ -7,26 +7,25 @@ import (
 	"os/signal"
 	"syscall"
 
-	// firebase "firebase.google.com/go"
+	firebase "firebase.google.com/go"
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
-	// gofiberfirebaseauth "github.com/sacsand/gofiber-firebaseauth"
-	// "google.golang.org/api/option"
 )
 
 type Server struct {
 	config     util.Config
 	store      db.Store
+	fb         *firebase.App
 	tokenMaker token.Maker
 	router     *fiber.App
 }
 
 // NewServer creates a new HTTP server and setup routing.
-func NewServer(config util.Config, store db.Store) (*Server, error) {
+func NewServer(config util.Config, store db.Store, fb *firebase.App) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
@@ -35,6 +34,7 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	server := &Server{
 		config:     config,
 		store:      store,
+		fb:         fb,
 		tokenMaker: tokenMaker,
 	}
 
@@ -46,8 +46,8 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 func (server *Server) setupRouter() {
 	app := fiber.New(
 		fiber.Config{
-			JSONEncoder: sonic.Marshal,
-			JSONDecoder: sonic.Unmarshal,
+			JSONEncoder: sonic.ConfigFastest.Marshal,
+			JSONDecoder: sonic.ConfigFastest.Unmarshal,
 		},
 	)
 
@@ -55,21 +55,20 @@ func (server *Server) setupRouter() {
 		etag.Config{},
 	))
 
-	// // Get google service account credentials
+	// Get google service account credentials
 	// serviceAccount, fileExi := os.LookupEnv("GOOGLE_SERVICE_ACCOUNT")
 
 	// if !fileExi {
-	// 	log.Fatalf("Please provide valid firebbase auth credential json!")
+	// 	log.Fatalf("Please provide valid firebase auth credential json!")
 	// }
 
-	// // Initialize the firebase app.
-	// opt := option.WithCredentialsFile(serviceAccount)
-	// fireApp, _ := firebase.NewApp(context.Background(), nil, opt)
-
-	// app.Use(gofiberfirebaseauth.New(
-	// 	gofiberfirebaseauth.Config{
-	// 		FirebaseApp: fireApp,
-	// 	}))
+	// Initialize the firebase app.
+	// opt := option.WithCredentialsFile("serviceAccountKey.json")
+	// config := &firebase.Config{ProjectID: "notifications-3eca3"}
+	// fb, err := firebase.NewApp(context.Background(), config, opt)
+	// if err != nil {
+	// 	log.Fatalf("Please provide valid firebase auth credential json!")
+	// }
 
 	//* Users
 	app.Post("/api/v1/users", server.createUser)
@@ -138,6 +137,17 @@ func (server *Server) setupRouter() {
 	adminRouter := app.Group("/admin/:adminId/v1").Use(authMiddleware(server.tokenMaker, true))
 
 	userRouter.Get("/users/:id", server.getUser)
+
+	// app.Use(gofiberfirebaseauth.New(
+	// 	gofiberfirebaseauth.Config{
+	// 		FirebaseApp: fireApp,
+	// 	}))
+
+	userRouter.Post("/users/:id/notification", server.createNotification)
+	userRouter.Get("/users/:id/notification/:deviceId", server.getNotification)
+	userRouter.Put("/users/:id/notification/:deviceId", server.updateNotification)
+	userRouter.Delete("/users/:id/notification/:deviceId", server.deleteNotification)
+
 	adminRouter.Get("/users", server.listUsers) //! Admin Only
 	userRouter.Put("/users/:id", server.updateUser)
 	adminRouter.Delete("/users/:id", server.deleteUser) //! Admin Only
@@ -236,18 +246,19 @@ func (server *Server) setupRouter() {
 	userRouter.Get("/users/:id/shop-orders", server.listShopOrders)
 	userRouter.Get("/users/:id/shop-orders-v2", server.listShopOrdersV2)
 	userRouter.Get("/users/:id/shop-orders-next-page", server.listShopOrdersNextPage)
-
-	userRouter.Post("/users/:id/order-status", server.createOrderStatus)
-	userRouter.Get("/users/:id/order-status/:statusId", server.getOrderStatus)
-	userRouter.Get("/users/:id/order-status", server.listOrderStatuses)
-	userRouter.Put("/users/:id/order-status/:statusId", server.updateOrderStatus)
-	adminRouter.Delete("/order-status/:statusId", server.deleteOrderStatus) //! Admin Only
+	adminRouter.Put("/shop-orders/:shopOrderId", server.updateShopOrder) //! Admin Only
 
 	userRouter.Post("/users/:id/shipping-method", server.createShippingMethod)
 	userRouter.Get("/users/:id/shipping-method/:methodId", server.getShippingMethod)
 	userRouter.Get("/users/:id/shipping-method", server.listShippingMethods)
 	userRouter.Put("/users/:id/shipping-method/:methodId", server.updateShippingMethod)
 	adminRouter.Delete("/shipping-method/:methodId", server.deleteShippingMethod) //! Admin Only
+
+	adminRouter.Post("/order-status", server.createOrderStatus) //! Admin Only
+	userRouter.Get("/users/:id/order-status/:statusId", server.getOrderStatus)
+	userRouter.Get("/users/:id/order-status", server.listOrderStatuses)
+	adminRouter.Put("/order-status/:statusId", server.updateOrderStatus)    //! Admin Only
+	adminRouter.Delete("/order-status/:statusId", server.deleteOrderStatus) //! Admin Only
 
 	server.router = app
 

@@ -243,20 +243,19 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 
 type listProductItemsV2QueryRequest struct {
 	Limit            int32     `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID       null.Int  `query:"category_id" validate:"omitempty,min=1"`
-	BrandID          null.Int  `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID           null.Int  `query:"size_id" validate:"omitempty,min=1"`
-	ColorID          null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew            null.Bool `query:"is_new" validate:"omitempty,boolean"`
-	IsPromoted       null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
-	OrderByID        null.Bool `query:"order_by_id" validate:"omitempty,boolean"`
-	OrderByLowPrice  null.Bool `query:"order_by_low_price" validate:"omitempty,boolean"`
-	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty,boolean"`
+	CategoryID       null.Int  `query:"category_id" validate:"omitempty"`
+	BrandID          null.Int  `query:"brand_id" validate:"omitempty"`
+	SizeID           null.Int  `query:"size_id" validate:"omitempty"`
+	ColorID          null.Int  `query:"color_id" validate:"omitempty"`
+	IsNew            null.Bool `query:"is_new" validate:"omitempty"`
+	IsPromoted       null.Bool `query:"is_promoted" validate:"omitempty"`
+	OrderByLowPrice  null.Bool `query:"order_by_low_price" validate:"omitempty"`
+	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	query := &listProductItemsV2QueryRequest{}
-	var maxPage int64
+	// var maxPage int64
 
 	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -271,7 +270,6 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
-		OrderByID:        query.OrderByID,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}
@@ -285,17 +283,24 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	if len(productItems) != 0 {
-		maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
-		// ctx.Set("Max-Page", fmt.Sprint(maxPage))
-		// ctx.Status(fiber.StatusOK).JSON(productItems)
-	} else {
-		maxPage = 0
-		// ctx.Set("Max-Page", fmt.Sprint(maxPage))
-		// ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
+	if len(productItems) == 0 {
+		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
+		return nil
 	}
+	// if len(productItems) != 0 {
+	// 	maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
+	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Status(fiber.StatusOK).JSON(productItems)
+	// } else {
+	// 	maxPage = 0
+	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
+	// }
 
-	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+
+	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -305,20 +310,19 @@ type listProductItemsNextPageQueryRequest struct {
 	ProductItemCursor int64     `query:"product_item_cursor" validate:"required,min=1"`
 	ProductCursor     int64     `query:"product_cursor" validate:"required,min=1"`
 	Limit             int32     `query:"limit" validate:"required,min=5,max=10"`
-	CategoryID        null.Int  `query:"category_id" validate:"omitempty,min=1"`
-	BrandID           null.Int  `query:"brand_id" validate:"omitempty,min=1"`
-	SizeID            null.Int  `query:"size_id" validate:"omitempty,min=1"`
-	ColorID           null.Int  `query:"color_id" validate:"omitempty,min=1"`
-	IsNew             null.Bool `query:"is_new" validate:"omitempty,boolean"`
-	IsPromoted        null.Bool `query:"is_promoted" validate:"omitempty,boolean"`
-	OrderByID         null.Bool `query:"order_by_id" validate:"omitempty,boolean"`
-	OrderByLowPrice   null.Bool `query:"order_by_low_price" validate:"omitempty,boolean"`
-	OrderByHighPrice  null.Bool `query:"order_by_high_price" validate:"omitempty,boolean"`
+	CategoryID        null.Int  `query:"category_id" validate:"omitempty"`
+	BrandID           null.Int  `query:"brand_id" validate:"omitempty"`
+	SizeID            null.Int  `query:"size_id" validate:"omitempty"`
+	ColorID           null.Int  `query:"color_id" validate:"omitempty"`
+	IsNew             null.Bool `query:"is_new" validate:"omitempty"`
+	IsPromoted        null.Bool `query:"is_promoted" validate:"omitempty"`
+	OrderByLowPrice   null.Bool `query:"order_by_low_price" validate:"omitempty"`
+	OrderByHighPrice  null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsNextPageQueryRequest{}
-	var maxPage int64
+	// var maxPage int64
 
 	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -335,7 +339,6 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
-		OrderByID:        query.OrderByID,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}
@@ -349,13 +352,16 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	if len(productItems) != 0 {
-		maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
-	} else {
-		maxPage = 0
+	if len(productItems) == 0 {
+		// ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
+		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
+		return nil
 	}
 
-	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+
+	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -390,19 +396,20 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	//Todo: should be copied to other functions??
-	if len(productItems) > 0 {
-		pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
-		if len(productItems) == int(productItems[0].TotalCount) {
-			ctx.Set("Max-Page", "0")
-		} else {
-			maxPage := int64(math.Ceil(pagesNumber))
-			ctx.Set("Max-Page", fmt.Sprint(maxPage))
-		}
-	} else {
-		ctx.Set("Max-Page", "0")
-	}
+	// //Todo: should be copied to other functions??
+	// if len(productItems) > 0 {
+	// 	pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
+	// 	if len(productItems) == int(productItems[0].TotalCount) {
+	// 		ctx.Set("Max-Page", "0")
+	// 	} else {
+	// 		maxPage := int64(math.Ceil(pagesNumber))
+	// 		ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	}
+	// } else {
+	// 	ctx.Set("Max-Page", "0")
+	// }
 
+	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -440,18 +447,19 @@ func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if len(productItems) > 0 {
-		pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
-		if len(productItems) == int(productItems[0].TotalCount) {
-			ctx.Set("Max-Page", "0")
-		} else {
-			maxPage := int64(math.Ceil(pagesNumber))
-			ctx.Set("Max-Page", fmt.Sprint(maxPage))
-		}
-	} else {
-		ctx.Set("Max-Page", "0")
-	}
+	// if len(productItems) > 0 {
+	// 	pagesNumber := float64(productItems[0].TotalCount) / float64(query.Limit)
+	// 	if len(productItems) == int(productItems[0].TotalCount) {
+	// 		ctx.Set("Max-Page", "0")
+	// 	} else {
+	// 		maxPage := int64(math.Ceil(pagesNumber))
+	// 		ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	}
+	// } else {
+	// 	ctx.Set("Max-Page", f"0"))
+	// }
 
+	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 

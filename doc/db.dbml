@@ -8,7 +8,7 @@ Project Classic_Shop {
 /// Creating tables
 // ADMIN
 Table admin_type as ADT{
-  id bigserial [pk, not null]// auto-increment
+  id bigserial [pk, not null, ref: - AD.type_id]// auto-increment
   admin_type varchar [not null, unique]
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
@@ -20,7 +20,7 @@ Table admin as AD {
   email varchar [not null, unique]
   password varchar [not null]
   active boolean [not null, default: true]
-  type_id bigint [not null, ref: - ADT.id]
+  type_id bigint [not null]
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   last_login timestamptz [not null, default: '0001-01-01 00:00:00Z']
@@ -39,7 +39,7 @@ Table user as U {
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   
-  indexes{
+  indexes {
     username
     email
     telephone
@@ -56,6 +56,14 @@ Table user_session as US {
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   expires_at timestamptz [not null]
+}
+
+Table notification as N {
+  user_id bigint [not null,ref:> U.id]
+  device_id varchar
+  fcm_token varchar
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z'] 
 }
 
 Table address as A {
@@ -269,7 +277,7 @@ Table shop_order as SO {
   track_number varchar [not null]
   order_number int [not null]
   user_id bigint [not null]
-  payment_method_id bigint [not null]
+  // payment_method_id bigint [not null]
   shipping_address_id bigint [not null, ref:> A.id]
   order_total varchar [not null]
   shipping_method_id bigint [not null, ref:> SM.id]
@@ -291,5 +299,3 @@ Table shipping_method as SM {
   name varchar [not null, unique, note:'values like normal, or free']
   price varchar [not null]
 }
-
- 

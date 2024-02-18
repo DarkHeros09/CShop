@@ -13,7 +13,7 @@ import (
 
 // ////////////* Create API //////////////
 type createOrderStatusParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type createOrderStatusJsonRequest struct {
@@ -29,9 +29,9 @@ func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
-	if params.UserID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
@@ -139,12 +139,13 @@ func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
 
 // //////////////* UPDATE API ///////////////
 type updateOrderStatusParamsRequest struct {
-	UserID   int64 `params:"id" validate:"required,min=1"`
+	AdminID  int64 `params:"adminId" validate:"required,min=1"`
 	StatusID int64 `params:"statusId" validate:"required,min=1"`
 }
 
 type updateOrderStatusJsonRequest struct {
-	Status string `json:"status" validate:"omitempty,required"`
+	Status   string `json:"status" validate:"omitempty,required"`
+	DeviceID string `json:"device_id" validate:"omitempty,required"`
 }
 
 func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
@@ -156,9 +157,9 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
-	if authPayload.UserID != params.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
+	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}

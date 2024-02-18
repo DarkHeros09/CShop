@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -14,7 +13,7 @@ type renewAccessTokenRequest struct {
 }
 
 type renewAccessTokenResponse struct {
-	UserSessionID        uuid.UUID `json:"user_session_id"`
+	UserSessionID        string    `json:"user_session_id"`
 	AccessToken          string    `json:"access_token"`
 	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
@@ -81,7 +80,7 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	}
 
 	rsp := renewAccessTokenResponse{
-		UserSessionID:        userSession.ID,
+		UserSessionID:        userSession.ID.String(),
 		AccessToken:          accessToken,
 		AccessTokenExpiresAt: accessPayload.ExpiredAt,
 	}

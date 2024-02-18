@@ -189,20 +189,57 @@ ORDER BY pi.id DESC
 LIMIT $1;
 
 -- name: ListProductItemsV2 :many
-WITH t1 AS (
-SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
-cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
-cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
-cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
-FROM "product_category" AS pc
-INNER JOIN
-"category_promotion" AS cp ON cp.category_id = pc.id
-INNER JOIN
-"promotion" AS cpromo ON cpromo.id = cp.promotion_id
-WHERE CASE
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+WHERE 
+pi.active = TRUE AND
+p.active =TRUE AND
+CASE
 WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN cp.active = TRUE
-AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
+THEN 
+((pp.active = TRUE
+AND ppromo.active = TRUE
+AND ppromo.start_date <= CURRENT_DATE 
+AND ppromo.end_date >= CURRENT_DATE)
+OR (cp.active = TRUE
+AND cpromo.active =TRUE 
+AND cpromo.start_date <= CURRENT_DATE 
+AND cpromo.end_date >= CURRENT_DATE)
+OR (bp.active = TRUE
+AND bpromo.active =TRUE 
+AND bpromo.start_date <= CURRENT_DATE 
+AND bpromo.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
+AND
+CASE
+WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
 ELSE 1=1
 END
 AND CASE
@@ -210,72 +247,11 @@ AND CASE
     THEN pc.id = sqlc.narg(category_id)
     ELSE 1=1
 END 
-)
-, t2 AS(
-SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
-bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
-bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
-bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
-FROM "product_brand" AS pb
-INNER JOIN
-"brand_promotion" AS bp ON bp.brand_id = pb.id
-INNER JOIN
-"promotion" AS bpromo ON bpromo.id = bp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN bp.active = TRUE
-AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
 AND CASE
     WHEN COALESCE(sqlc.narg(brand_id), 0) > 0 
     THEN pb.id = sqlc.narg(brand_id)
     ELSE 1=1
 END 
-)
-, t3 AS(
-SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, 
-pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
-ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
-ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
-ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
-t1.*, t2.*
- FROM "product" AS p
- LEFT JOIN
- "product_promotion" AS pp ON pp.product_id = p.id
-LEFT JOIN
-"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
-LEFT JOIN t1 ON t1.product_category_id = p.category_id
-LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
-WHERE 
-p.active = TRUE
-AND
-CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN 
-pp.active = TRUE AND 
-(
-    pp.product_id IS NOT NULL OR
-    t1.product_category_id IS NOT NULL OR
-    t2.product_brand_id IS NOT NULL
-)
-AND
-ppromo.active = TRUE 
-AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
-ELSE 1=1
-END 
-)
-, t4 AS (
-SELECT *, COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-INNER JOIN t3 ON t3.pid = pi.product_id
-WHERE 
-pi.active = TRUE AND
-CASE
-WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
-ELSE 1=1
-END
 AND CASE
     WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
     THEN pi.color_id = sqlc.narg(color_id)
@@ -287,11 +263,6 @@ AND CASE
     ELSE 1=1
 END
 ORDER BY 
-	CASE
-	WHEN COALESCE(sqlc.narg(order_by_id), TRUE) = TRUE
-	THEN pi.id
-	ELSE 0
-END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 		THEN pi.price
@@ -301,65 +272,104 @@ CASE
 	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
-END DESC
-)
-, t5 AS (
-SELECT t4.*, ps.size_value FROM t4
-LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN ps.id = sqlc.narg(size_id)
-    ELSE 1=1
-END
-)
-, t6 AS (
-SELECT t5.*, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
-FROM t5
-LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
-)
-, t7 AS (
-SELECT t6.*, pclr.color_value FROM t6
-LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pclr.id = sqlc.narg(color_id)
-    ELSE 1=1
-END
+END DESC,
+CASE
+    WHEN sqlc.narg(order_by_low_price) IS NOT NULL
+    THEN pi.id END ASC,
+CASE
+	WHEN (sqlc.narg(order_by_low_price),sqlc.narg(category_id),sqlc.narg(brand_id)) IS NOT NULL
+	THEN pi.product_id
+    END ASC,
+CASE WHEN sqlc.narg(order_by_low_price) IS NULL
+	THEN pi.id END DESC,
+    CASE
+	WHEN sqlc.narg(order_by_low_price) IS NULL AND (sqlc.narg(category_id),sqlc.narg(brand_id)) IS NOT NULL
+	THEN pi.product_id
+    END DESC
+LIMIT $1 +1
 )
 
-SELECT
-t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
-t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
- t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
- t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
- t7.total_count,
- t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
- t7.category_promo_discount_rate, t7.category_promo_active,
- t7.category_promo_start_date, t7.category_promo_end_date,
- t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
- t7.brand_promo_discount_rate, t7.brand_promo_active,
- t7.brand_promo_start_date, t7.brand_promo_end_date,
- t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
- t7.product_promo_discount_rate, t7.product_promo_active,
- t7.product_promo_start_date, t7.product_promo_end_date
-FROM t7
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsNextPage :many
-WITH t1 AS (
-SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
-cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
-cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
-cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
-FROM "product_category" AS pc
-INNER JOIN
-"category_promotion" AS cp ON cp.category_id = pc.id
-INNER JOIN
-"promotion" AS cpromo ON cpromo.id = cp.promotion_id
-WHERE CASE
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+WHERE
+(
+    CASE
+    WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
+	THEN (
+        (pi.price < sqlc.narg(price)) OR
+         (pi.price = sqlc.narg(price) AND  pi.id < sqlc.arg(product_item_id)) OR
+         CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+         THEN (pi.price = sqlc.narg(price) AND  pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
+         ELSE 1=1
+         END
+         )
+    WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
+	THEN (
+        (pi.price > sqlc.narg(price)) OR
+         (pi.price = sqlc.narg(price) AND  pi.id > sqlc.arg(product_item_id)) OR
+         CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+         THEN (pi.price = sqlc.narg(price) AND  pi.id = sqlc.arg(product_item_id) AND pi.product_id > sqlc.arg(product_id))
+         ELSE 1=1
+         END
+         )
+	ELSE pi.id < sqlc.arg(product_item_id) AND
+        CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+        THEN pi.product_id < sqlc.arg(product_id)
+        ELSE 1=1
+        END
+END ) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+CASE
 WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN cp.active = TRUE
-AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
+THEN 
+((pp.active = TRUE
+AND ppromo.active = TRUE
+AND ppromo.start_date <= CURRENT_DATE 
+AND ppromo.end_date >= CURRENT_DATE)
+OR (cp.active = TRUE
+AND cpromo.active =TRUE 
+AND cpromo.start_date <= CURRENT_DATE 
+AND cpromo.end_date >= CURRENT_DATE)
+OR (bp.active = TRUE
+AND bpromo.active =TRUE 
+AND bpromo.start_date <= CURRENT_DATE 
+AND bpromo.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
+AND
+CASE
+WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
 ELSE 1=1
 END
 AND CASE
@@ -367,74 +377,11 @@ AND CASE
     THEN pc.id = sqlc.narg(category_id)
     ELSE 1=1
 END 
-)
-, t2 AS(
-SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
-bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
-bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
-bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
-FROM "product_brand" AS pb
-INNER JOIN
-"brand_promotion" AS bp ON bp.brand_id = pb.id
-INNER JOIN
-"promotion" AS bpromo ON bpromo.id = bp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN bp.active = TRUE
-AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
 AND CASE
     WHEN COALESCE(sqlc.narg(brand_id), 0) > 0 
     THEN pb.id = sqlc.narg(brand_id)
     ELSE 1=1
 END 
-)
-, t3 AS(
-SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, 
-pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
-ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
-ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
-ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
-t1.*, t2.*
- FROM "product" AS p
- LEFT JOIN
- "product_promotion" AS pp ON pp.product_id = p.id
-LEFT JOIN
-"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
-LEFT JOIN t1 ON t1.product_category_id = p.category_id
-LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
-WHERE 
-p.id < sqlc.arg(product_id) AND
-p.active = TRUE
-AND
-CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN 
-pp.active = TRUE AND 
-(
-    pp.product_id IS NOT NULL OR
-    t1.product_category_id IS NOT NULL OR
-    t2.product_brand_id IS NOT NULL
-)
-AND
-ppromo.active = TRUE 
-AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
-ELSE 1=1
-END 
-)
-, t4 AS (
-SELECT *, COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-INNER JOIN t3 ON t3.pid = pi.product_id
-WHERE 
-pi.id < sqlc.arg(product_item_id) AND
-pi.active = TRUE AND
-CASE
-WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
-ELSE 1=1
-END
 AND CASE
     WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
     THEN pi.color_id = sqlc.narg(color_id)
@@ -446,11 +393,6 @@ AND CASE
     ELSE 1=1
 END
 ORDER BY 
-	CASE
-	WHEN COALESCE(sqlc.narg(order_by_id), TRUE) = TRUE
-	THEN pi.id
-	ELSE 0
-END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 		THEN pi.price
@@ -460,57 +402,27 @@ CASE
 	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
-END DESC
-)
-, t5 AS (
-SELECT t4.*, ps.size_value FROM t4
-LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN ps.id = sqlc.narg(size_id)
-    ELSE 1=1
-END
-)
-, t6 AS (
-SELECT t5.*, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
-FROM t5
-LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
-)
-, t7 AS (
-SELECT t6.*, pclr.color_value FROM t6
-LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pclr.id = sqlc.narg(color_id)
-    ELSE 1=1
-END
+END DESC,
+CASE
+    WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NOT NULL
+    THEN pi.id END ASC,
+CASE
+	WHEN (sqlc.narg(order_by_low_price)::BOOLEAN,sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+	THEN pi.product_id
+    END ASC,
+CASE WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NULL
+	THEN pi.id END DESC,
+    CASE
+	WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NULL AND (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+	THEN pi.product_id
+    END DESC
+LIMIT $1 +1
 )
 
-SELECT
-t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
-t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
- t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
- t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
- t7.total_count,
- t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
- t7.category_promo_discount_rate, t7.category_promo_active,
- t7.category_promo_start_date, t7.category_promo_end_date,
- t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
- t7.brand_promo_discount_rate, t7.brand_promo_active,
- t7.brand_promo_start_date, t7.brand_promo_end_date,
- t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
- t7.product_promo_discount_rate, t7.product_promo_active,
- t7.product_promo_start_date, t7.product_promo_end_date
-FROM t7
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: SearchProductItemsOld :many
--- WITH t1 AS (
--- SELECT COUNT(*) OVER() AS total_count
--- FROM "product_item" AS pi
--- WHERE pi.active = TRUE
--- LIMIT 1
--- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
@@ -551,178 +463,57 @@ END
 LIMIT $1;
 
 -- name: SearchProductItems :many
-WITH t1 AS (
-SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
-cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
-cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
-cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
-FROM "product_category" AS pc
-INNER JOIN
-"category_promotion" AS cp ON cp.category_id = pc.id
-INNER JOIN
-"promotion" AS cpromo ON cpromo.id = cp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN cp.active = TRUE
-AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(category_id), 0) > 0 
-    THEN pc.id = sqlc.narg(category_id)
-    ELSE 1=1
-END 
-)
-, t2 AS(
-SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
-bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
-bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
-bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
-FROM "product_brand" AS pb
-INNER JOIN
-"brand_promotion" AS bp ON bp.brand_id = pb.id
-INNER JOIN
-"promotion" AS bpromo ON bpromo.id = bp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN bp.active = TRUE
-AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(brand_id), 0) > 0 
-    THEN pb.id = sqlc.narg(brand_id)
-    ELSE 1=1
-END 
-)
-, t3 AS(
-SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, p.search,
-pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
-ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
-ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
-ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
-t1.*, t2.*
- FROM "product" AS p
- LEFT JOIN
- "product_promotion" AS pp ON pp.product_id = p.id
-LEFT JOIN
-"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
-LEFT JOIN t1 ON t1.product_category_id = p.category_id
-LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE 
-p.active = TRUE AND p.search @@ 
+pi.active = TRUE AND
+p.active =TRUE AND
+p.search @@ 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
 END
-AND
-CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN 
-pp.active = TRUE AND 
-(
-    pp.product_id IS NOT NULL OR
-    t1.product_category_id IS NOT NULL OR
-    t2.product_brand_id IS NOT NULL
-)
-AND
-ppromo.active = TRUE 
-AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
-ELSE 1=1
-END 
-)
-, t4 AS (
-SELECT *, COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-INNER JOIN t3 ON t3.pid = pi.product_id
-WHERE 
-pi.active = TRUE AND
-CASE
-WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pi.color_id = sqlc.narg(color_id)
-    ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN pi.size_id = sqlc.narg(size_id)
-    ELSE 1=1
-END
 ORDER BY 
-	CASE
-	WHEN COALESCE(sqlc.narg(order_by_id), TRUE) = TRUE
-	THEN pi.id
-	ELSE 0
-END DESC,
-CASE
-	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
-END ASC,
-CASE
-	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
-END DESC , ts_rank(t3.search, 
+pi.id DESC,
+p.id DESC,
+ts_rank(p.search, 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
 END
 ) DESC
-)
-, t5 AS (
-SELECT t4.*, ps.size_value FROM t4
-LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN ps.id = sqlc.narg(size_id)
-    ELSE 1=1
-END
-)
-, t6 AS (
-SELECT t5.*, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
-FROM t5
-LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
-)
-, t7 AS (
-SELECT t6.*, pclr.color_value FROM t6
-LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pclr.id = sqlc.narg(color_id)
-    ELSE 1=1
-END
+LIMIT $1 +1
 )
 
-SELECT
-t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
-t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
- t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
- t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
- t7.total_count,
- t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
- t7.category_promo_discount_rate, t7.category_promo_active,
- t7.category_promo_start_date, t7.category_promo_end_date,
- t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
- t7.brand_promo_discount_rate, t7.brand_promo_active,
- t7.brand_promo_start_date, t7.brand_promo_end_date,
- t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
- t7.product_promo_discount_rate, t7.product_promo_active,
- t7.product_promo_start_date, t7.product_promo_end_date
-FROM t7
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: SearchProductItemsNextPageOld :many
--- WITH t1 AS (
--- SELECT COUNT(*) OVER() AS total_count
--- FROM "product_item" AS pi
--- WHERE pi.active = TRUE
--- LIMIT 1
--- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
  pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
@@ -763,171 +554,56 @@ END
 LIMIT $1;
 
 -- name: SearchProductItemsNextPage :many
-WITH t1 AS (
-SELECT pc.id AS product_category_id, pc.parent_category_id ,pc.category_name, pc.category_image, cp.category_promotion_image, cp.active AS category_promotion_active, 
-cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
-cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
-cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
-FROM "product_category" AS pc
-INNER JOIN
-"category_promotion" AS cp ON cp.category_id = pc.id
-INNER JOIN
-"promotion" AS cpromo ON cpromo.id = cp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN cp.active = TRUE
-AND cpromo.active =TRUE AND cpromo.start_date <= CURRENT_DATE AND cpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(category_id), 0) > 0 
-    THEN pc.id = sqlc.narg(category_id)
-    ELSE 1=1
-END 
-)
-, t2 AS(
-SELECT pb.id AS product_brand_id, pb.brand_name, pb.brand_image, bp.brand_promotion_image, bp.active AS brand_promotion_active, 
-bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
-bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
-bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
-FROM "product_brand" AS pb
-INNER JOIN
-"brand_promotion" AS bp ON bp.brand_id = pb.id
-INNER JOIN
-"promotion" AS bpromo ON bpromo.id = bp.promotion_id
-WHERE CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN bp.active = TRUE
-AND bpromo.active = TRUE AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(brand_id), 0) > 0 
-    THEN pb.id = sqlc.narg(brand_id)
-    ELSE 1=1
-END 
-)
-, t3 AS(
-SELECT p.id AS pid ,p.name, p.description, p.category_id, p.brand_id, p.active AS parent_product_active, p.search,
-pp.product_id AS promotion_product_id , pp.product_promotion_image, pp.active AS product_promotion_active, 
-ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
-ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
-ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
-t1.*, t2.*
- FROM "product" AS p
- LEFT JOIN
- "product_promotion" AS pp ON pp.product_id = p.id
-LEFT JOIN
-"promotion" AS ppromo ON ppromo.id = pp.promotion_id 
-LEFT JOIN t1 ON t1.product_category_id = p.category_id
-LEFT JOIN t2 ON t2.product_brand_id = p.brand_id
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE 
+pi.id < sqlc.arg(product_item_id) AND
 p.id < sqlc.arg(product_id) AND
-p.active = TRUE AND p.search @@  
+pi.active = TRUE AND
+p.active =TRUE AND
+p.search @@ 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
 END
-AND
-CASE
-WHEN COALESCE(sqlc.narg(is_promoted), FALSE) = TRUE
-THEN 
-pp.active = TRUE AND 
-(
-    pp.product_id IS NOT NULL OR
-    t1.product_category_id IS NOT NULL OR
-    t2.product_brand_id IS NOT NULL
-)
-AND
-ppromo.active = TRUE 
-AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE 
-ELSE 1=1
-END 
-)
-, t4 AS (
-SELECT *, COUNT(*) OVER() AS total_count
-FROM "product_item" AS pi
-INNER JOIN t3 ON t3.pid = pi.product_id
-WHERE 
-pi.id < sqlc.arg(product_item_id) AND
-pi.active = TRUE AND
-CASE
-WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
-ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pi.color_id = sqlc.narg(color_id)
-    ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN pi.size_id = sqlc.narg(size_id)
-    ELSE 1=1
-END
 ORDER BY 
-	CASE
-	WHEN COALESCE(sqlc.narg(order_by_id), TRUE) = TRUE
-	THEN pi.id
-	ELSE 0
-END DESC,
-CASE
-	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
-END ASC,
-CASE
-	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
-END DESC, ts_rank(t3.search, 
+pi.id DESC,
+p.id DESC,
+ts_rank(p.search, 
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
 END
 ) DESC
-)
-, t5 AS (
-SELECT t4.*, ps.size_value FROM t4
-LEFT JOIN "product_size" AS ps ON ps.id = t4.size_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(size_id), 0) > 0 
-    THEN ps.id = sqlc.narg(size_id)
-    ELSE 1=1
-END
-)
-, t6 AS (
-SELECT t5.*, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
-FROM t5
-LEFT JOIN "product_image" AS pimg ON pimg.id = t5.image_id
-)
-, t7 AS (
-SELECT t6.*, pclr.color_value FROM t6
-LEFT JOIN "product_color" AS pclr ON pclr.id = t6.color_id
-WHERE CASE
-    WHEN COALESCE(sqlc.narg(color_id), 0) > 0 
-    THEN pclr.id = sqlc.narg(color_id)
-    ELSE 1=1
-END
+LIMIT $1 +1
 )
 
-SELECT
-t7.id, t7.product_id, t7.size_id, t7.image_id, t7.color_id, t7.product_sku, t7.qty_in_stock, t7.price,
-t7.active, t7.created_at, t7.updated_at, t7.name, t7.description, t7.category_id, t7.category_name, t7.parent_category_id,
- t7.category_image, t7.brand_id, t7.brand_name, t7.brand_image, t7.parent_product_active, t7.size_value,
- t7.product_image_1, t7.product_image_2, t7.product_image_3, t7.color_value, 
- t7.total_count,
- t7.category_promo_id, t7.category_promo_name, t7.category_promo_description,
- t7.category_promo_discount_rate, t7.category_promo_active,
- t7.category_promo_start_date, t7.category_promo_end_date,
- t7.brand_promo_id, t7.brand_promo_name, t7.brand_promo_description,
- t7.brand_promo_discount_rate, t7.brand_promo_active,
- t7.brand_promo_start_date, t7.brand_promo_end_date,
- t7.product_promo_id, t7.product_promo_name, t7.product_promo_description,
- t7.product_promo_discount_rate, t7.product_promo_active,
- t7.product_promo_start_date, t7.product_promo_end_date
-FROM t7
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: UpdateProductItem :one

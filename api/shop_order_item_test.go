@@ -312,9 +312,9 @@ func randomSOIUser(t *testing.T) (user db.User, password string) {
 
 func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) {
 	shopOrder = db.ShopOrder{
-		ID:                util.RandomMoney(),
-		UserID:            user.ID,
-		PaymentMethodID:   util.RandomMoney(),
+		ID:     util.RandomMoney(),
+		UserID: user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
 		ShippingAddressID: util.RandomMoney(),
 		OrderTotal:        util.RandomDecimalString(1, 1000),
 		ShippingMethodID:  util.RandomMoney(),
@@ -337,7 +337,7 @@ func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderI
 		AddressLine:   null.StringFrom(util.RandomUser()),
 		Region:        null.StringFrom(util.RandomUser()),
 		City:          null.StringFrom(util.RandomUser()),
-		PaymentType:   null.StringFrom(util.RandomUser()),
+		// PaymentType:   null.StringFrom(util.RandomUser()),
 	}
 	return
 }

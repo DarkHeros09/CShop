@@ -102,6 +102,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":     user.Email,
 				"password":  password,
 				"telephone": user.Telephone,
+				// "fcm_token": util.RandomString(32),
+				// "device_id": util.RandomString(32),
 			},
 			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 
@@ -131,7 +133,7 @@ func TestCreateUserAPI(t *testing.T) {
 				}
 
 				finalRsp = createUserResponse{
-					UserSessionID:         userSession.ID,
+					UserSessionID:         userSession.ID.String(),
 					AccessToken:           accessToken,
 					AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 					RefreshToken:          refreshToken,
@@ -154,6 +156,9 @@ func TestCreateUserAPI(t *testing.T) {
 				store.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).
 					Times(1)
 
+				// store.EXPECT().CreateNotification(gomock.Any(), gomock.Any()).
+				// 	Times(1)
+
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -167,6 +172,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":     user.Email,
 				"password":  password,
 				"telephone": user.Telephone,
+				// "fcm_token": util.RandomString(32),
+				// "device_id": util.RandomString(32),
 			},
 			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
@@ -191,6 +198,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":     user.Email,
 				"password":  password,
 				"telephone": user.Telephone,
+				// "fcm_token": util.RandomString(32),
+				// "device_id": util.RandomString(32),
 			},
 			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
@@ -244,6 +253,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":     "invalid-user#1",
 				"password":  password,
 				"telephone": user.Telephone,
+				// "fcm_token": util.RandomString(32),
+				// "device_id": util.RandomString(32),
 			},
 
 			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
@@ -268,6 +279,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":     user.Email,
 				"password":  "123",
 				"telephone": user.Telephone,
+				// "fcm_token": util.RandomString(32),
+				// "device_id": util.RandomString(32),
 			},
 			buildStubs: func(store *mockdb.MockStore, tokenMaker token.Maker) {
 				arg := db.CreateUserWithCartAndWishListParams{
@@ -591,6 +604,7 @@ func TestGetUserAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).

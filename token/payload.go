@@ -24,7 +24,8 @@ type UserPayload struct {
 
 // NewPayload creates a new token payload with a specific username and duration
 func NewPayloadForUser(userID int64, username string, duration time.Duration) (*UserPayload, error) {
-	tokenID, err := uuid.NewRandom()
+	// tokenID, err := uuid.NewRandom()
+	tokenID, err := uuid.NewV7()
 	if err != nil {
 		return nil, err
 	}

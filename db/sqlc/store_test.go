@@ -147,7 +147,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NotEmpty(t, finishedShopOrder)
 			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
 			require.Equal(t, listUsersAddress[z].AddressID, finishedShopOrder.ShippingAddressID)
-			require.Equal(t, listPaymentMethod[z].ID, finishedShopOrder.PaymentMethodID)
+			// require.Equal(t, listPaymentMethod[z].ID, finishedShopOrder.PaymentMethodID)
 			require.Equal(t, listShippingMethod[z].ID, finishedShopOrder.ShippingMethodID)
 			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID.Int64)
 

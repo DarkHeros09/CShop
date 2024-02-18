@@ -2,9 +2,9 @@
 FROM golang:1.20-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go build -tags=go_json,nomsgpack -o main main.go
-RUN wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.3/wait-for
-RUN chmod +x wait-for.sh
+RUN go build -tags=go_json,nomsgpack -o main main.go && \
+wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.3/wait-for && \
+chmod +x wait-for.sh
 
 # Copy stage
 FROM scratch AS copier

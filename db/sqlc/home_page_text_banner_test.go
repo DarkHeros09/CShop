@@ -74,7 +74,7 @@ func TestDeleteHomePageTextBanner(t *testing.T) {
 
 func TestListHomePageTextBanners(t *testing.T) {
 	for i := 0; i < 5; i++ {
-		createRandomPaymentType(t)
+		createRandomHomePageTextBanner(t)
 	}
 
 	textBanners, err := testStore.ListHomePageTextBanners(context.Background())

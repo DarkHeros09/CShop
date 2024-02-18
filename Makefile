@@ -6,7 +6,7 @@ DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
 
 postgres:
 	docker run --name psql_$(DB_VERSION)-cshop -p $(DB_PORT):5432 -e POSTGRES_USER=postgres \
-	-e POSTGRES_PASSWORD=secret -d -e "TZ=Africa/Tripoli" -e "PGTZ=Africa/Tripoli" postgres:$(DB_VERSION)-alpine
+	-e POSTGRES_PASSWORD=secret -d -e "TZ=Africa/Tripoli" -e "PGTZ=Africa/Tripoli" postgres:alpine
 
 create_db:
 	docker exec -it psql_$(DB_VERSION)-cshop createdb --username=postgres --owner=postgres cshop
@@ -49,9 +49,17 @@ migrate_up_docker:
 	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
 	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose up
 
+migrate_up1_docker:
+	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose up 1
+
 migrate_down_docker:
 	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
-	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose down
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose down -all
+
+migrate_down1_docker:
+	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
+	migrate/migrate -path /migrations -database "$(DB_URL)" -verbose down 1
 
 migrate_fix_docker:
 	docker run --rm -v "${CURDIR}/db/migration":/migrations --network host \
@@ -71,6 +79,11 @@ sqlcfix:
 
 test:
 	go test -v -cover -timeout 1m -shuffle on -count=1 ./...
+
+testwin:
+	powershell -command "go test -v -cover -timeout 1m -shuffle on -count=1 ./...  | tee test_output.txt"
+	powershell -command "Select-String -Path test_output.txt -Pattern 'FAIL'"
+	powershell -command "del test_output.txt"
 
 dagger_test:
 	go run ./dagger/dagger_test_workflow.go
@@ -105,7 +118,7 @@ db_docs:
 	dbdocs build .\doc\db.dbml
 
 db_schema:
-	dbml2sql --postgres -o doc/schema.sql doc/db.dbml
+	dbml2sql doc/db.dbml --postgres -o doc/schema.sql
 
 
 .PHONY: postgres create_db drop_db init_migrate migrate_up migrate_down \

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,6 +19,179 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func TestUpdateShopOrderAPI(t *testing.T) {
+	admin, _ := randomOrderStatusSuperAdmin(t)
+	shopOrder := createRandomShopOrderForUpdate(t)
+	deviceId := util.RandomUser()
+
+	testCases := []struct {
+		name          string
+		ShopOrderID   int64
+		AdminID       int64
+		body          fiber.Map
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, rsp *http.Response)
+	}{
+		{
+			name:        "OK",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id":             shopOrder.UserID,
+				"shipping_address_id": shopOrder.ShippingAddressID,
+				"shipping_method_id":  shopOrder.ShippingMethodID,
+				"order_status_id":     shopOrder.OrderStatusID,
+				"track_number":        shopOrder.TrackNumber,
+				"order_total":         shopOrder.OrderTotal,
+				"device_id":           deviceId,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.UpdateShopOrderParams{
+					TrackNumber:       null.StringFrom(shopOrder.TrackNumber),
+					UserID:            null.IntFrom(shopOrder.UserID),
+					ShippingAddressID: null.IntFrom(shopOrder.ShippingAddressID),
+					OrderTotal:        null.StringFrom(shopOrder.OrderTotal),
+					ShippingMethodID:  null.IntFrom(shopOrder.ShippingMethodID),
+					OrderStatusID:     shopOrder.OrderStatusID,
+					ID:                shopOrder.ID,
+				}
+
+				store.EXPECT().
+					UpdateShopOrder(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(shopOrder, nil)
+
+				store.EXPECT().
+					GetNotification(gomock.Any(), gomock.Any()).
+					Times(1)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name:        "NoAuthorization",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id":             shopOrder.UserID,
+				"shipping_address_id": shopOrder.ShippingAddressID,
+				"shipping_method_id":  shopOrder.ShippingMethodID,
+				"order_status_id":     shopOrder.OrderStatusID,
+				"track_number":        shopOrder.TrackNumber,
+				"order_total":         shopOrder.OrderTotal,
+				"device_id":           deviceId,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateShopOrder(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:        "InternalError",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id":             shopOrder.UserID,
+				"shipping_address_id": shopOrder.ShippingAddressID,
+				"shipping_method_id":  shopOrder.ShippingMethodID,
+				"order_status_id":     shopOrder.OrderStatusID,
+				"track_number":        shopOrder.TrackNumber,
+				"order_total":         shopOrder.OrderTotal,
+				"device_id":           deviceId,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.UpdateShopOrderParams{
+					TrackNumber:       null.StringFrom(shopOrder.TrackNumber),
+					UserID:            null.IntFrom(shopOrder.UserID),
+					ShippingAddressID: null.IntFrom(shopOrder.ShippingAddressID),
+					OrderTotal:        null.StringFrom(shopOrder.OrderTotal),
+					ShippingMethodID:  null.IntFrom(shopOrder.ShippingMethodID),
+					OrderStatusID:     shopOrder.OrderStatusID,
+					ID:                shopOrder.ID,
+				}
+
+				store.EXPECT().
+					UpdateShopOrder(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.ShopOrder{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:        "InvalidUserID",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     0,
+			body: fiber.Map{
+				"user_id":             shopOrder.UserID,
+				"shipping_address_id": shopOrder.ShippingAddressID,
+				"shipping_method_id":  shopOrder.ShippingMethodID,
+				"order_status_id":     shopOrder.OrderStatusID,
+				"track_number":        shopOrder.TrackNumber,
+				"order_total":         shopOrder.OrderTotal,
+				"device_id":           deviceId,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateShopOrder(gomock.Any(), gomock.Any()).
+					Times(0)
+
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			//recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/admin/%d/v1/shop-orders/%d", tc.AdminID, tc.ShopOrderID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.tokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
+		})
+	}
+
+}
 
 func TestListShopOrderAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
@@ -450,7 +624,7 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 // 	shopOrder = db.ShopOrder{
 // 		ID:                util.RandomMoney(),
 // 		UserID:            user.ID,
-// 		PaymentMethodID:   util.RandomMoney(),
+// PaymentMethodID:   util.RandomMoney(),
 // 		ShippingAddressID: util.RandomMoney(),
 // 		OrderTotal:        util.RandomDecimalString(1, 1000),
 // 		ShippingMethodID:  util.RandomMoney(),
@@ -459,27 +633,29 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 // 	return
 // }
 
-// func createRandomShopOrderForGet(t *testing.T, shopOrder db.ShopOrder) (ShopOrder db.GetShopOrderByUserIDOrderIDRow) {
-// 	ShopOrder = db.GetShopOrderByUserIDOrderIDRow{
-// 		ID:            util.RandomMoney(),
-// 		ProductItemID: util.RandomMoney(),
-// 		OrderID:       shopOrder.ID,
-// 		Quantity:      int32(util.RandomMoney()),
-// 		Price:         util.RandomDecimalString(1, 1000),
-// 		UserID:        null.IntFrom(shopOrder.UserID),
-// 	}
-// 	return
-// }
+func createRandomShopOrderForUpdate(t *testing.T) (ShopOrder db.ShopOrder) {
+	ShopOrder = db.ShopOrder{
+		ID:                util.RandomMoney(),
+		TrackNumber:       util.GenerateTrackNumber(),
+		OrderNumber:       int32(util.RandomMoney()),
+		UserID:            util.RandomMoney(),
+		ShippingAddressID: util.RandomMoney(),
+		OrderTotal:        util.RandomDecimalString(1, 100),
+		ShippingMethodID:  util.RandomMoney(),
+		OrderStatusID:     null.IntFrom(util.RandomMoney()),
+	}
+	return
+}
 
 func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDV2Row {
 	return db.ListShopOrdersByUserIDV2Row{
-		Status:            null.StringFrom(orderStatus.Status),
-		OrderNumber:       int32(util.RandomMoney()),
-		ItemCount:         util.RandomMoney(),
-		ID:                util.RandomMoney(),
-		TrackNumber:       util.GenerateTrackNumber(),
-		UserID:            user.ID,
-		PaymentMethodID:   util.RandomMoney(),
+		Status:      null.StringFrom(orderStatus.Status),
+		OrderNumber: int32(util.RandomMoney()),
+		ItemCount:   util.RandomMoney(),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
 		ShippingAddressID: util.RandomMoney(),
 		OrderTotal:        util.RandomDecimalString(0, 1000),
 		ShippingMethodID:  util.RandomMoney(),
@@ -490,13 +666,13 @@ func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListSho
 
 func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDNextPageRow {
 	return db.ListShopOrdersByUserIDNextPageRow{
-		Status:            null.StringFrom(orderStatus.Status),
-		OrderNumber:       int32(util.RandomMoney()),
-		ItemCount:         util.RandomMoney(),
-		ID:                util.RandomMoney(),
-		TrackNumber:       util.GenerateTrackNumber(),
-		UserID:            user.ID,
-		PaymentMethodID:   util.RandomMoney(),
+		Status:      null.StringFrom(orderStatus.Status),
+		OrderNumber: int32(util.RandomMoney()),
+		ItemCount:   util.RandomMoney(),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
 		ShippingAddressID: util.RandomMoney(),
 		OrderTotal:        util.RandomDecimalString(0, 1000),
 		ShippingMethodID:  util.RandomMoney(),
@@ -533,7 +709,7 @@ func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder [
 		require.Equal(t, shopOrder[i].Status, gotOrderItem.Status)
 		require.Equal(t, shopOrder[i].OrderNumber, gotOrderItem.OrderNumber)
 		require.Equal(t, shopOrder[i].UserID, gotOrderItem.UserID)
-		require.Equal(t, shopOrder[i].PaymentMethodID, gotOrderItem.PaymentMethodID)
+		// // require.Equal(t, shopOrder[i].PaymentMethodID, gotOrderItem.PaymentMethodID)
 		require.Equal(t, shopOrder[i].ShippingAddressID, gotOrderItem.ShippingAddressID)
 		require.Equal(t, shopOrder[i].OrderTotal, gotOrderItem.OrderTotal)
 		require.Equal(t, shopOrder[i].ShippingMethodID, gotOrderItem.ShippingMethodID)
@@ -543,11 +719,11 @@ func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder [
 
 func createRandomShopOrderForList(t *testing.T, user db.User, orderStatus db.OrderStatus) (shopOrder db.ListShopOrdersByUserIDRow) {
 	shopOrder = db.ListShopOrdersByUserIDRow{
-		Status:            null.StringFrom(orderStatus.Status),
-		ID:                util.RandomMoney(),
-		TrackNumber:       util.RandomString(5),
-		UserID:            user.ID,
-		PaymentMethodID:   util.RandomMoney(),
+		Status:      null.StringFrom(orderStatus.Status),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.RandomString(5),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
 		ShippingAddressID: util.RandomMoney(),
 		OrderTotal:        fmt.Sprint(util.RandomMoney()),
 		ShippingMethodID:  util.RandomMoney(),
