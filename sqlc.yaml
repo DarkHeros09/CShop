@@ -13,6 +13,7 @@ sql:
       emit_exact_table_names: false
       emit_empty_slices: true
       emit_json_tags: true
+      emit_result_struct_pointers: false
       emit_params_struct_pointers: false
       overrides:
         - db_type: "uuid"
@@ -22,29 +23,50 @@ sql:
           go_type: "time.Time"
 
         - db_type: "pg_catalog.int8"
-          go_type: "github.com/guregu/null.Int"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "Int"
 
         - db_type: "bigserial"
-          go_type: "github.com/guregu/null.Int"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "Int"
 
         - db_type: "pg_catalog.int4"
-          go_type: "github.com/guregu/null.Int"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "Int"
 
         - db_type: "pg_catalog.varchar"
-          go_type: "github.com/guregu/null.String"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "String"
 
         - db_type: "timestamptz"
-          go_type: "github.com/guregu/null.Time"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "Time"
 
         - db_type: "pg_catalog.bool"
-          go_type: "github.com/guregu/null.Bool"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "Bool"
 
         - column: "product.search"
-          go_type: "github.com/guregu/null.String"
           nullable: true
+          go_type:
+            import: "github.com/guregu/null/v5"
+            package: "null"
+            type: "String"

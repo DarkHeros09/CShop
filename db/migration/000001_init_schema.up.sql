@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-02-01T23:08:24.454Z
+-- Generated at: 2024-03-02T14:57:33.613Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -28,9 +28,30 @@ CREATE TABLE "user" (
   "password" varchar NOT NULL,
   "telephone" int NOT NULL DEFAULT 0,
   "is_blocked" boolean NOT NULL DEFAULT false,
+  "is_email_verified" boolean NOT NULL DEFAULT false,
   "default_payment" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "verify_emails" (
+  "id" bigserial PRIMARY KEY,
+  "user_id" bigint NOT NULL,
+  "email" varchar NOT NULL,
+  "secret_code" varchar NOT NULL,
+  "is_used" bool NOT NULL DEFAULT false,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
+);
+
+CREATE TABLE "reset_passwords" (
+  "id" bigserial PRIMARY KEY,
+  "user_id" bigint NOT NULL,
+  "email" varchar NOT NULL,
+  "secret_code" varchar NOT NULL,
+  "is_used" bool NOT NULL DEFAULT false,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
 );
 
 CREATE TABLE "user_session" (
@@ -308,6 +329,10 @@ COMMENT ON COLUMN "order_status"."status" IS 'values like ordered, processed and
 COMMENT ON COLUMN "shipping_method"."name" IS 'values like normal, or free';
 
 ALTER TABLE "admin" ADD FOREIGN KEY ("type_id") REFERENCES "admin_type" ("id");
+
+ALTER TABLE "verify_emails" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+ALTER TABLE "reset_passwords" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "user_session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 

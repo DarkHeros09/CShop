@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )

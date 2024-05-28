@@ -3,21 +3,38 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	firebase "firebase.google.com/go"
 	"github.com/cshop/v3/api"
 	db "github.com/cshop/v3/db/sqlc"
+	"github.com/cshop/v3/mail"
 	"github.com/cshop/v3/util"
+	"github.com/cshop/v3/worker"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/option"
 )
+
+var interruptSignals = []os.Signal{
+	os.Interrupt,
+	syscall.SIGTERM,
+	syscall.SIGINT,
+}
 
 func main() {
 	config, err := util.LoadConfig(".") // we use . because app.env is on the same level with main.go
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
-	conn, err := pgxpool.New(context.Background(), config.DBSource)
+
+	ctx, stop := signal.NotifyContext(context.Background(), interruptSignals...)
+	defer stop()
+
+	conn, err := pgxpool.New(ctx, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db", err)
 	}
@@ -31,12 +48,61 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	runFiberServer(config, store, fb)
+
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+
+	waitGroup, ctx := errgroup.WithContext(ctx)
+
+	runTaskProcessor(ctx, waitGroup, config, redisOpt, store)
+	runFiberServer(config, store, fb, taskDistributor)
+
+	err = waitGroup.Wait()
+	if err != nil {
+		// log.Fatal().Err(err).Msg("error from wait group")
+	}
 
 }
 
-func runFiberServer(config util.Config, store db.Store, fb *firebase.App) {
-	server, err := api.NewServer(config, store, fb)
+func runTaskProcessor(
+	ctx context.Context,
+	waitGroup *errgroup.Group,
+	config util.Config,
+	redisOpt asynq.RedisClientOpt,
+	store db.Store,
+) {
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer, config)
+
+	// log.Info().Msg("start task processor")
+	err := taskProcessor.Start()
+	if err != nil {
+		// log.Fatal().Err(err).Msg("failed to start task processor")
+	}
+
+	waitGroup.Go(func() error {
+		<-ctx.Done()
+		// log.Info().Msg("graceful shutdown task processor")
+
+		taskProcessor.Shutdown()
+		// log.Info().Msg("task processor is stopped")
+
+		return nil
+	})
+}
+
+func runFiberServer(
+	// ctx context.Context,
+	// waitGroup *errgroup.Group,
+	config util.Config,
+	store db.Store,
+	fb *firebase.App,
+	taskDistributor worker.TaskDistributor,
+) {
+	server, err := api.NewServer(config, store, fb, taskDistributor)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}
@@ -45,4 +111,14 @@ func runFiberServer(config util.Config, store db.Store, fb *firebase.App) {
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
+
+	// waitGroup.Go(func() error {
+	// 	<-ctx.Done()
+	// 	// log.Info().Msg("graceful shutdown gRPC server")
+
+	// 	server.GracefulShutdown()
+	// 	// log.Info().Msg("gRPC server is stopped")
+
+	// 	return nil
+	// })
 }

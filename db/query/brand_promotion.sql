@@ -21,6 +21,7 @@ LIMIT 1;
 -- name: ListBrandPromotionsWithImages :many
 SELECT * FROM "brand_promotion" AS bp
 LEFT JOIN "product_brand" AS pb ON pb.id = bp.brand_id
+JOIN "promotion" AS promo ON promo.id = bp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 WHERE bp.brand_promotion_image IS NOT NULL AND bp.active = true;
 
 -- name: ListBrandPromotions :many

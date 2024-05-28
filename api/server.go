@@ -12,30 +12,39 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
+	"github.com/cshop/v3/worker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
+	"github.com/gofiber/template/html/v2"
 )
 
 type Server struct {
-	config     util.Config
-	store      db.Store
-	fb         *firebase.App
-	tokenMaker token.Maker
-	router     *fiber.App
+	config          util.Config
+	store           db.Store
+	fb              *firebase.App
+	tokenMaker      token.Maker
+	router          *fiber.App
+	taskDistributor worker.TaskDistributor
 }
 
 // NewServer creates a new HTTP server and setup routing.
-func NewServer(config util.Config, store db.Store, fb *firebase.App) (*Server, error) {
+func NewServer(
+	config util.Config,
+	store db.Store,
+	fb *firebase.App,
+	taskDistributor worker.TaskDistributor,
+) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
 	server := &Server{
-		config:     config,
-		store:      store,
-		fb:         fb,
-		tokenMaker: tokenMaker,
+		config:          config,
+		store:           store,
+		fb:              fb,
+		tokenMaker:      tokenMaker,
+		taskDistributor: taskDistributor,
 	}
 
 	server.setupRouter()
@@ -44,12 +53,18 @@ func NewServer(config util.Config, store db.Store, fb *firebase.App) (*Server, e
 }
 
 func (server *Server) setupRouter() {
+	engine := html.New("./web/views", ".html")
 	app := fiber.New(
 		fiber.Config{
+			Views:       engine,
 			JSONEncoder: sonic.ConfigFastest.Marshal,
 			JSONDecoder: sonic.ConfigFastest.Unmarshal,
 		},
 	)
+
+	app.Static("/static", "./web/styles")
+
+	// app.Use(app.Use(logger.New()))
 
 	app.Use(etag.New(
 		etag.Config{},
@@ -70,10 +85,13 @@ func (server *Server) setupRouter() {
 	// 	log.Fatalf("Please provide valid firebase auth credential json!")
 	// }
 
+	app.Get("/api/v1/reset_password", server.resetPasswordPage)
+
 	//* Users
 	app.Post("/api/v1/users", server.createUser)
 	app.Post("/api/v1/users/login", server.loginUser)
 	app.Post("/api/v1/users/reset-password", server.resetPassword)
+	app.Post("/api/v1/users/new-password", server.newPassword)
 
 	//* Tokens
 	app.Post("/api/v1/auth/access-token", server.renewAccessToken)
@@ -122,12 +140,18 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/variation-options", server.listVariationOptions)   //? no auth required
 
 	//* Product-Items
-	app.Get("/api/v1/product-items/:itemId", server.getProductItem)                      //? no auth required
-	app.Get("/api/v1/product-items", server.listProductItems)                            //? no auth required
-	app.Get("/api/v1/product-items-v2", server.listProductItemsV2)                       //? no auth required
-	app.Get("/api/v1/product-items-next-page", server.listProductItemsNextPage)          //? no auth required
-	app.Get("/api/v1/search-product-items", server.searchProductItems)                   //? no auth required
-	app.Get("/api/v1/search-product-items-next-page", server.searchProductItemsNextPage) //? no auth required
+	app.Get("/api/v1/product-items/:itemId", server.getProductItem)                                                            //? no auth required
+	app.Get("/api/v1/product-items", server.listProductItems)                                                                  //? no auth required
+	app.Get("/api/v1/product-items-v2", server.listProductItemsV2)                                                             //? no auth required
+	app.Get("/api/v1/product-items-next-page", server.listProductItemsNextPage)                                                //? no auth required
+	app.Get("/api/v1/search-product-items", server.searchProductItems)                                                         //? no auth required
+	app.Get("/api/v1/search-product-items-next-page", server.searchProductItemsNextPage)                                       //? no auth required
+	app.Get("/api/v1/product-items-with-promotions", server.listProductItemsWithPromotions)                                    //? no auth required
+	app.Get("/api/v1/product-items-with-promotions-next-page", server.listProductItemsWithPromotionsNextPage)                  //? no auth required
+	app.Get("/api/v1/product-items-with-brand-promotions", server.listProductItemsWithBrandPromotions)                         //? no auth required
+	app.Get("/api/v1/product-items-with-brand-promotions-next-page", server.listProductItemsWithBrandPromotionsNextPage)       //? no auth required
+	app.Get("/api/v1/product-items-with-category-promotions", server.listProductItemsWithCategoryPromotions)                   //? no auth required
+	app.Get("/api/v1/product-items-with-category-promotions-next-page", server.listProductItemsWithCategoryPromotionsNextPage) //? no auth required
 
 	//* Product-Configuration
 	app.Get("/api/v1/product-configurations/:itemId/variation-options/:variationId", server.getProductConfiguration) //? no auth required
@@ -277,7 +301,7 @@ func (server *Server) gracefulShutdown() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	_ = <-done
+	<-done
 	log.Println("Shutdown server...")
 	if err := server.router.Shutdown(); err != nil {
 		log.Fatalf("Could not gracefully shutdown the server: %v\n", err)

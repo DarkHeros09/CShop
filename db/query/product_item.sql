@@ -624,3 +624,225 @@ RETURNING *;
 -- name: DeleteProductItem :exec
 DELETE FROM "product_item"
 WHERE id = $1;
+
+-- name: ListProductItemsWithPromotions :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+INNER JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+INNER JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id 
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+ 
+WHERE 
+p.id = sqlc.arg(product_id) AND
+pi.active = TRUE AND
+p.active = TRUE AND
+((pp.active = TRUE
+AND ppromo.active = TRUE
+AND ppromo.start_date <= CURRENT_DATE 
+AND ppromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductItemsWithPromotionsNextPage :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+INNER JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+INNER JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id 
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+ 
+WHERE 
+p.id = sqlc.arg(product_id) AND
+pi.id < sqlc.arg(product_item_id) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+((pp.active = TRUE
+AND ppromo.active = TRUE
+AND ppromo.start_date <= CURRENT_DATE 
+AND ppromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductItemsWithBrandPromotions :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+INNER JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+ 
+WHERE 
+pb.id = sqlc.arg(brand_id) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+((bp.active = TRUE
+AND bpromo.active = TRUE
+AND bpromo.start_date <= CURRENT_DATE 
+AND bpromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductItemsWithBrandPromotionsNextPage :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+INNER JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+ 
+WHERE 
+pb.id = sqlc.arg(brand_id) AND
+pi.id < sqlc.arg(product_item_id) AND
+p.id < sqlc.arg(product_id) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+((bp.active = TRUE
+AND bpromo.active = TRUE
+AND bpromo.start_date <= CURRENT_DATE 
+AND bpromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductItemsWithCategoryPromotions :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+INNER JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+INNER JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id 
+ 
+WHERE 
+pc.id = sqlc.arg(category_id) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+((cp.active = TRUE
+AND cpromo.active = TRUE
+AND cpromo.start_date <= CURRENT_DATE 
+AND cpromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductItemsWithCategoryPromotionsNextPage :many
+WITH t1 AS(
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+INNER JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+INNER JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+ 
+WHERE 
+pc.id = sqlc.arg(category_id) AND
+pi.id < sqlc.arg(product_item_id) AND
+p.id < sqlc.arg(product_id) AND
+pi.active = TRUE AND
+p.active =TRUE AND
+((cp.active = TRUE
+AND cpromo.active = TRUE
+AND cpromo.start_date <= CURRENT_DATE 
+AND cpromo.end_date >= CURRENT_DATE))
+ORDER BY 
+pi.id DESC,
+p.id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+

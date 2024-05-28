@@ -3,9 +3,10 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -20,15 +21,15 @@ func createRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 		Active:                 util.RandomBool(),
 	}
 
-	CategoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg)
+	categoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg)
 	require.NoError(t, err)
-	require.NotEmpty(t, CategoryPromotion)
+	require.NotEmpty(t, categoryPromotion)
 
-	require.Equal(t, arg.CategoryID, CategoryPromotion.CategoryID)
-	require.Equal(t, arg.PromotionID, CategoryPromotion.PromotionID)
-	require.Equal(t, arg.Active, CategoryPromotion.Active)
+	require.Equal(t, arg.CategoryID, categoryPromotion.CategoryID)
+	require.Equal(t, arg.PromotionID, categoryPromotion.PromotionID)
+	require.Equal(t, arg.Active, categoryPromotion.Active)
 
-	return CategoryPromotion
+	return categoryPromotion
 }
 func TestCreateCategoryPromotion(t *testing.T) {
 	createRandomCategoryPromotion(t)
@@ -99,7 +100,7 @@ func TestDeleteCategoryPromotion(t *testing.T) {
 }
 
 func TestListCategoryPromotions(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		createRandomCategoryPromotion(t)
 	}
 	arg := ListCategoryPromotionsParams{
@@ -119,18 +120,31 @@ func TestListCategoryPromotions(t *testing.T) {
 }
 
 func TestListCategoryPromotionsWithImages(t *testing.T) {
+	exit := false
+	for {
+		p := createRandomCategoryPromotion(t)
+		if p.Active && p.CategoryPromotionImage.Valid {
+			categoryPromotions, _ := testStore.ListCategoryPromotionsWithImages(context.Background())
+			for _, categoryPromotion := range categoryPromotions {
+				if categoryPromotion.StartDate.Unix() <= time.Now().Unix() && categoryPromotion.EndDate.Unix() >= time.Now().Unix() {
+					exit = true
+					break
+				}
+			}
+			if exit {
+				break
+			}
 
-	for i := 0; i < 5; i++ {
-		createRandomCategoryPromotion(t)
+		}
 	}
 
-	CategoryPromotions, err := testStore.ListCategoryPromotionsWithImages(context.Background())
+	categoryPromotions, err := testStore.ListCategoryPromotionsWithImages(context.Background())
 
 	require.NoError(t, err)
-	require.NotEmpty(t, CategoryPromotions)
+	require.NotEmpty(t, categoryPromotions)
 
-	for _, CategoryPromotion := range CategoryPromotions {
-		require.NotEmpty(t, CategoryPromotion)
+	for _, categoryPromotion := range categoryPromotions {
+		require.NotEmpty(t, categoryPromotion)
 	}
 
 }

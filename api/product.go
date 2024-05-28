@@ -8,7 +8,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )

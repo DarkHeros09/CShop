@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -123,18 +124,30 @@ func TestListBrandPromotions(t *testing.T) {
 }
 
 func TestListBrandPromotionsWithImages(t *testing.T) {
-
-	for i := 0; i < 5; i++ {
-		createRandomBrandPromotion(t)
+	exit := false
+	for {
+		p := createRandomBrandPromotion(t)
+		if p.Active && p.BrandPromotionImage.Valid {
+			brandPromotions, _ := testStore.ListBrandPromotionsWithImages(context.Background())
+			for _, brandPromotion := range brandPromotions {
+				if brandPromotion.StartDate.Unix() <= time.Now().Unix() && brandPromotion.EndDate.Unix() >= time.Now().Unix() && len(brandPromotions) > 0 {
+					exit = true
+					break
+				}
+			}
+			if exit {
+				break
+			}
+		}
 	}
 
-	BrandPromotions, err := testStore.ListBrandPromotionsWithImages(context.Background())
+	brandPromotions, err := testStore.ListBrandPromotionsWithImages(context.Background())
 
 	require.NoError(t, err)
-	require.NotEmpty(t, BrandPromotions)
+	require.NotEmpty(t, brandPromotions)
 
-	for _, BrandPromotion := range BrandPromotions {
-		require.NotEmpty(t, BrandPromotion)
+	for _, brandPromotion := range brandPromotions {
+		require.NotEmpty(t, brandPromotion)
 	}
 
 }

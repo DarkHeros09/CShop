@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -293,4 +293,143 @@ func TestSearchProductItems(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, searchedRestProductItem)
 	// require.Equal(t, productItem.ID, searchedProductItem[len(searchedProductItem)-1].ID)
+}
+
+func TestListProductItemsWithPromotion(t *testing.T) {
+	t.Parallel()
+	var productId int64
+	var isOK = true
+	for isOK {
+		pi := createRandomProductItem(t)
+		arg := ListProductItemsWithPromotionsParams{
+			Limit:     10,
+			ProductID: pi.ProductID,
+		}
+		productItem, err := testStore.ListProductItemsWithPromotions(context.Background(), arg)
+		require.NoError(t, err)
+		if len(productItem) > 0 && productItem[len(productItem)-1].ProductPromoActive == true {
+			productId = productItem[len(productItem)-1].ProductID
+			isOK = false
+		}
+	}
+
+	arg := ListProductItemsWithPromotionsParams{
+		Limit:     10,
+		ProductID: productId,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsWithPromotions(context.Background(), arg)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	// require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductItemsWithPromotionsNextPageParams{
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
+	}
+
+	_, err = testStore.ListProductItemsWithPromotionsNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
+	require.NoError(t, err)
+	// require.NotEmpty(t, secondPage)
+	// require.Equal(t, len(secondPage), 10)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+}
+
+func TestListProductItemsWithBrandPromotion(t *testing.T) {
+	t.Parallel()
+	var brandId int64
+	for {
+		pi := createRandomProductItem(t)
+		p, err := testStore.GetProduct(context.Background(), pi.ProductID)
+		require.NoError(t, err)
+		if p.Active {
+			arg := ListProductItemsWithBrandPromotionsParams{
+				Limit:   10,
+				BrandID: p.BrandID,
+			}
+			productItem, err := testStore.ListProductItemsWithBrandPromotions(context.Background(), arg)
+			require.NoError(t, err)
+			if len(productItem) > 0 && productItem[len(productItem)-1].BrandPromoActive {
+				brandId = productItem[len(productItem)-1].BrandID
+				break
+			}
+		}
+	}
+
+	arg := ListProductItemsWithBrandPromotionsParams{
+		Limit:   10,
+		BrandID: brandId,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsWithBrandPromotions(context.Background(), arg)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	// require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductItemsWithBrandPromotionsNextPageParams{
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
+	}
+
+	_, err = testStore.ListProductItemsWithBrandPromotionsNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
+	require.NoError(t, err)
+	// require.NotEmpty(t, secondPage)
+	// require.Equal(t, len(secondPage), 10)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+}
+
+func TestListProductItemsWithCategoryPromotion(t *testing.T) {
+	t.Parallel()
+	var categoryId int64
+	var isOK = true
+	for isOK {
+		pi := createRandomProductItem(t)
+		p, err := testStore.GetProduct(context.Background(), pi.ProductID)
+		require.NoError(t, err)
+		if p.Active {
+			arg := ListProductItemsWithCategoryPromotionsParams{
+				Limit:      10,
+				CategoryID: p.CategoryID,
+			}
+			productItem, err := testStore.ListProductItemsWithCategoryPromotions(context.Background(), arg)
+			require.NoError(t, err)
+			if len(productItem) > 0 && productItem[len(productItem)-1].CategoryPromoActive == true {
+				categoryId = productItem[len(productItem)-1].CategoryID
+				isOK = false
+			}
+		}
+	}
+
+	arg := ListProductItemsWithCategoryPromotionsParams{
+		Limit:      10,
+		CategoryID: categoryId,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsWithCategoryPromotions(context.Background(), arg)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	// require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductItemsWithCategoryPromotionsNextPageParams{
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
+	}
+
+	_, err = testStore.ListProductItemsWithCategoryPromotionsNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
+	require.NoError(t, err)
+	// require.NotEmpty(t, secondPage)
+	// require.Equal(t, len(secondPage), 10)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
 }

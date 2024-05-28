@@ -47,3 +47,7 @@ RETURNING *;
 -- name: DeleteProduct :exec
 DELETE FROM "product"
 WHERE id = $1;
+
+-- name: GetProductsByIDs :many
+SELECT * FROM "product"
+WHERE id = ANY(sqlc.arg(ids)::bigint[]);

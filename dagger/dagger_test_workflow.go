@@ -44,7 +44,16 @@ func main() {
 	}
 
 	// Project to test
-	src := client.Host().Directory(".")
+	src := client.Host().Directory(".").
+		WithoutDirectory("./.github").
+		WithoutDirectory("./tmp").
+		WithoutDirectory("./web").
+		WithoutDirectory("./doc").
+		WithoutDirectory("./dagger").
+		WithoutFile("./.air.toml").
+		WithoutFile("./dbml-error.log").
+		WithoutFile("./pre-cmd.txt").
+		WithoutFile("./post_cmd.txt")
 
 	// multi stage build - stage 1
 	// golang-migrate image

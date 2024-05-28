@@ -10,11 +10,16 @@ import (
 	firebase "firebase.google.com/go"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
+	"github.com/cshop/v3/worker"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
 )
 
-func newTestServer(t *testing.T, store db.Store) *Server {
+func newTestServer(
+	t *testing.T,
+	store db.Store,
+	taskDistributor worker.TaskDistributor,
+) *Server {
 	config := util.Config{
 		TokenSymmetricKey:   util.RandomString(32),
 		AccessTokenDuration: time.Minute,
@@ -28,7 +33,7 @@ func newTestServer(t *testing.T, store db.Store) *Server {
 		log.Fatal("error initializing firebase:", err)
 	}
 
-	server, err := NewServer(config, store, fb)
+	server, err := NewServer(config, store, fb, taskDistributor)
 	require.NoError(t, err)
 
 	return server

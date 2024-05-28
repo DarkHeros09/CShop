@@ -12,6 +12,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
+	mockwk "github.com/cshop/v3/worker/mock"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
@@ -77,9 +78,10 @@ func TestListPaymentTypeAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/payment-types", tc.UserID)

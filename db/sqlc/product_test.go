@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -143,6 +143,25 @@ func TestListProducts(t *testing.T) {
 
 	for _, product := range products {
 		require.NotEmpty(t, product)
+	}
+
+}
+
+func TestGetProductsByIDs(t *testing.T) {
+	var listOfIds []int64
+	for i := 0; i < 10; i++ {
+		product := createRandomProduct(t)
+		listOfIds = append(listOfIds, product.ID)
+	}
+
+	products, err := testStore.GetProductsByIDs(context.Background(), listOfIds)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, products)
+
+	for _, product := range products {
+		require.NotEmpty(t, product)
+		require.Contains(t, listOfIds, product.ID)
 	}
 
 }

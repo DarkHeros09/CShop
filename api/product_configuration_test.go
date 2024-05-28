@@ -13,8 +13,9 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
+	mockwk "github.com/cshop/v3/worker/mock"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -109,12 +110,13 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 			ctrl := gomock.NewController(t) // no need to call defer ctrl.finish() in 1.6V
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/product-configurations/%d/variation-options/%d", tc.ProductItemID, tc.VariationOptionID)
@@ -264,9 +266,10 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -384,9 +387,10 @@ func TestListProductConfigurationsAPI(t *testing.T) {
 				ctrl := gomock.NewController(t)
 
 				store := mockdb.NewMockStore(ctrl)
+				worker := mockwk.NewMockTaskDistributor(ctrl)
 				tc.buildStubs(store)
 
-				server := newTestServer(t, store)
+				server := newTestServer(t, store, worker)
 				//recorder := httptest.NewRecorder()
 
 				url := fmt.Sprintf("/api/v1/product-configurations/%d", tc.ProductItemID)
@@ -548,9 +552,10 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -723,12 +728,13 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 			ctrl := gomock.NewController(t) // no need to call defer ctrl.finish() in 1.6V
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/%d/v1/product-configurations/%d/variation-options/%d", tc.AdminID, tc.ProductItemID, tc.VariationOptionID)

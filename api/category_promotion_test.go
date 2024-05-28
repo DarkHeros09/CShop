@@ -13,8 +13,9 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
+	mockwk "github.com/cshop/v3/worker/mock"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -110,12 +111,13 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 			ctrl := gomock.NewController(t) // no need to call defer ctrl.finish() in 1.6V
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/category-promotions/%d/categories/%d", tc.PromotionID, tc.CategoryID)
@@ -277,9 +279,10 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -395,9 +398,10 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/category-promotions"
@@ -566,9 +570,10 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -736,12 +741,13 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			ctrl := gomock.NewController(t) // no need to call defer ctrl.finish() in 1.6V
 
 			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
