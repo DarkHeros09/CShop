@@ -33,7 +33,8 @@ jobs:
       - uses: vovavc/migrate-github-action@v0.2.1
         with:
           path: ./db/migration
-          database: postgres://postgres:secret@$localhost:6666/cshop?sslmode=disable
+          database: postgres://postgres:secret@localhost:6666/cshop?sslmode=disable
+          version: 
           command: up
 
   test:
