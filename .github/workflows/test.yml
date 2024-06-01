@@ -8,37 +8,7 @@ on:
 
 jobs:
 
-  migrate:
-    name: Migrate
-    runs-on: ubuntu-latest
-
-    services:
-
-      postgres:
-        image: postgres:16.0
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: cshop
-        ports: 
-          - 6666:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5 
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: vovavc/migrate-github-action@v0.2.1
-        with:
-          path: ./db/migration
-          database: postgres://postgres:secret@postgres:6666/cshop?sslmode=disable
-          version: 
-          command: up
-
   test:
-    needs: migrate
     name: Test
     runs-on: ubuntu-latest
 
@@ -60,6 +30,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - uses: vovavc/migrate-github-action@v0.2.1
+      with:
+        path: ./db/migration
+        database: postgres://postgres:secret@postgres:6666/cshop?sslmode=disable
+        version: 
+        command: up
 
     - name: Set up Go
       uses: actions/setup-go@v5
