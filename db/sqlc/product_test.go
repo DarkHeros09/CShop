@@ -38,8 +38,42 @@ func createRandomProduct(t *testing.T) Product {
 
 	return product
 }
+
+func adminCreateRandomProduct(t *testing.T) Product {
+	admin := createRandomAdmin(t)
+	category := createRandomProductCategory(t)
+	brand := createRandomProductBrand(t)
+	arg := AdminCreateProductParams{
+		AdminID:     admin.ID,
+		CategoryID:  category.ID,
+		BrandID:     brand.ID,
+		Name:        util.RandomUser(),
+		Description: util.RandomUser(),
+		Active:      true,
+	}
+
+	product, err := testStore.AdminCreateProduct(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, product)
+
+	require.Equal(t, arg.CategoryID, product.CategoryID)
+	require.Equal(t, arg.Name, product.Name)
+	require.Equal(t, arg.Description, product.Description)
+	// require.Equal(t, arg.ProductImage, product.ProductImage)
+	require.Equal(t, arg.Active, product.Active)
+	require.NotEmpty(t, product.CreatedAt)
+	require.True(t, product.UpdatedAt.IsZero())
+	require.True(t, product.Active)
+
+	return product
+}
 func TestCreateProduct(t *testing.T) {
 	createRandomProduct(t)
+}
+
+func TestAdminCreateProduct(t *testing.T) {
+	adminCreateRandomProduct(t)
 }
 
 func TestGetProduct(t *testing.T) {

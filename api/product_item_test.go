@@ -147,7 +147,8 @@ func TestCreateProductItemAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductItemParams{
+				arg := db.AdminCreateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
 					QtyInStock: productItem.QtyInStock,
@@ -159,7 +160,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(productItem, nil)
 			},
@@ -174,7 +175,8 @@ func TestCreateProductItemAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductItemParams{
+				arg := db.AdminCreateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
 					QtyInStock: productItem.QtyInStock,
@@ -186,7 +188,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -211,7 +213,8 @@ func TestCreateProductItemAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductItemParams{
+				arg := db.AdminCreateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
 					QtyInStock: productItem.QtyInStock,
@@ -223,7 +226,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -248,7 +251,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateProductItem(gomock.Any(), gomock.Any()).
+					AdminCreateProductItem(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrTxClosed)
 			},
@@ -274,7 +277,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateProductItem(gomock.Any(), gomock.Any()).
+					AdminCreateProductItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -300,7 +303,7 @@ func TestCreateProductItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/product-items", tc.AdminID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-items", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -1764,7 +1767,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-items/%d", tc.AdminID, tc.productItemID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -1907,7 +1910,7 @@ func TestDeleteProductItemAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/product-items/%d", tc.AdminID, tc.productItemID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-items/%d", tc.AdminID, tc.productItemID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

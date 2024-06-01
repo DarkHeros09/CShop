@@ -9,6 +9,38 @@ import (
 	"context"
 )
 
+const adminCreateProductBrand = `-- name: AdminCreateProductBrand :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
+INSERT INTO "product_brand" (
+  brand_name,
+  brand_image
+) 
+SELECT $1, $2 FROM t1
+WHERE is_admin=1
+ON CONFLICT(brand_name) DO UPDATE SET 
+brand_name = EXCLUDED.brand_name,
+brand_image = EXCLUDED.brand_image
+RETURNING id, brand_name, brand_image
+`
+
+type AdminCreateProductBrandParams struct {
+	BrandName  string `json:"brand_name"`
+	BrandImage string `json:"brand_image"`
+	AdminID    int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductBrand, arg.BrandName, arg.BrandImage, arg.AdminID)
+	var i ProductBrand
+	err := row.Scan(&i.ID, &i.BrandName, &i.BrandImage)
+	return i, err
+}
+
 const createProductBrand = `-- name: CreateProductBrand :one
 INSERT INTO "product_brand" (
   brand_name,

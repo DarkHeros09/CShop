@@ -180,7 +180,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/shop-orders/%d", tc.AdminID, tc.ShopOrderID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/shop-orders/%d", tc.AdminID, tc.ShopOrderID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

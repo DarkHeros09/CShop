@@ -102,12 +102,12 @@ testwin:
 	powershell -command "del test_output.txt"
 
 docker_login:
-	powershell -command "$$DOCKER_ACCESS_TOKEN | docker login -u mohammednajib --password-stdin"
+	powershell -command '$$env:DOCKER_ACCESS_TOKEN' | powershell 'docker login -u mohammednajib --password-stdin'
 
 dagger_test:
 	docker start redis
 	docker start psql_$(DB_VERSION)-cshop
-	docker login
+	make docker_login
 	go run ./dagger/dagger_test_workflow.go
 
 dagger_test2:
@@ -117,7 +117,7 @@ server:
 	go run main.go
 
 stop:
-	@-docker stop $(shell docker ps -q >nul 2>nul) >nul 2>nul
+	@-docker stop $(shell docker ps -q) >nul 2>nul
 	@echo "stopped all containers"
 	@make -s close_docker
 	@echo "closed docker"

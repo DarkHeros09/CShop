@@ -5,6 +5,7 @@
 //
 //	mockgen --build_flags=--mod=mod -package mockdb -destination db/mock/store.go github.com/cshop/v3/db/sqlc Store
 //
+
 // Package mockdb is a generated GoMock package.
 package mockdb
 
@@ -39,6 +40,66 @@ func NewMockStore(ctrl *gomock.Controller) *MockStore {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
+}
+
+// AdminCreateProduct mocks base method.
+func (m *MockStore) AdminCreateProduct(arg0 context.Context, arg1 db.AdminCreateProductParams) (db.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateProduct", arg0, arg1)
+	ret0, _ := ret[0].(db.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateProduct indicates an expected call of AdminCreateProduct.
+func (mr *MockStoreMockRecorder) AdminCreateProduct(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProduct", reflect.TypeOf((*MockStore)(nil).AdminCreateProduct), arg0, arg1)
+}
+
+// AdminCreateProductBrand mocks base method.
+func (m *MockStore) AdminCreateProductBrand(arg0 context.Context, arg1 db.AdminCreateProductBrandParams) (db.ProductBrand, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateProductBrand", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductBrand)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateProductBrand indicates an expected call of AdminCreateProductBrand.
+func (mr *MockStoreMockRecorder) AdminCreateProductBrand(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProductBrand", reflect.TypeOf((*MockStore)(nil).AdminCreateProductBrand), arg0, arg1)
+}
+
+// AdminCreateProductCategory mocks base method.
+func (m *MockStore) AdminCreateProductCategory(arg0 context.Context, arg1 db.AdminCreateProductCategoryParams) (db.ProductCategory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateProductCategory", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductCategory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateProductCategory indicates an expected call of AdminCreateProductCategory.
+func (mr *MockStoreMockRecorder) AdminCreateProductCategory(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProductCategory", reflect.TypeOf((*MockStore)(nil).AdminCreateProductCategory), arg0, arg1)
+}
+
+// AdminCreateProductItem mocks base method.
+func (m *MockStore) AdminCreateProductItem(arg0 context.Context, arg1 db.AdminCreateProductItemParams) (db.ProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateProductItem", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateProductItem indicates an expected call of AdminCreateProductItem.
+func (mr *MockStoreMockRecorder) AdminCreateProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProductItem", reflect.TypeOf((*MockStore)(nil).AdminCreateProductItem), arg0, arg1)
 }
 
 // CheckUserAddressDefaultAddress mocks base method.
@@ -84,6 +145,21 @@ func (m *MockStore) CreateAdmin(arg0 context.Context, arg1 db.CreateAdminParams)
 func (mr *MockStoreMockRecorder) CreateAdmin(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdmin", reflect.TypeOf((*MockStore)(nil).CreateAdmin), arg0, arg1)
+}
+
+// CreateAdminSession mocks base method.
+func (m *MockStore) CreateAdminSession(arg0 context.Context, arg1 db.CreateAdminSessionParams) (db.AdminSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAdminSession", arg0, arg1)
+	ret0, _ := ret[0].(db.AdminSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAdminSession indicates an expected call of CreateAdminSession.
+func (mr *MockStoreMockRecorder) CreateAdminSession(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdminSession", reflect.TypeOf((*MockStore)(nil).CreateAdminSession), arg0, arg1)
 }
 
 // CreateAdminType mocks base method.
@@ -1195,6 +1271,21 @@ func (m *MockStore) GetAdminByEmail(arg0 context.Context, arg1 string) (db.Admin
 func (mr *MockStoreMockRecorder) GetAdminByEmail(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdminByEmail", reflect.TypeOf((*MockStore)(nil).GetAdminByEmail), arg0, arg1)
+}
+
+// GetAdminSession mocks base method.
+func (m *MockStore) GetAdminSession(arg0 context.Context, arg1 uuid.UUID) (db.AdminSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAdminSession", arg0, arg1)
+	ret0, _ := ret[0].(db.AdminSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAdminSession indicates an expected call of GetAdminSession.
+func (mr *MockStoreMockRecorder) GetAdminSession(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdminSession", reflect.TypeOf((*MockStore)(nil).GetAdminSession), arg0, arg1)
 }
 
 // GetAdminType mocks base method.
@@ -2770,6 +2861,21 @@ func (m *MockStore) UpdateAdmin(arg0 context.Context, arg1 db.UpdateAdminParams)
 func (mr *MockStoreMockRecorder) UpdateAdmin(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAdmin", reflect.TypeOf((*MockStore)(nil).UpdateAdmin), arg0, arg1)
+}
+
+// UpdateAdminSession mocks base method.
+func (m *MockStore) UpdateAdminSession(arg0 context.Context, arg1 db.UpdateAdminSessionParams) (db.AdminSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAdminSession", arg0, arg1)
+	ret0, _ := ret[0].(db.AdminSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAdminSession indicates an expected call of UpdateAdminSession.
+func (mr *MockStoreMockRecorder) UpdateAdminSession(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAdminSession", reflect.TypeOf((*MockStore)(nil).UpdateAdminSession), arg0, arg1)
 }
 
 // UpdateAdminType mocks base method.

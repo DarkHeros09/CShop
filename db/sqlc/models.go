@@ -32,6 +32,18 @@ type Admin struct {
 	LastLogin time.Time `json:"last_login"`
 }
 
+type AdminSession struct {
+	ID           uuid.UUID `json:"id"`
+	AdminID      int64     `json:"admin_id"`
+	RefreshToken string    `json:"refresh_token"`
+	AdminAgent   string    `json:"admin_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
+}
+
 type AdminType struct {
 	ID        int64     `json:"id"`
 	AdminType string    `json:"admin_type"`

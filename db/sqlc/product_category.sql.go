@@ -11,6 +11,50 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProductCategory = `-- name: AdminCreateProductCategory :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $4
+    AND active = TRUE
+    )
+INSERT INTO "product_category" (
+  parent_category_id,
+  category_name,
+  category_image
+)
+SELECT $1, $2, $3 FROM t1
+WHERE is_admin=1
+ON CONFLICT(category_name) DO UPDATE SET 
+category_name = EXCLUDED.category_name,
+category_image = EXCLUDED.category_image
+RETURNING id, parent_category_id, category_name, category_image
+`
+
+type AdminCreateProductCategoryParams struct {
+	ParentCategoryID null.Int `json:"parent_category_id"`
+	CategoryName     string   `json:"category_name"`
+	CategoryImage    string   `json:"category_image"`
+	AdminID          int64    `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductCategory,
+		arg.ParentCategoryID,
+		arg.CategoryName,
+		arg.CategoryImage,
+		arg.AdminID,
+	)
+	var i ProductCategory
+	err := row.Scan(
+		&i.ID,
+		&i.ParentCategoryID,
+		&i.CategoryName,
+		&i.CategoryImage,
+	)
+	return i, err
+}
+
 const createProductCategory = `-- name: CreateProductCategory :one
 INSERT INTO "product_category" (
   parent_category_id,

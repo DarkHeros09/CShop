@@ -106,8 +106,109 @@ func createRandomProductItem(t *testing.T) ProductItem {
 
 	return productItem
 }
+
+func adminCreateRandomProductItem(t *testing.T) ProductItem {
+	admin := createRandomAdmin(t)
+	product := createRandomProduct(t)
+	productSize := createRandomProductSize(t)
+	productColor := createRandomProductColor(t)
+	productImage := createRandomProductImage(t)
+	arg := AdminCreateProductItemParams{
+		AdminID:    admin.ID,
+		ProductID:  product.ID,
+		ProductSku: util.RandomInt(100, 300),
+		QtyInStock: int32(util.RandomInt(0, 100)),
+		SizeID:     productSize.ID,
+		ImageID:    productImage.ID,
+		ColorID:    productColor.ID,
+		// ProductImage: util.RandomURL(),
+		Price:  util.RandomDecimalString(1, 100),
+		Active: true,
+	}
+
+	productItem, err := testStore.AdminCreateProductItem(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem)
+
+	require.Equal(t, arg.ProductID, productItem.ProductID)
+	require.Equal(t, arg.ProductSku, productItem.ProductSku)
+	require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
+	// require.Equal(t, arg.ProductImage, productItem.ProductImage)
+	require.Equal(t, arg.SizeID, productItem.SizeID)
+	require.Equal(t, arg.ColorID, productItem.ColorID)
+	require.Equal(t, arg.ImageID, productItem.ImageID)
+	require.Equal(t, arg.Price, productItem.Price)
+	require.Equal(t, arg.Active, productItem.Active)
+	require.NotEmpty(t, productItem.CreatedAt)
+	require.True(t, productItem.UpdatedAt.IsZero())
+	require.True(t, productItem.Active)
+
+	if util.RandomBool() {
+		promotion := createRandomPromotion(t)
+
+		rand := util.RandomInt(1, 3)
+
+		switch rand {
+		case 1:
+
+			arg1 := CreateCategoryPromotionParams{
+				CategoryID:             product.CategoryID,
+				PromotionID:            promotion.ID,
+				CategoryPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:                 util.RandomBool(),
+			}
+
+			categoryPromotion, err := testStore.CreateCategoryPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, categoryPromotion)
+
+			require.Equal(t, arg1.CategoryID, categoryPromotion.CategoryID)
+			require.Equal(t, arg1.PromotionID, categoryPromotion.PromotionID)
+			require.Equal(t, arg1.Active, categoryPromotion.Active)
+
+		case 2:
+
+			arg1 := CreateBrandPromotionParams{
+				BrandID:             product.BrandID,
+				PromotionID:         promotion.ID,
+				BrandPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:              util.RandomBool(),
+			}
+
+			brandPromotion, err := testStore.CreateBrandPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, brandPromotion)
+
+			require.Equal(t, arg1.BrandID, brandPromotion.BrandID)
+			require.Equal(t, arg1.PromotionID, brandPromotion.PromotionID)
+			require.Equal(t, arg1.Active, brandPromotion.Active)
+
+		case 3:
+			arg1 := CreateProductPromotionParams{
+				ProductID:             product.ID,
+				PromotionID:           promotion.ID,
+				ProductPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+				Active:                util.RandomBool(),
+			}
+
+			productPromotion, err := testStore.CreateProductPromotion(context.Background(), arg1)
+			require.NoError(t, err)
+			require.NotEmpty(t, productPromotion)
+
+			require.Equal(t, arg1.ProductID, productPromotion.ProductID)
+			require.Equal(t, arg1.PromotionID, productPromotion.PromotionID)
+			require.Equal(t, arg1.Active, productPromotion.Active)
+		}
+	}
+
+	return productItem
+}
 func TestCreateProductItem(t *testing.T) {
 	createRandomProductItem(t)
+}
+
+func TestAdminCreateProductItem(t *testing.T) {
+	adminCreateRandomProductItem(t)
 }
 
 func TestGetProductItem(t *testing.T) {

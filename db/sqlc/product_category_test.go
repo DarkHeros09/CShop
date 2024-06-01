@@ -84,8 +84,43 @@ func createRandomProductCategoryParent(t *testing.T) ProductCategory {
 	return productCategory
 }
 
+func adminCreateRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCategory {
+	admin := createRandomAdmin(t)
+	categoryName := util.RandomString(5)
+	arg := AdminCreateProductCategoryParams{
+		AdminID:          admin.ID,
+		ParentCategoryID: null.Int{},
+		CategoryName:     categoryName,
+		CategoryImage:    util.RandomURL(),
+	}
+	// productCategoryChan := make(chan ProductCategory)
+	// errChan := make(chan error)
+
+	// go func() {
+	// 	productCategory, err := testStore.CreateProductCategory(context.Background(), arg)
+	// 	productCategoryChan <- productCategory
+	// 	errChan <- err
+	// }()
+
+	// err := <-errChan
+	// productCategory := <-productCategoryChan
+	productCategory, err := testStore.AdminCreateProductCategory(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productCategory)
+
+	require.Equal(t, arg.CategoryName, productCategory.CategoryName)
+	require.NotEmpty(t, productCategory.ID)
+
+	return productCategory
+}
+
 func TestCreateProductCategory(t *testing.T) {
 	go createRandomProductCategory(t)
+}
+
+func TestAdminCreateProductCategory(t *testing.T) {
+	go adminCreateRandomProductCategoryForUpdateOrDelete(t)
 }
 
 func TestCreateProductCategoryParent(t *testing.T) {

@@ -14,6 +14,28 @@ INSERT INTO "product_item" (
 )
 RETURNING *;
 
+-- name: AdminCreateProductItem :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "product_item" (
+  product_id,
+  size_id,
+  image_id,
+  color_id,
+  product_sku,
+  qty_in_stock,
+  -- product_image,
+  price,
+  active
+)
+SELECT sqlc.arg(product_id), sqlc.arg(size_id), sqlc.arg(image_id), sqlc.arg(color_id), sqlc.arg(product_sku), sqlc.arg(qty_in_stock), sqlc.arg(price), sqlc.arg(active) FROM t1
+WHERE is_admin=1
+RETURNING *;
+    
 -- name: GetProductItem :one
 SELECT * FROM "product_item"
 WHERE id = $1 LIMIT 1;

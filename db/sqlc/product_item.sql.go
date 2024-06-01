@@ -12,6 +12,70 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProductItem = `-- name: AdminCreateProductItem :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $9
+    AND active = TRUE
+    )
+INSERT INTO "product_item" (
+  product_id,
+  size_id,
+  image_id,
+  color_id,
+  product_sku,
+  qty_in_stock,
+  -- product_image,
+  price,
+  active
+)
+SELECT $1, $2, $3, $4, $5, $6, $7, $8 FROM t1
+WHERE is_admin=1
+RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+`
+
+type AdminCreateProductItemParams struct {
+	ProductID  int64  `json:"product_id"`
+	SizeID     int64  `json:"size_id"`
+	ImageID    int64  `json:"image_id"`
+	ColorID    int64  `json:"color_id"`
+	ProductSku int64  `json:"product_sku"`
+	QtyInStock int32  `json:"qty_in_stock"`
+	Price      string `json:"price"`
+	Active     bool   `json:"active"`
+	AdminID    int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductItem,
+		arg.ProductID,
+		arg.SizeID,
+		arg.ImageID,
+		arg.ColorID,
+		arg.ProductSku,
+		arg.QtyInStock,
+		arg.Price,
+		arg.Active,
+		arg.AdminID,
+	)
+	var i ProductItem
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
+		&i.ProductSku,
+		&i.QtyInStock,
+		&i.Price,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createProductItem = `-- name: CreateProductItem :one
 INSERT INTO "product_item" (
   product_id,

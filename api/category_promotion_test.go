@@ -289,7 +289,7 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -580,7 +580,7 @@ func TestUpdateCategoryPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -750,7 +750,7 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

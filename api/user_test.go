@@ -1015,7 +1015,7 @@ func TestListUsersAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			// //recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/users", tc.AdminID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/users", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -1149,7 +1149,7 @@ func TestDeleteUserAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/users/%d", tc.AdminID, tc.UserID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/users/%d", tc.AdminID, tc.UserID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

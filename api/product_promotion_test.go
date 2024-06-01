@@ -288,7 +288,7 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -579,7 +579,7 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -749,7 +749,7 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 

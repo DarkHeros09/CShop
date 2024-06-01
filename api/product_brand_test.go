@@ -255,7 +255,7 @@ func TestCreateProductBrandAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/brands", tc.AdminID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/brands", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -533,7 +533,7 @@ func TestUpdateProductBrandAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/brands/%d", tc.AdminID, tc.productBrandID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/brands/%d", tc.AdminID, tc.productBrandID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -687,7 +687,7 @@ func TestDeleteProductBrandAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/%d/v1/brands/%d", tc.AdminID, tc.productBrandID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/brands/%d", tc.AdminID, tc.productBrandID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

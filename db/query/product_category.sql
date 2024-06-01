@@ -11,6 +11,25 @@ category_name = EXCLUDED.category_name,
 category_image = EXCLUDED.category_image
 RETURNING *;
 
+-- name: AdminCreateProductCategory :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "product_category" (
+  parent_category_id,
+  category_name,
+  category_image
+)
+SELECT sqlc.arg(parent_category_id), sqlc.arg(category_name), sqlc.arg(category_image) FROM t1
+WHERE is_admin=1
+ON CONFLICT(category_name) DO UPDATE SET 
+category_name = EXCLUDED.category_name,
+category_image = EXCLUDED.category_image
+RETURNING *;
+
 -- name: GetProductCategory :one
 SELECT * FROM "product_category"
 WHERE id = $1 LIMIT 1;

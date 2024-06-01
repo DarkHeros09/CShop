@@ -71,8 +71,49 @@ func createRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
 	return productBrand
 }
 
+func adminCreateRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
+	t.Helper()
+	admin := createRandomAdmin(t)
+	brandName := util.RandomString(5)
+	// arg := CreateProductBrandParams{
+	// 	BrandName:     brandName,
+	// }
+	// productBrandChan := make(chan ProductBrand)
+	// errChan := make(chan error)
+
+	// go func() {
+	// 	productBrand, err := testStore.CreateProductBrand(context.Background(), arg)
+	// 	productBrandChan <- productBrand
+	// 	errChan <- err
+	// }()
+
+	// err := <-errChan
+	// productBrand := <-productBrandChan
+	arg := AdminCreateProductBrandParams{
+		AdminID:    admin.ID,
+		BrandName:  brandName,
+		BrandImage: util.RandomURL(),
+	}
+	productBrand, err := testStore.AdminCreateProductBrand(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productBrand)
+
+	require.Equal(t, brandName, productBrand.BrandName)
+	require.NotEmpty(t, productBrand.ID)
+
+	return productBrand
+}
+
 func TestCreateProductBrand(t *testing.T) {
 	go createRandomProductBrand(t)
+}
+func TestCreateProductBrandForUpdateOrDelete(t *testing.T) {
+	go createRandomProductBrandForUpdateOrDelete(t)
+}
+
+func TestAdminCreateProductBrand(t *testing.T) {
+	go adminCreateRandomProductBrandForUpdateOrDelete(t)
 }
 
 func TestGetProductBrand(t *testing.T) {

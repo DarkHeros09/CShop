@@ -46,7 +46,8 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.CreateProductItemParams{
+	arg := db.AdminCreateProductItemParams{
+		AdminID:    authPayload.AdminID,
 		ProductID:  req.ProductID,
 		ProductSku: req.ProductSKU,
 		QtyInStock: req.QtyInStock,
@@ -58,7 +59,7 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 		Active:  req.Active,
 	}
 
-	productItem, err := server.store.CreateProductItem(ctx.Context(), arg)
+	productItem, err := server.store.AdminCreateProductItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

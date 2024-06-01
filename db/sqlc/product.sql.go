@@ -12,6 +12,58 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProduct = `-- name: AdminCreateProduct :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $6
+    AND active = TRUE
+    )
+INSERT INTO "product" (
+  category_id,
+  brand_id,
+  name,
+  description,
+  active
+)
+SELECT $1, $2, $3, $4, $5 FROM t1
+WHERE is_admin=1
+RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+`
+
+type AdminCreateProductParams struct {
+	CategoryID  int64  `json:"category_id"`
+	BrandID     int64  `json:"brand_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
+	AdminID     int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error) {
+	row := q.db.QueryRow(ctx, adminCreateProduct,
+		arg.CategoryID,
+		arg.BrandID,
+		arg.Name,
+		arg.Description,
+		arg.Active,
+		arg.AdminID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.BrandID,
+		&i.Name,
+		&i.Description,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Search,
+	)
+	return i, err
+}
+
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO "product" (
   category_id,

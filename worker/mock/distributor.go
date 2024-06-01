@@ -5,6 +5,7 @@
 //
 //	mockgen --build_flags=--mod=mod -package mockwk -destination worker/mock/distributor.go github.com/cshop/v3/worker TaskDistributor
 //
+
 // Package mockwk is a generated GoMock package.
 package mockwk
 

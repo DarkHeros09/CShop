@@ -683,7 +683,7 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 			server := newTestServer(t, store, worker)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/admin/%d/v1/shipping-method/%d", tc.AdminID, tc.ID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/shipping-method/%d", tc.AdminID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
