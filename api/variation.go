@@ -29,7 +29,7 @@ func (server *Server) createVariation(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -141,7 +141,7 @@ func (server *Server) updateVariation(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -185,7 +185,7 @@ func (server *Server) deleteVariation(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

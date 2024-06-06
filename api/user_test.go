@@ -310,7 +310,7 @@ func TestCreateUserAPI(t *testing.T) {
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 
 			server := newTestServer(t, store, worker)
-			tc.buildStubs(store, server.tokenMaker)
+			tc.buildStubs(store, server.userTokenMaker)
 
 			// Marshal body data to JSON
 			data, err := json.Marshal(tc.body)
@@ -718,7 +718,7 @@ func TestGetUserAPI(t *testing.T) {
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
 
-			tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.userTokenMaker)
 
 			rsp, err := server.router.Test(request, -1)
 			require.NoError(t, err)
@@ -848,7 +848,7 @@ func TestUpdateUserAPI(t *testing.T) {
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
 
-			tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.userTokenMaker)
 
 			rsp, err := server.router.Test(request, -1)
 			require.NoError(t, err)
@@ -1027,7 +1027,7 @@ func TestListUsersAPI(t *testing.T) {
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
-			tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			rsp, err := server.router.Test(request, -1)
 			require.NoError(t, err)
 
@@ -1153,7 +1153,7 @@ func TestDeleteUserAPI(t *testing.T) {
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)

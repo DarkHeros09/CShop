@@ -52,7 +52,7 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -145,7 +145,7 @@ func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -220,7 +220,7 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -295,7 +295,7 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -358,7 +358,7 @@ func (server *Server) deleteUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

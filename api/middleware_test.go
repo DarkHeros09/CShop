@@ -106,7 +106,7 @@ func TestAuthMiddlewareForUser(t *testing.T) {
 			server := newTestServer(t, nil, nil)
 
 			authPath := "/auth"
-			server.router.Use(authMiddleware(server.tokenMaker, false))
+			server.router.Use(authMiddleware(server.userTokenMaker, false))
 			server.router.Get(
 				authPath,
 				func(ctx *fiber.Ctx) error {
@@ -120,7 +120,7 @@ func TestAuthMiddlewareForUser(t *testing.T) {
 			request, err := http.NewRequest(fiber.MethodGet, authPath, nil)
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.tokenMaker)
+			tc.setupAuth(t, request, server.userTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)

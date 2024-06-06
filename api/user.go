@@ -101,7 +101,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateTokenForUser(
+	accessToken, accessPayload, err := server.userTokenMaker.CreateTokenForUser(
 		user.ID,
 		user.Username,
 		server.config.AccessTokenDuration,
@@ -111,7 +111,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateTokenForUser(
+	refreshToken, refreshPayload, err := server.userTokenMaker.CreateTokenForUser(
 		user.ID,
 		user.Username,
 		server.config.RefreshTokenDuration,
@@ -349,7 +349,7 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -397,7 +397,7 @@ func (server *Server) listUsers(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -442,7 +442,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if params.UserID != authPayload.UserID {
 		err := errors.New("account doesn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -488,7 +488,7 @@ func (server *Server) deleteUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -571,7 +571,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateTokenForUser(
+	accessToken, accessPayload, err := server.userTokenMaker.CreateTokenForUser(
 		user.ID,
 		user.Username,
 		server.config.AccessTokenDuration,
@@ -581,7 +581,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateTokenForUser(
+	refreshToken, refreshPayload, err := server.userTokenMaker.CreateTokenForUser(
 		user.ID,
 		user.Username,
 		server.config.RefreshTokenDuration,
@@ -643,7 +643,7 @@ func (server *Server) logoutUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if params.UserID != authPayload.UserID {
 		err := errors.New("account doesn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

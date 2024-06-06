@@ -76,7 +76,7 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateTokenForAdmin(
+	accessToken, accessPayload, err := server.adminTokenMaker.CreateTokenForAdmin(
 		admin.ID,
 		admin.Username,
 		admin.TypeID,
@@ -88,7 +88,7 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateTokenForAdmin(
+	refreshToken, refreshPayload, err := server.adminTokenMaker.CreateTokenForAdmin(
 		admin.ID,
 		admin.Username,
 		admin.TypeID,
@@ -152,7 +152,7 @@ func (server *Server) logoutAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if params.AdminID != authPayload.AdminID {
 		err := errors.New("account doesn't belong to the authenticated admin")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

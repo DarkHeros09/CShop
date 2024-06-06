@@ -41,7 +41,7 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -163,7 +163,7 @@ func (server *Server) listShopOrders(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -209,7 +209,7 @@ func (server *Server) listShopOrdersV2(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -262,7 +262,7 @@ func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

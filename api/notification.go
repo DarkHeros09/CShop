@@ -30,7 +30,7 @@ func (server *Server) createNotification(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -74,7 +74,7 @@ func (server *Server) getNotification(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -119,7 +119,7 @@ func (server *Server) updateNotification(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -163,7 +163,7 @@ func (server *Server) deleteNotification(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -209,7 +209,7 @@ func (server *Server) deleteNotificationAllByUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if authPayload.UserID != params.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

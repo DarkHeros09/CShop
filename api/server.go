@@ -22,7 +22,8 @@ type Server struct {
 	config          util.Config
 	store           db.Store
 	fb              *firebase.App
-	tokenMaker      token.Maker
+	userTokenMaker  token.Maker
+	adminTokenMaker token.Maker
 	router          *fiber.App
 	taskDistributor worker.TaskDistributor
 }
@@ -34,7 +35,11 @@ func NewServer(
 	fb *firebase.App,
 	taskDistributor worker.TaskDistributor,
 ) (*Server, error) {
-	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	userTokenMaker, err := token.NewPasetoMaker(config.UserTokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
+	adminTokenMaker, err := token.NewPasetoMaker(config.AdminTokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
@@ -43,7 +48,8 @@ func NewServer(
 		config:          config,
 		store:           store,
 		fb:              fb,
-		tokenMaker:      tokenMaker,
+		userTokenMaker:  userTokenMaker,
+		adminTokenMaker: adminTokenMaker,
 		taskDistributor: taskDistributor,
 	}
 
@@ -98,9 +104,11 @@ func (server *Server) setupRouter() {
 
 	//* Tokens
 	app.Post("/api/v1/auth/access-token", server.renewAccessToken)
+	app.Post("/api/v1/auth/refresh-token", server.renewRefreshToken)
 
 	//* Tokens for Admins
-	app.Post("/api/v1/auth/access-token-for-admin", server.renewAccessTokenAdmin) //! For Admin Only
+	app.Post("/api/v1/auth/access-token-for-admin", server.renewAccessTokenForAdmin)   //! For Admin Only
+	app.Post("/api/v1/auth/refresh-token-for-admin", server.renewRefreshTokenForAdmin) //! For Admin Only
 
 	//*HomePageTextBanner
 	app.Get("/api/v1/text-banners/:textBannerId", server.getHomePageTextBanner) //? no auth required
@@ -163,8 +171,8 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/product-configurations/:itemId/variation-options/:variationId", server.getProductConfiguration) //? no auth required
 	app.Get("/api/v1/product-configurations/:itemId", server.listProductConfigurations)                              //? no auth required
 
-	userRouter := app.Group("/usr/v1").Use(authMiddleware(server.tokenMaker, false))
-	adminRouter := app.Group("/admin/v1").Use(authMiddleware(server.tokenMaker, true)) //! For Admin Only
+	userRouter := app.Group("/usr/v1").Use(authMiddleware(server.userTokenMaker, false))
+	adminRouter := app.Group("/admin/v1").Use(authMiddleware(server.adminTokenMaker, true)) //! For Admin Only
 
 	userRouter.Get("/users/:id", server.getUser)
 

@@ -9,16 +9,17 @@ import (
 // config stores all configuration of the application
 // The values are read by viper from a config file or environment variable.
 type Config struct {
-	DBDriver             string        `mapstructure:"DB_DRIVER"`
-	DBSource             string        `mapstructure:"DB_SOURCE"`
-	ServerAddress        string        `mapstructure:"SERVER_ADDRESS"`
-	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
-	EmailSenderAddress   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
-	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	DBDriver               string        `mapstructure:"DB_DRIVER"`
+	DBSource               string        `mapstructure:"DB_SOURCE"`
+	ServerAddress          string        `mapstructure:"SERVER_ADDRESS"`
+	RedisAddress           string        `mapstructure:"REDIS_ADDRESS"`
+	UserTokenSymmetricKey  string        `mapstructure:"USER_TOKEN_SYMMETRIC_KEY"`
+	AdminTokenSymmetricKey string        `mapstructure:"ADMIN_TOKEN_SYMMETRIC_KEY"`
+	EmailSenderName        string        `mapstructure:"EMAIL_SENDER_NAME"`
+	EmailSenderAddress     string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
+	EmailSenderPassword    string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
+	AccessTokenDuration    time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration   time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 // LoadConfig reads configuration from file or environment variable.

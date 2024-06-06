@@ -29,7 +29,7 @@ func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -68,7 +68,7 @@ func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -112,7 +112,7 @@ func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.UserPayload)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
 	if params.UserID != authPayload.UserID {
 		err := errors.New("account deosn't belong to the authenticated user")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -157,7 +157,7 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -201,7 +201,7 @@ func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationPayloadKey).(*token.AdminPayload)
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))

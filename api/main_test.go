@@ -21,8 +21,9 @@ func newTestServer(
 	taskDistributor worker.TaskDistributor,
 ) *Server {
 	config := util.Config{
-		TokenSymmetricKey:   util.RandomString(32),
-		AccessTokenDuration: time.Minute,
+		UserTokenSymmetricKey:  util.RandomString(32),
+		AdminTokenSymmetricKey: util.RandomString(32),
+		AccessTokenDuration:    time.Minute,
 	}
 
 	opt := option.WithCredentialsFile("serviceAccountKey_test.json")

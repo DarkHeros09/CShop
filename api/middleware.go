@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	authorizationHeaderKey  = "authorization"
-	authorizationTypeBearer = "bearer"
-	authorizationPayloadKey = "authorization_payload"
+	authorizationHeaderKey       = "authorization"
+	authorizationTypeBearer      = "bearer"
+	authorizationUserPayloadKey  = "authorization_user_payload"
+	authorizationAdminPayloadKey = "authorization_admin_payload"
 )
 
 func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
@@ -53,7 +54,7 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 				return nil
 			}
 
-			ctx.Locals(authorizationPayloadKey, adminPayload)
+			ctx.Locals(authorizationAdminPayloadKey, adminPayload)
 			ctx.Next()
 		}
 
@@ -67,7 +68,7 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 				return nil
 			}
 
-			ctx.Locals(authorizationPayloadKey, userPayload)
+			ctx.Locals(authorizationUserPayloadKey, userPayload)
 			ctx.Next()
 
 		}
