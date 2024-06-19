@@ -11,6 +11,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
 
     services:
 

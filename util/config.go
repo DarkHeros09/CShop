@@ -2,6 +2,7 @@ package util
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/dotenv-org/godotenvvault"
@@ -46,34 +47,34 @@ func LoadConfig(path string) (config Config, err error) {
 }
 
 func LoadVault(filename ...string) (config Config, err error) {
-	appEnv, err := godotenvvault.Read(filename...)
+	err = godotenvvault.Overload(filename...)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	accessTokenDurration, err := time.ParseDuration(appEnv["ACCESS_TOKEN_DURATION"])
+	accessTokenDurration, err := time.ParseDuration(os.Getenv("ACCESS_TOKEN_DURATION"))
 	if err != nil {
 		return Config{}, err
 	}
 
-	refreshTokenDuration, err := time.ParseDuration(appEnv["REFRESH_TOKEN_DURATION"])
+	refreshTokenDuration, err := time.ParseDuration(os.Getenv("REFRESH_TOKEN_DURATION"))
 	if err != nil {
 		return Config{}, err
 	}
 
 	return Config{
-		DBDriver:               appEnv["DB_DRIVER"],
-		DBSource:               appEnv["DB_SOURCE"],
-		ServerAddress:          appEnv["SERVER_ADDRESS"],
-		RedisAddress:           appEnv["REDIS_ADDRESS"],
-		UserTokenSymmetricKey:  appEnv["USER_TOKEN_SYMMETRIC_KEY"],
-		AdminTokenSymmetricKey: appEnv["ADMIN_TOKEN_SYMMETRIC_KEY"],
-		EmailSenderName:        appEnv["EMAIL_SENDER_NAME"],
-		EmailSenderAddress:     appEnv["EMAIL_SENDER_ADDRESS"],
-		EmailSenderPassword:    appEnv["EMAIL_SENDER_PASSWORD"],
+		DBDriver:               os.Getenv("DB_DRIVER"),
+		DBSource:               os.Getenv("DB_SOURCE"),
+		ServerAddress:          os.Getenv("SERVER_ADDRESS"),
+		RedisAddress:           os.Getenv("REDIS_ADDRESS"),
+		UserTokenSymmetricKey:  os.Getenv("USER_TOKEN_SYMMETRIC_KEY"),
+		AdminTokenSymmetricKey: os.Getenv("ADMIN_TOKEN_SYMMETRIC_KEY"),
+		EmailSenderName:        os.Getenv("EMAIL_SENDER_NAME"),
+		EmailSenderAddress:     os.Getenv("EMAIL_SENDER_ADDRESS"),
+		EmailSenderPassword:    os.Getenv("EMAIL_SENDER_PASSWORD"),
 		AccessTokenDuration:    accessTokenDurration,
 		RefreshTokenDuration:   refreshTokenDuration,
-		ImageKitPrivateKey:     appEnv["IMAGE_KIT_PRIVATE_KEY"],
-		ImageKitPublicKey:      appEnv["IMAGE_KIT_PUBLIC_KEY"],
-		ImageKitUrlEndPoint:    appEnv["IMAGE_KIT_URL_ENDPOINT"],
+		ImageKitPrivateKey:     os.Getenv("IMAGE_KIT_PRIVATE_KEY"),
+		ImageKitPublicKey:      os.Getenv("IMAGE_KIT_PUBLIC_KEY"),
+		ImageKitUrlEndPoint:    os.Getenv("IMAGE_KIT_URL_ENDPOINT"),
 	}, nil
 }
