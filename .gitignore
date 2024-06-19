@@ -25,3 +25,4 @@ web/
 !.env.project
 !.env.vault
 .env*
+.env.*

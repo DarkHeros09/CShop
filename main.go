@@ -29,7 +29,7 @@ var interruptSignals = []os.Signal{
 
 func main() {
 
-	config, err := util.LoadConfig(".") // we use . because app.env is on the same level with main.go
+	config, err := util.LoadVault() // we use . because app.env is on the same level with main.go
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}

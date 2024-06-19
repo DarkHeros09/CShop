@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -8,12 +9,14 @@ import (
 )
 
 func TestSendEmailWithGmail(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
-
-	config, err := util.LoadConfig("../")
+	// if testing.Short() {
+	t.Skip()
+	// }
+	config, err := util.LoadVault("../.env.vault")
+	require.NotEmpty(t, config)
 	require.NoError(t, err)
+
+	fmt.Println(config)
 
 	sender := NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
 

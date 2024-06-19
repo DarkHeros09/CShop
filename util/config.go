@@ -1,8 +1,11 @@
 package util
 
 import (
+	"log"
 	"time"
 
+	"github.com/dotenv-org/godotenvvault"
+	_ "github.com/dotenv-org/godotenvvault/autoload"
 	"github.com/spf13/viper"
 )
 
@@ -40,4 +43,37 @@ func LoadConfig(path string) (config Config, err error) {
 
 	err = viper.Unmarshal(&config)
 	return
+}
+
+func LoadVault(filename ...string) (config Config, err error) {
+	appEnv, err := godotenvvault.Read(filename...)
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	accessTokenDurration, err := time.ParseDuration(appEnv["ACCESS_TOKEN_DURATION"])
+	if err != nil {
+		return Config{}, err
+	}
+
+	refreshTokenDuration, err := time.ParseDuration(appEnv["REFRESH_TOKEN_DURATION"])
+	if err != nil {
+		return Config{}, err
+	}
+
+	return Config{
+		DBDriver:               appEnv["DB_DRIVER"],
+		DBSource:               appEnv["DB_SOURCE"],
+		ServerAddress:          appEnv["SERVER_ADDRESS"],
+		RedisAddress:           appEnv["REDIS_ADDRESS"],
+		UserTokenSymmetricKey:  appEnv["USER_TOKEN_SYMMETRIC_KEY"],
+		AdminTokenSymmetricKey: appEnv["ADMIN_TOKEN_SYMMETRIC_KEY"],
+		EmailSenderName:        appEnv["EMAIL_SENDER_NAME"],
+		EmailSenderAddress:     appEnv["EMAIL_SENDER_ADDRESS"],
+		EmailSenderPassword:    appEnv["EMAIL_SENDER_PASSWORD"],
+		AccessTokenDuration:    accessTokenDurration,
+		RefreshTokenDuration:   refreshTokenDuration,
+		ImageKitPrivateKey:     appEnv["IMAGE_KIT_PRIVATE_KEY"],
+		ImageKitPublicKey:      appEnv["IMAGE_KIT_PUBLIC_KEY"],
+		ImageKitUrlEndPoint:    appEnv["IMAGE_KIT_URL_ENDPOINT"],
+	}, nil
 }
