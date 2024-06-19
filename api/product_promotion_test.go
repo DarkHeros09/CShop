@@ -11,6 +11,7 @@ import (
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
+	mockik "github.com/cshop/v3/image/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -116,12 +117,13 @@ func TestGetProductPromotionAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/product-promotions/%d/products/%d", tc.PromotionID, tc.ProductID)
@@ -279,9 +281,10 @@ func TestCreateProductPromotionAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -398,9 +401,10 @@ func TestListProductPromotionsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-promotions"
@@ -570,9 +574,10 @@ func TestUpdateProductPromotionAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -741,12 +746,13 @@ func TestDeleteProductPromotionAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/product-promotions/%d/products/%d", tc.AdminID, tc.PromotionID, tc.ProductID)

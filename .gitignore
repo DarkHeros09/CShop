@@ -20,3 +20,8 @@ serviceAccountKey.json
 tmp/
 
 web/
+
+.flaskenv*
+!.env.project
+!.env.vault
+.env*

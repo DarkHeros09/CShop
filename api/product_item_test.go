@@ -11,6 +11,7 @@ import (
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
+	mockik "github.com/cshop/v3/image/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -94,12 +95,13 @@ func TestGetProductItemAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/product-items/%d", tc.productItemID)
@@ -294,9 +296,10 @@ func TestCreateProductItemAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -413,9 +416,10 @@ func TestListProductItemsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items"
@@ -520,9 +524,10 @@ func TestListProductItemsV2API(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-v2"
@@ -643,9 +648,10 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-next-page"
@@ -748,9 +754,10 @@ func TestSearchProductItemsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/search-product-items"
@@ -870,9 +877,10 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/search-product-items-next-page"
@@ -976,9 +984,10 @@ func TestListProductItemsWithPromotionsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-promotions"
@@ -1092,9 +1101,10 @@ func TestListProductItemsWithPromotionsNextPageAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-promotions-next-page"
@@ -1197,9 +1207,10 @@ func TestListProductItemsWithBrandPromotionsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-brand-promotions"
@@ -1318,9 +1329,10 @@ func TestListProductItemsWithBrandPromotionsNextPageAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-brand-promotions-next-page"
@@ -1424,9 +1436,10 @@ func TestListProductItemsWithCategoryPromotionsAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-category-promotions"
@@ -1545,9 +1558,10 @@ func TestListProductItemsWithCategoryPromotionsNextPageAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/product-items-with-category-promotions-next-page"
@@ -1758,9 +1772,10 @@ func TestUpdateProductItemAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -1902,12 +1917,13 @@ func TestDeleteProductItemAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/product-items/%d", tc.AdminID, tc.productItemID)

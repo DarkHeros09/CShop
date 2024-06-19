@@ -80,6 +80,21 @@ sqlcwin:
 sqlcfix:
 	docker run --rm -v "${CURDIR}":/src -w /src sqlc/sqlc generate
 
+ttt:
+	echo "${CURDIR}"
+
+dotenv_new:
+	docker run -w "$(CURDIR)" -v "$(CURDIR):$(CURDIR)" -it dotenv/dotenv-vault new 	
+
+dotenv_login:
+	docker run -w "${CURDIR}" -v "${CURDIR}:${CURDIR}" -it dotenv/dotenv-vault login 	
+
+dotenv_pull:
+	docker run -w "${CURDIR}" -v "${CURDIR}:${CURDIR}" -it dotenv/dotenv-vault pull 
+
+dotenv_push:
+	docker run -w "${CURDIR}" -v "${CURDIR}:${CURDIR}" -it dotenv/dotenv-vault push 	
+
 init_docker:
 	@pwsh -noprofile -command 'if ([bool]([System.Environment]::OSVersion))\
 	{\
@@ -129,6 +144,7 @@ close_docker:
 mock:
 	mockgen --build_flags=--mod=mod -package mockdb -destination db/mock/store.go github.com/cshop/v3/db/sqlc Store
 	mockgen --build_flags=--mod=mod -package mockwk -destination worker/mock/distributor.go github.com/cshop/v3/worker TaskDistributor
+	mockgen --build_flags=--mod=mod -package mockik -destination image/mock/imagekit.go github.com/cshop/v3/image ImageKitManagement
 
 proto:
 	rm -f pb/*.go

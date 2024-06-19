@@ -35,6 +35,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/creasty/defaults v1.6.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -62,6 +63,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
+	gopkg.in/validator.v2 v2.0.1 // indirect
 )
 
 require (
@@ -81,6 +83,7 @@ require (
 	github.com/gofiber/template/html/v2 v2.1.1
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hibiken/asynq v0.24.1
+	github.com/imagekit-developer/imagekit-go v0.0.0-20240521071536-1d7e6e67fcd7
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

@@ -20,12 +20,15 @@ type Config struct {
 	EmailSenderPassword    string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
 	AccessTokenDuration    time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration   time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	ImageKitPrivateKey     string        `mapstructure:"IMAGE_KIT_PRIVATE_KEY"`
+	ImageKitPublicKey      string        `mapstructure:"IMAGE_KIT_PUBLIC_KEY"`
+	ImageKitUrlEndPoint    string        `mapstructure:"IMAGE_KIT_URL_ENDPOINT"`
 }
 
 // LoadConfig reads configuration from file or environment variable.
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
+	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()

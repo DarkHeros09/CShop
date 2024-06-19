@@ -18,6 +18,7 @@ import (
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
+	mockik "github.com/cshop/v3/image/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -308,8 +309,9 @@ func TestCreateUserAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			tc.buildStubs(store, server.userTokenMaker)
 
 			// Marshal body data to JSON
@@ -433,9 +435,10 @@ func TestLoginUserAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -568,7 +571,7 @@ func TestLoginUserAPI(t *testing.T) {
 // worker := mockwk.NewMockTaskDistributor(ctrl)
 // 			tc.buildStubs(store)
 
-// 			server := newTestServer(t, store, worker)
+// 			server := newTestServer(t, store, worker,ik)
 // 			// //recorder := httptest.NewRecorder()
 
 // 			// Marshal body data to JSON
@@ -706,11 +709,12 @@ func TestGetUserAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d", tc.UserID)
@@ -834,9 +838,10 @@ func TestUpdateUserAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -1010,9 +1015,10 @@ func TestListUsersAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			// //recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/users", tc.AdminID)
@@ -1141,12 +1147,13 @@ func TestDeleteUserAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/users/%d", tc.AdminID, tc.UserID)

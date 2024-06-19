@@ -10,6 +10,7 @@ import (
 
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
+	mockik "github.com/cshop/v3/image/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -79,9 +80,10 @@ func TestListPaymentTypeAPI(t *testing.T) {
 
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker)
+			server := newTestServer(t, store, worker, ik)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/payment-types", tc.UserID)

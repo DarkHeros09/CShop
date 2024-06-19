@@ -10,6 +10,7 @@ import (
 	firebase "firebase.google.com/go"
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
+	image "github.com/cshop/v3/image"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
@@ -26,6 +27,7 @@ type Server struct {
 	adminTokenMaker token.Maker
 	router          *fiber.App
 	taskDistributor worker.TaskDistributor
+	ik              image.ImageKitManagement
 }
 
 // NewServer creates a new HTTP server and setup routing.
@@ -34,6 +36,7 @@ func NewServer(
 	store db.Store,
 	fb *firebase.App,
 	taskDistributor worker.TaskDistributor,
+	ik image.ImageKitManagement,
 ) (*Server, error) {
 	userTokenMaker, err := token.NewPasetoMaker(config.UserTokenSymmetricKey)
 	if err != nil {
@@ -51,6 +54,7 @@ func NewServer(
 		userTokenMaker:  userTokenMaker,
 		adminTokenMaker: adminTokenMaker,
 		taskDistributor: taskDistributor,
+		ik:              ik,
 	}
 
 	server.setupRouter()
@@ -92,6 +96,7 @@ func (server *Server) setupRouter() {
 	// }
 
 	app.Get("/api/v1/reset_password", server.resetPasswordPage)
+	app.Get("/api/v1/imagekit", server.listproductImages) //! Admin Only
 
 	//* Users
 	app.Post("/api/v1/users", server.createUser)
@@ -180,6 +185,8 @@ func (server *Server) setupRouter() {
 	// 	gofiberfirebaseauth.Config{
 	// 		FirebaseApp: fireApp,
 	// 	}))
+
+	adminRouter.Get("/admins/:adminId/imagekit", server.listproductImages) //! Admin Only
 
 	userRouter.Post("/users/:id/notification", server.createNotification)
 	userRouter.Get("/users/:id/notification/:deviceId", server.getNotification)
