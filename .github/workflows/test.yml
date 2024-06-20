@@ -37,25 +37,22 @@ jobs:
       with:
         go-version: '>=1.22.3'
         cache: false
-
-    - name: install dotenvx
-      run: curl -sfS https://dotenvx.sh/install.sh | sh
-
+  
     - name: Install golang-migrate
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.1/migrate.linux-amd64.tar.gz | tar xvz
         sudo mv migrate /usr/bin/
         which migrate
-
+        
     - name: Run Migrations
       run: make migrate_up
+        
+    - name: install dotenvx
+      run: curl -sfS https://dotenvx.sh/install.sh | sh
 
     - name: Test
-      run: |
-        echo "TTEST: $TTEST"
-        dotenvx run -f .env.test -- make test
+      run: dotenvx run -f .env.test -- make test
       env:
         DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
-        TTEST: ${{ secrets.TTEST }}
       
     
