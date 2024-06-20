@@ -54,7 +54,7 @@ jobs:
         echo "TTEST: $TTEST"
         dotenvx run -f .env.test -- make test
       env:
-        DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
-        TTEST: ${{ secrets.TTEST }}
+        DOTENV_PRIVATE_KEY_TEST: ${{ secrets.CShop.DOTENV_PRIVATE_KEY_TEST }}
+        TTEST: ${{ secrets.Cshop.TTEST }}
       
     
