@@ -50,6 +50,6 @@ jobs:
       run: make migrate_up
 
     - name: Test
-      run: dotenvx run -- make test
+      run: dotenvx run -f .env.test -- make test
       env:
         DOTENV_KEY: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
