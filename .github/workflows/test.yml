@@ -50,8 +50,11 @@ jobs:
       run: make migrate_up
 
     - name: Test
-      run: dotenvx run -f .env.test -- make test
-      run: echo "TTEST: $TTEST"
+      run: |
+        echo "TTEST: $TTEST"
+        dotenvx run -f .env.test -- make test
       env:
         DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
         TTEST: ${{ secrets.TTEST }}
+      
+    
