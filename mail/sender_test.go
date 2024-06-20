@@ -13,7 +13,7 @@ func TestSendEmailWithGmail(t *testing.T) {
 	// t.Skip()
 	// }
 
-	config, err := util.LoadVault("../.env.test")
+	config, err := util.LoadVault()
 	require.NotEmpty(t, config)
 	require.NoError(t, err)
 

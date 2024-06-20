@@ -1,11 +1,9 @@
 package util
 
 import (
-	"log"
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -45,11 +43,11 @@ func LoadConfig(path string) (config Config, err error) {
 	return
 }
 
-func LoadVault(filename ...string) (config Config, err error) {
-	err = godotenv.Load(filename...)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+func LoadVault() (config Config, err error) {
+	// err = godotenv.Load(filename...)
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	accessTokenDurration, err := time.ParseDuration(os.Getenv("ACCESS_TOKEN_DURATION"))
 	if err != nil {
 		return Config{}, err

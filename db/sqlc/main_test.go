@@ -17,7 +17,7 @@ var testStore Store
 
 func TestMain(m *testing.M) {
 	// goleak.VerifyTestMain(m)
-	config, err := util.LoadVault("../../.env.test")
+	config, err := util.LoadVault()
 	if err != nil {
 		log.Fatal("cannot load config:", err)
 	}
