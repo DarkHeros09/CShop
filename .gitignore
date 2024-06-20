@@ -22,7 +22,7 @@ tmp/
 web/
 
 .flaskenv*
-!.env.project
-!.env.vault
 .env*
 .env.*
+.env.keys
+!.env.test

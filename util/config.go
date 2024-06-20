@@ -5,8 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dotenv-org/godotenvvault"
-	_ "github.com/dotenv-org/godotenvvault/autoload"
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -47,7 +46,7 @@ func LoadConfig(path string) (config Config, err error) {
 }
 
 func LoadVault(filename ...string) (config Config, err error) {
-	err = godotenvvault.Overload(filename...)
+	err = godotenv.Load(filename...)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}

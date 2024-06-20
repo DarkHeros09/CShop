@@ -10,9 +10,10 @@ import (
 
 func TestSendEmailWithGmail(t *testing.T) {
 	// if testing.Short() {
-	t.Skip()
+	// t.Skip()
 	// }
-	config, err := util.LoadVault("../.env.vault")
+
+	config, err := util.LoadVault("../.env.test")
 	require.NotEmpty(t, config)
 	require.NoError(t, err)
 
