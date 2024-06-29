@@ -48,7 +48,10 @@ jobs:
       run: make migrate_up
         
     - name: install dotenvx
-      run: curl -sfS https://dotenvx.sh/?version=0.45.0 | sh
+      run: |
+        curl -sfS https://dotenvx.sh/install.sh > install.sh
+        chmod", "+x", "install.sh
+        ./install.sh
 
     - name: Test
       run: dotenvx run -f .env.test -- make test
