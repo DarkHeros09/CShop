@@ -124,7 +124,7 @@ dagger_test:
 	docker start redis
 	docker start psql_$(DB_VERSION)-cshop
 	make docker_login
-	dotenvx run -f $(ENVFILE) -- go run ./dagger/dagger_test_workflow.go
+	go run ./dagger/dagger_test_workflow.go
 
 dagger_test2:
 	go run ./dagger2/dagger_test_workflow.go

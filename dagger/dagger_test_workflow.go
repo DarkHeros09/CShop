@@ -94,7 +94,7 @@ func main() {
 	// multi stage build - stage 3
 	// Run Service with tests
 	out, err := container.
-		WithFile("install.sh", client.HTTP("https://dotenvx.sh/?version=1.0.1")).
+		WithFile("install.sh", client.HTTP("https://dotenvx.sh/?version=0.45.0")).
 		WithExec([]string{"chmod", "+x", "install.sh"}).
 		WithExec([]string{"./install.sh"}).
 		WithExec([]string{"dotenvx", "run", "-f", ".env.test", "--", "make", "test"}). // execute go test
