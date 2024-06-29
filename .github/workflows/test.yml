@@ -55,7 +55,7 @@ jobs:
       
 
     - name: Test
-      run: dotenvx run -f .env.test -- make test
+      run: ./dotenvx run -f .env.test -- make test
       env:
         DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
       
