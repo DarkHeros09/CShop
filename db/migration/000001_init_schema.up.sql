@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-05-28T21:05:45.111Z
+-- Generated at: 2024-06-28T19:57:17.552Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -288,7 +288,8 @@ CREATE TABLE "shop_order" (
   "shipping_method_id" bigint NOT NULL,
   "order_status_id" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "completed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE "order_status" (
@@ -418,4 +419,3 @@ ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "add
 
 ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
 
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("order_status_id") REFERENCES "order_status" ("id") ON DELETE SET NULL;

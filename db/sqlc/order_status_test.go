@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"math/rand/v2"
 	"testing"
 
 	"github.com/guregu/null/v5"
@@ -10,15 +11,33 @@ import (
 )
 
 func createRandomOrderStatus(t *testing.T) OrderStatus {
-	var orderStatus OrderStatus
 	var err error
 	orderStatuses := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
-	for i := 0; i < len(orderStatuses); i++ {
-		orderStatus, err = testStore.CreateOrderStatus(context.Background(), orderStatuses[i])
-		require.NoError(t, err)
-		require.NotEmpty(t, orderStatus)
+	var orderStatus OrderStatus
+	var orderStatusAll []OrderStatus
+	orderStatuseList, err := testStore.ListOrderStatuses(context.Background() /* arg*/)
+
+	require.NoError(t, err)
+	if len(orderStatuseList) != 3 {
+
+		for i := 0; i < len(orderStatuses); i++ {
+			orderStatus, err = testStore.CreateOrderStatus(context.Background(), orderStatuses[i])
+			require.NoError(t, err)
+			require.NotEmpty(t, orderStatus)
+
+			orderStatusAll = append(orderStatusAll, orderStatus)
+		}
+		// select rand int from 0 - 2
+
+		r := rand.IntN(len(orderStatuses))
+		// fmt.Println("THIS IS THE RANDOM NUMBER IN", r)
+		return orderStatusAll[r]
 	}
-	return orderStatus
+	// ln := len(orderStatuseList)
+	// fmt.Println("LENGTH NUMBER OUT", ln)
+	r := rand.IntN(len(orderStatuseList))
+	// fmt.Println("THIS IS THE RANDOM NUMBER OUT", r)
+	return orderStatuseList[r]
 }
 func TestCreateOrderStatus(t *testing.T) {
 	createRandomOrderStatus(t)
@@ -40,7 +59,7 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 	arg := UpdateOrderStatusParams{
 		ID: orderStatus1.ID,
 		//last value from orderStatus1 otherwise will get duplicate keys becuase of unique constraint
-		Status: null.StringFrom("ملغي"),
+		Status: null.StringFrom(orderStatus1.Status),
 	}
 
 	orderStatus2, err := testStore.UpdateOrderStatus(context.Background(), arg)
@@ -52,17 +71,21 @@ func TestUpdateOrderStatusNameAndPrice(t *testing.T) {
 }
 
 func TestDeleteOrderStatus(t *testing.T) {
-	orderStatus1 := createRandomOrderStatus(t)
+	for {
+		orderStatus1 := createRandomOrderStatus(t)
+		if orderStatus1.Status == "ملغي" {
+			err := testStore.DeleteOrderStatus(context.Background(), orderStatus1.ID)
 
-	err := testStore.DeleteOrderStatus(context.Background(), orderStatus1.ID)
+			require.NoError(t, err)
 
-	require.NoError(t, err)
+			orderStatus2, err := testStore.GetOrderStatus(context.Background(), orderStatus1.ID)
 
-	orderStatus2, err := testStore.GetOrderStatus(context.Background(), orderStatus1.ID)
-
-	require.Error(t, err)
-	require.EqualError(t, err, pgx.ErrNoRows.Error())
-	require.Empty(t, orderStatus2)
+			require.Error(t, err)
+			require.EqualError(t, err, pgx.ErrNoRows.Error())
+			require.Empty(t, orderStatus2)
+			break
+		}
+	}
 
 }
 

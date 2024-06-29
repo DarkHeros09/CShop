@@ -74,3 +74,24 @@ RETURNING *;
 DELETE FROM "user"
 WHERE id = $1
 RETURNING *;
+
+-- name: GetActiveUsersCount :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(id) FROM "user"
+WHERE EXISTS(SELECT is_admin FROM t1)
+AND is_blocked = false;
+
+-- name: GetTotalUsersCount :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(id) FROM "user"
+WHERE EXISTS(SELECT is_admin FROM t1);

@@ -534,3 +534,19 @@ func TestListProductItemsWithCategoryPromotion(t *testing.T) {
 	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
 
 }
+
+func TestGetActiveProductItems(t *testing.T) {
+	admin := createRandomAdmin(t)
+
+	productItem2, err := testStore.GetActiveProductItems(context.Background(), admin.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem2)
+}
+
+func TestGetTotalProductItems(t *testing.T) {
+	admin := createRandomAdmin(t)
+
+	productItem2, err := testStore.GetTotalProductItems(context.Background(), admin.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem2)
+}

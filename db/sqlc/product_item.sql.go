@@ -142,6 +142,26 @@ func (q *Queries) DeleteProductItem(ctx context.Context, id int64) error {
 	return err
 }
 
+const getActiveProductItems = `-- name: GetActiveProductItems :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT COUNT(pi.id) FROM product_item AS pi
+JOIN product AS p ON p.id = pi.product_id
+WHERE p.active = TRUE AND pi.active = TRUE
+AND EXISTS(SELECT is_admin FROM t1)
+`
+
+func (q *Queries) GetActiveProductItems(ctx context.Context, adminID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, getActiveProductItems, adminID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getProductItem = `-- name: GetProductItem :one
 SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at FROM "product_item"
 WHERE id = $1 LIMIT 1
@@ -189,6 +209,25 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getTotalProductItems = `-- name: GetTotalProductItems :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT COUNT(pi.id) FROM product_item AS pi
+JOIN product AS p ON p.id = pi.product_id
+WHERE EXISTS(SELECT is_admin FROM t1)
+`
+
+func (q *Queries) GetTotalProductItems(ctx context.Context, adminID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalProductItems, adminID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const listProductItems = `-- name: ListProductItems :many

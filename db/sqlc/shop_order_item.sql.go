@@ -180,7 +180,7 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 
 const listShopOrderItemsByUserID = `-- name: ListShopOrderItemsByUserID :many
 
-SELECT so.id, so.track_number, so.order_number, so.user_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, soi.id, soi.product_item_id, soi.order_id, soi.size, soi.color, soi.quantity, soi.price, soi.created_at, soi.updated_at 
+SELECT so.id, so.track_number, so.order_number, so.user_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, soi.id, soi.product_item_id, soi.order_id, soi.size, soi.color, soi.quantity, soi.price, soi.created_at, soi.updated_at 
 FROM "shop_order" AS so
 LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
 WHERE so.user_id = $3
@@ -206,6 +206,7 @@ type ListShopOrderItemsByUserIDRow struct {
 	OrderStatusID     null.Int    `json:"order_status_id"`
 	CreatedAt         time.Time   `json:"created_at"`
 	UpdatedAt         time.Time   `json:"updated_at"`
+	CompletedAt       time.Time   `json:"completed_at"`
 	ID_2              null.Int    `json:"id_2"`
 	ProductItemID     null.Int    `json:"product_item_id"`
 	OrderID           null.Int    `json:"order_id"`
@@ -238,6 +239,7 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 			&i.OrderStatusID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CompletedAt,
 			&i.ID_2,
 			&i.ProductItemID,
 			&i.OrderID,

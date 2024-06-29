@@ -183,3 +183,20 @@ func TestListUsers(t *testing.T) {
 
 	}
 }
+
+func TestGetActiveUsersCount(t *testing.T) {
+	t.Parallel()
+	admin := createRandomAdmin(t)
+	user2, err := testStore.GetActiveUsersCount(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+}
+func TestGetTotalUsersCount(t *testing.T) {
+	t.Parallel()
+	admin := createRandomAdmin(t)
+	user2, err := testStore.GetTotalUsersCount(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+}

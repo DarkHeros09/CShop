@@ -118,6 +118,33 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 	require.Equal(t, shopOrder1.ShippingMethodID, shopOrder2.ShippingMethodID)
 	require.Equal(t, shopOrder1.OrderStatusID, shopOrder2.OrderStatusID)
 }
+func TestUpdateShopOrderOrderStatus(t *testing.T) {
+	for {
+		shopOrder1 := createRandomShopOrder(t)
+		if shopOrder1.OrderStatusID.Int64 != 2 {
+			arg := UpdateShopOrderParams{
+				OrderStatusID: null.IntFrom(2),
+				ID:            shopOrder1.ID,
+			}
+
+			shopOrder2, err := testStore.UpdateShopOrder(context.Background(), arg)
+			require.NoError(t, err)
+			require.NotEmpty(t, shopOrder2)
+
+			require.Equal(t, shopOrder1.ID, shopOrder2.ID)
+			require.Equal(t, shopOrder1.UserID, shopOrder2.UserID)
+			// require.Equal(t, shopOrder1.PaymentMethodID, shopOrder2.PaymentMethodID)
+			require.Equal(t, shopOrder1.ShippingAddressID, shopOrder2.ShippingAddressID)
+			require.Equal(t, shopOrder1.OrderTotal, shopOrder2.OrderTotal)
+			require.Equal(t, shopOrder1.ShippingMethodID, shopOrder2.ShippingMethodID)
+			require.NotEqual(t, shopOrder1.OrderStatusID, shopOrder2.OrderStatusID)
+			require.NotEqual(t, shopOrder1.OrderStatusID, shopOrder2.OrderStatusID)
+			require.NotZero(t, shopOrder2.CompletedAt)
+			require.NotEqual(t, shopOrder1.CompletedAt, shopOrder2.CompletedAt)
+			break
+		}
+	}
+}
 
 func TestDeleteShopOrder(t *testing.T) {
 	shopOrder1 := createRandomShopOrder(t)
@@ -230,4 +257,36 @@ func TestListShopOrdersByUserIDV2(t *testing.T) {
 	require.Equal(t, len(initialSearchResult), 10)
 	require.Greater(t, secondPage[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+}
+
+func TestGetShopOrdersCountByStatusId(t *testing.T) {
+	admin := createRandomAdmin(t)
+	shopOrder1 := createRandomShopOrder(t)
+
+	arg := GetShopOrdersCountByStatusIdParams{
+		OrderStatusID: shopOrder1.OrderStatusID,
+		AdminID:       admin.ID,
+	}
+	shopOrder2, err := testStore.GetShopOrdersCountByStatusId(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, shopOrder2)
+}
+
+func TestGetTotalShopOrder(t *testing.T) {
+	admin := createRandomAdmin(t)
+
+	shopOrder2, err := testStore.GetTotalShopOrder(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, shopOrder2)
+}
+
+func TestGetDailyOrderTotal(t *testing.T) {
+	admin := createRandomAdmin(t)
+
+	shopOrder2, err := testStore.GetCompletedDailyOrderTotal(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, shopOrder2)
 }

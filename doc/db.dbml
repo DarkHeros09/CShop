@@ -316,6 +316,7 @@ Table shop_order as SO {
   order_status_id bigint
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  completed_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
 }
 Ref: SO.order_status_id > OS.id [delete: set null]
 

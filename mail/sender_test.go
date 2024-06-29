@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -17,7 +16,7 @@ func TestSendEmailWithGmail(t *testing.T) {
 	require.NotEmpty(t, config)
 	require.NoError(t, err)
 
-	fmt.Println(config)
+	// fmt.Println(config)
 
 	sender := NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
 

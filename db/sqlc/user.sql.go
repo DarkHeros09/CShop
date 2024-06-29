@@ -165,6 +165,43 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
+const getActiveUsersCount = `-- name: GetActiveUsersCount :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT COUNT(id) FROM "user"
+WHERE EXISTS(SELECT is_admin FROM t1)
+AND is_blocked = false
+`
+
+func (q *Queries) GetActiveUsersCount(ctx context.Context, adminID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, getActiveUsersCount, adminID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalUsersCount = `-- name: GetTotalUsersCount :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT COUNT(id) FROM "user"
+WHERE EXISTS(SELECT is_admin FROM t1)
+`
+
+func (q *Queries) GetTotalUsersCount(ctx context.Context, adminID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalUsersCount, adminID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getUser = `-- name: GetUser :one
 SELECT id, username, email, password, telephone, is_blocked, is_email_verified, default_payment, created_at, updated_at FROM "user"
 WHERE id = $1 LIMIT 1

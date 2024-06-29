@@ -53,7 +53,11 @@ func main() {
 		WithoutFile("./.air.toml").
 		WithoutFile("./dbml-error.log").
 		WithoutFile("./pre-cmd.txt").
-		WithoutFile("./post_cmd.txt")
+		WithoutFile("./post_cmd.txt").
+		WithoutFile("./.env").
+		WithoutFile("./.env.me").
+		WithoutFile("./.env.previous").
+		WithoutFile("./.env.vault")
 
 	// multi stage build - stage 1
 	// golang-migrate image
@@ -90,7 +94,10 @@ func main() {
 	// multi stage build - stage 3
 	// Run Service with tests
 	out, err := container.
-		WithExec([]string{"make", "test"}). // execute go test
+		WithFile("install.sh", client.HTTP("https://dotenvx.sh/install.sh")).
+		WithExec([]string{"chmod", "+x", "install.sh"}).
+		WithExec([]string{"./install.sh"}).
+		WithExec([]string{"dotenvx", "run", "-f", ".env.test", "--", "make", "test"}). // execute go test
 		Stdout(ctx)
 
 	if err != nil {

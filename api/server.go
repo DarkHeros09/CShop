@@ -187,6 +187,8 @@ func (server *Server) setupRouter() {
 	// 	}))
 
 	adminRouter.Get("/admins/:adminId/imagekit", server.listproductImages) //! Admin Only
+	//* dashboard
+	adminRouter.Get("/admins/:adminId/dashboard", server.getDashboardInfo) //! Admin Only
 
 	userRouter.Post("/users/:id/notification", server.createNotification)
 	userRouter.Get("/users/:id/notification/:deviceId", server.getNotification)

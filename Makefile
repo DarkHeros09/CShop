@@ -1,6 +1,7 @@
 DB_HOST ?= localhost
 DB_PORT ?= 6666
 DB_VERSION ?= 16.0
+ENVFILE ?=./.env.test
 
 DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
 
@@ -109,7 +110,7 @@ init_docker:
 	@docker start psql_$(DB_VERSION)-cshop
 
 test:
-	go test -v -cover -timeout 1m -shuffle on -count=1 ./...
+	dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./...
 
 testwin:
 	powershell -command "go test -v -cover -timeout 1m -shuffle on -count=1 ./...  | tee test_output.txt"
@@ -123,13 +124,13 @@ dagger_test:
 	docker start redis
 	docker start psql_$(DB_VERSION)-cshop
 	make docker_login
-	go run ./dagger/dagger_test_workflow.go
+	dotenvx run -f $(ENVFILE) -- go run ./dagger/dagger_test_workflow.go
 
 dagger_test2:
 	go run ./dagger2/dagger_test_workflow.go
 
 server:
-	go run main.go
+	dotenvx run -f $(ENVFILE) -- go run main.go
 
 stop:
 	@-docker stop $(shell docker ps -q) >nul 2>nul

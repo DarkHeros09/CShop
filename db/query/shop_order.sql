@@ -91,10 +91,52 @@ shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_i
 order_total = COALESCE(sqlc.narg(order_total),order_total),
 shipping_method_id = COALESCE(sqlc.narg(shipping_method_id),shipping_method_id),
 order_status_id = COALESCE(sqlc.narg(order_status_id),order_status_id),
-updated_at = now()
+updated_at = NOW(),
+completed_at = CASE
+    WHEN order_status_id != 2 AND sqlc.narg(order_status_id) =2
+    THEN NOW()
+    ELSE completed_at
+END
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: DeleteShopOrder :exec
 DELETE FROM "shop_order"
 WHERE id = $1;
+
+-- name: GetShopOrdersCountByStatusId :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(*) AS orders_count FROM shop_order
+WHERE order_status_id = sqlc.arg(order_status_id)
+AND EXISTS(SELECT is_admin FROM t1);
+
+-- name: GetTotalShopOrder :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(*) AS orders_count FROM shop_order
+WHERE EXISTS(SELECT is_admin FROM t1);
+
+-- name: GetCompletedDailyOrderTotal :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT
+    CAST(SUM(CAST(order_total AS NUMERIC))AS VARCHAR) AS daily_revenue
+FROM
+    shop_order
+WHERE order_status_id = 2
+AND updated_at >= CURRENT_DATE
+AND updated_at < CURRENT_DATE + INTERVAL '1 day'
+AND EXISTS(SELECT is_admin FROM t1);

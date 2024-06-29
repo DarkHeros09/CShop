@@ -214,6 +214,7 @@ type ShopOrder struct {
 	OrderStatusID     null.Int  `json:"order_status_id"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
+	CompletedAt       time.Time `json:"completed_at"`
 }
 
 type ShopOrderItem struct {

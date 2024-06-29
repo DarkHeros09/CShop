@@ -868,3 +868,25 @@ LIMIT $1 +1
 SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
 LIMIT $1;
 
+-- name: GetActiveProductItems :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(pi.id) FROM product_item AS pi
+JOIN product AS p ON p.id = pi.product_id
+WHERE p.active = TRUE AND pi.active = TRUE
+AND EXISTS(SELECT is_admin FROM t1);
+
+-- name: GetTotalProductItems :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT COUNT(pi.id) FROM product_item AS pi
+JOIN product AS p ON p.id = pi.product_id
+WHERE EXISTS(SELECT is_admin FROM t1);

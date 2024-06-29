@@ -1213,6 +1213,36 @@ func (mr *MockStoreMockRecorder) FinishedPurchaseTx(arg0, arg1 any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinishedPurchaseTx", reflect.TypeOf((*MockStore)(nil).FinishedPurchaseTx), arg0, arg1)
 }
 
+// GetActiveProductItems mocks base method.
+func (m *MockStore) GetActiveProductItems(arg0 context.Context, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetActiveProductItems", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveProductItems indicates an expected call of GetActiveProductItems.
+func (mr *MockStoreMockRecorder) GetActiveProductItems(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveProductItems", reflect.TypeOf((*MockStore)(nil).GetActiveProductItems), arg0, arg1)
+}
+
+// GetActiveUsersCount mocks base method.
+func (m *MockStore) GetActiveUsersCount(arg0 context.Context, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetActiveUsersCount", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetActiveUsersCount indicates an expected call of GetActiveUsersCount.
+func (mr *MockStoreMockRecorder) GetActiveUsersCount(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveUsersCount", reflect.TypeOf((*MockStore)(nil).GetActiveUsersCount), arg0, arg1)
+}
+
 // GetAddress mocks base method.
 func (m *MockStore) GetAddress(arg0 context.Context, arg1 int64) (db.Address, error) {
 	m.ctrl.T.Helper()
@@ -1331,6 +1361,21 @@ func (m *MockStore) GetCategoryPromotion(arg0 context.Context, arg1 db.GetCatego
 func (mr *MockStoreMockRecorder) GetCategoryPromotion(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCategoryPromotion", reflect.TypeOf((*MockStore)(nil).GetCategoryPromotion), arg0, arg1)
+}
+
+// GetCompletedDailyOrderTotal mocks base method.
+func (m *MockStore) GetCompletedDailyOrderTotal(arg0 context.Context, arg1 int64) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCompletedDailyOrderTotal", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCompletedDailyOrderTotal indicates an expected call of GetCompletedDailyOrderTotal.
+func (mr *MockStoreMockRecorder) GetCompletedDailyOrderTotal(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompletedDailyOrderTotal", reflect.TypeOf((*MockStore)(nil).GetCompletedDailyOrderTotal), arg0, arg1)
 }
 
 // GetHomePageTextBanner mocks base method.
@@ -1708,6 +1753,21 @@ func (mr *MockStoreMockRecorder) GetShopOrderItemByUserIDOrderID(arg0, arg1 any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShopOrderItemByUserIDOrderID", reflect.TypeOf((*MockStore)(nil).GetShopOrderItemByUserIDOrderID), arg0, arg1)
 }
 
+// GetShopOrdersCountByStatusId mocks base method.
+func (m *MockStore) GetShopOrdersCountByStatusId(arg0 context.Context, arg1 db.GetShopOrdersCountByStatusIdParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetShopOrdersCountByStatusId", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetShopOrdersCountByStatusId indicates an expected call of GetShopOrdersCountByStatusId.
+func (mr *MockStoreMockRecorder) GetShopOrdersCountByStatusId(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShopOrdersCountByStatusId", reflect.TypeOf((*MockStore)(nil).GetShopOrdersCountByStatusId), arg0, arg1)
+}
+
 // GetShoppingCart mocks base method.
 func (m *MockStore) GetShoppingCart(arg0 context.Context, arg1 int64) (db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
@@ -1766,6 +1826,51 @@ func (m *MockStore) GetShoppingCartItemByUserIDCartID(arg0 context.Context, arg1
 func (mr *MockStoreMockRecorder) GetShoppingCartItemByUserIDCartID(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShoppingCartItemByUserIDCartID", reflect.TypeOf((*MockStore)(nil).GetShoppingCartItemByUserIDCartID), arg0, arg1)
+}
+
+// GetTotalProductItems mocks base method.
+func (m *MockStore) GetTotalProductItems(arg0 context.Context, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalProductItems", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalProductItems indicates an expected call of GetTotalProductItems.
+func (mr *MockStoreMockRecorder) GetTotalProductItems(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalProductItems", reflect.TypeOf((*MockStore)(nil).GetTotalProductItems), arg0, arg1)
+}
+
+// GetTotalShopOrder mocks base method.
+func (m *MockStore) GetTotalShopOrder(arg0 context.Context, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalShopOrder", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalShopOrder indicates an expected call of GetTotalShopOrder.
+func (mr *MockStoreMockRecorder) GetTotalShopOrder(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShopOrder", reflect.TypeOf((*MockStore)(nil).GetTotalShopOrder), arg0, arg1)
+}
+
+// GetTotalUsersCount mocks base method.
+func (m *MockStore) GetTotalUsersCount(arg0 context.Context, arg1 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalUsersCount", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalUsersCount indicates an expected call of GetTotalUsersCount.
+func (mr *MockStoreMockRecorder) GetTotalUsersCount(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalUsersCount", reflect.TypeOf((*MockStore)(nil).GetTotalUsersCount), arg0, arg1)
 }
 
 // GetUser mocks base method.
