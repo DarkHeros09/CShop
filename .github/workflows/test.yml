@@ -49,7 +49,7 @@ jobs:
         
     - name: install dotenvx
       run: |
-        curl -sfS https://dotenvx.sh/install.sh > install.sh
+        curl -sfS https://dotenvx.sh > install.sh
         chmod", "+x", "install.sh
         ./install.sh
 

@@ -97,6 +97,7 @@ func main() {
 		WithFile("install.sh", client.HTTP("https://dotenvx.sh/install.sh")).
 		WithExec([]string{"chmod", "+x", "install.sh"}).
 		WithExec([]string{"./install.sh"}).
+		WithExec([]string{"dotenvx", "help"}).
 		WithExec([]string{"dotenvx", "run", "-f", ".env.test", "--", "make", "test"}). // execute go test
 		Stdout(ctx)
 
