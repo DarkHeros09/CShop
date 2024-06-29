@@ -48,14 +48,10 @@ jobs:
       run: make migrate_up
         
     - name: install dotenvx
-      run: |
-        curl -L -o dotenvx.tar.gz "https://github.com/dotenvx/dotenvx/releases/latest/download/dotenvx-$(uname -s)-$(uname -m).tar.gz"
-        tar -xzf dotenvx.tar.gz
-        ./dotenvx help
-      
+      run: curl -sfS https://dotenvx.sh/install.sh | sh
 
     - name: Test
-      run: ./dotenvx run -f .env.test -- make test
+      run: make test
       env:
         DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
       
