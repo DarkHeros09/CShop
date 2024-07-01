@@ -7,7 +7,7 @@ require (
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/bytedance/sonic v1.11.8
 	github.com/go-playground/validator/v10 v10.21.0
-	github.com/gofiber/fiber/v2 v2.52.4
+	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/google/uuid v1.6.0
 	github.com/guregu/null/v5 v5.0.0
 	github.com/jackc/pgconn v1.14.3
@@ -87,7 +87,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx-shopspring-decimal v0.0.0-20220624020537-1d36b5a1853e
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/klauspost/compress v1.17.8 // indirect
