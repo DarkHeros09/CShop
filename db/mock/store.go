@@ -87,6 +87,21 @@ func (mr *MockStoreMockRecorder) AdminCreateProductCategory(arg0, arg1 any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProductCategory", reflect.TypeOf((*MockStore)(nil).AdminCreateProductCategory), arg0, arg1)
 }
 
+// AdminCreateProductImages mocks base method.
+func (m *MockStore) AdminCreateProductImages(arg0 context.Context, arg1 db.AdminCreateProductImagesParams) (db.ProductImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateProductImages", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateProductImages indicates an expected call of AdminCreateProductImages.
+func (mr *MockStoreMockRecorder) AdminCreateProductImages(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateProductImages", reflect.TypeOf((*MockStore)(nil).AdminCreateProductImages), arg0, arg1)
+}
+
 // AdminCreateProductItem mocks base method.
 func (m *MockStore) AdminCreateProductItem(arg0 context.Context, arg1 db.AdminCreateProductItemParams) (db.ProductItem, error) {
 	m.ctrl.T.Helper()

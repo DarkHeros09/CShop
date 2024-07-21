@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	media "github.com/imagekit-developer/imagekit-go/api/media"
+	url "github.com/imagekit-developer/imagekit-go/url"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -53,4 +54,19 @@ func (m *MockImageKitManagement) ListAndSearch(arg0 context.Context, arg1 media.
 func (mr *MockImageKitManagementMockRecorder) ListAndSearch(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAndSearch", reflect.TypeOf((*MockImageKitManagement)(nil).ListAndSearch), arg0, arg1)
+}
+
+// UrlGeneration mocks base method.
+func (m *MockImageKitManagement) UrlGeneration(arg0 context.Context, arg1 url.UrlParam) (*string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UrlGeneration", arg0, arg1)
+	ret0, _ := ret[0].(*string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UrlGeneration indicates an expected call of UrlGeneration.
+func (mr *MockImageKitManagementMockRecorder) UrlGeneration(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UrlGeneration", reflect.TypeOf((*MockImageKitManagement)(nil).UrlGeneration), arg0, arg1)
 }

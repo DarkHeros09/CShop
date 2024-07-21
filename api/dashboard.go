@@ -46,7 +46,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "active products query error"})
 		return nil
 	}
 	// total products query
@@ -56,7 +56,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "total products query error"})
 		return nil
 	}
 	// active users query
@@ -66,7 +66,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "active users query error"})
 		return nil
 	}
 	// total users query
@@ -76,7 +76,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "total users query error"})
 		return nil
 	}
 
@@ -91,7 +91,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "active orders query error"})
 		return nil
 	}
 
@@ -102,7 +102,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "total orders query error"})
 		return nil
 	}
 
@@ -113,7 +113,7 @@ func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "today revenue query error"})
 		return nil
 	}
 

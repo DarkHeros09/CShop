@@ -96,7 +96,6 @@ func (server *Server) setupRouter() {
 	// }
 
 	app.Get("/api/v1/reset_password", server.resetPasswordPage)
-	app.Get("/api/v1/imagekit", server.listproductImages) //! Admin Only
 
 	//* Users
 	app.Post("/api/v1/users", server.createUser)
@@ -186,7 +185,9 @@ func (server *Server) setupRouter() {
 	// 		FirebaseApp: fireApp,
 	// 	}))
 
-	adminRouter.Get("/admins/:adminId/imagekit", server.listproductImages) //! Admin Only
+	adminRouter.Post("/admins/:adminId/product-images", server.createProductImages)  //? Admin Only
+	adminRouter.Get("/admins/:adminId/product-images/kit", server.listproductImages) //! Admin Only
+
 	//* dashboard
 	adminRouter.Get("/admins/:adminId/dashboard", server.getDashboardInfo) //! Admin Only
 

@@ -98,7 +98,7 @@ func main() {
 		WithExec([]string{"chmod", "+x", "install.sh"}).
 		WithExec([]string{"./install.sh"}).
 		WithExec([]string{"dotenvx", "help"}).
-		WithExec([]string{"dotenvx", "run", "-f", ".env.test", "--", "make", "test"}). // execute go test
+		WithExec([]string{"make", "test"}). // execute go test
 		Stdout(ctx)
 
 	if err != nil {

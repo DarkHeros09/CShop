@@ -113,7 +113,7 @@ test:
 	dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./...
 
 testwin:
-	powershell -command "go test -v -cover -timeout 1m -shuffle on -count=1 ./...  | tee test_output.txt"
+	powershell -command "dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./...  | tee test_output.txt"
 	powershell -command "Select-String -Path test_output.txt -Pattern 'FAIL'"
 	powershell -command "del test_output.txt"
 

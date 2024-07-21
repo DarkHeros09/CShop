@@ -146,6 +146,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 				arg := db.CreateProductCategoryParams{
 					ParentCategoryID: productCategory.ParentCategoryID,
 					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
 				}
 
 				store.EXPECT().
@@ -167,6 +168,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 				arg := db.CreateProductCategoryParams{
 					ParentCategoryID: productCategory.ParentCategoryID,
 					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
 				}
 
 				store.EXPECT().
@@ -193,6 +195,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 				arg := db.CreateProductCategoryParams{
 					ParentCategoryID: productCategory.ParentCategoryID,
 					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
 				}
 
 				store.EXPECT().

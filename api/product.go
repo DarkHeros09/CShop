@@ -22,6 +22,7 @@ type createProductParamsRequest struct {
 type createProductJsonRequest struct {
 	Name        string `json:"name" validate:"required,alphanum"`
 	CategoryID  int64  `json:"category_id" validate:"required,min=1"`
+	BrandID     int64  `json:"brand_id" validate:"required,min=1"`
 	Description string `json:"description" validate:"required"`
 	// ProductImage string `json:"product_image" validate:"required,url"`
 	Active bool `json:"active" validate:"boolean"`
@@ -43,15 +44,17 @@ func (server *Server) createProduct(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.CreateProductParams{
-		CategoryID:  req.CategoryID,
+	arg := db.AdminCreateProductParams{
+		AdminID:     authPayload.AdminID,
 		Name:        req.Name,
 		Description: req.Description,
+		CategoryID:  req.CategoryID,
+		BrandID:     req.BrandID,
 		// ProductImage: req.ProductImage,
 		Active: req.Active,
 	}
 
-	product, err := server.store.CreateProduct(ctx.Context(), arg)
+	product, err := server.store.AdminCreateProduct(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -157,7 +160,7 @@ type updateProductJsonRequest struct {
 	Name         string `json:"name" validate:"omitempty,required,alphanum"`
 	CategoryID   int64  `json:"category_id" validate:"omitempty,required,min=1"`
 	Description  string `json:"description" validate:"omitempty,required"`
-	ProductImage string `json:"product_image" validate:"omitempty,required"`
+	ProductImage string `json:"product_image" validate:"omitempty,required,http_url"`
 	Active       bool   `json:"active" validate:"omitempty,required,boolean"`
 }
 

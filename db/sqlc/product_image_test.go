@@ -26,8 +26,31 @@ func createRandomProductImage(t *testing.T) ProductImage {
 
 	return productImage
 }
+
+func adminCreateRandomProductImages(t *testing.T) ProductImage {
+	admin := createRandomAdmin(t)
+	arg := AdminCreateProductImagesParams{
+		AdminID:       admin.ID,
+		ProductImage1: util.RandomURL(),
+		ProductImage2: util.RandomURL(),
+		ProductImage3: util.RandomURL(),
+	}
+	productImage, err := testStore.AdminCreateProductImages(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productImage)
+
+	require.Equal(t, arg.ProductImage1, productImage.ProductImage1)
+	require.Equal(t, arg.ProductImage2, productImage.ProductImage2)
+	require.Equal(t, arg.ProductImage3, productImage.ProductImage3)
+
+	return productImage
+}
 func TestCreateProductImage(t *testing.T) {
 	createRandomProductImage(t)
+}
+
+func TestAdminCreateProductImage(t *testing.T) {
+	adminCreateRandomProductImages(t)
 }
 
 func TestGetProductImage(t *testing.T) {

@@ -11,6 +11,47 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProductImages = `-- name: AdminCreateProductImages :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $4
+    AND active = TRUE
+    )
+INSERT INTO "product_image" (
+  product_image_1,
+  product_image_2,
+  product_image_3
+)
+SELECT $1, $2, $3 FROM t1
+WHERE is_admin=1
+RETURNING id, product_image_1, product_image_2, product_image_3
+`
+
+type AdminCreateProductImagesParams struct {
+	ProductImage1 string `json:"product_image_1"`
+	ProductImage2 string `json:"product_image_2"`
+	ProductImage3 string `json:"product_image_3"`
+	AdminID       int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (ProductImage, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductImages,
+		arg.ProductImage1,
+		arg.ProductImage2,
+		arg.ProductImage3,
+		arg.AdminID,
+	)
+	var i ProductImage
+	err := row.Scan(
+		&i.ID,
+		&i.ProductImage1,
+		&i.ProductImage2,
+		&i.ProductImage3,
+	)
+	return i, err
+}
+
 const createProductImage = `-- name: CreateProductImage :one
 INSERT INTO "product_image" (
   product_image_1,

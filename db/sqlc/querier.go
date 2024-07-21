@@ -15,6 +15,7 @@ type Querier interface {
 	AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error)
 	AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error)
 	AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error)
+	AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (ProductImage, error)
 	AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error)
 	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)

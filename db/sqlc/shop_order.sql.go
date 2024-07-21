@@ -86,7 +86,7 @@ SELECT 1 AS is_admin
     AND active = TRUE
     )
 SELECT
-    CAST(SUM(CAST(order_total AS NUMERIC))AS VARCHAR) AS daily_revenue
+    COALESCE(SUM(CAST(order_total AS NUMERIC)),'0')::VARCHAR AS daily_revenue
 FROM
     shop_order
 WHERE order_status_id = 2

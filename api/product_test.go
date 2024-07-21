@@ -119,7 +119,7 @@ func TestGetProductAPI(t *testing.T) {
 
 }
 
-func TestCreateProductAPI(t *testing.T) {
+func TestAdminCreateProductAPI(t *testing.T) {
 	admin, _ := randomPromotionSuperAdmin(t)
 	product := randomProduct()
 
@@ -138,6 +138,7 @@ func TestCreateProductAPI(t *testing.T) {
 				"name":        product.Name,
 				"description": product.Description,
 				"category_id": product.CategoryID,
+				"brand_id":    product.BrandID,
 				// "product_image": product.ProductImage,
 				"active": product.Active,
 			},
@@ -145,8 +146,10 @@ func TestCreateProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductParams{
+				arg := db.AdminCreateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  product.CategoryID,
+					BrandID:     product.BrandID,
 					Name:        product.Name,
 					Description: product.Description,
 					// ProductImage: product.ProductImage,
@@ -154,7 +157,7 @@ func TestCreateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(product, nil)
 			},
@@ -169,8 +172,10 @@ func TestCreateProductAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductParams{
+				arg := db.AdminCreateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  product.CategoryID,
+					BrandID:     product.BrandID,
 					Name:        product.Name,
 					Description: product.Description,
 					// ProductImage: product.ProductImage,
@@ -178,7 +183,7 @@ func TestCreateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -196,12 +201,15 @@ func TestCreateProductAPI(t *testing.T) {
 				"name":        product.Name,
 				"description": product.Description,
 				"category_id": product.CategoryID,
+				"brand_id":    product.BrandID,
 				// "product_image": product.ProductImage,
 				"active": product.Active,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateProductParams{
+				arg := db.AdminCreateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  product.CategoryID,
+					BrandID:     product.BrandID,
 					Name:        product.Name,
 					Description: product.Description,
 					// ProductImage: product.ProductImage,
@@ -209,7 +217,7 @@ func TestCreateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -223,6 +231,7 @@ func TestCreateProductAPI(t *testing.T) {
 				"name":        product.Name,
 				"description": product.Description,
 				"category_id": product.CategoryID,
+				"brand_id":    product.BrandID,
 				// "product_image": product.ProductImage,
 				"active": product.Active,
 			},
@@ -231,7 +240,7 @@ func TestCreateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Any()).
+					AdminCreateProduct(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.Product{}, pgx.ErrTxClosed)
 			},
@@ -250,7 +259,7 @@ func TestCreateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateProduct(gomock.Any(), gomock.Any()).
+					AdminCreateProduct(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -768,7 +777,8 @@ func randomPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 func randomProduct() db.Product {
 	return db.Product{
 		ID:          util.RandomInt(1, 1000),
-		CategoryID:  util.RandomInt(1, 500),
+		CategoryID:  util.RandomInt(1, 1000),
+		BrandID:     util.RandomInt(1, 1000),
 		Name:        util.RandomUser(),
 		Description: util.RandomUser(),
 		// ProductImage: util.RandomURL(),

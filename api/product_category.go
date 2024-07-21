@@ -17,8 +17,9 @@ type createProductCategoryParamsRequest struct {
 }
 
 type createProductCategoryJsonRequest struct {
-	CategoryName     string `json:"category_name" validate:"required,alphanum"`
 	ParentCategoryID int64  `json:"parent_category_id" validate:"required,min=1"`
+	CategoryName     string `json:"category_name" validate:"required,alphanum"`
+	CategoryImage    string `json:"category_image" validate:"required,http_url"`
 }
 
 func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
@@ -40,6 +41,7 @@ func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
 	arg := db.CreateProductCategoryParams{
 		ParentCategoryID: null.IntFromPtr(&req.ParentCategoryID),
 		CategoryName:     req.CategoryName,
+		CategoryImage:    req.CategoryImage,
 	}
 
 	productCategory, err := server.store.CreateProductCategory(ctx.Context(), arg)
@@ -105,7 +107,7 @@ func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
 	// 	Limit:  query.PageSize,
 	// 	Offset: (query.PageID - 1) * query.PageSize,
 	// }
-	productCategorys, err := server.store.ListProductCategories(ctx.Context())
+	productCategories, err := server.store.ListProductCategories(ctx.Context())
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -115,7 +117,7 @@ func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Status(fiber.StatusOK).JSON(productCategorys)
+	ctx.Status(fiber.StatusOK).JSON(productCategories)
 	return nil
 
 }
