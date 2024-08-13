@@ -69,3 +69,81 @@ WHERE id = $1;
 -- name: GetProductsByIDs :many
 SELECT * FROM "product"
 WHERE id = ANY(sqlc.arg(ids)::bigint[]);
+
+-- name: ListProductsV2 :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductsNextPage :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+WHERE
+ p.id < sqlc.arg(id) 
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: SearchProducts :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+WHERE 
+p.search @@ 
+CASE
+    WHEN char_length(sqlc.arg(query)::VARCHAR) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+ORDER BY 
+p.id DESC,
+ts_rank(p.search, 
+CASE
+    WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
+    ELSE to_tsquery(sqlc.arg(query))
+END
+) DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: SearchProductsNextPage :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+
+WHERE 
+p.id < sqlc.arg(product_id) AND
+p.search @@ 
+CASE
+    WHEN char_length(sqlc.arg(query)::VARCHAR) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*')::VARCHAR)
+    ELSE to_tsquery(sqlc.arg(query)::VARCHAR)
+END
+ORDER BY 
+p.id DESC,
+ts_rank(p.search, 
+CASE
+    WHEN char_length(sqlc.arg(query)::VARCHAR) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*')::VARCHAR)
+    ELSE to_tsquery(sqlc.arg(query)::VARCHAR)
+END
+) DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;

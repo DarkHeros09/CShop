@@ -20,8 +20,26 @@ func createRandomProductColor(t *testing.T) ProductColor {
 
 	return productColor
 }
+
+func adminCreateRandomProductColor(t *testing.T) ProductColor {
+	admin := createRandomAdmin(t)
+	arg := AdminCreateProductColorParams{
+		AdminID:    admin.ID,
+		ColorValue: util.RandomColor(),
+	}
+	productColor, err := testStore.AdminCreateProductColor(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productColor)
+
+	require.Equal(t, arg.ColorValue, productColor.ColorValue)
+
+	return productColor
+}
 func TestCreateProductColor(t *testing.T) {
 	createRandomProductColor(t)
+}
+func TestAdminCreateProductColor(t *testing.T) {
+	adminCreateRandomProductColor(t)
 }
 
 func TestGetProductColor(t *testing.T) {
@@ -33,6 +51,16 @@ func TestGetProductColor(t *testing.T) {
 
 	require.Equal(t, productColor1.ID, productColor2.ID)
 	require.Equal(t, productColor1.ColorValue, productColor2.ColorValue)
+}
+
+func TestListProductColors(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		createRandomProductColor(t)
+	}
+	productColor2, err := testStore.ListProductColors(context.Background())
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productColor2)
 }
 
 func TestUpdateProductColor(t *testing.T) {

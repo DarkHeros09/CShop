@@ -15,8 +15,10 @@ type Querier interface {
 	AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error)
 	AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error)
 	AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error)
+	AdminCreateProductColor(ctx context.Context, arg AdminCreateProductColorParams) (ProductColor, error)
 	AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (ProductImage, error)
 	AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error)
+	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)
@@ -205,7 +207,10 @@ type Querier interface {
 	// LIMIT $1
 	// OFFSET $2;
 	ListProductCategoriesByParent(ctx context.Context, parentCategoryID null.Int) ([]ProductCategory, error)
+	ListProductColors(ctx context.Context) ([]ProductColor, error)
 	ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error)
+	ListProductImagesNextPage(ctx context.Context, arg ListProductImagesNextPageParams) ([]ListProductImagesNextPageRow, error)
+	ListProductImagesV2(ctx context.Context, limit int32) ([]ListProductImagesV2Row, error)
 	ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error)
 	ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error)
 	ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error)
@@ -232,12 +237,15 @@ type Querier interface {
 	ListProductItemsWithPromotionsNextPage(ctx context.Context, arg ListProductItemsWithPromotionsNextPageParams) ([]ListProductItemsWithPromotionsNextPageRow, error)
 	ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error)
 	ListProductPromotionsWithImages(ctx context.Context) ([]ListProductPromotionsWithImagesRow, error)
+	ListProductSizes(ctx context.Context) ([]ProductSize, error)
 	// WITH total_records AS (
 	//   SELECT COUNT(id)
 	//   FROM "product"
 	// ),
 	// list_products AS (
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
+	ListProductsNextPage(ctx context.Context, arg ListProductsNextPageParams) ([]ListProductsNextPageRow, error)
+	ListProductsV2(ctx context.Context, limit int32) ([]ListProductsV2Row, error)
 	ListPromotions(ctx context.Context, arg ListPromotionsParams) ([]Promotion, error)
 	ListShippingMethods(ctx context.Context) ([]ShippingMethod, error)
 	// ORDER BY id
@@ -279,6 +287,8 @@ type Querier interface {
 	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
 	SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error)
 	SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error)
+	SearchProducts(ctx context.Context, arg SearchProductsParams) ([]SearchProductsRow, error)
+	SearchProductsNextPage(ctx context.Context, arg SearchProductsNextPageParams) ([]SearchProductsNextPageRow, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error)
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
 	UpdateAdminSession(ctx context.Context, arg UpdateAdminSessionParams) (AdminSession, error)

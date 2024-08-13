@@ -199,3 +199,74 @@ func TestGetProductsByIDs(t *testing.T) {
 	}
 
 }
+
+func TestListProductsV2(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProduct(t)
+	}
+
+	limit := 10
+
+	initialSearchResult, err := testStore.ListProductsV2(context.Background(), int32(limit))
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductsNextPageParams{
+		Limit: 10,
+		ID:    initialSearchResult[len(initialSearchResult)-1].ID,
+	}
+
+	secondPage, err := testStore.ListProductsNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(secondPage), 10)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+	arg2 := ListProductsNextPageParams{
+		Limit: 10,
+		ID:    secondPage[len(secondPage)-1].ID,
+	}
+
+	thirdPage, err := testStore.ListProductsNextPage(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, secondPage[len(secondPage)-1].ID, thirdPage[len(thirdPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+}
+
+func TestSearchProducts(t *testing.T) {
+
+	product := createRandomProduct(t)
+
+	product, err := testStore.GetProduct(context.Background(), product.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, product)
+
+	arg1 := SearchProductsParams{
+		Limit: 10,
+		Query: product.Name,
+	}
+
+	searchedProduct, err := testStore.SearchProducts(context.Background(), arg1)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, searchedProduct)
+	require.Equal(t, product.ID, searchedProduct[len(searchedProduct)-1].ID)
+
+	arg2 := SearchProductsNextPageParams{
+		Limit:     10,
+		ProductID: searchedProduct[len(searchedProduct)-1].ID,
+		Query:     product.Name,
+	}
+
+	searchedRestProduct, err := testStore.SearchProductsNextPage(context.Background(), arg2)
+
+	require.NoError(t, err)
+	require.Empty(t, searchedRestProduct)
+
+}

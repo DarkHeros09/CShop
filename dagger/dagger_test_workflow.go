@@ -34,7 +34,8 @@ func main() {
 		WithEnvVariable("PGPORT", "6666").
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithEnvVariable("PGTZ", "Africa/Tripoli").
-		WithExec([]string{"postgres"}).
+		// removed this line due to breaking change in v.12.0
+		// WithExec([]string{"postgres"}).
 		WithExposedPort(6666).
 		AsService().
 		Start(ctx)

@@ -6,9 +6,26 @@ INSERT INTO "product_color" (
 )
 RETURNING *;
 
+-- name: AdminCreateProductColor :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "product_color" (
+color_value
+)
+SELECT sqlc.arg(color_value) FROM t1
+WHERE is_admin=1
+RETURNING *;
+
 -- name: GetProductColor :one
 SELECT * FROM "product_color"
 WHERE id = $1 LIMIT 1;
+
+-- name: ListProductColors :many
+SELECT * FROM "product_color";
 
 -- name: UpdateProductColor :one
 UPDATE "product_color"

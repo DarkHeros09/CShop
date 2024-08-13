@@ -119,8 +119,12 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/text-banners", server.listHomePageTextBanners)             //? no auth required
 
 	//*Products
-	app.Get("/api/v1/products/:productId", server.getProduct) //? no auth required
-	app.Get("/api/v1/products", server.listProducts)          //? no auth required
+	app.Get("/api/v1/products/:productId", server.getProduct)                   //? no auth required
+	app.Get("/api/v1/products", server.listProducts)                            //? no auth required
+	app.Get("/api/v1/products-v2", server.listProductsV2)                       //? no auth required                                                       //? no auth required
+	app.Get("/api/v1/products-next-page", server.listProductsNextPage)          //? no auth required
+	app.Get("/api/v1/search-products", server.searchProducts)                   //? no auth required
+	app.Get("/api/v1/search-products-next-page", server.searchProductsNextPage) //? no auth required
 
 	//*Promotions
 	app.Get("/api/v1/promotions/:promotionId", server.getPromotion) //? no auth required
@@ -133,6 +137,16 @@ func (server *Server) setupRouter() {
 	//* Product-Brands
 	app.Get("/api/v1/brands/:brandId", server.getProductBrand) //? no auth required
 	app.Get("/api/v1/brands", server.listProductBrands)        //? no auth required
+
+	//* Product-Sizes
+	app.Get("/api/v1/sizes", server.listProductSizes) //? no auth required
+
+	//* Product-Colors
+	app.Get("/api/v1/colors", server.listProductColors) //? no auth required
+
+	//* Product-Images
+	app.Get("/api/v1/images-v2", server.listProductImagesV2)              //? no auth required
+	app.Get("/api/v1/images-next-page", server.listProductImagesNextPage) //? no auth required
 
 	//* Products-Promotions
 	app.Get("/api/v1/product-promotions/:promotionId/products/:productId", server.getProductPromotion) //? no auth required
@@ -255,6 +269,10 @@ func (server *Server) setupRouter() {
 	adminRouter.Post("/admins/:adminId/categories", server.createProductCategory)               //! Admin Only
 	adminRouter.Put("/admins/:adminId/categories/:categoryId", server.updateProductCategory)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/categories/:categoryId", server.deleteProductCategory) //! Admin Only
+
+	adminRouter.Post("/admins/:adminId/colors", server.createProductColor) //! Admin Only
+
+	adminRouter.Post("/admins/:adminId/sizes", server.createProductSize) //! Admin Only
 
 	adminRouter.Post("/admins/:adminId/brands", server.createProductBrand)            //! Admin Only
 	adminRouter.Put("/admins/:adminId/brands/:brandId", server.updateProductBrand)    //! Admin Only

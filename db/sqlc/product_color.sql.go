@@ -11,6 +11,33 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProductColor = `-- name: AdminCreateProductColor :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    )
+INSERT INTO "product_color" (
+color_value
+)
+SELECT $1 FROM t1
+WHERE is_admin=1
+RETURNING id, color_value
+`
+
+type AdminCreateProductColorParams struct {
+	ColorValue string `json:"color_value"`
+	AdminID    int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductColor(ctx context.Context, arg AdminCreateProductColorParams) (ProductColor, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductColor, arg.ColorValue, arg.AdminID)
+	var i ProductColor
+	err := row.Scan(&i.ID, &i.ColorValue)
+	return i, err
+}
+
 const createProductColor = `-- name: CreateProductColor :one
 INSERT INTO "product_color" (
   color_value
@@ -47,6 +74,30 @@ func (q *Queries) GetProductColor(ctx context.Context, id int64) (ProductColor, 
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
 	return i, err
+}
+
+const listProductColors = `-- name: ListProductColors :many
+SELECT id, color_value FROM "product_color"
+`
+
+func (q *Queries) ListProductColors(ctx context.Context) ([]ProductColor, error) {
+	rows, err := q.db.Query(ctx, listProductColors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProductColor{}
+	for rows.Next() {
+		var i ProductColor
+		if err := rows.Scan(&i.ID, &i.ColorValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateProductColor = `-- name: UpdateProductColor :one

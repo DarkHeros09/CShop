@@ -2,12 +2,14 @@ package api
 
 import (
 	"errors"
+	"fmt"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
 	"github.com/imagekit-developer/imagekit-go/api/media"
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v5"
 )
 
 type createProductImagesParamsRequest struct {
@@ -106,4 +108,94 @@ func (server *Server) listproductImages(ctx *fiber.Ctx) error {
 
 	ctx.Status(fiber.StatusOK).JSON(imagesURLs)
 	return nil
+}
+
+//////////////* Pagination List API //////////////
+
+type listProductImagesV2QueryRequest struct {
+	Limit int32 `query:"limit" validate:"required,min=5,max=10"`
+}
+
+func (server *Server) listProductImagesV2(ctx *fiber.Ctx) error {
+	query := &listProductImagesV2QueryRequest{}
+	// var maxPage int64
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	productImages, err := server.store.ListProductImagesV2(ctx.Context(), query.Limit)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	if len(productImages) == 0 {
+		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Status(fiber.StatusOK).JSON([]db.ListProductImagesV2Row{})
+		return nil
+	}
+	// if len(productImages) != 0 {
+	// 	maxPage = int64(math.Ceil(float64(productImages[0].TotalCount) / float64(query.Limit)))
+	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Status(fiber.StatusOK).JSON(productImages)
+	// } else {
+	// 	maxPage = 0
+	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Status(fiber.StatusOK).JSON([]db.ListProductImagesV2Row{})
+	// }
+
+	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+
+	ctx.Set("Next-Available", fmt.Sprint(productImages[0].NextAvailable))
+	ctx.Status(fiber.StatusOK).JSON(productImages)
+	return nil
+
+}
+
+type listProductImagesNextPageQueryRequest struct {
+	ProductCursor int64 `query:"product_cursor" validate:"required,min=1"`
+	Limit         int32 `query:"limit" validate:"required,min=5,max=10"`
+}
+
+func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
+	query := &listProductImagesNextPageQueryRequest{}
+	// var maxPage int64
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.ListProductImagesNextPageParams{
+		Limit: query.Limit,
+		ID:    query.ProductCursor,
+	}
+
+	productImages, err := server.store.ListProductImagesNextPage(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	if len(productImages) == 0 {
+		// ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
+		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductImagesNextPageRow{})
+		return nil
+	}
+
+	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+
+	ctx.Set("Next-Available", fmt.Sprint(productImages[0].NextAvailable))
+	ctx.Status(fiber.StatusOK).JSON(productImages)
+	return nil
+
 }

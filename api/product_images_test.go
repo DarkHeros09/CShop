@@ -186,6 +186,214 @@ func TestCreateProductImagesAPI(t *testing.T) {
 	}
 }
 
+func TestListProductImagesV2API(t *testing.T) {
+	n := 10
+	images := make([]db.ListProductImagesV2Row, n)
+	for i := 0; i < n; i++ {
+		images[i] = randomListProductImagesV2()
+	}
+
+	type Query struct {
+		Limit int
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit: n,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductImagesV2(gomock.Any(), gomock.Eq(int32(10))).
+					Times(1).
+					Return(images, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListProductImagesV2(t, rsp.Body, images)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit: 10,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductImagesV2(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListProductImagesV2Row{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit: 11,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductImagesV2(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/images-v2"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestListProductImagesNextPageAPI(t *testing.T) {
+	n := 10
+	images1 := make([]db.ListProductImagesNextPageRow, n)
+	images2 := make([]db.ListProductImagesNextPageRow, n)
+	for i := 0; i < n; i++ {
+		images1[i] = randomRestProductImagesList()
+	}
+	for i := 0; i < n; i++ {
+		images2[i] = randomRestProductImagesList()
+	}
+
+	type Query struct {
+		ProductCursor int
+		Limit         int
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit:         n,
+				ProductCursor: int(images1[len(images1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.ListProductImagesNextPageParams{
+					Limit: int32(n),
+					ID:    images1[len(images1)-1].ID,
+				}
+
+				store.EXPECT().
+					ListProductImagesNextPage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(images2, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListProductImagesNextPage(t, rsp.Body, images2)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit:         10,
+				ProductCursor: int(images1[len(images1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					ListProductImagesNextPage(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListProductImagesNextPageRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit:         11,
+				ProductCursor: int(images1[len(images1)-1].ID),
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductImagesNextPage(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/images-next-page"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
 func randomProductImageSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
@@ -219,4 +427,42 @@ func requireBodyMatchProductImage(t *testing.T, body io.ReadCloser, productImage
 	err = json.Unmarshal(data, &gotProductImage)
 	require.NoError(t, err)
 	require.Equal(t, productImage, gotProductImage)
+}
+
+func requireBodyMatchListProductImagesV2(t *testing.T, body io.ReadCloser, productImages []db.ListProductImagesV2Row) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductImages []db.ListProductImagesV2Row
+	err = json.Unmarshal(data, &gotProductImages)
+	require.NoError(t, err)
+	require.Equal(t, productImages, gotProductImages)
+}
+
+func requireBodyMatchListProductImagesNextPage(t *testing.T, body io.ReadCloser, productImages []db.ListProductImagesNextPageRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductImages []db.ListProductImagesNextPageRow
+	err = json.Unmarshal(data, &gotProductImages)
+	require.NoError(t, err)
+	require.Equal(t, productImages, gotProductImages)
+}
+
+func randomListProductImagesV2() db.ListProductImagesV2Row {
+	return db.ListProductImagesV2Row{
+		ID:            util.RandomInt(1, 1000),
+		ProductImage1: util.RandomURL(),
+		ProductImage2: util.RandomURL(),
+		ProductImage3: util.RandomURL(),
+	}
+}
+
+func randomRestProductImagesList() db.ListProductImagesNextPageRow {
+	return db.ListProductImagesNextPageRow{
+		ID:            util.RandomInt(1, 1000),
+		ProductImage1: util.RandomURL(),
+		ProductImage2: util.RandomURL(),
+		ProductImage3: util.RandomURL(),
+	}
 }

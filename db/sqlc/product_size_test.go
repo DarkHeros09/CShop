@@ -20,8 +20,26 @@ func createRandomProductSize(t *testing.T) ProductSize {
 
 	return productSize
 }
+
+func adminCreateRandomProductSize(t *testing.T) ProductSize {
+	admin := createRandomAdmin(t)
+	arg := AdminCreateProductSizeParams{
+		AdminID:   admin.ID,
+		SizeValue: util.RandomSize(),
+	}
+	productSize, err := testStore.AdminCreateProductSize(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize)
+
+	require.Equal(t, arg.SizeValue, productSize.SizeValue)
+
+	return productSize
+}
 func TestCreateProductSize(t *testing.T) {
 	createRandomProductSize(t)
+}
+func TestAdminCreateProductSize(t *testing.T) {
+	adminCreateRandomProductSize(t)
 }
 
 func TestGetProductSize(t *testing.T) {
@@ -33,6 +51,16 @@ func TestGetProductSize(t *testing.T) {
 
 	require.Equal(t, productSize1.ID, productSize2.ID)
 	require.Equal(t, productSize1.SizeValue, productSize2.SizeValue)
+}
+
+func TestListProductSizes(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		createRandomProductSize(t)
+	}
+	productSize2, err := testStore.ListProductSizes(context.Background())
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize2)
 }
 
 func TestUpdateProductSize(t *testing.T) {

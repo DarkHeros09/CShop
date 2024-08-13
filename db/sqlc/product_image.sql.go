@@ -108,6 +108,107 @@ func (q *Queries) GetProductImage(ctx context.Context, id int64) (ProductImage, 
 	return i, err
 }
 
+const listProductImagesNextPage = `-- name: ListProductImagesNextPage :many
+WITH t1 AS(
+SELECT 
+ pimg.id, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM "product_image" AS pimg
+WHERE
+ pimg.id < $2 
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT id, product_image_1, product_image_2, product_image_3,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type ListProductImagesNextPageParams struct {
+	Limit int32 `json:"limit"`
+	ID    int64 `json:"id"`
+}
+
+type ListProductImagesNextPageRow struct {
+	ID            int64  `json:"id"`
+	ProductImage1 string `json:"product_image_1"`
+	ProductImage2 string `json:"product_image_2"`
+	ProductImage3 string `json:"product_image_3"`
+	NextAvailable bool   `json:"next_available"`
+}
+
+func (q *Queries) ListProductImagesNextPage(ctx context.Context, arg ListProductImagesNextPageParams) ([]ListProductImagesNextPageRow, error) {
+	rows, err := q.db.Query(ctx, listProductImagesNextPage, arg.Limit, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductImagesNextPageRow{}
+	for rows.Next() {
+		var i ListProductImagesNextPageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductImagesV2 = `-- name: ListProductImagesV2 :many
+WITH t1 AS(
+SELECT 
+ pimg.id, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM "product_image" AS pimg
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT id, product_image_1, product_image_2, product_image_3,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type ListProductImagesV2Row struct {
+	ID            int64  `json:"id"`
+	ProductImage1 string `json:"product_image_1"`
+	ProductImage2 string `json:"product_image_2"`
+	ProductImage3 string `json:"product_image_3"`
+	NextAvailable bool   `json:"next_available"`
+}
+
+func (q *Queries) ListProductImagesV2(ctx context.Context, limit int32) ([]ListProductImagesV2Row, error) {
+	rows, err := q.db.Query(ctx, listProductImagesV2, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductImagesV2Row{}
+	for rows.Next() {
+		var i ListProductImagesV2Row
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductImage1,
+			&i.ProductImage2,
+			&i.ProductImage3,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProductImage = `-- name: UpdateProductImage :one
 UPDATE "product_image"
 SET 

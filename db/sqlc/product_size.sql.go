@@ -11,6 +11,33 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateProductSize = `-- name: AdminCreateProductSize :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    )
+INSERT INTO "product_size" (
+size_value
+)
+SELECT $1 FROM t1
+WHERE is_admin=1
+RETURNING id, size_value
+`
+
+type AdminCreateProductSizeParams struct {
+	SizeValue string `json:"size_value"`
+	AdminID   int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error) {
+	row := q.db.QueryRow(ctx, adminCreateProductSize, arg.SizeValue, arg.AdminID)
+	var i ProductSize
+	err := row.Scan(&i.ID, &i.SizeValue)
+	return i, err
+}
+
 const createProductSize = `-- name: CreateProductSize :one
 INSERT INTO "product_size" (
   size_value
@@ -47,6 +74,30 @@ func (q *Queries) GetProductSize(ctx context.Context, id int64) (ProductSize, er
 	var i ProductSize
 	err := row.Scan(&i.ID, &i.SizeValue)
 	return i, err
+}
+
+const listProductSizes = `-- name: ListProductSizes :many
+SELECT id, size_value FROM "product_size"
+`
+
+func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
+	rows, err := q.db.Query(ctx, listProductSizes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProductSize{}
+	for rows.Next() {
+		var i ProductSize
+		if err := rows.Scan(&i.ID, &i.SizeValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateProductSize = `-- name: UpdateProductSize :one

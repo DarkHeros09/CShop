@@ -241,6 +241,272 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]L
 	return items, nil
 }
 
+const listProductsNextPage = `-- name: ListProductsNextPage :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+WHERE
+ p.id < $2 
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT id, name, description, category_id, brand_id, active, created_at, updated_at,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type ListProductsNextPageParams struct {
+	Limit int32 `json:"limit"`
+	ID    int64 `json:"id"`
+}
+
+type ListProductsNextPageRow struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	CategoryID    int64     `json:"category_id"`
+	BrandID       int64     `json:"brand_id"`
+	Active        bool      `json:"active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	NextAvailable bool      `json:"next_available"`
+}
+
+func (q *Queries) ListProductsNextPage(ctx context.Context, arg ListProductsNextPageParams) ([]ListProductsNextPageRow, error) {
+	rows, err := q.db.Query(ctx, listProductsNextPage, arg.Limit, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductsNextPageRow{}
+	for rows.Next() {
+		var i ListProductsNextPageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.BrandID,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductsV2 = `-- name: ListProductsV2 :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT id, name, description, category_id, brand_id, active, created_at, updated_at,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type ListProductsV2Row struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	CategoryID    int64     `json:"category_id"`
+	BrandID       int64     `json:"brand_id"`
+	Active        bool      `json:"active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	NextAvailable bool      `json:"next_available"`
+}
+
+func (q *Queries) ListProductsV2(ctx context.Context, limit int32) ([]ListProductsV2Row, error) {
+	rows, err := q.db.Query(ctx, listProductsV2, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductsV2Row{}
+	for rows.Next() {
+		var i ListProductsV2Row
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.BrandID,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchProducts = `-- name: SearchProducts :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+WHERE 
+p.search @@ 
+CASE
+    WHEN char_length($2::VARCHAR) > 0 THEN to_tsquery(concat($2, ':*'))
+    ELSE to_tsquery($2)
+END
+ORDER BY 
+p.id DESC,
+ts_rank(p.search, 
+CASE
+    WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
+    ELSE to_tsquery($2)
+END
+) DESC
+LIMIT $1 +1
+)
+
+SELECT id, name, description, category_id, brand_id, active, created_at, updated_at,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type SearchProductsParams struct {
+	Limit int32  `json:"limit"`
+	Query string `json:"query"`
+}
+
+type SearchProductsRow struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	CategoryID    int64     `json:"category_id"`
+	BrandID       int64     `json:"brand_id"`
+	Active        bool      `json:"active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	NextAvailable bool      `json:"next_available"`
+}
+
+func (q *Queries) SearchProducts(ctx context.Context, arg SearchProductsParams) ([]SearchProductsRow, error) {
+	rows, err := q.db.Query(ctx, searchProducts, arg.Limit, arg.Query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchProductsRow{}
+	for rows.Next() {
+		var i SearchProductsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.BrandID,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchProductsNextPage = `-- name: SearchProductsNextPage :many
+WITH t1 AS(
+SELECT 
+ p.id, p.name, p.description, p.category_id, p.brand_id, p.active, p.created_at, p.updated_at
+FROM "product" AS p
+
+WHERE 
+p.id < $2 AND
+p.search @@ 
+CASE
+    WHEN char_length($3::VARCHAR) > 0 THEN to_tsquery(concat($3, ':*')::VARCHAR)
+    ELSE to_tsquery($3::VARCHAR)
+END
+ORDER BY 
+p.id DESC,
+ts_rank(p.search, 
+CASE
+    WHEN char_length($3::VARCHAR) > 0 THEN to_tsquery(concat($3, ':*')::VARCHAR)
+    ELSE to_tsquery($3::VARCHAR)
+END
+) DESC
+LIMIT $1 +1
+)
+
+SELECT id, name, description, category_id, brand_id, active, created_at, updated_at,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1
+`
+
+type SearchProductsNextPageParams struct {
+	Limit     int32  `json:"limit"`
+	ProductID int64  `json:"product_id"`
+	Query     string `json:"query"`
+}
+
+type SearchProductsNextPageRow struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	CategoryID    int64     `json:"category_id"`
+	BrandID       int64     `json:"brand_id"`
+	Active        bool      `json:"active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	NextAvailable bool      `json:"next_available"`
+}
+
+func (q *Queries) SearchProductsNextPage(ctx context.Context, arg SearchProductsNextPageParams) ([]SearchProductsNextPageRow, error) {
+	rows, err := q.db.Query(ctx, searchProductsNextPage, arg.Limit, arg.ProductID, arg.Query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchProductsNextPageRow{}
+	for rows.Next() {
+		var i SearchProductsNextPageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CategoryID,
+			&i.BrandID,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProduct = `-- name: UpdateProduct :one
 
 UPDATE "product"

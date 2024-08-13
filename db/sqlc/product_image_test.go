@@ -66,6 +66,44 @@ func TestGetProductImage(t *testing.T) {
 	require.Equal(t, productImage1.ProductImage3, productImage2.ProductImage3)
 }
 
+func TestListProductImagesV2(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProductImage(t)
+	}
+
+	limit := 10
+
+	initialSearchResult, err := testStore.ListProductImagesV2(context.Background(), int32(limit))
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := ListProductImagesNextPageParams{
+		Limit: 10,
+		ID:    initialSearchResult[len(initialSearchResult)-1].ID,
+	}
+
+	secondPage, err := testStore.ListProductImagesNextPage(context.Background(), arg1)
+	// fmt.Println(secondPage)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(secondPage), 10)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+	arg2 := ListProductImagesNextPageParams{
+		Limit: 10,
+		ID:    secondPage[len(secondPage)-1].ID,
+	}
+
+	thirdPage, err := testStore.ListProductImagesNextPage(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, secondPage[len(secondPage)-1].ID, thirdPage[len(thirdPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+}
+
 func TestUpdateProductImage(t *testing.T) {
 	productImage1 := createRandomProductImage(t)
 	arg := UpdateProductImageParams{

@@ -28,6 +28,32 @@ RETURNING *;
 SELECT * FROM "product_image"
 WHERE id = $1 LIMIT 1;
 
+-- name: ListProductImagesV2 :many
+WITH t1 AS(
+SELECT 
+ pimg.id, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM "product_image" AS pimg
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
+-- name: ListProductImagesNextPage :many
+WITH t1 AS(
+SELECT 
+ pimg.id, pimg.product_image_1, pimg.product_image_2, pimg.product_image_3
+FROM "product_image" AS pimg
+WHERE
+ pimg.id < sqlc.arg(id) 
+ORDER BY id DESC
+LIMIT $1 +1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+LIMIT $1;
+
 -- name: UpdateProductImage :one
 UPDATE "product_image"
 SET 
