@@ -139,17 +139,6 @@ func (server *Server) listProductImagesV2(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductImagesV2Row{})
 		return nil
 	}
-	// if len(productImages) != 0 {
-	// 	maxPage = int64(math.Ceil(float64(productImages[0].TotalCount) / float64(query.Limit)))
-	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
-	// 	// ctx.Status(fiber.StatusOK).JSON(productImages)
-	// } else {
-	// 	maxPage = 0
-	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
-	// 	// ctx.Status(fiber.StatusOK).JSON([]db.ListProductImagesV2Row{})
-	// }
-
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
 
 	ctx.Set("Next-Available", fmt.Sprint(productImages[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productImages)

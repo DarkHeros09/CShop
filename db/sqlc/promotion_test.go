@@ -35,8 +35,36 @@ func createRandomPromotion(t *testing.T) Promotion {
 
 	return promotion
 }
+func adminCreateRandomPromotion(t *testing.T) Promotion {
+	admin := createRandomAdmin(t)
+	arg := AdminCreatePromotionParams{
+		AdminID:      admin.ID,
+		Name:         util.RandomString(6),
+		Description:  util.RandomString(6),
+		DiscountRate: util.RandomInt(1, 90),
+		Active:       util.RandomBool(),
+		StartDate:    util.RandomStartDate(),
+		EndDate:      util.RandomEndDate(),
+	}
+
+	promotion, err := testStore.AdminCreatePromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, promotion)
+
+	require.Equal(t, arg.Name, promotion.Name)
+	require.Equal(t, arg.Description, promotion.Description)
+	require.Equal(t, arg.DiscountRate, promotion.DiscountRate)
+	require.Equal(t, arg.Active, promotion.Active)
+	require.WithinDuration(t, arg.StartDate, promotion.StartDate, time.Second)
+	require.WithinDuration(t, arg.EndDate, promotion.EndDate, time.Second)
+
+	return promotion
+}
 func TestCreatePromotion(t *testing.T) {
 	createRandomPromotion(t)
+}
+func TestAdminCreatePromotion(t *testing.T) {
+	adminCreateRandomPromotion(t)
 }
 
 func TestGetPromotion(t *testing.T) {
@@ -130,12 +158,12 @@ func TestListPromotions(t *testing.T) {
 	}
 
 	wg.Wait()
-	arg := ListPromotionsParams{
-		Limit:  5,
-		Offset: 5,
-	}
+	// arg := ListPromotionsParams{
+	// 	Limit:  5,
+	// 	Offset: 5,
+	// }
 
-	promotions, err := testStore.ListPromotions(context.Background(), arg)
+	promotions, err := testStore.ListPromotions(context.Background())
 
 	require.NoError(t, err)
 	require.NotEmpty(t, promotions)

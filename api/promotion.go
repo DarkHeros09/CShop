@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	db "github.com/cshop/v3/db/sqlc"
@@ -18,19 +19,24 @@ type createPromotionParamsRequest struct {
 	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createPromotionJsonRequest struct {
-	Name         string    `json:"name" validate:"required,alphanum"`
-	Description  string    `json:"description" validate:"required"`
-	DiscountRate int64     `json:"discount_rate" validate:"required,min=1"`
-	Active       bool      `json:"active" validate:"boolean"`
-	StartDate    time.Time `json:"start_date" validate:"required"`
-	EndDate      time.Time `json:"end_date" validate:"required"`
+	Name         string `json:"name" validate:"required,alphanum"`
+	Description  string `json:"description" validate:"required"`
+	DiscountRate int64  `json:"discount_rate" validate:"required,min=1"`
+	Active       bool   `json:"active" validate:"boolean"`
+	StartDate    string `json:"start_date" validate:"required"`
+	EndDate      string `json:"end_date" validate:"required"`
 }
+
+const (
+	timeLayout = "2006-01-02T15:04:05.000"
+)
 
 func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 	params := &createPromotionParamsRequest{}
 	req := &createPromotionJsonRequest{}
 
 	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		log.Fatal(err)
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -41,17 +47,28 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
+	startDate, err := time.Parse(timeLayout, req.StartDate)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	endtDate, err := time.Parse(timeLayout, req.EndDate)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
 
-	arg := db.CreatePromotionParams{
+	arg := db.AdminCreatePromotionParams{
+		AdminID:      authPayload.AdminID,
 		Name:         req.Name,
 		Description:  req.Description,
 		DiscountRate: req.DiscountRate,
 		Active:       req.Active,
-		StartDate:    req.StartDate,
-		EndDate:      req.EndDate,
+		StartDate:    startDate,
+		EndDate:      endtDate,
 	}
 
-	promotion, err := server.store.CreatePromotion(ctx.Context(), arg)
+	promotion, err := server.store.AdminCreatePromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -97,24 +114,24 @@ func (server *Server) getPromotion(ctx *fiber.Ctx) error {
 
 //////////////* List API //////////////
 
-type listPromotionsQueryRequest struct {
-	PageID   int32 `query:"page_id" validate:"required,min=1"`
-	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
-}
+// type listPromotionsQueryRequest struct {
+// 	PageID   int32 `query:"page_id" validate:"required,min=1"`
+// 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
+// }
 
 func (server *Server) listPromotions(ctx *fiber.Ctx) error {
-	query := &listPromotionsQueryRequest{}
+	// query := &listPromotionsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		return nil
-	}
+	// if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+	// 	return nil
+	// }
 
-	arg := db.ListPromotionsParams{
-		Limit:  query.PageSize,
-		Offset: (query.PageID - 1) * query.PageSize,
-	}
-	promotions, err := server.store.ListPromotions(ctx.Context(), arg)
+	// arg := db.ListPromotionsParams{
+	// 	Limit:  query.PageSize,
+	// 	Offset: (query.PageID - 1) * query.PageSize,
+	// }
+	promotions, err := server.store.ListPromotions(ctx.Context())
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

@@ -31,8 +31,34 @@ func createRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 
 	return categoryPromotion
 }
+func adminCreateRandomCategoryPromotion(t *testing.T) CategoryPromotion {
+	admin := createRandomAdmin(t)
+	category := createRandomProductCategory(t)
+	promotion := createRandomPromotion(t)
+	arg := AdminCreateCategoryPromotionParams{
+		AdminID:                admin.ID,
+		CategoryID:             category.ID,
+		PromotionID:            promotion.ID,
+		CategoryPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+		Active:                 util.RandomBool(),
+	}
+
+	categoryPromotion, err := testStore.AdminCreateCategoryPromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, categoryPromotion)
+
+	require.Equal(t, arg.CategoryID, categoryPromotion.CategoryID)
+	require.Equal(t, arg.PromotionID, categoryPromotion.PromotionID)
+	require.Equal(t, arg.Active, categoryPromotion.Active)
+
+	return categoryPromotion
+}
 func TestCreateCategoryPromotion(t *testing.T) {
 	createRandomCategoryPromotion(t)
+}
+
+func TestAdminCreateCategoryPromotion(t *testing.T) {
+	adminCreateRandomCategoryPromotion(t)
 }
 
 func TestGetCategoryPromotion(t *testing.T) {

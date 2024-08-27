@@ -14,13 +14,14 @@ import (
 //////////////* Create API //////////////
 
 type createCategoryPromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	CategoryID  int64 `params:"categoryId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type createCategoryPromotionJsonRequest struct {
-	Active bool `json:"active" validate:"boolean"`
+	CategoryID             int64  `json:"category_id" validate:"required,min=1"`
+	PromotionID            int64  `json:"promotion_id" validate:"required,min=1"`
+	CategoryPromotionImage string `json:"category_promotion_image" validate:"required,http_url"`
+	Active                 bool   `json:"active" validate:"boolean"`
 }
 
 func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
@@ -39,13 +40,15 @@ func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.CreateCategoryPromotionParams{
-		CategoryID:  params.CategoryID,
-		PromotionID: params.PromotionID,
-		Active:      req.Active,
+	arg := db.AdminCreateCategoryPromotionParams{
+		AdminID:                authPayload.AdminID,
+		CategoryID:             req.CategoryID,
+		PromotionID:            req.PromotionID,
+		CategoryPromotionImage: null.StringFromPtr(&req.CategoryPromotionImage),
+		Active:                 req.Active,
 	}
 
-	categoryPromotion, err := server.store.CreateCategoryPromotion(ctx.Context(), arg)
+	categoryPromotion, err := server.store.AdminCreateCategoryPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

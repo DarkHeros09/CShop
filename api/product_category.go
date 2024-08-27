@@ -17,7 +17,7 @@ type createProductCategoryParamsRequest struct {
 }
 
 type createProductCategoryJsonRequest struct {
-	ParentCategoryID int64  `json:"parent_category_id" validate:"required,min=1"`
+	ParentCategoryID *int64 `json:"parent_category_id" validate:"omitempty,required,min=1"`
 	CategoryName     string `json:"category_name" validate:"required,alphanum"`
 	CategoryImage    string `json:"category_image" validate:"required,http_url"`
 }
@@ -39,7 +39,7 @@ func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.CreateProductCategoryParams{
-		ParentCategoryID: null.IntFromPtr(&req.ParentCategoryID),
+		ParentCategoryID: null.IntFromPtr(req.ParentCategoryID),
 		CategoryName:     req.CategoryName,
 		CategoryImage:    req.CategoryImage,
 	}

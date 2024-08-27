@@ -35,8 +35,37 @@ func createRandomBrandPromotion(t *testing.T) BrandPromotion {
 
 	return brandPromotion
 }
+func adminCreateRandomBrandPromotion(t *testing.T) BrandPromotion {
+	admin := createRandomAdmin(t)
+	brand := createRandomProductBrand(t)
+	promotion := createRandomPromotion(t)
+
+	fmt.Println(brand.ID)
+	fmt.Println(promotion.ID)
+	arg := AdminCreateBrandPromotionParams{
+		AdminID:             admin.ID,
+		BrandID:             brand.ID,
+		PromotionID:         promotion.ID,
+		BrandPromotionImage: null.StringFrom(util.RandomPromotionURL()),
+		Active:              util.RandomBool(),
+	}
+
+	brandPromotion, err := testStore.AdminCreateBrandPromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, brandPromotion)
+
+	require.Equal(t, arg.BrandID, brandPromotion.BrandID)
+	require.Equal(t, arg.PromotionID, brandPromotion.PromotionID)
+	require.Equal(t, arg.Active, brandPromotion.Active)
+
+	return brandPromotion
+}
 func TestCreateBrandPromotion(t *testing.T) {
 	createRandomBrandPromotion(t)
+}
+
+func TestAdminCreateBrandPromotion(t *testing.T) {
+	adminCreateRandomBrandPromotion(t)
 }
 
 func TestGetBrandPromotion(t *testing.T) {

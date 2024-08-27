@@ -278,6 +278,165 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 		})
 	}
 }
+func TestCreateProductCategoryWithoutParentCategoryIdAPI(t *testing.T) {
+	admin, _ := randomPCategorieSuperAdmin(t)
+	productCategory := randomProductCategoryWithoutParentID()
+
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		AdminID       int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:    "OK",
+			AdminID: admin.ID,
+			body: fiber.Map{
+				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
+				"parent_category_id": productCategory.ParentCategoryID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.CreateProductCategoryParams{
+					ParentCategoryID: productCategory.ParentCategoryID,
+					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
+				}
+
+				store.EXPECT().
+					CreateProductCategory(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productCategory, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchProductCategory(t, rsp.Body, productCategory)
+			},
+		},
+		{
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.CreateProductCategoryParams{
+					ParentCategoryID: productCategory.ParentCategoryID,
+					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
+				}
+
+				store.EXPECT().
+					CreateProductCategory(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "Unauthorized",
+			AdminID: admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
+			},
+			body: fiber.Map{
+				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
+				"parent_category_id": productCategory.ParentCategoryID,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.CreateProductCategoryParams{
+					ParentCategoryID: productCategory.ParentCategoryID,
+					CategoryName:     productCategory.CategoryName,
+					CategoryImage:    productCategory.CategoryImage,
+				}
+
+				store.EXPECT().
+					CreateProductCategory(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			body: fiber.Map{
+				"category_name":      productCategory.CategoryName,
+				"category_image":     productCategory.CategoryImage,
+				"parent_category_id": productCategory.ParentCategoryID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					CreateProductCategory(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.ProductCategory{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InvalidID",
+			AdminID: admin.ID,
+			body: fiber.Map{
+				"id": "invalid",
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					CreateProductCategory(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/categories", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
 
 func TestListProductCategoriesAPI(t *testing.T) {
 	n := 5
@@ -778,6 +937,14 @@ func randomProductCategory() db.ProductCategory {
 		ParentCategoryID: null.IntFrom(util.RandomMoney()),
 		CategoryName:     util.RandomUser(),
 		CategoryImage:    util.RandomURL(),
+	}
+}
+
+func randomProductCategoryWithoutParentID() db.ProductCategory {
+	return db.ProductCategory{
+		ID:            util.RandomInt(1, 1000),
+		CategoryName:  util.RandomUser(),
+		CategoryImage: util.RandomURL(),
 	}
 }
 

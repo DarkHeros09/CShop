@@ -9,6 +9,23 @@ INSERT INTO "product_promotion" (
 )
 RETURNING *;
 
+-- name: AdminCreateProductPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "product_promotion" (
+  product_id,
+  promotion_id,
+  product_promotion_image,
+  active
+)
+SELECT sqlc.arg(product_id), sqlc.arg(promotion_id), sqlc.arg(product_promotion_image), sqlc.arg(active) FROM t1
+WHERE is_admin=1
+RETURNING *;
+
 -- name: GetProductPromotion :one
 SELECT * FROM "product_promotion"
 WHERE product_id = $1

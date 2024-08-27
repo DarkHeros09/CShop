@@ -12,6 +12,27 @@ brand_promotion_image = EXCLUDED.brand_promotion_image,
 active = EXCLUDED.active
 RETURNING *;
 
+-- name: AdminCreateBrandPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "brand_promotion" (
+  brand_id,
+  promotion_id,
+  brand_promotion_image,
+  active
+)
+SELECT sqlc.arg(brand_id), sqlc.arg(promotion_id), sqlc.arg(brand_promotion_image), sqlc.arg(active) FROM t1
+WHERE is_admin=1
+ON CONFLICT(brand_id) DO UPDATE SET 
+promotion_id = EXCLUDED.promotion_id,
+brand_promotion_image = EXCLUDED.brand_promotion_image,
+active = EXCLUDED.active
+RETURNING *;
+
 -- name: GetBrandPromotion :one
 SELECT * FROM "brand_promotion"
 WHERE brand_id = $1

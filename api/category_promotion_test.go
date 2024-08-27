@@ -144,33 +144,34 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		CategoryID    int64
-		PromotionID   int64
 		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			CategoryID:  categoryPromotion.CategoryID,
-			PromotionID: categoryPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": categoryPromotion.Active,
+				"category_id":              categoryPromotion.CategoryID,
+				"promotion_id":             categoryPromotion.PromotionID,
+				"category_promotion_image": categoryPromotion.CategoryPromotionImage,
+				"active":                   categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateCategoryPromotionParams{
-					CategoryID:  categoryPromotion.CategoryID,
-					PromotionID: categoryPromotion.PromotionID,
-					Active:      categoryPromotion.Active,
+				arg := db.AdminCreateCategoryPromotionParams{
+					AdminID:                admin.ID,
+					CategoryID:             categoryPromotion.CategoryID,
+					PromotionID:            categoryPromotion.PromotionID,
+					CategoryPromotionImage: categoryPromotion.CategoryPromotionImage,
+					Active:                 categoryPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(categoryPromotion, nil)
 			},
@@ -180,24 +181,27 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "NoAuthorization",
-			CategoryID:  categoryPromotion.CategoryID,
-			PromotionID: categoryPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": categoryPromotion.Active,
+				"category_id":              categoryPromotion.CategoryID,
+				"promotion_id":             categoryPromotion.PromotionID,
+				"category_promotion_image": categoryPromotion.CategoryPromotionImage,
+				"active":                   categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateCategoryPromotionParams{
-					CategoryID:  categoryPromotion.CategoryID,
-					PromotionID: categoryPromotion.PromotionID,
-					Active:      categoryPromotion.Active,
+				arg := db.AdminCreateCategoryPromotionParams{
+					AdminID:                admin.ID,
+					CategoryID:             categoryPromotion.CategoryID,
+					PromotionID:            categoryPromotion.PromotionID,
+					CategoryPromotionImage: categoryPromotion.CategoryPromotionImage,
+					Active:                 categoryPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -206,25 +210,28 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "Unauthorized",
-			CategoryID:  categoryPromotion.CategoryID,
-			PromotionID: categoryPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "Unauthorized",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": categoryPromotion.Active,
+				"category_id":              categoryPromotion.CategoryID,
+				"promotion_id":             categoryPromotion.PromotionID,
+				"category_promotion_image": categoryPromotion.CategoryPromotionImage,
+				"active":                   categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateCategoryPromotionParams{
-					CategoryID:  categoryPromotion.CategoryID,
-					PromotionID: categoryPromotion.PromotionID,
-					Active:      categoryPromotion.Active,
+				arg := db.AdminCreateCategoryPromotionParams{
+					AdminID:                admin.ID,
+					CategoryID:             categoryPromotion.CategoryID,
+					PromotionID:            categoryPromotion.PromotionID,
+					CategoryPromotionImage: categoryPromotion.CategoryPromotionImage,
+					Active:                 categoryPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -232,19 +239,20 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InternalError",
-			CategoryID:  categoryPromotion.CategoryID,
-			PromotionID: categoryPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": categoryPromotion.Active,
+				"category_id":              categoryPromotion.CategoryID,
+				"promotion_id":             categoryPromotion.PromotionID,
+				"category_promotion_image": categoryPromotion.CategoryPromotionImage,
+				"active":                   categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateCategoryPromotion(gomock.Any(), gomock.Any()).
+					AdminCreateCategoryPromotion(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
 			},
@@ -253,12 +261,13 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InvalidID",
-			CategoryID:  0,
-			PromotionID: categoryPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InvalidID",
+			AdminID: 0,
 			body: fiber.Map{
-				"active": categoryPromotion.Active,
+				"category_id":              categoryPromotion.CategoryID,
+				"promotion_id":             categoryPromotion.PromotionID,
+				"category_promotion_image": categoryPromotion.CategoryPromotionImage,
+				"active":                   categoryPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -292,7 +301,7 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/v1/admins/%d/category-promotions/%d/categories/%d", tc.AdminID, tc.PromotionID, tc.CategoryID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/category-promotions", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -790,9 +799,10 @@ func randomCategoryPromotionSuperAdmin(t *testing.T) (admin db.Admin, password s
 
 func randomCategoryPromotion() db.CategoryPromotion {
 	return db.CategoryPromotion{
-		CategoryID:  util.RandomMoney(),
-		PromotionID: util.RandomMoney(),
-		Active:      util.RandomBool(),
+		CategoryID:             util.RandomMoney(),
+		PromotionID:            util.RandomMoney(),
+		Active:                 util.RandomBool(),
+		CategoryPromotionImage: null.StringFrom(util.RandomURL()),
 	}
 }
 

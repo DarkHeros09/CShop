@@ -14,7 +14,7 @@ func TestPasetoMakerForUser(t *testing.T) {
 
 	userID := util.RandomMoney()
 	username := util.RandomUser()
-	duration := time.Minute
+	duration := time.Hour
 
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(duration)

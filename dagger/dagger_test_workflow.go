@@ -79,7 +79,7 @@ func main() {
 	// multi stage build - stage 2
 	// golang image with cached dependencies
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).
-		From("golang:1.22").
+		From("golang:1.23").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db

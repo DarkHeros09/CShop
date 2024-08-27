@@ -14,13 +14,14 @@ import (
 //////////////* Create API //////////////
 
 type createProductPromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
-	ProductID   int64 `params:"productId" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 
 type createProductPromotionJsonRequest struct {
-	Active bool `json:"active" validate:"boolean"`
+	PromotionID           int64  `json:"promotion_id" validate:"required,min=1"`
+	ProductID             int64  `json:"product_id" validate:"required,min=1"`
+	ProductPromotionImage string `json:"product_promotion_image" validate:"required,http_url"`
+	Active                bool   `json:"active" validate:"boolean"`
 }
 
 func (server *Server) createProductPromotion(ctx *fiber.Ctx) error {
@@ -39,13 +40,15 @@ func (server *Server) createProductPromotion(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.CreateProductPromotionParams{
-		ProductID:   params.ProductID,
-		PromotionID: params.PromotionID,
-		Active:      req.Active,
+	arg := db.AdminCreateProductPromotionParams{
+		AdminID:               authPayload.AdminID,
+		ProductID:             req.ProductID,
+		PromotionID:           req.PromotionID,
+		ProductPromotionImage: null.StringFromPtr(&req.ProductPromotionImage),
+		Active:                req.Active,
 	}
 
-	productPromotion, err := server.store.CreateProductPromotion(ctx.Context(), arg)
+	productPromotion, err := server.store.AdminCreateProductPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

@@ -12,6 +12,27 @@ category_promotion_image = EXCLUDED.category_promotion_image,
 active = EXCLUDED.active
 RETURNING *;
 
+-- name: AdminCreateCategoryPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+INSERT INTO "category_promotion" (
+  category_id,
+  promotion_id,
+  category_promotion_image,
+  active
+)
+SELECT sqlc.arg(category_id), sqlc.arg(promotion_id), sqlc.arg(category_promotion_image), sqlc.arg(active) FROM t1
+WHERE is_admin=1
+ON CONFLICT(category_id) DO UPDATE SET 
+promotion_id = EXCLUDED.promotion_id,
+category_promotion_image = EXCLUDED.category_promotion_image,
+active = EXCLUDED.active
+RETURNING *;
+
 -- name: GetCategoryPromotion :one
 SELECT * FROM "category_promotion"
 WHERE category_id = $1

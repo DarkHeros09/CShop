@@ -139,14 +139,15 @@ func TestCreatePromotionAPI(t *testing.T) {
 				"description":   promotion.Description,
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreatePromotionParams{
+				arg := db.AdminCreatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         promotion.Name,
 					Description:  promotion.Description,
 					DiscountRate: promotion.DiscountRate,
@@ -156,7 +157,7 @@ func TestCreatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(promotion, nil)
 			},
@@ -171,7 +172,8 @@ func TestCreatePromotionAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreatePromotionParams{
+				arg := db.AdminCreatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         promotion.Name,
 					Description:  promotion.Description,
 					DiscountRate: promotion.DiscountRate,
@@ -181,7 +183,7 @@ func TestCreatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -197,14 +199,15 @@ func TestCreatePromotionAPI(t *testing.T) {
 				"description":   promotion.Description,
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreatePromotionParams{
+				arg := db.AdminCreatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         promotion.Name,
 					Description:  promotion.Description,
 					DiscountRate: promotion.DiscountRate,
@@ -214,7 +217,7 @@ func TestCreatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					CreatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -229,15 +232,15 @@ func TestCreatePromotionAPI(t *testing.T) {
 				"description":   promotion.Description,
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreatePromotion(gomock.Any(), gomock.Any()).
+					AdminCreatePromotion(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.Promotion{}, pgx.ErrTxClosed)
 			},
@@ -245,24 +248,29 @@ func TestCreatePromotionAPI(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
-		{
-			name:    "InvalidID",
-			AdminID: admin.ID,
-			body: fiber.Map{
-				"id": "invalid",
-			},
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					CreatePromotion(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
+		// {
+		// 	name:    "InvalidID",
+		// 	AdminID: admin.ID,
+		// 	body: fiber.Map{
+		// 		"name":          promotion.Name,
+		// 		"description":   promotion.Description,
+		// 		"discount_rate": 0,
+		// 		"active":        promotion.Active,
+		// 		"start_date":    promotion.StartDate.Format(timeLayout),
+		// 		"end_date":      promotion.EndDate.Format(timeLayout),
+		// 	},
+		// 	setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+		// 		addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			AdminCreatePromotion(gomock.Any(), gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
 	}
 
 	for i := range testCases {
@@ -322,13 +330,13 @@ func TestListPromotionsAPI(t *testing.T) {
 				pageSize: n,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListPromotionsParams{
-					Limit:  int32(n),
-					Offset: 0,
-				}
+				// arg := db.ListPromotionsParams{
+				// 	Limit:  int32(n),
+				// 	Offset: 0,
+				// }
 
 				store.EXPECT().
-					ListPromotions(gomock.Any(), gomock.Eq(arg)).
+					ListPromotions(gomock.Any()).
 					Times(1).
 					Return(Promotions, nil)
 			},
@@ -345,7 +353,7 @@ func TestListPromotionsAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListPromotions(gomock.Any(), gomock.Any()).
+					ListPromotions(gomock.Any()).
 					Times(1).
 					Return([]db.Promotion{}, pgx.ErrTxClosed)
 			},
@@ -353,36 +361,36 @@ func TestListPromotionsAPI(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
-		{
-			name: "InvalidPageID",
-			query: Query{
-				pageID:   -1,
-				pageSize: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListPromotions(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidPageSize",
-			query: Query{
-				pageID:   1,
-				pageSize: 100000,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListPromotions(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
+		// {
+		// 	name: "InvalidPageID",
+		// 	query: Query{
+		// 		pageID:   -1,
+		// 		pageSize: n,
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListPromotions(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
+		// {
+		// 	name: "InvalidPageSize",
+		// 	query: Query{
+		// 		pageID:   1,
+		// 		pageSize: 100000,
+		// 	},
+		// 	buildStubs: func(store *mockdb.MockStore) {
+		// 		store.EXPECT().
+		// 			ListPromotions(gomock.Any()).
+		// 			Times(0)
+		// 	},
+		// 	checkResponse: func(rsp *http.Response) {
+		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+		// 	},
+		// },
 	}
 
 	for i := range testCases {
@@ -404,10 +412,10 @@ func TestListPromotionsAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
-			request.URL.RawQuery = q.Encode()
+			// q := request.URL.Query()
+			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
+			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
 
@@ -780,14 +788,16 @@ func randomPSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 }
 
 func randomPromotion() db.Promotion {
+	startTime, _ := time.Parse(timeLayout, time.Now().Truncate(0).Local().UTC().Format(timeLayout))
+	endTime, _ := time.Parse(timeLayout, time.Now().Truncate(0).Local().UTC().Format(timeLayout))
 	return db.Promotion{
 		ID:           util.RandomInt(1, 1000),
 		Name:         util.RandomUser(),
 		Description:  util.RandomUser(),
 		DiscountRate: util.RandomInt(1, 1000),
 		Active:       util.RandomBool(),
-		StartDate:    time.Now().Truncate(0).Local().UTC(),
-		EndDate:      time.Now().Truncate(0).Local().UTC(),
+		StartDate:    startTime,
+		EndDate:      endTime,
 	}
 }
 

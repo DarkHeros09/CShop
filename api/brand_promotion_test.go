@@ -144,33 +144,34 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		BrandID       int64
-		PromotionID   int64
 		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:        "OK",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"brand_id":              brandPromotion.BrandID,
+				"promotion_id":          brandPromotion.PromotionID,
+				"brand_promotion_image": brandPromotion.BrandPromotionImage,
+				"active":                brandPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.AdminCreateBrandPromotionParams{
+					AdminID:             admin.ID,
+					BrandID:             brandPromotion.BrandID,
+					PromotionID:         brandPromotion.PromotionID,
+					BrandPromotionImage: brandPromotion.BrandPromotionImage,
+					Active:              brandPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(brandPromotion, nil)
 			},
@@ -180,24 +181,27 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "NoAuthorization",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"brand_id":              brandPromotion.BrandID,
+				"promotion_id":          brandPromotion.PromotionID,
+				"brand_promotion_image": brandPromotion.BrandPromotionImage,
+				"active":                brandPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.AdminCreateBrandPromotionParams{
+					AdminID:             admin.ID,
+					BrandID:             brandPromotion.BrandID,
+					PromotionID:         brandPromotion.PromotionID,
+					BrandPromotionImage: brandPromotion.BrandPromotionImage,
+					Active:              brandPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 
 			},
@@ -206,25 +210,28 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "Unauthorized",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "Unauthorized",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"brand_id":              brandPromotion.BrandID,
+				"promotion_id":          brandPromotion.PromotionID,
+				"brand_promotion_image": brandPromotion.BrandPromotionImage,
+				"active":                brandPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.CreateBrandPromotionParams{
-					BrandID:     brandPromotion.BrandID,
-					PromotionID: brandPromotion.PromotionID,
-					Active:      brandPromotion.Active,
+				arg := db.AdminCreateBrandPromotionParams{
+					AdminID:             admin.ID,
+					BrandID:             brandPromotion.BrandID,
+					PromotionID:         brandPromotion.PromotionID,
+					BrandPromotionImage: brandPromotion.BrandPromotionImage,
+					Active:              brandPromotion.Active,
 				}
 
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -232,19 +239,20 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InternalError",
-			BrandID:     brandPromotion.BrandID,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"brand_id":              brandPromotion.BrandID,
+				"promotion_id":          brandPromotion.PromotionID,
+				"brand_promotion_image": brandPromotion.BrandPromotionImage,
+				"active":                brandPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateBrandPromotion(gomock.Any(), gomock.Any()).
+					AdminCreateBrandPromotion(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
 			},
@@ -253,12 +261,13 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			},
 		},
 		{
-			name:        "InvalidID",
-			BrandID:     0,
-			PromotionID: brandPromotion.PromotionID,
-			AdminID:     admin.ID,
+			name:    "InvalidID",
+			AdminID: 0,
 			body: fiber.Map{
-				"active": brandPromotion.Active,
+				"brand_id":              brandPromotion.BrandID,
+				"promotion_id":          brandPromotion.PromotionID,
+				"brand_promotion_image": brandPromotion.BrandPromotionImage,
+				"active":                brandPromotion.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -292,7 +301,7 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/admin/v1/admins/%d/brand-promotions/%d/brands/%d", tc.AdminID, tc.PromotionID, tc.BrandID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/brand-promotions", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -790,9 +799,10 @@ func randomBrandPromotionSuperAdmin(t *testing.T) (admin db.Admin, password stri
 
 func randomBrandPromotion() db.BrandPromotion {
 	return db.BrandPromotion{
-		BrandID:     util.RandomMoney(),
-		PromotionID: util.RandomMoney(),
-		Active:      util.RandomBool(),
+		BrandID:             util.RandomMoney(),
+		PromotionID:         util.RandomMoney(),
+		Active:              util.RandomBool(),
+		BrandPromotionImage: null.StringFrom(util.RandomURL()),
 	}
 }
 
