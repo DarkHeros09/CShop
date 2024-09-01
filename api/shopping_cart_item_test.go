@@ -24,8 +24,8 @@ import (
 
 func TestCreateShoppingCartItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItem1(t, shoppingCart)
+	shoppingCart := createRandomShoppingCart(user)
+	shoppingCartItem := createRandomShoppingCartItem1(shoppingCart)
 
 	testCases := []struct {
 		name           string
@@ -173,8 +173,8 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 
 func TestGetShoppingCartItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItemForGet(t, shoppingCart)
+	shoppingCart := createRandomShoppingCart(user)
+	shoppingCartItem := createRandomShoppingCartItemForGet(shoppingCart)
 
 	testCases := []struct {
 		name           string
@@ -295,7 +295,7 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 
 func TestListShoppingCartItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
+	shoppingCart := createRandomShoppingCart(user)
 
 	n := 5
 	shoppingCartItems := make([]db.ListShoppingCartItemsByUserIDRow, n)
@@ -304,7 +304,7 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 	for i := 0; i < n; i++ {
 		randomProductItems := randomProductItemNew()
 		productItems = append(productItems, randomProductItems)
-		shoppingCartItems[i] = createRandomListShoppingCartItem(t, shoppingCart, randomProductItems)
+		shoppingCartItems[i] = createRandomListShoppingCartItem(shoppingCart, randomProductItems)
 	}
 
 	// fmt.Println("ShoppingCarts: ", shoppingCartItems)
@@ -312,12 +312,12 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 	// fmt.Println("ProductItems: ", productItems)
 	// fmt.Println("ProductItems LEN: ", len(productItems))
 
-	productIds := createProductIdsForCart(t, shoppingCartItems)
+	productIds := createProductIdsForCart(shoppingCartItems)
 	// fmt.Println("ProductIDs: ", productIds)
-	listProductsByIds := createRandomListProductsByIds(t, shoppingCartItems, productItems)
+	listProductsByIds := createRandomListProductsByIds(shoppingCartItems, productItems)
 	// fmt.Println("ProductsListById: ", listProductsByIds)
 
-	finalRsp := createFinalRspForCart(t, shoppingCartItems, listProductsByIds)
+	finalRsp := createFinalRspForCart(shoppingCartItems, listProductsByIds)
 
 	testCases := []struct {
 		name          string
@@ -429,8 +429,8 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 
 func TestUpdateShoppingCartItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItemForUpdate(t, shoppingCart)
+	shoppingCart := createRandomShoppingCart(user)
+	shoppingCartItem := createRandomShoppingCartItemForUpdate(shoppingCart)
 	qty := util.RandomMoney()
 
 	testCases := []struct {
@@ -575,8 +575,8 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 
 func TestDeleteShoppingCartItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItemForUpdate(t, shoppingCart)
+	shoppingCart := createRandomShoppingCart(user)
+	shoppingCartItem := createRandomShoppingCartItemForUpdate(shoppingCart)
 
 	testCases := []struct {
 		name               string
@@ -718,8 +718,8 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 
 func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shoppingCartItem := createRandomShoppingCartItem(t, shoppingCart)
+	shoppingCart := createRandomShoppingCart(user)
+	shoppingCartItem := createRandomShoppingCartItem(shoppingCart)
 
 	var shoppingCartItemList []db.ShoppingCartItem
 	shoppingCartItemList = append(shoppingCartItemList, shoppingCartItem...)
@@ -850,14 +850,14 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 
 func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
-	shoppingCart := createRandomShoppingCart(t, user)
-	shippingMethod := createRandomShippingMethod(t)
-	paymentMethod := createRandomPaymentMethodUA(t, user)
-	orderStatus := createRandomOrderStatus(t)
+	address := createRandomAddress()
+	userAddress := createRandomUserAddress(user, address)
+	shoppingCart := createRandomShoppingCart(user)
+	shippingMethod := createRandomShippingMethod()
+	paymentMethod := createRandomPaymentMethodUA(user)
+	orderStatus := createRandomOrderStatus()
 	orderTotal := util.RandomDecimalString(1, 100)
-	finishedPurchase := createRandomFinishedPurchase(t)
+	finishedPurchase := createRandomFinishedPurchase()
 
 	testCases := []struct {
 		name           string
@@ -1030,7 +1030,7 @@ func randomSCIUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomShoppingCart(t *testing.T, user db.User) (shoppingSession db.ShoppingCart) {
+func createRandomShoppingCart(user db.User) (shoppingSession db.ShoppingCart) {
 	shoppingSession = db.ShoppingCart{
 		ID:     util.RandomMoney(),
 		UserID: user.ID,
@@ -1038,7 +1038,7 @@ func createRandomShoppingCart(t *testing.T, user db.User) (shoppingSession db.Sh
 	return
 }
 
-func createRandomShoppingCartItem1(t *testing.T, shoppingCart db.ShoppingCart) (shoppingCartItem db.ShoppingCartItem) {
+func createRandomShoppingCartItem1(shoppingCart db.ShoppingCart) (shoppingCartItem db.ShoppingCartItem) {
 	shoppingCartItem = db.ShoppingCartItem{
 		ID:             util.RandomMoney(),
 		ShoppingCartID: shoppingCart.ID,
@@ -1048,7 +1048,7 @@ func createRandomShoppingCartItem1(t *testing.T, shoppingCart db.ShoppingCart) (
 	return
 }
 
-func createRandomShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart) (shoppingCartItem []db.ShoppingCartItem) {
+func createRandomShoppingCartItem(shoppingCart db.ShoppingCart) (shoppingCartItem []db.ShoppingCartItem) {
 	shoppingCartItem = []db.ShoppingCartItem{
 		{ID: util.RandomMoney(),
 			ShoppingCartID: shoppingCart.ID,
@@ -1058,11 +1058,11 @@ func createRandomShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart) (s
 	return
 }
 
-func createRandomListProductsByIds(t *testing.T, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow, productItem []db.ListProductItemsV2Row) (listByIds []db.ListProductItemsByIDsRow) {
+func createRandomListProductsByIds(shoppingCartItem []db.ListShoppingCartItemsByUserIDRow, productItem []db.ListProductItemsV2Row) (listByIds []db.ListProductItemsByIDsRow) {
 	productsIds := make([]db.ListProductItemsByIDsRow, len(shoppingCartItem))
 
 	for i := 0; i < len(shoppingCartItem); i++ {
-		productsIds = append(productsIds, db.ListProductItemsByIDsRow{
+		_ = append(productsIds, db.ListProductItemsByIDsRow{
 			ID:            productItem[i].ID,
 			Name:          null.StringFrom(util.RandomString(10)),
 			ProductID:     productItem[i].ProductID,
@@ -1079,7 +1079,7 @@ func createRandomListProductsByIds(t *testing.T, shoppingCartItem []db.ListShopp
 	return
 }
 
-func createProductIdsForCart(t *testing.T, shoppingCartItems []db.ListShoppingCartItemsByUserIDRow) (productId []int64) {
+func createProductIdsForCart(shoppingCartItems []db.ListShoppingCartItemsByUserIDRow) (productId []int64) {
 	var productsIds []int64
 
 	for i := 0; i < len(shoppingCartItems); i++ {
@@ -1088,7 +1088,7 @@ func createProductIdsForCart(t *testing.T, shoppingCartItems []db.ListShoppingCa
 
 	return productsIds
 }
-func createFinalRspForCart(t *testing.T, shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listShoppingCartItemsResponse) {
+func createFinalRspForCart(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listShoppingCartItemsResponse) {
 	for i := 0; i < len(productItems); i++ {
 		rsp = append(rsp, listShoppingCartItemsResponse{
 			ID:             shopCartItems[i].ID,
@@ -1106,7 +1106,7 @@ func createFinalRspForCart(t *testing.T, shopCartItems []db.ListShoppingCartItem
 	}
 	return
 }
-func createRandomPaymentMethodUA(t *testing.T, user db.User) (paymentMethod db.PaymentMethod) {
+func createRandomPaymentMethodUA(user db.User) (paymentMethod db.PaymentMethod) {
 	paymentMethod = db.PaymentMethod{
 		ID:            util.RandomMoney(),
 		UserID:        user.ID,
@@ -1117,7 +1117,7 @@ func createRandomPaymentMethodUA(t *testing.T, user db.User) (paymentMethod db.P
 	return
 }
 
-func createRandomShippingMethod(t *testing.T) (shippingMethod db.ShippingMethod) {
+func createRandomShippingMethod() (shippingMethod db.ShippingMethod) {
 	shippingMethod = db.ShippingMethod{
 		ID:    util.RandomMoney(),
 		Name:  util.RandomUser(),
@@ -1126,7 +1126,7 @@ func createRandomShippingMethod(t *testing.T) (shippingMethod db.ShippingMethod)
 	return
 }
 
-func createRandomOrderStatus(t *testing.T) (orderStatus db.OrderStatus) {
+func createRandomOrderStatus() (orderStatus db.OrderStatus) {
 	orderStatus = db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
@@ -1134,7 +1134,7 @@ func createRandomOrderStatus(t *testing.T) (orderStatus db.OrderStatus) {
 	return
 }
 
-func createRandomFinishedPurchase(t *testing.T) (finishedPurchase db.FinishedPurchaseTxResult) {
+func createRandomFinishedPurchase() (finishedPurchase db.FinishedPurchaseTxResult) {
 	finishedPurchase = db.FinishedPurchaseTxResult{
 		UpdatedProductItemID: util.RandomMoney(),
 		ShopOrderID:          util.RandomMoney(),
@@ -1143,7 +1143,7 @@ func createRandomFinishedPurchase(t *testing.T) (finishedPurchase db.FinishedPur
 	return
 }
 
-func createRandomShoppingCartItemForGet(t *testing.T, shoppingCart db.ShoppingCart) (shoppingCartItem []db.GetShoppingCartItemByUserIDCartIDRow) {
+func createRandomShoppingCartItemForGet(shoppingCart db.ShoppingCart) (shoppingCartItem []db.GetShoppingCartItemByUserIDCartIDRow) {
 	shoppingCartItem = []db.GetShoppingCartItemByUserIDCartIDRow{
 		{ID: util.RandomMoney(),
 			ShoppingCartID: shoppingCart.ID,
@@ -1154,7 +1154,7 @@ func createRandomShoppingCartItemForGet(t *testing.T, shoppingCart db.ShoppingCa
 	return
 }
 
-func createRandomShoppingCartItemForUpdate(t *testing.T, shoppingCart db.ShoppingCart) (shoppingCartItem db.UpdateShoppingCartItemRow) {
+func createRandomShoppingCartItemForUpdate(shoppingCart db.ShoppingCart) (shoppingCartItem db.UpdateShoppingCartItemRow) {
 	shoppingCartItem = db.UpdateShoppingCartItemRow{
 		ID:             util.RandomMoney(),
 		ShoppingCartID: shoppingCart.ID,
@@ -1165,7 +1165,7 @@ func createRandomShoppingCartItemForUpdate(t *testing.T, shoppingCart db.Shoppin
 	return
 }
 
-func createRandomListShoppingCartItem(t *testing.T, shoppingCart db.ShoppingCart, productItem db.ListProductItemsV2Row) (shoppingCartItem db.ListShoppingCartItemsByUserIDRow) {
+func createRandomListShoppingCartItem(shoppingCart db.ShoppingCart, productItem db.ListProductItemsV2Row) (shoppingCartItem db.ListShoppingCartItemsByUserIDRow) {
 	shoppingCartItem = db.ListShoppingCartItemsByUserIDRow{
 		UserID:         shoppingCart.UserID,
 		ID:             null.IntFrom(util.RandomMoney()),
@@ -1191,22 +1191,23 @@ func requireBodyMatchShoppingCartItem(t *testing.T, body io.ReadCloser, shopping
 	require.Equal(t, shoppingCartItem.Qty, gotShoppingCartItem.Qty)
 	require.Equal(t, shoppingCartItem.CreatedAt, gotShoppingCartItem.CreatedAt)
 }
-func requireBodyMatchShoppingCartItemForCreate(t *testing.T, body io.ReadCloser, shoppingCartItems []db.ShoppingCartItem) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
 
-	var gotShoppingCartItem []db.ShoppingCartItem
-	err = json.Unmarshal(data, &gotShoppingCartItem)
+// func requireBodyMatchShoppingCartItemForCreate(t *testing.T, body io.ReadCloser, shoppingCartItems []db.ShoppingCartItem) {
+// 	data, err := io.ReadAll(body)
+// 	require.NoError(t, err)
 
-	require.NoError(t, err)
-	for i, shoppingCartItem := range shoppingCartItems {
-		require.Equal(t, shoppingCartItem.ID, gotShoppingCartItem[i].ID)
-		require.Equal(t, shoppingCartItem.ShoppingCartID, gotShoppingCartItem[i].ShoppingCartID)
-		require.Equal(t, shoppingCartItem.ProductItemID, gotShoppingCartItem[i].ProductItemID)
-		require.Equal(t, shoppingCartItem.Qty, gotShoppingCartItem[i].Qty)
-		require.Equal(t, shoppingCartItem.CreatedAt, gotShoppingCartItem[i].CreatedAt)
-	}
-}
+// 	var gotShoppingCartItem []db.ShoppingCartItem
+// 	err = json.Unmarshal(data, &gotShoppingCartItem)
+
+// 	require.NoError(t, err)
+// 	for i, shoppingCartItem := range shoppingCartItems {
+// 		require.Equal(t, shoppingCartItem.ID, gotShoppingCartItem[i].ID)
+// 		require.Equal(t, shoppingCartItem.ShoppingCartID, gotShoppingCartItem[i].ShoppingCartID)
+// 		require.Equal(t, shoppingCartItem.ProductItemID, gotShoppingCartItem[i].ProductItemID)
+// 		require.Equal(t, shoppingCartItem.Qty, gotShoppingCartItem[i].Qty)
+// 		require.Equal(t, shoppingCartItem.CreatedAt, gotShoppingCartItem[i].CreatedAt)
+// 	}
+// }
 
 func requireBodyMatchShoppingCartItemForGet(t *testing.T, body io.ReadCloser, shoppingCartItem []db.GetShoppingCartItemByUserIDCartIDRow) {
 	data, err := io.ReadAll(body)
@@ -1227,21 +1228,21 @@ func requireBodyMatchShoppingCartItemForGet(t *testing.T, body io.ReadCloser, sh
 	}
 }
 
-func requireBodyMatchListShoppingCartItem(t *testing.T, body io.ReadCloser, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
+// func requireBodyMatchListShoppingCartItem(t *testing.T, body io.ReadCloser, shoppingCartItem []db.ListShoppingCartItemsByUserIDRow) {
+// 	data, err := io.ReadAll(body)
+// 	require.NoError(t, err)
 
-	var gotShoppingCartItem []db.ListShoppingCartItemsByUserIDRow
-	err = json.Unmarshal(data, &gotShoppingCartItem)
+// 	var gotShoppingCartItem []db.ListShoppingCartItemsByUserIDRow
+// 	err = json.Unmarshal(data, &gotShoppingCartItem)
 
-	require.NoError(t, err)
-	for i, gotCartItem := range gotShoppingCartItem {
-		require.Equal(t, shoppingCartItem[i].ID, gotCartItem.ID)
-		require.Equal(t, shoppingCartItem[i].ShoppingCartID, gotCartItem.ShoppingCartID)
-		require.Equal(t, shoppingCartItem[i].ProductItemID, gotCartItem.ProductItemID)
-		require.Equal(t, shoppingCartItem[i].UserID, gotCartItem.UserID)
-	}
-}
+// 	require.NoError(t, err)
+// 	for i, gotCartItem := range gotShoppingCartItem {
+// 		require.Equal(t, shoppingCartItem[i].ID, gotCartItem.ID)
+// 		require.Equal(t, shoppingCartItem[i].ShoppingCartID, gotCartItem.ShoppingCartID)
+// 		require.Equal(t, shoppingCartItem[i].ProductItemID, gotCartItem.ProductItemID)
+// 		require.Equal(t, shoppingCartItem[i].UserID, gotCartItem.UserID)
+// 	}
+// }
 
 func requireBodyMatchFinalListShoppingCartItem(t *testing.T, body io.ReadCloser, finalRsp []listShoppingCartItemsResponse) {
 	data, err := io.ReadAll(body)

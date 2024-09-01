@@ -264,6 +264,39 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 	require.NotEqual(t, productItem1.UpdatedAt, productItem2.UpdatedAt)
 }
 
+func TestAdminUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
+	admin := createRandomAdmin(t)
+	productItem1 := createRandomProductItem(t)
+	arg := AdminUpdateProductItemParams{
+		AdminID:    admin.ID,
+		ProductID:  productItem1.ProductID,
+		ProductSku: null.Int{},
+		QtyInStock: null.IntFrom(util.RandomInt(1, 500)),
+		// ProductImage: null.String{},
+		Price:  null.StringFrom(util.RandomDecimalString(1, 100)),
+		Active: null.BoolFrom(!productItem1.Active),
+		ID:     productItem1.ID,
+	}
+
+	productItem2, err := testStore.AdminUpdateProductItem(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem2)
+
+	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
+	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
+	require.NotEqual(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
+	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
+	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
+	require.NotEqual(t, productItem1.Price, productItem2.Price)
+	require.NotEqual(t, productItem1.Active, productItem2.Active)
+	require.False(t, productItem2.Active)
+	require.WithinDuration(t, productItem1.CreatedAt, productItem2.CreatedAt, time.Second)
+	require.NotEqual(t, productItem1.UpdatedAt, productItem2.UpdatedAt)
+}
+
 func TestDeleteProductItem(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
 	err := testStore.DeleteProductItem(context.Background(), productItem1.ID)

@@ -24,8 +24,8 @@ import (
 
 func TestCreatePaymentMethodAPI(t *testing.T) {
 	user, _ := randomPMUser(t)
-	paymentType := createRandomPaymentType(t)
-	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
+	paymentType := createRandomPaymentType()
+	paymentMethod := createRandomPaymentMethod(user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -162,8 +162,8 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 
 func TestGetPaymentMethodAPI(t *testing.T) {
 	user, _ := randomPMUser(t)
-	paymentType := createRandomPaymentType(t)
-	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
+	paymentType := createRandomPaymentType()
+	paymentMethod := createRandomPaymentMethod(user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -331,10 +331,10 @@ func TestListPaymentMethodAPI(t *testing.T) {
 	n := 5
 	paymentMethods := make([]db.PaymentMethod, n)
 	user, _ := randomPMUser(t)
-	paymentType := createRandomPaymentType(t)
-	paymentMethod1 := createRandomPaymentMethod(t, user, paymentType)
-	paymentMethod2 := createRandomPaymentMethod(t, user, paymentType)
-	paymentMethod3 := createRandomPaymentMethod(t, user, paymentType)
+	paymentType := createRandomPaymentType()
+	paymentMethod1 := createRandomPaymentMethod(user, paymentType)
+	paymentMethod2 := createRandomPaymentMethod(user, paymentType)
+	paymentMethod3 := createRandomPaymentMethod(user, paymentType)
 
 	paymentMethods = append(paymentMethods, paymentMethod1, paymentMethod2, paymentMethod3)
 
@@ -474,8 +474,8 @@ func TestListPaymentMethodAPI(t *testing.T) {
 
 func TestUpdatePaymentMethodAPI(t *testing.T) {
 	user, _ := randomPMUser(t)
-	paymentType := createRandomPaymentType(t)
-	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
+	paymentType := createRandomPaymentType()
+	paymentMethod := createRandomPaymentMethod(user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -619,8 +619,8 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 
 func TestDeletePaymentMethodAPI(t *testing.T) {
 	user, _ := randomPMUser(t)
-	paymentType := createRandomPaymentType(t)
-	paymentMethod := createRandomPaymentMethod(t, user, paymentType)
+	paymentType := createRandomPaymentType()
+	paymentMethod := createRandomPaymentMethod(user, paymentType)
 
 	testCases := []struct {
 		name          string
@@ -763,7 +763,7 @@ func randomPMUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomPaymentMethod(t *testing.T, user db.User, paymentType db.PaymentType) (paymentMethod db.PaymentMethod) {
+func createRandomPaymentMethod(user db.User, paymentType db.PaymentType) (paymentMethod db.PaymentMethod) {
 	paymentMethod = db.PaymentMethod{
 		ID:            util.RandomMoney(),
 		UserID:        user.ID,
@@ -773,7 +773,7 @@ func createRandomPaymentMethod(t *testing.T, user db.User, paymentType db.Paymen
 	}
 	return
 }
-func createRandomPaymentType(t *testing.T) (paymentType db.PaymentType) {
+func createRandomPaymentType() (paymentType db.PaymentType) {
 	paymentType = db.PaymentType{
 		ID:    util.RandomMoney(),
 		Value: util.RandomUser(),

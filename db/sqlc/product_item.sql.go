@@ -76,6 +76,72 @@ func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreatePro
 	return i, err
 }
 
+const adminUpdateProductItem = `-- name: AdminUpdateProductItem :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $10
+    AND active = TRUE
+    )
+UPDATE "product_item"
+SET
+product_sku = COALESCE($1,product_sku),
+qty_in_stock = COALESCE($2,qty_in_stock),
+size_id = COALESCE($3,size_id),
+image_id = COALESCE($4,image_id),
+color_id = COALESCE($5,color_id),
+price = COALESCE($6,price),
+active = COALESCE($7,active),
+updated_at = now()
+WHERE "product_item".id = $8
+AND product_id = $9
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+`
+
+type AdminUpdateProductItemParams struct {
+	ProductSku null.Int    `json:"product_sku"`
+	QtyInStock null.Int    `json:"qty_in_stock"`
+	SizeID     null.Int    `json:"size_id"`
+	ImageID    null.Int    `json:"image_id"`
+	ColorID    null.Int    `json:"color_id"`
+	Price      null.String `json:"price"`
+	Active     null.Bool   `json:"active"`
+	ID         int64       `json:"id"`
+	ProductID  int64       `json:"product_id"`
+	AdminID    int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error) {
+	row := q.db.QueryRow(ctx, adminUpdateProductItem,
+		arg.ProductSku,
+		arg.QtyInStock,
+		arg.SizeID,
+		arg.ImageID,
+		arg.ColorID,
+		arg.Price,
+		arg.Active,
+		arg.ID,
+		arg.ProductID,
+		arg.AdminID,
+	)
+	var i ProductItem
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
+		&i.ProductSku,
+		&i.QtyInStock,
+		&i.Price,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createProductItem = `-- name: CreateProductItem :one
 INSERT INTO "product_item" (
   product_id,

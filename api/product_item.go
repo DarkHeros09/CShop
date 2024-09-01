@@ -148,12 +148,12 @@ type updateProductItemParamsRequest struct {
 }
 
 type updateProductItemJsonRequest struct {
-	ProductID    int64  `json:"product_id" validate:"required,min=1"`
-	ProductSKU   int64  `json:"product_sku" validate:"omitempty,required"`
-	QtyInStock   int64  `json:"qty_in_stock" validate:"omitempty,required"`
-	ProductImage string `json:"product_image" validate:"omitempty,required,url"`
-	Price        string `json:"price" validate:"omitempty,required"`
-	Active       bool   `json:"active" validate:"boolean"`
+	ProductID  int64  `json:"product_id" validate:"required,min=1"`
+	ProductSKU *int64 `json:"product_sku" validate:"omitempty,required"`
+	QtyInStock *int64 `json:"qty_in_stock" validate:"omitempty,required"`
+	// ProductImage string `json:"product_image" validate:"omitempty,required,url"`
+	Price  *string `json:"price" validate:"omitempty,required"`
+	Active *bool   `json:"active" validate:"omitempty,boolean"`
 }
 
 func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
@@ -172,17 +172,18 @@ func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.UpdateProductItemParams{
+	arg := db.AdminUpdateProductItemParams{
+		AdminID:    authPayload.AdminID,
 		ID:         params.ProductItemID,
 		ProductID:  req.ProductID,
-		ProductSku: null.IntFromPtr(&req.ProductSKU),
-		QtyInStock: null.IntFromPtr(&req.QtyInStock),
+		ProductSku: null.IntFromPtr(req.ProductSKU),
+		QtyInStock: null.IntFromPtr(req.QtyInStock),
 		// ProductImage: null.StringFromPtr(&req.ProductImage),
-		Price:  null.StringFromPtr(&req.Price),
-		Active: null.BoolFromPtr(&req.Active),
+		Price:  null.StringFromPtr(req.Price),
+		Active: null.BoolFromPtr(req.Active),
 	}
 
-	productItem, err := server.store.UpdateProductItem(ctx.Context(), arg)
+	productItem, err := server.store.AdminUpdateProductItem(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

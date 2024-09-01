@@ -160,7 +160,7 @@ type updateBrandPromotionParamsRequest struct {
 }
 
 type updateBrandPromotionJsonRequest struct {
-	Active bool `json:"active" validate:"omitempty,required,boolean"`
+	Active *bool `json:"active" validate:"omitempty,required,boolean"`
 }
 
 func (server *Server) updateBrandPromotion(ctx *fiber.Ctx) error {
@@ -182,7 +182,7 @@ func (server *Server) updateBrandPromotion(ctx *fiber.Ctx) error {
 	arg := db.UpdateBrandPromotionParams{
 		BrandID:     params.BrandID,
 		PromotionID: params.PromotionID,
-		Active:      null.BoolFromPtr(&req.Active),
+		Active:      null.BoolFromPtr(req.Active),
 	}
 
 	brandPromotion, err := server.store.UpdateBrandPromotion(ctx.Context(), arg)

@@ -25,7 +25,7 @@ import (
 func TestCreateOrderStatusAPI(t *testing.T) {
 	// user, _ := randomOSUser(t)
 	admin, _ := randomOrderStatusSuperAdmin(t)
-	orderStatus := createRandomOrderStatusForStatus(t)
+	orderStatus := createRandomOrderStatusForStatus()
 
 	testCases := []struct {
 		name          string
@@ -148,7 +148,7 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 
 func TestGetOrderStatusAPI(t *testing.T) {
 	user, _ := randomOSUser(t)
-	orderStatus := createRandomOrderStatusForGet(t, user)
+	orderStatus := createRandomOrderStatusForGet()
 
 	testCases := []struct {
 		name          string
@@ -292,9 +292,9 @@ func TestListOrderStatusAPI(t *testing.T) {
 	n := 5
 	orderStatuses := make([]db.ListOrderStatusesByUserIDRow, n)
 	user, _ := randomOSUser(t)
-	orderStatus1 := createRandomOrderStatusForList(t, user)
-	orderStatus2 := createRandomOrderStatusForList(t, user)
-	orderStatus3 := createRandomOrderStatusForList(t, user)
+	orderStatus1 := createRandomOrderStatusForList(user)
+	orderStatus2 := createRandomOrderStatusForList(user)
+	orderStatus3 := createRandomOrderStatusForList(user)
 
 	orderStatuses = append(orderStatuses, orderStatus1, orderStatus2, orderStatus3)
 
@@ -434,7 +434,7 @@ func TestListOrderStatusAPI(t *testing.T) {
 
 func TestUpdateOrderStatusAPI(t *testing.T) {
 	admin, _ := randomOrderStatusSuperAdmin(t)
-	orderStatus := createRandomOrderStatusForStatus(t)
+	orderStatus := createRandomOrderStatusForStatus()
 
 	testCases := []struct {
 		name          string
@@ -570,7 +570,7 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 
 func TestDeleteOrderStatusAPI(t *testing.T) {
 	admin, _ := randomOrderStatusSuperAdmin(t)
-	orderStatus := createRandomOrderStatusForStatus(t)
+	orderStatus := createRandomOrderStatusForStatus()
 	userID := util.RandomMoney()
 
 	testCases := []struct {
@@ -723,7 +723,7 @@ func randomOrderStatusSuperAdmin(t *testing.T) (admin db.Admin, password string)
 	return
 }
 
-func createRandomOrderStatusForStatus(t *testing.T) (orderStatus db.OrderStatus) {
+func createRandomOrderStatusForStatus() (orderStatus db.OrderStatus) {
 	orderStatus = db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
@@ -731,7 +731,7 @@ func createRandomOrderStatusForStatus(t *testing.T) (orderStatus db.OrderStatus)
 	return
 }
 
-func createRandomOrderStatusForGet(t *testing.T, user db.User) (orderStatus db.OrderStatus) {
+func createRandomOrderStatusForGet() (orderStatus db.OrderStatus) {
 	orderStatus = db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
@@ -740,7 +740,7 @@ func createRandomOrderStatusForGet(t *testing.T, user db.User) (orderStatus db.O
 	return
 }
 
-func createRandomOrderStatusForList(t *testing.T, user db.User) (orderStatus db.ListOrderStatusesByUserIDRow) {
+func createRandomOrderStatusForList(user db.User) (orderStatus db.ListOrderStatusesByUserIDRow) {
 	orderStatus = db.ListOrderStatusesByUserIDRow{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),

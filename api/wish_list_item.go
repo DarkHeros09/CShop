@@ -196,6 +196,7 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 }
 
 // ////////////* UPDATE API //////////////
+
 type updateWishListItemParamsRequest struct {
 	UserID         int64 `params:"id" validate:"required,min=1"`
 	WishListID     int64 `params:"wishId" validate:"required,min=1"`
@@ -203,7 +204,7 @@ type updateWishListItemParamsRequest struct {
 }
 
 type updateWishListItemJsonRequest struct {
-	ProductItemID int64 `json:"product_item_id" validate:"omitempty,required"`
+	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required"`
 }
 
 func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
@@ -225,7 +226,7 @@ func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
 	arg := db.UpdateWishListItemParams{
 		ID:            params.WishListItemID,
 		WishListID:    params.WishListID,
-		ProductItemID: null.IntFromPtr(&req.ProductItemID),
+		ProductItemID: null.IntFromPtr(req.ProductItemID),
 	}
 
 	wishList, err := server.store.UpdateWishListItem(ctx.Context(), arg)

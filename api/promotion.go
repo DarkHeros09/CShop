@@ -154,12 +154,12 @@ type updatePromotionParamsRequest struct {
 }
 
 type updatePromotionJsonRequest struct {
-	Name         string    `json:"name" validate:"omitempty,required,alphanum"`
-	Description  string    `json:"description" validate:"omitempty,required"`
-	DiscountRate int64     `json:"discount_rate" validate:"omitempty,required,min=1"`
-	Active       bool      `json:"active" validate:"omitempty,required,boolean"`
-	StartDate    time.Time `json:"start_date" validate:"omitempty,required"`
-	EndDate      time.Time `json:"end_date" validate:"omitempty,required"`
+	Name         *string    `json:"name" validate:"omitempty,required,alphanum"`
+	Description  *string    `json:"description" validate:"omitempty,required"`
+	DiscountRate *int64     `json:"discount_rate" validate:"omitempty,required,min=1"`
+	Active       *bool      `json:"active" validate:"omitempty,required,boolean"`
+	StartDate    *time.Time `json:"start_date" validate:"omitempty,required"`
+	EndDate      *time.Time `json:"end_date" validate:"omitempty,required"`
 }
 
 func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
@@ -180,12 +180,12 @@ func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
 
 	arg := db.UpdatePromotionParams{
 		ID:           params.PromotionID,
-		Name:         null.StringFromPtr(&req.Name),
-		Description:  null.StringFromPtr(&req.Description),
-		DiscountRate: null.IntFromPtr(&req.DiscountRate),
-		Active:       null.BoolFromPtr(&req.Active),
-		StartDate:    null.TimeFromPtr(&req.StartDate),
-		EndDate:      null.TimeFromPtr(&req.EndDate),
+		Name:         null.StringFromPtr(req.Name),
+		Description:  null.StringFromPtr(req.Description),
+		DiscountRate: null.IntFromPtr(req.DiscountRate),
+		Active:       null.BoolFromPtr(req.Active),
+		StartDate:    null.TimeFromPtr(req.StartDate),
+		EndDate:      null.TimeFromPtr(req.EndDate),
 	}
 
 	promotion, err := server.store.UpdatePromotion(ctx.Context(), arg)

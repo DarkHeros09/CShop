@@ -449,7 +449,8 @@ func TestUpdateProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductParams{
+				arg := db.AdminUpdateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  null.IntFromPtr(&product.CategoryID),
 					Name:        null.StringFromPtr(&product.Name),
 					Description: null.StringFrom("new product Description"),
@@ -459,7 +460,7 @@ func TestUpdateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(product, nil)
 			},
@@ -482,7 +483,8 @@ func TestUpdateProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductParams{
+				arg := db.AdminUpdateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  null.IntFromPtr(&product.CategoryID),
 					Name:        null.StringFromPtr(&product.Name),
 					Description: null.StringFrom("new product Description"),
@@ -492,7 +494,7 @@ func TestUpdateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -513,7 +515,8 @@ func TestUpdateProductAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductParams{
+				arg := db.AdminUpdateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  null.IntFromPtr(&product.CategoryID),
 					Name:        null.StringFromPtr(&product.Name),
 					Description: null.StringFrom("new product Description"),
@@ -523,7 +526,7 @@ func TestUpdateProductAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -545,7 +548,8 @@ func TestUpdateProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductParams{
+				arg := db.AdminUpdateProductParams{
+					AdminID:     admin.ID,
 					CategoryID:  null.IntFromPtr(&product.CategoryID),
 					Name:        null.StringFromPtr(&product.Name),
 					Description: null.StringFrom("new product Description"),
@@ -554,7 +558,7 @@ func TestUpdateProductAPI(t *testing.T) {
 					ID:     product.ID,
 				}
 				store.EXPECT().
-					UpdateProduct(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.Product{}, pgx.ErrTxClosed)
 			},
@@ -571,7 +575,7 @@ func TestUpdateProductAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateProduct(gomock.Any(), gomock.Any()).
+					AdminUpdateProduct(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -1239,16 +1243,6 @@ func requireBodyMatchProduct(t *testing.T, body io.ReadCloser, product db.Produc
 	err = json.Unmarshal(data, &gotProduct)
 	require.NoError(t, err)
 	require.Equal(t, product, gotProduct)
-}
-
-func requireBodyMatchProducts(t *testing.T, body io.ReadCloser, products []db.Product) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
-
-	var gotProducts []db.Product
-	err = json.Unmarshal(data, &gotProducts)
-	require.NoError(t, err)
-	require.Equal(t, products, gotProducts)
 }
 
 func requireBodyMatchProductsList(t *testing.T, body io.ReadCloser, products []db.ListProductsRow) {

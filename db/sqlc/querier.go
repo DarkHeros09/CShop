@@ -23,6 +23,10 @@ type Querier interface {
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error)
+	// product_image = COALESCE(sqlc.narg(product_image),product_image),
+	AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error)
+	AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (ProductImage, error)
+	AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error)
 	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)

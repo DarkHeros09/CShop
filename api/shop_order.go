@@ -23,13 +23,13 @@ type updateShopOrderParamsRequest struct {
 }
 
 type updateShopOrderJsonRequest struct {
-	UserID            int64  `json:"user_id" validate:"omitempty,required,min=1"`
-	ShippingAddressID int64  `json:"shipping_address_id" validate:"omitempty,required,min=1"`
-	ShippingMethodID  int64  `json:"shipping_method_id" validate:"omitempty,required,min=1"`
-	OrderStatusID     int64  `json:"order_status_id" validate:"omitempty,required,min=1"`
-	TrackNumber       string `json:"track_number" validate:"omitempty,required"`
-	OrderTotal        string `json:"order_total" validate:"omitempty,required"`
-	DeviceID          string `json:"device_id" validate:"omitempty,required"`
+	UserID            *int64  `json:"user_id" validate:"omitempty,required,min=1"`
+	ShippingAddressID *int64  `json:"shipping_address_id" validate:"omitempty,required,min=1"`
+	ShippingMethodID  *int64  `json:"shipping_method_id" validate:"omitempty,required,min=1"`
+	OrderStatusID     *int64  `json:"order_status_id" validate:"omitempty,required,min=1"`
+	TrackNumber       *string `json:"track_number" validate:"omitempty,required"`
+	OrderTotal        *string `json:"order_total" validate:"omitempty,required"`
+	DeviceID          string  `json:"device_id" validate:"required"`
 }
 
 func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
@@ -50,12 +50,12 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 
 	arg := db.UpdateShopOrderParams{
 		ID:                params.ShopOrderID,
-		TrackNumber:       null.StringFromPtr(&req.TrackNumber),
-		UserID:            null.IntFromPtr(&req.UserID),
-		ShippingAddressID: null.IntFromPtr(&req.ShippingAddressID),
-		OrderTotal:        null.StringFromPtr(&req.OrderTotal),
-		ShippingMethodID:  null.IntFromPtr(&req.ShippingMethodID),
-		OrderStatusID:     null.IntFromPtr(&req.OrderStatusID),
+		TrackNumber:       null.StringFromPtr(req.TrackNumber),
+		UserID:            null.IntFromPtr(req.UserID),
+		ShippingAddressID: null.IntFromPtr(req.ShippingAddressID),
+		OrderTotal:        null.StringFromPtr(req.OrderTotal),
+		ShippingMethodID:  null.IntFromPtr(req.ShippingMethodID),
+		OrderStatusID:     null.IntFromPtr(req.OrderStatusID),
 	}
 
 	shopOrder, err := server.store.UpdateShopOrder(ctx.Context(), arg)

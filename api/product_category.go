@@ -130,8 +130,9 @@ type updateProductCategoryParamsRequest struct {
 }
 
 type updateProductCategoryJsonRequest struct {
+	//? should be revised
 	CategoryName     string `json:"category_name" validate:"omitempty,required"`
-	ParentCategoryID int64  `json:"parent_category_id" validate:"omitempty,required,min=1"`
+	ParentCategoryID *int64 `json:"parent_category_id" validate:"omitempty,required,min=1"`
 }
 
 func (server *Server) updateProductCategory(ctx *fiber.Ctx) error {
@@ -153,7 +154,7 @@ func (server *Server) updateProductCategory(ctx *fiber.Ctx) error {
 	arg := db.UpdateProductCategoryParams{
 		ID:               params.CategoryID,
 		CategoryName:     req.CategoryName,
-		ParentCategoryID: null.IntFromPtr(&req.ParentCategoryID),
+		ParentCategoryID: null.IntFromPtr(req.ParentCategoryID),
 	}
 
 	productCategory, err := server.store.UpdateProductCategory(ctx.Context(), arg)

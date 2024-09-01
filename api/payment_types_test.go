@@ -24,8 +24,8 @@ func TestListPaymentTypeAPI(t *testing.T) {
 	n := 5
 	paymentTypes := make([]db.PaymentType, n)
 	user, _ := randomPTUser(t)
-	paymentType1 := createRandomPaymentType(t)
-	paymentType2 := createRandomPaymentType(t)
+	paymentType1 := createRandomPaymentType()
+	paymentType2 := createRandomPaymentType()
 
 	paymentTypes = append(paymentTypes, paymentType1, paymentType2)
 

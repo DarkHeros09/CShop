@@ -278,8 +278,8 @@ type updateShoppingCartItemParamsRequest struct {
 }
 
 type updateShoppingCartItemJsonRequest struct {
-	ProductItemID int64 `json:"product_item_id" validate:"omitempty,required"`
-	QTY           int64 `json:"qty" validate:"omitempty,required"`
+	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required"`
+	QTY           *int64 `json:"qty" validate:"omitempty,required"`
 }
 
 func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
@@ -301,8 +301,8 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 	arg := db.UpdateShoppingCartItemParams{
 		ID:             params.ShoppingCartItemID,
 		ShoppingCartID: params.ShoppingCartID,
-		ProductItemID:  null.IntFromPtr(&req.ProductItemID),
-		Qty:            null.IntFromPtr(&req.QTY),
+		ProductItemID:  null.IntFromPtr(req.ProductItemID),
+		Qty:            null.IntFromPtr(req.QTY),
 	}
 
 	shoppingCart, err := server.store.UpdateShoppingCartItem(ctx.Context(), arg)

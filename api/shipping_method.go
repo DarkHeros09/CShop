@@ -151,8 +151,8 @@ type updateShippingMethodParamsRequest struct {
 }
 
 type updateShippingMethodJsonRequest struct {
-	Name  string `json:"name" validate:"omitempty,required"`
-	Price string `json:"price" validate:"omitempty,required"`
+	Name  *string `json:"name" validate:"omitempty,required"`
+	Price *string `json:"price" validate:"omitempty,required"`
 }
 
 func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
@@ -172,8 +172,8 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateShippingMethodParams{
-		Name:  null.StringFromPtr(&req.Name),
-		Price: null.StringFromPtr(&req.Price),
+		Name:  null.StringFromPtr(req.Name),
+		Price: null.StringFromPtr(req.Price),
 		ID:    params.ShippingMethodID,
 	}
 

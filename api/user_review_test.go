@@ -24,7 +24,7 @@ import (
 
 func TestCreateUserReviewAPI(t *testing.T) {
 	user, _ := randomURUser(t)
-	userReview := createRandomUserReview(t, user)
+	userReview := createRandomUserReview(user)
 
 	testCases := []struct {
 		name          string
@@ -161,7 +161,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 
 func TestGetUserReviewAPI(t *testing.T) {
 	user, _ := randomURUser(t)
-	userReview := createRandomUserReview(t, user)
+	userReview := createRandomUserReview(user)
 
 	testCases := []struct {
 		name          string
@@ -305,9 +305,9 @@ func TestListUsersReviewAPI(t *testing.T) {
 	n := 5
 	userReviews := make([]db.UserReview, n)
 	user, _ := randomURUser(t)
-	userReview1 := createRandomUserReview(t, user)
-	userReview2 := createRandomUserReview(t, user)
-	userReview3 := createRandomUserReview(t, user)
+	userReview1 := createRandomUserReview(user)
+	userReview2 := createRandomUserReview(user)
+	userReview3 := createRandomUserReview(user)
 
 	userReviews = append(userReviews, userReview1, userReview2, userReview3)
 
@@ -447,7 +447,7 @@ func TestListUsersReviewAPI(t *testing.T) {
 
 func TestUpdateUserReviewAPI(t *testing.T) {
 	user, _ := randomURUser(t)
-	userReview := createRandomUserReview(t, user)
+	userReview := createRandomUserReview(user)
 
 	testCases := []struct {
 		name          string
@@ -590,7 +590,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 
 func TestDeleteUserReviewAPI(t *testing.T) {
 	user, _ := randomURUser(t)
-	userReview := createRandomUserReview(t, user)
+	userReview := createRandomUserReview(user)
 
 	testCases := []struct {
 		name          string
@@ -731,7 +731,7 @@ func randomURUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomUserReview(t *testing.T, user db.User) (userReview db.UserReview) {
+func createRandomUserReview(user db.User) (userReview db.UserReview) {
 	userReview = db.UserReview{
 		ID:               util.RandomMoney(),
 		UserID:           user.ID,

@@ -24,8 +24,8 @@ import (
 
 func TestCreateUserAddessAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
+	address := createRandomAddress()
+	userAddress := createRandomUserAddress(user, address)
 	// userAddressWithAddress := createRandomUserAddressWithAddress(t, userAddress, address)
 
 	testCases := []struct {
@@ -193,9 +193,9 @@ func TestCreateUserAddessAPI(t *testing.T) {
 
 func TestGetUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
-	userAddressWithAddress := createRandomUserAddressWithAddressForGet(t, userAddress, address)
+	address := createRandomAddress()
+	userAddress := createRandomUserAddress(user, address)
+	userAddressWithAddress := createRandomUserAddressWithAddressForGet(userAddress, address)
 
 	testCases := []struct {
 		name          string
@@ -342,18 +342,18 @@ func TestListUsersAddressAPI(t *testing.T) {
 	userAddresses := make([]db.UserAddress, n)
 	addressesID := make([]int64, n)
 	user, _ := randomUAUser(t)
-	address1 := createRandomAddress(t)
-	address2 := createRandomAddress(t)
-	address3 := createRandomAddress(t)
-	userAddress1 := createRandomUserAddress(t, user, address1)
-	userAddress2 := createRandomUserAddress(t, user, address2)
-	userAddress3 := createRandomUserAddress(t, user, address3)
+	address1 := createRandomAddress()
+	address2 := createRandomAddress()
+	address3 := createRandomAddress()
+	userAddress1 := createRandomUserAddress(user, address1)
+	userAddress2 := createRandomUserAddress(user, address2)
+	userAddress3 := createRandomUserAddress(user, address3)
 
 	addresses = append(addresses, address1, address2, address3)
 	userAddresses = append(userAddresses, userAddress1, userAddress2, userAddress3)
 	addressesID = append(addressesID, address1.ID, address2.ID, address3.ID)
 
-	finalRsp := createFinalRspForListAddress(t, userAddresses, addresses)
+	finalRsp := createFinalRspForListAddress(userAddresses, addresses)
 
 	type Query struct {
 		pageID   int
@@ -508,8 +508,8 @@ func TestListUsersAddressAPI(t *testing.T) {
 
 func TestUpdateUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
+	address := createRandomAddress()
+	userAddress := createRandomUserAddress(user, address)
 
 	testCases := []struct {
 		name          string
@@ -685,8 +685,8 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 
 func TestDeleteUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress(t)
-	userAddress := createRandomUserAddress(t, user, address)
+	address := createRandomAddress()
+	userAddress := createRandomUserAddress(user, address)
 
 	testCases := []struct {
 		name          string
@@ -832,7 +832,7 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomAddress(t *testing.T) (address db.Address) {
+func createRandomAddress() (address db.Address) {
 	address = db.Address{
 		ID:          util.RandomMoney(),
 		AddressLine: util.RandomUser(),
@@ -842,7 +842,7 @@ func createRandomAddress(t *testing.T) (address db.Address) {
 	return
 }
 
-func createRandomUserAddress(t *testing.T, user db.User, address db.Address) (userAddress db.UserAddress) {
+func createRandomUserAddress(user db.User, address db.Address) (userAddress db.UserAddress) {
 	userAddress = db.UserAddress{
 		DefaultAddress: null.IntFromPtr(&address.ID),
 		UserID:         user.ID,
@@ -851,18 +851,18 @@ func createRandomUserAddress(t *testing.T, user db.User, address db.Address) (us
 	return
 }
 
-func createRandomUserAddressWithAddress(t *testing.T, userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.CreateUserAddressWithAddressRow) {
-	userAddressWithAddress = db.CreateUserAddressWithAddressRow{
-		UserID:      userAddress.UserID,
-		AddressID:   userAddress.AddressID,
-		AddressLine: address.AddressLine,
-		Region:      address.Region,
-		City:        address.City,
-	}
-	return
-}
+// func createRandomUserAddressWithAddress(userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.CreateUserAddressWithAddressRow) {
+// 	userAddressWithAddress = db.CreateUserAddressWithAddressRow{
+// 		UserID:      userAddress.UserID,
+// 		AddressID:   userAddress.AddressID,
+// 		AddressLine: address.AddressLine,
+// 		Region:      address.Region,
+// 		City:        address.City,
+// 	}
+// 	return
+// }
 
-func createRandomUserAddressWithAddressForGet(t *testing.T, userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.GetUserAddressWithAddressRow) {
+func createRandomUserAddressWithAddressForGet(userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.GetUserAddressWithAddressRow) {
 	userAddressWithAddress = db.GetUserAddressWithAddressRow{
 		UserID:      userAddress.UserID,
 		AddressID:   userAddress.AddressID,
@@ -879,6 +879,7 @@ func requireBodyMatchUserAddressForCreate(t *testing.T, body io.ReadCloser, addr
 
 	var gotAddress db.Address
 	err = json.Unmarshal(data, &gotAddress)
+	require.NoError(t, err)
 
 	var gotUserAddress db.UserAddress
 	err = json.Unmarshal(data, &gotUserAddress)
@@ -906,15 +907,15 @@ func requireBodyMatchUserAddressForGet(t *testing.T, body io.ReadCloser, userAdd
 	require.Equal(t, userAddress.City, gotUserAddress.City)
 }
 
-func requireBodyMatchUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []db.UserAddress) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
+// func requireBodyMatchUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []db.UserAddress) {
+// 	data, err := io.ReadAll(body)
+// 	require.NoError(t, err)
 
-	var gotUserAddresses []db.UserAddress
-	err = json.Unmarshal(data, &gotUserAddresses)
-	require.NoError(t, err)
-	require.Equal(t, userAddresses, gotUserAddresses)
-}
+// 	var gotUserAddresses []db.UserAddress
+// 	err = json.Unmarshal(data, &gotUserAddresses)
+// 	require.NoError(t, err)
+// 	require.Equal(t, userAddresses, gotUserAddresses)
+// }
 
 func requireBodyMatchListUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []listUserAddressResponse) {
 	data, err := io.ReadAll(body)
@@ -926,7 +927,7 @@ func requireBodyMatchListUserAddresses(t *testing.T, body io.ReadCloser, userAdd
 	require.Equal(t, userAddresses, gotUserAddresses)
 }
 
-func createFinalRspForListAddress(t *testing.T, userAddresses []db.UserAddress, addresses []db.Address) (rsp []listUserAddressResponse) {
+func createFinalRspForListAddress(userAddresses []db.UserAddress, addresses []db.Address) (rsp []listUserAddressResponse) {
 	for i := 0; i < len(addresses); i++ {
 		rsp = append(rsp, listUserAddressResponse{
 			UserID:         userAddresses[i].UserID,

@@ -127,6 +127,7 @@ type updateProductBrandParamsRequest struct {
 }
 
 type updateProductBrandJsonRequest struct {
+	//? should be revised
 	BrandName string `json:"brand_name" validate:"omitempty,required"`
 }
 

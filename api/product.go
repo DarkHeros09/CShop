@@ -157,11 +157,11 @@ type updateProductParamsRequest struct {
 }
 
 type updateProductJsonRequest struct {
-	Name         string `json:"name" validate:"omitempty,required,alphanum"`
-	CategoryID   int64  `json:"category_id" validate:"omitempty,required,min=1"`
-	Description  string `json:"description" validate:"omitempty,required"`
-	ProductImage string `json:"product_image" validate:"omitempty,required,http_url"`
-	Active       bool   `json:"active" validate:"omitempty,required,boolean"`
+	Name        *string `json:"name" validate:"omitempty,required,alphanum"`
+	CategoryID  *int64  `json:"category_id" validate:"omitempty,required,min=1"`
+	BrandID     *int64  `json:"brand_id" validate:"omitempty,required,min=1"`
+	Description *string `json:"description" validate:"omitempty,required"`
+	Active      *bool   `json:"active" validate:"omitempty,required,boolean"`
 }
 
 func (server *Server) updateProduct(ctx *fiber.Ctx) error {
@@ -180,16 +180,17 @@ func (server *Server) updateProduct(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.UpdateProductParams{
+	arg := db.AdminUpdateProductParams{
+		AdminID:     authPayload.AdminID,
 		ID:          params.ProductID,
-		Name:        null.StringFromPtr(&req.Name),
-		CategoryID:  null.IntFromPtr(&req.CategoryID),
-		Description: null.StringFromPtr(&req.Description),
-		// ProductImage: null.StringFromPtr(&req.ProductImage),
-		Active: null.BoolFromPtr(&req.Active),
+		Name:        null.StringFromPtr(req.Name),
+		CategoryID:  null.IntFromPtr(req.CategoryID),
+		BrandID:     null.IntFromPtr(req.BrandID),
+		Description: null.StringFromPtr(req.Description),
+		Active:      null.BoolFromPtr(req.Active),
 	}
 
-	product, err := server.store.UpdateProduct(ctx.Context(), arg)
+	product, err := server.store.AdminUpdateProduct(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

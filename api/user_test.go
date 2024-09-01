@@ -125,13 +125,13 @@ func TestCreateUserAPI(t *testing.T) {
 				require.NoError(t, err)
 
 				userSession := db.UserSession{
-					ID:           uuid.New(),
-					UserID:       user.ID,
-					RefreshToken: refreshToken,
-					UserAgent:    "TestAgent",
-					ClientIp:     "TestIP",
-					IsBlocked:    false,
-					ExpiresAt:    accessPayload.ExpiredAt,
+					ID: uuid.New(),
+					// UserID:       user.ID,
+					// RefreshToken: refreshToken,
+					// UserAgent:    "TestAgent",
+					// ClientIp:     "TestIP",
+					// IsBlocked:    false,
+					// ExpiresAt:    accessPayload.ExpiredAt,
 				}
 
 				finalRsp = createUserResponse{
@@ -458,139 +458,137 @@ func TestLoginUserAPI(t *testing.T) {
 	}
 }
 
-// func TestLogoutUserAPI(t *testing.T) {
-// 	user, userLog := randomUserLogout(t)
+func TestLogoutUserAPI(t *testing.T) {
+	userSession, userLogin := randomUserLogout(t)
 
-// 	testCases := []struct {
-// 		name          string
-// 		body          fiber.Map
-// 		UserID        int64
-// 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
-// 		buildStubs    func(store *mockdb.MockStore)
-// 		checkResponse func(rsp *http.Response)
-// 	}{
-// 		{
-// 			name:   "OK",
-// 			UserID: user.UserID,
-// 			body: fiber.Map{
-// 				"refresh_token": "bearer",
-// 			},
-// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.UserID, userLog.Username, time.Minute)
-// 			},
-// 			buildStubs: func(store *mockdb.MockStore) {
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		UserID        int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:   "OK",
+			UserID: userLogin.ID,
+			body: fiber.Map{
+				"user_session_id": userSession.ID,
+				"refresh_token":   userSession.RefreshToken,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userLogin.ID, userLogin.Username, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
 
-// 				arg := db.UpdateUserSessionParams{
-// 					IsBlocked:    null.BoolFrom(user.IsBlocked),
-// 					ID:           user.ID,
-// 					UserID:       user.UserID,
-// 					RefreshToken: "bearer",
-// 				}
-// 				store.EXPECT().
-// 					UpdateUserSession(gomock.Any(), gomock.Eq(arg)).
-// 					Times(1).
-// 					Return(user, nil)
+				arg := db.UpdateUserSessionParams{
+					IsBlocked:    null.BoolFrom(true),
+					ID:           userSession.ID,
+					UserID:       userSession.UserID,
+					RefreshToken: userSession.RefreshToken,
+				}
+				store.EXPECT().
+					UpdateUserSession(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(userSession, nil)
 
-// 			},
-// 			checkResponse: func(rsp *http.Response) {
-// 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-// 			},
-// 		},
-// 		// {
-// 		// 	name: "UserNotFound",
-// 		// 	body: fiber.Map{
-// 		// 		"email":    "NotFound@NotFound.com",
-// 		// 		"password": password,
-// 		// 	},
-// 		// 	buildStubs: func(store *mockdb.MockStore) {
-// 		// 		store.EXPECT().
-// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
-// 		// 			Times(1).
-// 		// 			Return(db.GetUserByEmailRow{}, pgx.ErrNoRows)
-// 		// 	},
-// 		// 	checkResponse: func(rsp *http.Response) {
-// 		// 		require.Equal(t, http.StatusNotFound, rsp.StatusCode)
-// 		// 	},
-// 		// },
-// 		// {
-// 		// 	name: "IncorrectPassword",
-// 		// 	body: fiber.Map{
-// 		// 		"email":    user.Email,
-// 		// 		"password": "incorrect",
-// 		// 	},
-// 		// 	buildStubs: func(store *mockdb.MockStore) {
-// 		// 		store.EXPECT().
-// 		// 			GetUserByEmail(gomock.Any(), gomock.Eq(user.Email)).
-// 		// 			Times(1).
-// 		// 			Return(user, nil)
-// 		// 	},
-// 		// 	checkResponse: func(rsp *http.Response) {
-// 		// 		require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
-// 		// 	},
-// 		// },
-// 		// {
-// 		// 	name: "InternalError",
-// 		// 	body: fiber.Map{
-// 		// 		"email":    user.Email,
-// 		// 		"password": password,
-// 		// 	},
-// 		// 	buildStubs: func(store *mockdb.MockStore) {
-// 		// 		store.EXPECT().
-// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
-// 		// 			Times(1).
-// 		// 			Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
-// 		// 	},
-// 		// 	checkResponse: func(rsp *http.Response) {
-// 		// 		require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
-// 		// 	},
-// 		// },
-// 		// {
-// 		// 	name: "InvalidUsername",
-// 		// 	body: fiber.Map{
-// 		// 		"email":    "invalid-email#1",
-// 		// 		"password": password,
-// 		// 	},
-// 		// 	buildStubs: func(store *mockdb.MockStore) {
-// 		// 		store.EXPECT().
-// 		// 			GetUserByEmail(gomock.Any(), gomock.Any()).
-// 		// 			Times(0)
-// 		// 	},
-// 		// 	checkResponse: func(rsp *http.Response) {
-// 		// 		require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-// 		// 	},
-// 		// },
-// 	}
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name:   "NoAuthorization",
+			UserID: userLogin.ID,
+			body: fiber.Map{
+				"user_session_id": userSession.ID,
+				"refresh_token":   userSession.RefreshToken,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUserSession(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:   "InternalError",
+			UserID: userLogin.ID,
+			body: fiber.Map{
+				"user_session_id": userSession.ID,
+				"refresh_token":   userSession.RefreshToken,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userLogin.ID, userLogin.Username, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUserSession(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.UserSession{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:   "InvalidSessionID",
+			UserID: userLogin.ID,
+			body: fiber.Map{
+				"user_session_id": 0,
+				"refresh_token":   userSession.RefreshToken,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, userLogin.ID, userLogin.Username, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUserSession(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
 
-// 	for i := range testCases {
-// 		tc := testCases[i]
+	for i := range testCases {
+		tc := testCases[i]
 
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			ctrl := gomock.NewController(t)
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
 
-// 			store := mockdb.NewMockStore(ctrl)
-// worker := mockwk.NewMockTaskDistributor(ctrl)
-// 			tc.buildStubs(store)
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
 
-// 			server := newTestServer(t, store, worker,ik)
-// 			// //recorder := httptest.NewRecorder()
+			server := newTestServer(t, store, worker, ik)
+			// //recorder := httptest.NewRecorder()
 
-// 			// Marshal body data to JSON
-// 			data, err := json.Marshal(tc.body)
-// 			require.NoError(t, err)
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
 
-// 			// url := "/api/v1/users/logout"
-// 			url := fmt.Sprintf("/usr/v1/users/%d/logout", tc.UserID)
-// 			request, err := http.NewRequest(fiber.MethodDelete, url, bytes.NewReader(data))
-// 			require.NoError(t, err)
+			// url := "/api/v1/users/logout"
+			url := fmt.Sprintf("/usr/v1/users/%d/logout", tc.UserID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, bytes.NewReader(data))
+			require.NoError(t, err)
 
-// 			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("Content-Type", "application/json")
 
-// 			rsp, err := server.router.Test(request)
-// 			require.NoError(t, err)
-// 			tc.checkResponse(rsp)
-// 		})
-// 	}
-// }
+			tc.setupAuth(t, request, server.userTokenMaker)
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
 
 func TestGetUserAPI(t *testing.T) {
 	user, _ := randomUser(t)
@@ -1179,12 +1177,13 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		ID:        util.RandomMoney(),
-		Username:  util.RandomUser(),
-		Password:  hashedPassword,
-		Telephone: int32(util.RandomInt(910000000, 929999999)),
-		IsBlocked: false,
-		Email:     util.RandomEmail(),
+		ID:             util.RandomMoney(),
+		Username:       util.RandomUser(),
+		Password:       hashedPassword,
+		Telephone:      int32(util.RandomInt(910000000, 929999999)),
+		IsBlocked:      false,
+		Email:          util.RandomEmail(),
+		DefaultPayment: null.IntFrom(util.RandomMoney()),
 	}
 	return
 }

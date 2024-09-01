@@ -1617,7 +1617,8 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductItemParams{
+				arg := db.AdminUpdateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
 					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
@@ -1628,7 +1629,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(productItem, nil)
 			},
@@ -1655,7 +1656,8 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductItemParams{
+				arg := db.AdminUpdateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
 					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
@@ -1666,7 +1668,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -1691,7 +1693,8 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductItemParams{
+				arg := db.AdminUpdateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
 					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
@@ -1702,7 +1705,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -1728,7 +1731,8 @@ func TestUpdateProductItemAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateProductItemParams{
+				arg := db.AdminUpdateProductItemParams{
+					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
 					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
@@ -1738,7 +1742,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					ID:     productItem.ID,
 				}
 				store.EXPECT().
-					UpdateProductItem(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdateProductItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ProductItem{}, pgx.ErrTxClosed)
 			},
@@ -1755,7 +1759,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateProductItem(gomock.Any(), gomock.Any()).
+					AdminUpdateProductItem(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -2191,16 +2195,6 @@ func requireBodyMatchProductItem(t *testing.T, body io.ReadCloser, productItem d
 	err = json.Unmarshal(data, &gotProductItem)
 	require.NoError(t, err)
 	require.Equal(t, productItem, gotProductItem)
-}
-
-func requireBodyMatchProductItems(t *testing.T, body io.ReadCloser, productItems []db.ProductItem) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
-
-	var gotProductItems []db.ProductItem
-	err = json.Unmarshal(data, &gotProductItems)
-	require.NoError(t, err)
-	require.Equal(t, productItems, gotProductItems)
 }
 
 func requireBodyMatchProductItemsList(t *testing.T, body io.ReadCloser, productItems []db.ListProductItemsRow) {

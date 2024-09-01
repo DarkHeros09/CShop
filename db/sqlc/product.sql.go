@@ -64,6 +64,62 @@ func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProduct
 	return i, err
 }
 
+const adminUpdateProduct = `-- name: AdminUpdateProduct :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $7
+    AND active = TRUE
+    )
+UPDATE "product"
+SET
+category_id = COALESCE($1,category_id),
+brand_id = COALESCE($2,brand_id),
+name = COALESCE($3,name),
+description = COALESCE($4,description),
+active = COALESCE($5,active),
+updated_at = now()
+WHERE "product".id = $6
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+`
+
+type AdminUpdateProductParams struct {
+	CategoryID  null.Int    `json:"category_id"`
+	BrandID     null.Int    `json:"brand_id"`
+	Name        null.String `json:"name"`
+	Description null.String `json:"description"`
+	Active      null.Bool   `json:"active"`
+	ID          int64       `json:"id"`
+	AdminID     int64       `json:"admin_id"`
+}
+
+// product_image = COALESCE(sqlc.narg(product_image),product_image),
+func (q *Queries) AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error) {
+	row := q.db.QueryRow(ctx, adminUpdateProduct,
+		arg.CategoryID,
+		arg.BrandID,
+		arg.Name,
+		arg.Description,
+		arg.Active,
+		arg.ID,
+		arg.AdminID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.BrandID,
+		&i.Name,
+		&i.Description,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Search,
+	)
+	return i, err
+}
+
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO "product" (
   category_id,

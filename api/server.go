@@ -199,8 +199,9 @@ func (server *Server) setupRouter() {
 	// 		FirebaseApp: fireApp,
 	// 	}))
 
-	adminRouter.Post("/admins/:adminId/product-images", server.createProductImages)  //? Admin Only
-	adminRouter.Get("/admins/:adminId/product-images/kit", server.listproductImages) //! Admin Only
+	adminRouter.Post("/admins/:adminId/product-images", server.createProductImages)    //! Admin Only
+	adminRouter.Get("/admins/:adminId/product-images/kit", server.listproductImages)   //! Admin Only
+	adminRouter.Put("/admins/:adminId/product-images/:id", server.updateProductImages) //! Admin Only
 
 	//* dashboard
 	adminRouter.Get("/admins/:adminId/dashboard", server.getDashboardInfo) //! Admin Only
@@ -215,7 +216,7 @@ func (server *Server) setupRouter() {
 	adminRouter.Delete("/admins/:adminId/users/:id", server.deleteUser) //! Admin Only
 	userRouter.Delete("/users/:id/logout", server.logoutUser)
 
-	adminRouter.Delete("/admins/:adminId/logout", server.logoutAdmin) //! Admin Only
+	adminRouter.Delete("/admins/:id/logout", server.logoutAdmin) //! Admin Only
 
 	userRouter.Post("/users/:id/addresses", server.createUserAddress)
 	userRouter.Get("/users/:id/addresses/:addressId", server.getUserAddress)

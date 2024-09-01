@@ -151,8 +151,8 @@ type updateUserReviewParamsRequest struct {
 }
 
 type updateUserReviewJsonRequest struct {
-	OrderedProductID int64 `json:"ordered_product_id" validate:"omitempty,required,min=1"`
-	RatingValue      int64 `json:"rating_value" validate:"omitempty,required,min=0,max=5"`
+	OrderedProductID *int64 `json:"ordered_product_id" validate:"omitempty,required,min=1"`
+	RatingValue      *int64 `json:"rating_value" validate:"omitempty,required,min=0,max=5"`
 }
 
 func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
@@ -173,8 +173,8 @@ func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
 
 	arg1 := db.UpdateUserReviewParams{
 		UserID:           authPayload.UserID,
-		OrderedProductID: null.IntFromPtr(&req.OrderedProductID),
-		RatingValue:      null.IntFromPtr(&req.RatingValue),
+		OrderedProductID: null.IntFromPtr(req.OrderedProductID),
+		RatingValue:      null.IntFromPtr(req.RatingValue),
 		ID:               params.ReviewID,
 	}
 

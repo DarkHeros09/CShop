@@ -24,7 +24,7 @@ import (
 
 func TestCreateShippingMethodAPI(t *testing.T) {
 	user, _ := randomSMUser(t)
-	shippingMethod := createRandomShippingMethodForMethod(t)
+	shippingMethod := createRandomShippingMethodForMethod()
 
 	testCases := []struct {
 		name          string
@@ -160,7 +160,7 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 
 func TestGetShippingMethodAPI(t *testing.T) {
 	user, _ := randomSMUser(t)
-	shippingMethod := createRandomShippingMethodForGet(t, user)
+	shippingMethod := createRandomShippingMethodForGet(user)
 
 	testCases := []struct {
 		name          string
@@ -305,9 +305,9 @@ func TestListShippingMethodAPI(t *testing.T) {
 	n := 5
 	ShippingMethods := make([]db.ShippingMethod, n)
 	user, _ := randomSMUser(t)
-	ShippingMethod1 := createRandomShippingMethodForList(t, user)
-	ShippingMethod2 := createRandomShippingMethodForList(t, user)
-	ShippingMethod3 := createRandomShippingMethodForList(t, user)
+	ShippingMethod1 := createRandomShippingMethodForList()
+	ShippingMethod2 := createRandomShippingMethodForList()
+	ShippingMethod3 := createRandomShippingMethodForList()
 
 	ShippingMethods = append(ShippingMethods, ShippingMethod1, ShippingMethod2, ShippingMethod3)
 
@@ -447,7 +447,7 @@ func TestListShippingMethodAPI(t *testing.T) {
 
 func TestUpdateShippingMethodAPI(t *testing.T) {
 	user, _ := randomSMUser(t)
-	shippingMethod := createRandomShippingMethodForMethod(t)
+	shippingMethod := createRandomShippingMethodForMethod()
 
 	testCases := []struct {
 		name          string
@@ -589,7 +589,7 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 
 func TestDeleteShippingMethodAPI(t *testing.T) {
 	admin, _ := randomShippingMethodSuperAdmin(t)
-	shippingMethod := createRandomShippingMethodForMethod(t)
+	shippingMethod := createRandomShippingMethodForMethod()
 
 	testCases := []struct {
 		name          string
@@ -736,7 +736,7 @@ func randomShippingMethodSuperAdmin(t *testing.T) (admin db.Admin, password stri
 	return
 }
 
-func createRandomShippingMethodForMethod(t *testing.T) (ShippingMethod db.ShippingMethod) {
+func createRandomShippingMethodForMethod() (ShippingMethod db.ShippingMethod) {
 	ShippingMethod = db.ShippingMethod{
 		ID:    util.RandomMoney(),
 		Name:  util.RandomUser(),
@@ -745,7 +745,7 @@ func createRandomShippingMethodForMethod(t *testing.T) (ShippingMethod db.Shippi
 	return
 }
 
-func createRandomShippingMethodForGet(t *testing.T, user db.User) (ShippingMethod db.GetShippingMethodByUserIDRow) {
+func createRandomShippingMethodForGet(user db.User) (ShippingMethod db.GetShippingMethodByUserIDRow) {
 	ShippingMethod = db.GetShippingMethodByUserIDRow{
 		ID:     util.RandomMoney(),
 		Name:   util.RandomUser(),
@@ -755,7 +755,7 @@ func createRandomShippingMethodForGet(t *testing.T, user db.User) (ShippingMetho
 	return
 }
 
-func createRandomShippingMethodForList(t *testing.T, user db.User) (ShippingMethod db.ShippingMethod) {
+func createRandomShippingMethodForList() (ShippingMethod db.ShippingMethod) {
 	ShippingMethod = db.ShippingMethod{
 		ID:    util.RandomMoney(),
 		Name:  util.RandomUser(),

@@ -207,6 +207,51 @@ func (mr *MockStoreMockRecorder) AdminCreatePromotion(arg0, arg1 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreatePromotion", reflect.TypeOf((*MockStore)(nil).AdminCreatePromotion), arg0, arg1)
 }
 
+// AdminUpdateProduct mocks base method.
+func (m *MockStore) AdminUpdateProduct(arg0 context.Context, arg1 db.AdminUpdateProductParams) (db.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdateProduct", arg0, arg1)
+	ret0, _ := ret[0].(db.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdateProduct indicates an expected call of AdminUpdateProduct.
+func (mr *MockStoreMockRecorder) AdminUpdateProduct(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateProduct", reflect.TypeOf((*MockStore)(nil).AdminUpdateProduct), arg0, arg1)
+}
+
+// AdminUpdateProductImage mocks base method.
+func (m *MockStore) AdminUpdateProductImage(arg0 context.Context, arg1 db.AdminUpdateProductImageParams) (db.ProductImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdateProductImage", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdateProductImage indicates an expected call of AdminUpdateProductImage.
+func (mr *MockStoreMockRecorder) AdminUpdateProductImage(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateProductImage", reflect.TypeOf((*MockStore)(nil).AdminUpdateProductImage), arg0, arg1)
+}
+
+// AdminUpdateProductItem mocks base method.
+func (m *MockStore) AdminUpdateProductItem(arg0 context.Context, arg1 db.AdminUpdateProductItemParams) (db.ProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdateProductItem", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdateProductItem indicates an expected call of AdminUpdateProductItem.
+func (mr *MockStoreMockRecorder) AdminUpdateProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateProductItem", reflect.TypeOf((*MockStore)(nil).AdminUpdateProductItem), arg0, arg1)
+}
+
 // CheckUserAddressDefaultAddress mocks base method.
 func (m *MockStore) CheckUserAddressDefaultAddress(arg0 context.Context, arg1 int64) (int64, error) {
 	m.ctrl.T.Helper()

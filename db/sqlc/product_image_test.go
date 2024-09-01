@@ -123,6 +123,27 @@ func TestUpdateProductImage(t *testing.T) {
 	// require.NotEqual(t, productImage1.ProductImage3, productImage2.ProductImage3)
 }
 
+func TestAdminUpdateProductImage(t *testing.T) {
+	admin := createRandomAdmin(t)
+	productImage1 := createRandomProductImage(t)
+	arg := AdminUpdateProductImageParams{
+		AdminID:       admin.ID,
+		ID:            productImage1.ID,
+		ProductImage1: null.StringFrom(productImage1.ProductImage3),
+		ProductImage2: null.StringFrom(productImage1.ProductImage1),
+		ProductImage3: null.StringFrom(productImage1.ProductImage2),
+	}
+
+	productImage2, err := testStore.AdminUpdateProductImage(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productImage2)
+
+	require.Equal(t, productImage1.ID, productImage2.ID)
+	require.NotEqual(t, productImage1, productImage2)
+	// require.NotEqual(t, productImage1.ProductImage2, productImage2.ProductImage2)
+	// require.NotEqual(t, productImage1.ProductImage3, productImage2.ProductImage3)
+}
+
 func TestDeleteProductImage(t *testing.T) {
 	productImage1 := createRandomProductImage(t)
 	err := testStore.DeleteProductImage(context.Background(), productImage1.ID)

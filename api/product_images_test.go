@@ -16,6 +16,7 @@ import (
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
 	"github.com/gofiber/fiber/v2"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -390,6 +391,185 @@ func TestListProductImagesNextPageAPI(t *testing.T) {
 			rsp, err := server.router.Test(request)
 			require.NoError(t, err)
 			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestUpdateProductImageAPI(t *testing.T) {
+	admin, _ := randomProductImageSuperAdmin(t)
+	productImage := randomProductImage()
+
+	testCases := []struct {
+		name           string
+		body           fiber.Map
+		productImageID int64
+		AdminID        int64
+		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs     func(store *mockdb.MockStore)
+		checkResponse  func(t *testing.T, rsp *http.Response)
+	}{
+		{
+			name:           "OK",
+			productImageID: productImage.ID,
+			AdminID:        admin.ID,
+			body: fiber.Map{
+				"product_image_1": productImage.ProductImage1,
+				"product_image_2": productImage.ProductImage2,
+				"product_image_3": productImage.ProductImage3,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateProductImageParams{
+					ID:            productImage.ID,
+					AdminID:       admin.ID,
+					ProductImage1: null.StringFrom(productImage.ProductImage1),
+					ProductImage2: null.StringFrom(productImage.ProductImage2),
+					ProductImage3: null.StringFrom(productImage.ProductImage3),
+				}
+
+				store.EXPECT().
+					AdminUpdateProductImage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productImage, nil)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name:           "Unauthorized",
+			productImageID: productImage.ID,
+			AdminID:        admin.ID,
+			body: fiber.Map{
+				"product_image_1": productImage.ProductImage1,
+				"product_image_2": productImage.ProductImage2,
+				"product_image_3": productImage.ProductImage3,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateProductImageParams{
+					ID:            productImage.ID,
+					AdminID:       admin.ID,
+					ProductImage1: null.StringFrom(productImage.ProductImage1),
+					ProductImage2: null.StringFrom(productImage.ProductImage2),
+					ProductImage3: null.StringFrom(productImage.ProductImage3),
+				}
+
+				store.EXPECT().
+					AdminUpdateProductImage(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:           "NoAuthorization",
+			productImageID: productImage.ID,
+			AdminID:        admin.ID,
+			body: fiber.Map{
+				"product_image_1": productImage.ProductImage1,
+				"product_image_2": productImage.ProductImage2,
+				"product_image_3": productImage.ProductImage3,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateProductImageParams{
+					ID:            productImage.ID,
+					AdminID:       admin.ID,
+					ProductImage1: null.StringFrom(productImage.ProductImage1),
+					ProductImage2: null.StringFrom(productImage.ProductImage2),
+					ProductImage3: null.StringFrom(productImage.ProductImage3),
+				}
+
+				store.EXPECT().
+					AdminUpdateProductImage(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:           "InternalError",
+			productImageID: productImage.ID,
+			AdminID:        admin.ID,
+			body: fiber.Map{
+				"product_image_1": productImage.ProductImage1,
+				"product_image_2": productImage.ProductImage2,
+				"product_image_3": productImage.ProductImage3,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateProductImageParams{
+					ID:            productImage.ID,
+					AdminID:       admin.ID,
+					ProductImage1: null.StringFrom(productImage.ProductImage1),
+					ProductImage2: null.StringFrom(productImage.ProductImage2),
+					ProductImage3: null.StringFrom(productImage.ProductImage3),
+				}
+				store.EXPECT().
+					AdminUpdateProductImage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.ProductImage{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:           "InvalidID",
+			productImageID: 0,
+			AdminID:        admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminUpdateProductImage(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/product-images/%d", tc.AdminID, tc.productImageID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
 		})
 	}
 }

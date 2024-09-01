@@ -24,7 +24,7 @@ import (
 
 func TestCreateNotificationAPI(t *testing.T) {
 	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(t, user)
+	notification := createRandomNotification(user)
 
 	testCases := []struct {
 		name          string
@@ -164,7 +164,7 @@ func TestCreateNotificationAPI(t *testing.T) {
 
 func TestGetNotificationAPI(t *testing.T) {
 	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(t, user)
+	notification := createRandomNotification(user)
 
 	testCases := []struct {
 		name          string
@@ -285,7 +285,7 @@ func TestGetNotificationAPI(t *testing.T) {
 
 func TestUpdateNotificationAPI(t *testing.T) {
 	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(t, user)
+	notification := createRandomNotification(user)
 	fcmToken := util.RandomString(10)
 
 	testCases := []struct {
@@ -421,7 +421,7 @@ func TestUpdateNotificationAPI(t *testing.T) {
 
 func TestDeleteNotificationAPI(t *testing.T) {
 	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(t, user)
+	notification := createRandomNotification(user)
 
 	testCases := []struct {
 		name          string
@@ -556,7 +556,7 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // func TestDeleteNotificationAllByUserAPI(t *testing.T) {
 // 	user, _ := randomNotificationUser(t)
 // 	shoppingCart := createRandomShoppingCart(t, user)
-// 	notification := createRandomNotification(t, shoppingCart)
+// 	notification := createRandomNotification( shoppingCart)
 
 // 	var NotificationList []db.Notification
 // 	NotificationList = append(NotificationList, notification...)
@@ -699,7 +699,7 @@ func randomNotificationUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomNotification(t *testing.T, user db.User) (Notification db.Notification) {
+func createRandomNotification(user db.User) (Notification db.Notification) {
 	Notification = db.Notification{
 		UserID:   user.ID,
 		DeviceID: null.StringFrom(util.RandomString(10)),

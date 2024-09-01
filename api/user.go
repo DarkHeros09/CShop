@@ -429,8 +429,8 @@ type updateUserParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type updateUserJsonRequest struct {
-	Telephone      int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
-	DefaultPayment int64 `json:"default_payment" validate:"omitempty,required"`
+	Telephone      *int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
+	DefaultPayment *int64 `json:"default_payment" validate:"omitempty,required"`
 }
 
 func (server *Server) updateUser(ctx *fiber.Ctx) error {
@@ -451,8 +451,8 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 
 	arg := db.UpdateUserParams{
 		ID:             authPayload.UserID,
-		Telephone:      null.IntFromPtr(&req.Telephone),
-		DefaultPayment: null.IntFromPtr(&req.DefaultPayment),
+		Telephone:      null.IntFromPtr(req.Telephone),
+		DefaultPayment: null.IntFromPtr(req.DefaultPayment),
 	}
 
 	user, err := server.store.UpdateUser(ctx.Context(), arg)

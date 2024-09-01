@@ -128,8 +128,8 @@ type updateHomePageTextBannerParamsRequest struct {
 }
 
 type updateHomePageTextBannerJsonRequest struct {
-	Name        string `json:"name" validate:"omitempty,required"`
-	Description string `json:"description" validate:"omitempty,required"`
+	Name        *string `json:"name" validate:"omitempty,required"`
+	Description *string `json:"description" validate:"omitempty,required"`
 }
 
 func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
@@ -150,8 +150,8 @@ func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
 
 	arg := db.UpdateHomePageTextBannerParams{
 		ID:          params.HomePageTextBannerID,
-		Name:        null.StringFromPtr(&req.Name),
-		Description: null.StringFromPtr(&req.Description),
+		Name:        null.StringFromPtr(req.Name),
+		Description: null.StringFromPtr(req.Description),
 	}
 
 	textBanner, err := server.store.UpdateHomePageTextBanner(ctx.Context(), arg)

@@ -147,6 +147,33 @@ func TestUpdateProductCategoryAndActive(t *testing.T) {
 
 }
 
+func TestAdminUpdateProductCategoryAndActive(t *testing.T) {
+	admin := createRandomAdmin(t)
+	product1 := createRandomProduct(t)
+	// category := createRandomProductCategory(t)
+	arg := AdminUpdateProductParams{
+		AdminID:    admin.ID,
+		ID:         product1.ID,
+		CategoryID: null.IntFromPtr(&product1.CategoryID),
+		Active:     null.BoolFrom(!product1.Active),
+	}
+
+	product2, err := testStore.AdminUpdateProduct(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, product2)
+
+	require.Equal(t, product1.ID, product2.ID)
+	require.Equal(t, product1.CategoryID, product2.CategoryID)
+	require.Equal(t, product1.Name, product2.Name)
+	require.Equal(t, product1.Description, product2.Description)
+	require.NotEqual(t, product1.Active, product2.Active)
+	require.False(t, product2.Active)
+	require.WithinDuration(t, product1.CreatedAt, product2.CreatedAt, time.Second)
+	require.NotEqual(t, product1.UpdatedAt, product2.UpdatedAt)
+
+}
+
 func TestDeleteProduct(t *testing.T) {
 	product1 := createRandomProduct(t)
 	err := testStore.DeleteProduct(context.Background(), product1.ID)

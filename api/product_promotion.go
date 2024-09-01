@@ -160,6 +160,7 @@ type updateProductPromotionParamsRequest struct {
 }
 
 type updateProductPromotionJsonRequest struct {
+	//? should be revised
 	Active bool `json:"active" validate:"omitempty,required,boolean"`
 }
 

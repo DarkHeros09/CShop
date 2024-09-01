@@ -445,11 +445,6 @@ func TestListProductCategoriesAPI(t *testing.T) {
 		productCategories[i] = randomProductCategory()
 	}
 
-	type Query struct {
-		pageID   int
-		pageSize int
-	}
-
 	testCases := []struct {
 		name string
 		// query         Query

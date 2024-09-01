@@ -139,7 +139,7 @@ type updateProductConfigurationParamsRequest struct {
 }
 
 type updateProductConfigurationJsonRequest struct {
-	VariationOptionID int64 `json:"variation_id" validate:"omitempty,required,min=1"`
+	VariationOptionID *int64 `json:"variation_id" validate:"omitempty,required,min=1"`
 }
 
 func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
@@ -159,7 +159,7 @@ func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateProductConfigurationParams{
-		VariationOptionID: null.IntFromPtr(&req.VariationOptionID),
+		VariationOptionID: null.IntFromPtr(req.VariationOptionID),
 		ProductItemID:     params.ProductItemID,
 	}
 

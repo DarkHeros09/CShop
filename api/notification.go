@@ -107,7 +107,7 @@ type updateNotificationParamsRequest struct {
 }
 
 type updateNotificationJsonRequest struct {
-	FcmToken string `json:"fcm_token" validate:"required"`
+	FcmToken *string `json:"fcm_token" validate:"required"`
 }
 
 func (server *Server) updateNotification(ctx *fiber.Ctx) error {
@@ -127,7 +127,7 @@ func (server *Server) updateNotification(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateNotificationParams{
-		FcmToken: null.StringFromPtr(&req.FcmToken),
+		FcmToken: null.StringFromPtr(req.FcmToken),
 		UserID:   authPayload.UserID,
 		DeviceID: null.StringFromPtr(&params.DeviceID),
 	}

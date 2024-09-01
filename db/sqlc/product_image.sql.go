@@ -52,6 +52,49 @@ func (q *Queries) AdminCreateProductImages(ctx context.Context, arg AdminCreateP
 	return i, err
 }
 
+const adminUpdateProductImage = `-- name: AdminUpdateProductImage :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $5
+    AND active = TRUE
+    )
+UPDATE "product_image"
+SET 
+product_image_1 = COALESCE($1,product_image_1),
+product_image_2 = COALESCE($2,product_image_2),
+product_image_3 = COALESCE($3,product_image_3)
+WHERE "product_image".id = $4
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, product_image_1, product_image_2, product_image_3
+`
+
+type AdminUpdateProductImageParams struct {
+	ProductImage1 null.String `json:"product_image_1"`
+	ProductImage2 null.String `json:"product_image_2"`
+	ProductImage3 null.String `json:"product_image_3"`
+	ID            int64       `json:"id"`
+	AdminID       int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (ProductImage, error) {
+	row := q.db.QueryRow(ctx, adminUpdateProductImage,
+		arg.ProductImage1,
+		arg.ProductImage2,
+		arg.ProductImage3,
+		arg.ID,
+		arg.AdminID,
+	)
+	var i ProductImage
+	err := row.Scan(
+		&i.ID,
+		&i.ProductImage1,
+		&i.ProductImage2,
+		&i.ProductImage3,
+	)
+	return i, err
+}
+
 const createProductImage = `-- name: CreateProductImage :one
 INSERT INTO "product_image" (
   product_image_1,

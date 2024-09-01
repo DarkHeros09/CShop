@@ -24,7 +24,7 @@ import (
 
 func TestUpdateShopOrderAPI(t *testing.T) {
 	admin, _ := randomOrderStatusSuperAdmin(t)
-	shopOrder := createRandomShopOrderForUpdate(t)
+	shopOrder := createRandomShopOrderForUpdate()
 	deviceId := util.RandomUser()
 
 	testCases := []struct {
@@ -199,13 +199,13 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 
 func TestListShopOrderAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
-	orderStatus := createRandomOrderStatus(t)
-	// shopOrder := createRandomShopOrderForList(t, user, orderStatus)
+	orderStatus := createRandomOrderStatus()
+	// shopOrder := createRandomShopOrderForList(user, orderStatus)
 	var shopOrders []db.ListShopOrdersByUserIDRow
 	n := 5
 	shopOrders = make([]db.ListShopOrdersByUserIDRow, n)
 	for i := 0; i < n; i++ {
-		shopOrders[i] = createRandomShopOrderForList(t, user, orderStatus)
+		shopOrders[i] = createRandomShopOrderForList(user, orderStatus)
 	}
 
 	type Query struct {
@@ -353,7 +353,7 @@ func TestListShopOrderAPI(t *testing.T) {
 
 func TestListShopOrdersV2API(t *testing.T) {
 	user, _ := randomSOUser(t)
-	orderStatus := createRandomOrderStatus(t)
+	orderStatus := createRandomOrderStatus()
 	n := 10
 	shopOrders := make([]db.ListShopOrdersByUserIDV2Row, n)
 	for i := 0; i < n; i++ {
@@ -475,7 +475,7 @@ func TestListShopOrdersV2API(t *testing.T) {
 
 func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
-	orderStatus := createRandomOrderStatus(t)
+	orderStatus := createRandomOrderStatus()
 	n := 10
 	shopOrders1 := make([]db.ListShopOrdersByUserIDNextPageRow, n)
 	shopOrders2 := make([]db.ListShopOrdersByUserIDNextPageRow, n)
@@ -643,7 +643,7 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 // 	return
 // }
 
-func createRandomShopOrderForUpdate(t *testing.T) (ShopOrder db.ShopOrder) {
+func createRandomShopOrderForUpdate() (ShopOrder db.ShopOrder) {
 	ShopOrder = db.ShopOrder{
 		ID:                util.RandomMoney(),
 		TrackNumber:       util.GenerateTrackNumber(),
@@ -727,7 +727,7 @@ func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder [
 	}
 }
 
-func createRandomShopOrderForList(t *testing.T, user db.User, orderStatus db.OrderStatus) (shopOrder db.ListShopOrdersByUserIDRow) {
+func createRandomShopOrderForList(user db.User, orderStatus db.OrderStatus) (shopOrder db.ListShopOrdersByUserIDRow) {
 	shopOrder = db.ListShopOrdersByUserIDRow{
 		Status:      null.StringFrom(orderStatus.Status),
 		ID:          util.RandomMoney(),

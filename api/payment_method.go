@@ -158,8 +158,8 @@ type updatePaymentMethodParamsRequest struct {
 }
 
 type updatePaymentMethodJsonRequest struct {
-	PaymentTypeID int64  `json:"payment_type_id" validate:"required,min=1"`
-	Provider      string `json:"provider" validate:"required"`
+	PaymentTypeID *int64  `json:"payment_type_id" validate:"required,min=1"`
+	Provider      *string `json:"provider" validate:"required"`
 }
 
 func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
@@ -181,8 +181,8 @@ func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
 	arg := db.UpdatePaymentMethodParams{
 		ID:            params.ID,
 		UserID:        null.IntFromPtr(&authPayload.UserID),
-		PaymentTypeID: null.IntFromPtr(&req.PaymentTypeID),
-		Provider:      null.StringFromPtr(&req.Provider),
+		PaymentTypeID: null.IntFromPtr(req.PaymentTypeID),
+		Provider:      null.StringFromPtr(req.Provider),
 	}
 
 	paymentMethod, err := server.store.UpdatePaymentMethod(ctx.Context(), arg)

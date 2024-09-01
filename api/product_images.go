@@ -7,6 +7,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
+	"github.com/guregu/null/v5"
 	"github.com/imagekit-developer/imagekit-go/api/media"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -187,4 +188,57 @@ func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
 	ctx.Status(fiber.StatusOK).JSON(productImages)
 	return nil
 
+}
+
+//////////////* Update API //////////////
+
+type updateProductImagesParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	ID      int64 `params:"id" validate:"required,min=1"`
+}
+
+type updateProductImagesJsonRequest struct {
+	ProductImage1 *string `json:"product_image_1" validate:"omitempty,required,url"`
+	ProductImage2 *string `json:"product_image_2" validate:"omitempty,required,url"`
+	ProductImage3 *string `json:"product_image_3" validate:"omitempty,required,url"`
+}
+
+func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
+	params := &updateProductImagesParamsRequest{}
+	req := &updateProductImagesJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminUpdateProductImageParams{
+		AdminID:       authPayload.AdminID,
+		ID:            params.ID,
+		ProductImage1: null.StringFromPtr(req.ProductImage1),
+		ProductImage2: null.StringFromPtr(req.ProductImage2),
+		ProductImage3: null.StringFromPtr(req.ProductImage3),
+	}
+
+	product, err := server.store.AdminUpdateProductImage(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	ctx.Status(fiber.StatusOK).JSON(product)
+	return nil
 }

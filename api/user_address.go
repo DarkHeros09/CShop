@@ -269,10 +269,10 @@ type updateUserAddressParamsRequest struct {
 }
 
 type updateUserAddressJsonRequest struct {
-	AddressLine    string `json:"address_line" validate:"omitempty,required"`
-	City           string `json:"city" validate:"omitempty,required"`
-	Region         string `json:"region" validate:"omitempty,required"`
-	DefaultAddress int64  `json:"default_address" validate:"omitempty,required,min=1"`
+	AddressLine    *string `json:"address_line" validate:"omitempty,required"`
+	City           *string `json:"city" validate:"omitempty,required"`
+	Region         *string `json:"region" validate:"omitempty,required"`
+	DefaultAddress *int64  `json:"default_address" validate:"omitempty,required,min=1"`
 }
 
 func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddress) userAddressResponse {
@@ -305,7 +305,7 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 	arg1 := db.UpdateUserAddressParams{
 		UserID:         authPayload.UserID,
 		AddressID:      params.AddressID,
-		DefaultAddress: null.IntFromPtr(&req.DefaultAddress),
+		DefaultAddress: null.IntFromPtr(req.DefaultAddress),
 	}
 
 	userAddress, err := server.store.UpdateUserAddress(ctx.Context(), arg1)
@@ -322,9 +322,9 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 	}
 
 	arg2 := db.UpdateAddressParams{
-		AddressLine: null.StringFromPtr(&req.AddressLine),
-		Region:      null.StringFromPtr(&req.Region),
-		City:        null.StringFromPtr(&req.City),
+		AddressLine: null.StringFromPtr(req.AddressLine),
+		Region:      null.StringFromPtr(req.Region),
+		City:        null.StringFromPtr(req.City),
 		ID:          userAddress.AddressID,
 	}
 

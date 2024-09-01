@@ -128,8 +128,8 @@ type updateVariationParamsRequest struct {
 }
 
 type updateVariationJsonRequest struct {
-	Name       string `json:"name" validate:"omitempty,required"`
-	CategoryID int64  `json:"category_id" validate:"omitempty,required,min=1"`
+	Name       *string `json:"name" validate:"omitempty,required"`
+	CategoryID *int64  `json:"category_id" validate:"omitempty,required,min=1"`
 }
 
 func (server *Server) updateVariation(ctx *fiber.Ctx) error {
@@ -150,8 +150,8 @@ func (server *Server) updateVariation(ctx *fiber.Ctx) error {
 
 	arg := db.UpdateVariationParams{
 		ID:         params.VariationID,
-		Name:       null.StringFromPtr(&req.Name),
-		CategoryID: null.IntFromPtr(&req.CategoryID),
+		Name:       null.StringFromPtr(req.Name),
+		CategoryID: null.IntFromPtr(req.CategoryID),
 	}
 
 	variation, err := server.store.UpdateVariation(ctx.Context(), arg)

@@ -23,10 +23,10 @@ import (
 
 func TestGetShopOrderItemAPI(t *testing.T) {
 	user, _ := randomSOIUser(t)
-	shopOrder := createRandomShopOrder(t, user)
+	shopOrder := createRandomShopOrder(user)
 	var shopOrderItemsList []db.ListShopOrderItemsByUserIDOrderIDRow
 	for i := 0; i < 5; i++ {
-		shopOrderItems := createRandomShopOrderItem(t, shopOrder)
+		shopOrderItems := createRandomShopOrderItem()
 		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
 	}
 	// shopOrderItem := createRandomShopOrderItemForGet(t, shopOrder)
@@ -150,12 +150,12 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 
 func TestListShopOrderItemAPI(t *testing.T) {
 	user, _ := randomSOIUser(t)
-	shopOrder := createRandomShopOrder(t, user)
+	shopOrder := createRandomShopOrder(user)
 
 	n := 5
 	shopOrderItems := make([]db.ListShopOrderItemsByUserIDRow, n)
 	for i := 0; i < n; i++ {
-		shopOrderItems[i] = createRandomListShopOrderItem(t, shopOrder)
+		shopOrderItems[i] = createRandomListShopOrderItem(shopOrder)
 	}
 
 	type Query struct {
@@ -316,7 +316,7 @@ func randomSOIUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) {
+func createRandomShopOrder(user db.User) (shopOrder db.ShopOrder) {
 	shopOrder = db.ShopOrder{
 		ID:     util.RandomMoney(),
 		UserID: user.ID,
@@ -329,7 +329,7 @@ func createRandomShopOrder(t *testing.T, user db.User) (shopOrder db.ShopOrder) 
 	return
 }
 
-func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderItems db.ListShopOrderItemsByUserIDOrderIDRow) {
+func createRandomShopOrderItem() (shopOrderItems db.ListShopOrderItemsByUserIDOrderIDRow) {
 	shopOrderItems = db.ListShopOrderItemsByUserIDOrderIDRow{
 		Status:        null.StringFrom(util.RandomUser()),
 		ID:            util.RandomMoney(),
@@ -348,19 +348,19 @@ func createRandomShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (shopOrderI
 	return
 }
 
-func createRandomShopOrderItemForGet(t *testing.T, shopOrder db.ShopOrder) (ShopOrderItem db.ShopOrderItem) {
-	ShopOrderItem = db.ShopOrderItem{
-		ID:            util.RandomMoney(),
-		ProductItemID: util.RandomMoney(),
-		OrderID:       shopOrder.ID,
-		Quantity:      int32(util.RandomMoney()),
-		Price:         util.RandomDecimalString(1, 1000),
-		// UserID:        null.IntFrom(shopOrder.UserID),
-	}
-	return
-}
+// func createRandomShopOrderItemForGet(shopOrder db.ShopOrder) (ShopOrderItem db.ShopOrderItem) {
+// 	ShopOrderItem = db.ShopOrderItem{
+// 		ID:            util.RandomMoney(),
+// 		ProductItemID: util.RandomMoney(),
+// 		OrderID:       shopOrder.ID,
+// 		Quantity:      int32(util.RandomMoney()),
+// 		Price:         util.RandomDecimalString(1, 1000),
+// 		// UserID:        null.IntFrom(shopOrder.UserID),
+// 	}
+// 	return
+// }
 
-func createRandomListShopOrderItem(t *testing.T, shopOrder db.ShopOrder) (ShopOrderItem db.ListShopOrderItemsByUserIDRow) {
+func createRandomListShopOrderItem(shopOrder db.ShopOrder) (ShopOrderItem db.ListShopOrderItemsByUserIDRow) {
 	ShopOrderItem = db.ListShopOrderItemsByUserIDRow{
 		UserID:        shopOrder.UserID,
 		ID:            util.RandomMoney(),

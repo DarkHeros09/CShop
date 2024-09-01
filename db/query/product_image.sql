@@ -63,6 +63,22 @@ product_image_3 = COALESCE(sqlc.narg(product_image_3),product_image_3)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
+-- name: AdminUpdateProductImage :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "product_image"
+SET 
+product_image_1 = COALESCE(sqlc.narg(product_image_1),product_image_1),
+product_image_2 = COALESCE(sqlc.narg(product_image_2),product_image_2),
+product_image_3 = COALESCE(sqlc.narg(product_image_3),product_image_3)
+WHERE "product_image".id = sqlc.arg(id)
+AND (SELECT is_admin FROM t1) = 1
+RETURNING *;
+
 -- name: DeleteProductImage :exec
 DELETE FROM "product_image"
 WHERE id = $1;

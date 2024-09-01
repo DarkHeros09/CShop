@@ -643,6 +643,28 @@ WHERE id = sqlc.arg(id)
 AND product_id = sqlc.arg(product_id)
 RETURNING *;
 
+-- name: AdminUpdateProductItem :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "product_item"
+SET
+product_sku = COALESCE(sqlc.narg(product_sku),product_sku),
+qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
+size_id = COALESCE(sqlc.narg(size_id),size_id),
+image_id = COALESCE(sqlc.narg(image_id),image_id),
+color_id = COALESCE(sqlc.narg(color_id),color_id),
+price = COALESCE(sqlc.narg(price),price),
+active = COALESCE(sqlc.narg(active),active),
+updated_at = now()
+WHERE "product_item".id = sqlc.arg(id)
+AND product_id = sqlc.arg(product_id)
+AND (SELECT is_admin FROM t1) = 1
+RETURNING *;
+
 -- name: DeleteProductItem :exec
 DELETE FROM "product_item"
 WHERE id = $1;

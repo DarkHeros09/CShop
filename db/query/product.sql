@@ -62,6 +62,26 @@ updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
+-- name: AdminUpdateProduct :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "product"
+SET
+category_id = COALESCE(sqlc.narg(category_id),category_id),
+brand_id = COALESCE(sqlc.narg(brand_id),brand_id),
+name = COALESCE(sqlc.narg(name),name),
+description = COALESCE(sqlc.narg(description),description),
+-- product_image = COALESCE(sqlc.narg(product_image),product_image),
+active = COALESCE(sqlc.narg(active),active),
+updated_at = now()
+WHERE "product".id = sqlc.arg(id)
+AND (SELECT is_admin FROM t1) = 1
+RETURNING *;
+
 -- name: DeleteProduct :exec
 DELETE FROM "product"
 WHERE id = $1;

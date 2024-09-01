@@ -37,6 +37,7 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 			ProductItemID:     productConfiguration.ProductItemID,
 			VariationOptionID: productConfiguration.VariationOptionID,
 			buildStub: func(store *mockdb.MockStore) {
+				//? should modify sql query to fix this lint
 				arg := db.GetProductConfigurationParams{
 					ProductItemID:     productConfiguration.ProductItemID,
 					VariationOptionID: productConfiguration.VariationOptionID,

@@ -144,8 +144,9 @@ type updateOrderStatusParamsRequest struct {
 }
 
 type updateOrderStatusJsonRequest struct {
-	Status   string `json:"status" validate:"omitempty,required"`
-	DeviceID string `json:"device_id" validate:"omitempty,required"`
+	Status *string `json:"status" validate:"omitempty,required"`
+	//? why is device_id is defined
+	DeviceID *string `json:"device_id" validate:"omitempty,required"`
 }
 
 func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
@@ -165,7 +166,7 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateOrderStatusParams{
-		Status: null.StringFromPtr(&req.Status),
+		Status: null.StringFromPtr(req.Status),
 		ID:     params.StatusID,
 	}
 
