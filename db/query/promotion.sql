@@ -36,8 +36,8 @@ SELECT * FROM "promotion"
 WHERE id = $1 LIMIT 1;
 
 -- name: ListPromotions :many
-SELECT * FROM "promotion";
--- ORDER BY id
+SELECT * FROM "promotion"
+ORDER BY id;
 -- LIMIT $1
 -- OFFSET $2;
 
@@ -51,6 +51,25 @@ active = COALESCE(sqlc.narg(active),active),
 start_date = COALESCE(sqlc.narg(start_date),start_date),
 end_date = COALESCE(sqlc.narg(end_date),end_date)
 WHERE id = sqlc.arg(id)
+RETURNING *;
+
+-- name: AdminUpdatePromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "promotion"
+SET
+name = COALESCE(sqlc.narg(name),name),
+description = COALESCE(sqlc.narg(description),description),
+discount_rate = COALESCE(sqlc.narg(discount_rate),discount_rate),
+active = COALESCE(sqlc.narg(active),active),
+start_date = COALESCE(sqlc.narg(start_date),start_date),
+end_date = COALESCE(sqlc.narg(end_date),end_date)
+WHERE "promotion".id = sqlc.arg(id)
+AND (SELECT is_admin FROM t1) = 1
 RETURNING *;
 
 -- name: DeletePromotion :exec

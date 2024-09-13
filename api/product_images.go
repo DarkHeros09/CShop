@@ -73,7 +73,8 @@ type listproductImagesParamsResquest struct {
 }
 
 type listproductImagesQueryRequest struct {
-	Tag string `query:"tag" validate:"omitempty,required,alpha"`
+	Path string `query:"path" validate:"omitempty,required,alpha"`
+	Tag  string `query:"tag" validate:"omitempty,required,alpha"`
 }
 
 func (server *Server) listproductImages(ctx *fiber.Ctx) error {
@@ -92,7 +93,9 @@ func (server *Server) listproductImages(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	resp, err := server.ik.ListAndSearch(ctx.Context(), media.FilesParam{Tags: query.Tag})
+	resp, err := server.ik.ListAndSearch(ctx.Context(), media.FilesParam{
+		Path: query.Path,
+		Tags: query.Tag})
 
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
@@ -227,7 +230,7 @@ func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
 		ProductImage3: null.StringFromPtr(req.ProductImage3),
 	}
 
-	product, err := server.store.AdminUpdateProductImage(ctx.Context(), arg)
+	productImage, err := server.store.AdminUpdateProductImage(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -239,6 +242,6 @@ func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	ctx.Status(fiber.StatusOK).JSON(product)
+	ctx.Status(fiber.StatusOK).JSON(productImage)
 	return nil
 }

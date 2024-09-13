@@ -6,6 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -72,5 +73,54 @@ func (server *Server) listProductColors(ctx *fiber.Ctx) error {
 	}
 
 	ctx.Status(fiber.StatusOK).JSON(productColors)
+	return nil
+}
+
+//////////////* Update API //////////////
+
+type updateProductColorParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	ID      int64 `params:"id" validate:"required,min=1"`
+}
+
+type updateProductColorJsonRequest struct {
+	Color *string `json:"color" validate:"omitempty,required,alpha"`
+}
+
+func (server *Server) updateProductColor(ctx *fiber.Ctx) error {
+	params := &updateProductColorParamsRequest{}
+	req := &updateProductColorJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminUpdateProductColorParams{
+		AdminID:    authPayload.AdminID,
+		ID:         params.ID,
+		ColorValue: null.StringFromPtr(req.Color),
+	}
+
+	color, err := server.store.AdminUpdateProductColor(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	ctx.Status(fiber.StatusOK).JSON(color)
 	return nil
 }

@@ -45,11 +45,43 @@ LEFT JOIN "product_category" AS pc ON pc.id = cp.category_id
 JOIN "promotion" AS promo ON promo.id = cp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 WHERE cp.category_promotion_image IS NOT NULL AND cp.active = true;
 
+-- name: AdminListCategoryPromotions :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT 
+cp.category_id, pc.category_name, 
+cp.promotion_id, promo.name AS promotion_name,
+cp.category_promotion_image, cp.active FROM "category_promotion" AS cp
+LEFT JOIN "product_category" AS pc ON pc.id = cp.category_id
+LEFT JOIN "promotion" AS promo ON promo.id = cp.promotion_id
+WHERE (SELECT is_admin FROM t1) = 1
+ORDER BY category_id;
+
 -- name: ListCategoryPromotions :many
 SELECT * FROM "category_promotion"
 ORDER BY category_id
 LIMIT $1
 OFFSET $2;
+
+-- name: AdminUpdateCategoryPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "category_promotion"
+SET
+category_promotion_image = COALESCE(sqlc.narg(category_promotion_image),category_promotion_image),
+active = COALESCE(sqlc.narg(active),active)
+WHERE category_id = sqlc.arg(category_id)
+AND promotion_id = sqlc.arg(promotion_id)
+AND (SELECT is_admin FROM t1) = 1
+RETURNING *;
 
 -- name: UpdateCategoryPromotion :one
 UPDATE "category_promotion"

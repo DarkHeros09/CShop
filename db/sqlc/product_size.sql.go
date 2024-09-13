@@ -38,6 +38,34 @@ func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreatePro
 	return i, err
 }
 
+const adminUpdateProductSize = `-- name: AdminUpdateProductSize :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
+UPDATE "product_size"
+SET 
+size_value = COALESCE($1,size_value)
+WHERE "product_size".id = $2
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, size_value
+`
+
+type AdminUpdateProductSizeParams struct {
+	SizeValue null.String `json:"size_value"`
+	ID        int64       `json:"id"`
+	AdminID   int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error) {
+	row := q.db.QueryRow(ctx, adminUpdateProductSize, arg.SizeValue, arg.ID, arg.AdminID)
+	var i ProductSize
+	err := row.Scan(&i.ID, &i.SizeValue)
+	return i, err
+}
+
 const createProductSize = `-- name: CreateProductSize :one
 INSERT INTO "product_size" (
   size_value
@@ -78,6 +106,7 @@ func (q *Queries) GetProductSize(ctx context.Context, id int64) (ProductSize, er
 
 const listProductSizes = `-- name: ListProductSizes :many
 SELECT id, size_value FROM "product_size"
+ORDER BY id
 `
 
 func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {

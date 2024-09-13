@@ -448,14 +448,15 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				"description":   "new discription",
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdatePromotionParams{
+				arg := db.AdminUpdatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         null.StringFromPtr(&promotion.Name),
 					Description:  null.StringFrom("new discription"),
 					DiscountRate: null.IntFromPtr(&promotion.DiscountRate),
@@ -466,7 +467,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(promotion, nil)
 			},
@@ -483,14 +484,15 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				"description":   "new discription",
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdatePromotionParams{
+				arg := db.AdminUpdatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         null.StringFromPtr(&promotion.Name),
 					Description:  null.StringFrom("new discription"),
 					DiscountRate: null.IntFromPtr(&promotion.DiscountRate),
@@ -501,7 +503,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -517,13 +519,14 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				"description":   "new discription",
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdatePromotionParams{
+				arg := db.AdminUpdatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         null.StringFromPtr(&promotion.Name),
 					Description:  null.StringFrom("new discription"),
 					DiscountRate: null.IntFromPtr(&promotion.DiscountRate),
@@ -534,7 +537,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				}
 
 				store.EXPECT().
-					UpdatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -550,14 +553,15 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				"description":   "new discription",
 				"discount_rate": promotion.DiscountRate,
 				"active":        promotion.Active,
-				"start_date":    promotion.StartDate,
-				"end_date":      promotion.EndDate,
+				"start_date":    promotion.StartDate.Format(timeLayout),
+				"end_date":      promotion.EndDate.Format(timeLayout),
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdatePromotionParams{
+				arg := db.AdminUpdatePromotionParams{
+					AdminID:      admin.ID,
 					Name:         null.StringFromPtr(&promotion.Name),
 					Description:  null.StringFrom("new discription"),
 					DiscountRate: null.IntFromPtr(&promotion.DiscountRate),
@@ -567,7 +571,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 					ID:           promotion.ID,
 				}
 				store.EXPECT().
-					UpdatePromotion(gomock.Any(), gomock.Eq(arg)).
+					AdminUpdatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.Promotion{}, pgx.ErrTxClosed)
 			},
@@ -584,7 +588,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdatePromotion(gomock.Any(), gomock.Any()).
+					AdminUpdatePromotion(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {

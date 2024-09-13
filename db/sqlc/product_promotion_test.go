@@ -94,6 +94,25 @@ func TestUpdateProductPromotionActive(t *testing.T) {
 	require.NotEqual(t, productPromotion1.Active, productPromotion2.Active)
 }
 
+func TestAdminUpdateProductPromotionActive(t *testing.T) {
+	admin := createRandomAdmin(t)
+	productPromotion1 := createRandomProductPromotion(t)
+	arg := AdminUpdateProductPromotionParams{
+		AdminID:     admin.ID,
+		PromotionID: productPromotion1.PromotionID,
+		Active:      null.BoolFrom(!productPromotion1.Active),
+		ProductID:   productPromotion1.ProductID,
+	}
+
+	productPromotion2, err := testStore.AdminUpdateProductPromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productPromotion2)
+
+	require.Equal(t, productPromotion1.ProductID, productPromotion2.ProductID)
+	require.Equal(t, productPromotion1.PromotionID, productPromotion2.PromotionID)
+	require.NotEqual(t, productPromotion1.Active, productPromotion2.Active)
+}
+
 func TestDeleteProductPromotion(t *testing.T) {
 	productPromotion1 := createRandomProductPromotion(t)
 	arg := DeleteProductPromotionParams{
@@ -149,6 +168,22 @@ func TestListProductPromotionsWithImages(t *testing.T) {
 
 	for _, ProductPromotion := range ProductPromotions {
 		require.NotEmpty(t, ProductPromotion)
+	}
+
+}
+func TestAdminListProductPromotions(t *testing.T) {
+	admin := createRandomAdmin(t)
+	for i := 0; i < 5; i++ {
+		createRandomProductPromotion(t)
+	}
+
+	productPromotions, err := testStore.AdminListProductPromotions(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productPromotions)
+
+	for _, productPromotion := range productPromotions {
+		require.NotEmpty(t, productPromotion)
 	}
 
 }

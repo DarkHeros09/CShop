@@ -133,6 +133,31 @@ func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 
 }
 
+func TestAdminUpdatePromotion(t *testing.T) {
+	admin := createRandomAdmin(t)
+	promotion1 := createRandomPromotion(t)
+	arg := AdminUpdatePromotionParams{
+		AdminID:      admin.ID,
+		Description:  null.StringFrom(util.RandomString(5)),
+		DiscountRate: null.IntFrom(util.RandomInt(1, 99)),
+		ID:           promotion1.ID,
+	}
+
+	promotion2, err := testStore.AdminUpdatePromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, promotion2)
+
+	require.Equal(t, promotion1.ID, promotion2.ID)
+	require.Equal(t, promotion1.Name, promotion2.Name)
+	require.NotEqual(t, promotion1.Description, promotion2.Description)
+	require.NotEqual(t, promotion1.DiscountRate, promotion2.DiscountRate)
+	require.Equal(t, promotion1.Active, promotion2.Active)
+	require.WithinDuration(t, promotion1.StartDate, promotion2.StartDate, time.Second)
+	require.WithinDuration(t, promotion1.EndDate, promotion2.EndDate, time.Second)
+	require.NotEqual(t, promotion1.StartDate, promotion2.EndDate)
+
+}
+
 func TestDeletePromotion(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
 	err := testStore.DeletePromotion(context.Background(), promotion1.ID)

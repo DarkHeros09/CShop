@@ -60,6 +60,102 @@ func (q *Queries) AdminCreateBrandPromotion(ctx context.Context, arg AdminCreate
 	return i, err
 }
 
+const adminListBrandPromotions = `-- name: AdminListBrandPromotions :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT 
+bp.brand_id, pb.brand_name, 
+bp.promotion_id, promo.name AS promotion_name,
+bp.brand_promotion_image, bp.active FROM "brand_promotion" AS bp
+LEFT JOIN "product_brand" AS pb ON pb.id = bp.brand_id
+JOIN "promotion" AS promo ON promo.id = bp.promotion_id
+WHERE (SELECT is_admin FROM t1) = 1
+ORDER BY brand_id
+`
+
+type AdminListBrandPromotionsRow struct {
+	BrandID             int64       `json:"brand_id"`
+	BrandName           null.String `json:"brand_name"`
+	PromotionID         int64       `json:"promotion_id"`
+	PromotionName       string      `json:"promotion_name"`
+	BrandPromotionImage null.String `json:"brand_promotion_image"`
+	Active              bool        `json:"active"`
+}
+
+func (q *Queries) AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error) {
+	rows, err := q.db.Query(ctx, adminListBrandPromotions, adminID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AdminListBrandPromotionsRow{}
+	for rows.Next() {
+		var i AdminListBrandPromotionsRow
+		if err := rows.Scan(
+			&i.BrandID,
+			&i.BrandName,
+			&i.PromotionID,
+			&i.PromotionName,
+			&i.BrandPromotionImage,
+			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminUpdateBrandPromotion = `-- name: AdminUpdateBrandPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $5
+    AND active = TRUE
+    )
+UPDATE "brand_promotion"
+SET
+brand_promotion_image = COALESCE($1,brand_promotion_image),
+active = COALESCE($2,active)
+WHERE brand_id = $3
+AND promotion_id = $4
+AND (SELECT is_admin FROM t1) = 1
+RETURNING brand_id, promotion_id, brand_promotion_image, active
+`
+
+type AdminUpdateBrandPromotionParams struct {
+	BrandPromotionImage null.String `json:"brand_promotion_image"`
+	Active              null.Bool   `json:"active"`
+	BrandID             int64       `json:"brand_id"`
+	PromotionID         int64       `json:"promotion_id"`
+	AdminID             int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error) {
+	row := q.db.QueryRow(ctx, adminUpdateBrandPromotion,
+		arg.BrandPromotionImage,
+		arg.Active,
+		arg.BrandID,
+		arg.PromotionID,
+		arg.AdminID,
+	)
+	var i BrandPromotion
+	err := row.Scan(
+		&i.BrandID,
+		&i.PromotionID,
+		&i.BrandPromotionImage,
+		&i.Active,
+	)
+	return i, err
+}
+
 const createBrandPromotion = `-- name: CreateBrandPromotion :one
 INSERT INTO "brand_promotion" (
   brand_id,

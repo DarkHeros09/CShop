@@ -101,6 +101,31 @@ func TestUpdateCategoryPromotionActive(t *testing.T) {
 	require.Equal(t, categoryPromotion1.PromotionID, categoryPromotion2.PromotionID)
 	require.NotEqual(t, categoryPromotion1.Active, categoryPromotion2.Active)
 }
+func TestAdminUpdateCategoryPromotionActive(t *testing.T) {
+	// categoryPromotionChan := make(chan CategoryPromotion)
+	// go func() {
+	admin := createRandomAdmin(t)
+	categoryPromotion1 := createRandomCategoryPromotion(t)
+
+	// 	categoryPromotionChan <- categoryPromotion1
+
+	// }()
+	// categoryPromotion1 := <-categoryPromotionChan
+	arg := AdminUpdateCategoryPromotionParams{
+		AdminID:     admin.ID,
+		PromotionID: categoryPromotion1.PromotionID,
+		Active:      null.BoolFrom(!categoryPromotion1.Active),
+		CategoryID:  categoryPromotion1.CategoryID,
+	}
+
+	categoryPromotion2, err := testStore.AdminUpdateCategoryPromotion(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, categoryPromotion2)
+
+	require.Equal(t, categoryPromotion1.CategoryID, categoryPromotion2.CategoryID)
+	require.Equal(t, categoryPromotion1.PromotionID, categoryPromotion2.PromotionID)
+	require.NotEqual(t, categoryPromotion1.Active, categoryPromotion2.Active)
+}
 
 func TestDeleteCategoryPromotion(t *testing.T) {
 	CategoryPromotion1 := createRandomCategoryPromotion(t)
@@ -165,6 +190,23 @@ func TestListCategoryPromotionsWithImages(t *testing.T) {
 	}
 
 	categoryPromotions, err := testStore.ListCategoryPromotionsWithImages(context.Background())
+
+	require.NoError(t, err)
+	require.NotEmpty(t, categoryPromotions)
+
+	for _, categoryPromotion := range categoryPromotions {
+		require.NotEmpty(t, categoryPromotion)
+	}
+
+}
+
+func TestAdminListCategoryPromotions(t *testing.T) {
+	admin := createRandomAdmin(t)
+	for i := 0; i < 5; i++ {
+		createRandomCategoryPromotion(t)
+	}
+
+	categoryPromotions, err := testStore.AdminListCategoryPromotions(context.Background(), admin.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, categoryPromotions)

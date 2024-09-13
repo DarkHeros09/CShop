@@ -84,6 +84,29 @@ func TestUpdateProductColor(t *testing.T) {
 	require.NotEqual(t, productColor1.ColorValue, productColor2.ColorValue)
 }
 
+func TestAdminUpdateProductColor(t *testing.T) {
+	admin := createRandomAdmin(t)
+	productColor1 := createRandomProductColor(t)
+	updatedColorValue := util.RandomColor()
+
+	if productColor1.ColorValue == updatedColorValue {
+		updatedColorValue = "purple"
+	}
+
+	arg := AdminUpdateProductColorParams{
+		AdminID:    admin.ID,
+		ID:         productColor1.ID,
+		ColorValue: null.StringFrom(updatedColorValue),
+	}
+
+	productColor2, err := testStore.AdminUpdateProductColor(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productColor2)
+
+	require.Equal(t, productColor1.ID, productColor2.ID)
+	require.NotEqual(t, productColor1.ColorValue, productColor2.ColorValue)
+}
+
 func TestDeleteProductColor(t *testing.T) {
 	productColor1 := createRandomProductColor(t)
 	err := testStore.DeleteProductColor(context.Background(), productColor1.ID)

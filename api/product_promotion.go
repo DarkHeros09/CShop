@@ -151,6 +151,42 @@ func (server *Server) listProductPromotionsWithImages(ctx *fiber.Ctx) error {
 
 }
 
+//////////////* Admin List API with Images //////////////
+
+type adminListProductPromotionParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+
+func (server *Server) listProductPromotionsForAdmins(ctx *fiber.Ctx) error {
+	params := &adminListProductPromotionParamsRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	productPromotions, err := server.store.AdminListProductPromotions(ctx.Context(), authPayload.AdminID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(productPromotions)
+	return nil
+
+}
+
 //////////////* Update API //////////////
 
 type updateProductPromotionParamsRequest struct {
@@ -160,8 +196,8 @@ type updateProductPromotionParamsRequest struct {
 }
 
 type updateProductPromotionJsonRequest struct {
-	//? should be revised
-	Active bool `json:"active" validate:"omitempty,required,boolean"`
+	ProductPromotionImage *string `json:"product_promotion_image" validate:"omitempty,required,url"`
+	Active                *bool   `json:"active" validate:"omitempty,required,boolean"`
 }
 
 func (server *Server) updateProductPromotion(ctx *fiber.Ctx) error {
@@ -180,13 +216,15 @@ func (server *Server) updateProductPromotion(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.UpdateProductPromotionParams{
-		ProductID:   params.ProductID,
-		PromotionID: params.PromotionID,
-		Active:      null.BoolFromPtr(&req.Active),
+	arg := db.AdminUpdateProductPromotionParams{
+		AdminID:               authPayload.AdminID,
+		ProductID:             params.ProductID,
+		PromotionID:           params.PromotionID,
+		ProductPromotionImage: null.StringFromPtr(req.ProductPromotionImage),
+		Active:                null.BoolFromPtr(req.Active),
 	}
 
-	productPromotion, err := server.store.UpdateProductPromotion(ctx.Context(), arg)
+	productPromotion, err := server.store.AdminUpdateProductPromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

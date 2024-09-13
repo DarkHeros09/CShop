@@ -66,6 +66,61 @@ func (q *Queries) AdminCreatePromotion(ctx context.Context, arg AdminCreatePromo
 	return i, err
 }
 
+const adminUpdatePromotion = `-- name: AdminUpdatePromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $8
+    AND active = TRUE
+    )
+UPDATE "promotion"
+SET
+name = COALESCE($1,name),
+description = COALESCE($2,description),
+discount_rate = COALESCE($3,discount_rate),
+active = COALESCE($4,active),
+start_date = COALESCE($5,start_date),
+end_date = COALESCE($6,end_date)
+WHERE "promotion".id = $7
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, name, description, discount_rate, active, start_date, end_date
+`
+
+type AdminUpdatePromotionParams struct {
+	Name         null.String `json:"name"`
+	Description  null.String `json:"description"`
+	DiscountRate null.Int    `json:"discount_rate"`
+	Active       null.Bool   `json:"active"`
+	StartDate    null.Time   `json:"start_date"`
+	EndDate      null.Time   `json:"end_date"`
+	ID           int64       `json:"id"`
+	AdminID      int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (Promotion, error) {
+	row := q.db.QueryRow(ctx, adminUpdatePromotion,
+		arg.Name,
+		arg.Description,
+		arg.DiscountRate,
+		arg.Active,
+		arg.StartDate,
+		arg.EndDate,
+		arg.ID,
+		arg.AdminID,
+	)
+	var i Promotion
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.DiscountRate,
+		&i.Active,
+		&i.StartDate,
+		&i.EndDate,
+	)
+	return i, err
+}
+
 const createPromotion = `-- name: CreatePromotion :one
 INSERT INTO "promotion" (
   name,
@@ -143,6 +198,7 @@ func (q *Queries) GetPromotion(ctx context.Context, id int64) (Promotion, error)
 
 const listPromotions = `-- name: ListPromotions :many
 SELECT id, name, description, discount_rate, active, start_date, end_date FROM "promotion"
+ORDER BY id
 `
 
 func (q *Queries) ListPromotions(ctx context.Context) ([]Promotion, error) {
@@ -197,7 +253,6 @@ type UpdatePromotionParams struct {
 	ID           int64       `json:"id"`
 }
 
-// ORDER BY id
 // LIMIT $1
 // OFFSET $2;
 func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error) {

@@ -271,22 +271,27 @@ func (server *Server) setupRouter() {
 	adminRouter.Put("/admins/:adminId/categories/:categoryId", server.updateProductCategory)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/categories/:categoryId", server.deleteProductCategory) //! Admin Only
 
-	adminRouter.Post("/admins/:adminId/colors", server.createProductColor) //! Admin Only
+	adminRouter.Post("/admins/:adminId/colors", server.createProductColor)    //! Admin Only
+	adminRouter.Put("/admins/:adminId/colors/:id", server.updateProductColor) //! Admin Only
 
-	adminRouter.Post("/admins/:adminId/sizes", server.createProductSize) //! Admin Only
+	adminRouter.Post("/admins/:adminId/sizes", server.createProductSize)    //! Admin Only
+	adminRouter.Put("/admins/:adminId/sizes/:id", server.updateProductSize) //! Admin Only
 
 	adminRouter.Post("/admins/:adminId/brands", server.createProductBrand)            //! Admin Only
 	adminRouter.Put("/admins/:adminId/brands/:brandId", server.updateProductBrand)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/brands/:brandId", server.deleteProductBrand) //! Admin Only
 
+	adminRouter.Get("/admins/:adminId/product-promotions", server.listProductPromotionsForAdmins)                             //! Admin Only
 	adminRouter.Post("/admins/:adminId/product-promotions", server.createProductPromotion)                                    //! Admin Only
 	adminRouter.Put("/admins/:adminId/product-promotions/:promotionId/products/:productId", server.updateProductPromotion)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/product-promotions/:promotionId/products/:productId", server.deleteProductPromotion) //! Admin Only
 
+	adminRouter.Get("/admins/:adminId/category-promotions", server.listCategoryPromotionsForAdmins)                                //! Admin Only
 	adminRouter.Post("/admins/:adminId/category-promotions", server.createCategoryPromotion)                                       //! Admin Only
 	adminRouter.Put("/admins/:adminId/category-promotions/:promotionId/categories/:categoryId", server.updateCategoryPromotion)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/category-promotions/:promotionId/categories/:categoryId", server.deleteCategoryPromotion) //! Admin Only
 
+	adminRouter.Get("/admins/:adminId/brand-promotions", server.listBrandPromotionsForAdmins)                         //! Admin Only
 	adminRouter.Post("/admins/:adminId/brand-promotions", server.createBrandPromotion)                                //! Admin Only
 	adminRouter.Put("/admins/:adminId/brand-promotions/:promotionId/brands/:brandId", server.updateBrandPromotion)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/brand-promotions/:promotionId/brands/:brandId", server.deleteBrandPromotion) //! Admin Only

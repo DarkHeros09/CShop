@@ -82,6 +82,29 @@ func TestUpdateProductSize(t *testing.T) {
 	require.NotEqual(t, productSize1.SizeValue, productSize2.SizeValue)
 }
 
+func TestAdminUpdateProductSize(t *testing.T) {
+	admin := createRandomAdmin(t)
+	productSize1 := createRandomProductSize(t)
+	updatedSizeValue := util.RandomSize()
+
+	if productSize1.SizeValue == updatedSizeValue {
+		updatedSizeValue = "purple"
+	}
+
+	arg := AdminUpdateProductSizeParams{
+		AdminID:   admin.ID,
+		ID:        productSize1.ID,
+		SizeValue: null.StringFrom(updatedSizeValue),
+	}
+
+	productSize2, err := testStore.AdminUpdateProductSize(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize2)
+
+	require.Equal(t, productSize1.ID, productSize2.ID)
+	require.NotEqual(t, productSize1.SizeValue, productSize2.SizeValue)
+}
+
 func TestDeleteProductSize(t *testing.T) {
 	productSize1 := createRandomProductSize(t)
 	err := testStore.DeleteProductSize(context.Background(), productSize1.ID)

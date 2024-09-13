@@ -52,7 +52,7 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
-	endtDate, err := time.Parse(timeLayout, req.EndDate)
+	endDate, err := time.Parse(timeLayout, req.EndDate)
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
@@ -65,7 +65,7 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 		DiscountRate: req.DiscountRate,
 		Active:       req.Active,
 		StartDate:    startDate,
-		EndDate:      endtDate,
+		EndDate:      endDate,
 	}
 
 	promotion, err := server.store.AdminCreatePromotion(ctx.Context(), arg)
@@ -148,18 +148,26 @@ func (server *Server) listPromotions(ctx *fiber.Ctx) error {
 
 //////////////* Update API //////////////
 
+func parseTimeOrNil(layout, value string) (*time.Time, error) {
+	parsedTime, err := time.Parse(layout, value)
+	if err != nil {
+		return nil, err // Return nil on error
+	}
+	return &parsedTime, nil // Return a pointer to the parsed time
+}
+
 type updatePromotionParamsRequest struct {
 	AdminID     int64 `params:"adminId" validate:"required,min=1"`
 	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
 }
 
 type updatePromotionJsonRequest struct {
-	Name         *string    `json:"name" validate:"omitempty,required,alphanum"`
-	Description  *string    `json:"description" validate:"omitempty,required"`
-	DiscountRate *int64     `json:"discount_rate" validate:"omitempty,required,min=1"`
-	Active       *bool      `json:"active" validate:"omitempty,required,boolean"`
-	StartDate    *time.Time `json:"start_date" validate:"omitempty,required"`
-	EndDate      *time.Time `json:"end_date" validate:"omitempty,required"`
+	Name         *string `json:"name" validate:"omitempty,required,alphanum"`
+	Description  *string `json:"description" validate:"omitempty,required"`
+	DiscountRate *int64  `json:"discount_rate" validate:"omitempty,required,min=1"`
+	Active       *bool   `json:"active" validate:"omitempty,required,boolean"`
+	StartDate    *string `json:"start_date" validate:"omitempty,required"`
+	EndDate      *string `json:"end_date" validate:"omitempty,required"`
 }
 
 func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
@@ -178,17 +186,30 @@ func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.UpdatePromotionParams{
+	startDate, err := parseTimeOrNil(timeLayout, *req.StartDate)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	endDate, err := parseTimeOrNil(timeLayout, *req.EndDate)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminUpdatePromotionParams{
+		AdminID:      authPayload.AdminID,
 		ID:           params.PromotionID,
 		Name:         null.StringFromPtr(req.Name),
 		Description:  null.StringFromPtr(req.Description),
 		DiscountRate: null.IntFromPtr(req.DiscountRate),
 		Active:       null.BoolFromPtr(req.Active),
-		StartDate:    null.TimeFromPtr(req.StartDate),
-		EndDate:      null.TimeFromPtr(req.EndDate),
+		StartDate:    null.TimeFromPtr(startDate),
+		EndDate:      null.TimeFromPtr(endDate),
 	}
 
-	promotion, err := server.store.UpdatePromotion(ctx.Context(), arg)
+	promotion, err := server.store.AdminUpdatePromotion(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

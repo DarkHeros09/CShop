@@ -38,6 +38,34 @@ func (q *Queries) AdminCreateProductColor(ctx context.Context, arg AdminCreatePr
 	return i, err
 }
 
+const adminUpdateProductColor = `-- name: AdminUpdateProductColor :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
+UPDATE "product_color"
+SET 
+color_value = COALESCE($1,color_value)
+WHERE "product_color".id = $2
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, color_value
+`
+
+type AdminUpdateProductColorParams struct {
+	ColorValue null.String `json:"color_value"`
+	ID         int64       `json:"id"`
+	AdminID    int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error) {
+	row := q.db.QueryRow(ctx, adminUpdateProductColor, arg.ColorValue, arg.ID, arg.AdminID)
+	var i ProductColor
+	err := row.Scan(&i.ID, &i.ColorValue)
+	return i, err
+}
+
 const createProductColor = `-- name: CreateProductColor :one
 INSERT INTO "product_color" (
   color_value
@@ -78,6 +106,7 @@ func (q *Queries) GetProductColor(ctx context.Context, id int64) (ProductColor, 
 
 const listProductColors = `-- name: ListProductColors :many
 SELECT id, color_value FROM "product_color"
+ORDER BY id
 `
 
 func (q *Queries) ListProductColors(ctx context.Context) ([]ProductColor, error) {

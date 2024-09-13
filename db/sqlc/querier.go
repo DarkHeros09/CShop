@@ -23,10 +23,19 @@ type Querier interface {
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error)
+	AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error)
+	AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error)
+	AdminListProductPromotions(ctx context.Context, adminID int64) ([]AdminListProductPromotionsRow, error)
+	AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error)
+	AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error)
 	// product_image = COALESCE(sqlc.narg(product_image),product_image),
 	AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error)
+	AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error)
 	AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (ProductImage, error)
 	AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error)
+	AdminUpdateProductPromotion(ctx context.Context, arg AdminUpdateProductPromotionParams) (ProductPromotion, error)
+	AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error)
+	AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (Promotion, error)
 	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)
@@ -328,7 +337,6 @@ type Querier interface {
 	UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error)
 	UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (ProductPromotion, error)
 	UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (ProductSize, error)
-	// ORDER BY id
 	// LIMIT $1
 	// OFFSET $2;
 	UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error)

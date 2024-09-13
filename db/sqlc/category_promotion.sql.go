@@ -60,6 +60,102 @@ func (q *Queries) AdminCreateCategoryPromotion(ctx context.Context, arg AdminCre
 	return i, err
 }
 
+const adminListCategoryPromotions = `-- name: AdminListCategoryPromotions :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT 
+cp.category_id, pc.category_name, 
+cp.promotion_id, promo.name AS promotion_name,
+cp.category_promotion_image, cp.active FROM "category_promotion" AS cp
+LEFT JOIN "product_category" AS pc ON pc.id = cp.category_id
+LEFT JOIN "promotion" AS promo ON promo.id = cp.promotion_id
+WHERE (SELECT is_admin FROM t1) = 1
+ORDER BY category_id
+`
+
+type AdminListCategoryPromotionsRow struct {
+	CategoryID             int64       `json:"category_id"`
+	CategoryName           null.String `json:"category_name"`
+	PromotionID            int64       `json:"promotion_id"`
+	PromotionName          null.String `json:"promotion_name"`
+	CategoryPromotionImage null.String `json:"category_promotion_image"`
+	Active                 bool        `json:"active"`
+}
+
+func (q *Queries) AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error) {
+	rows, err := q.db.Query(ctx, adminListCategoryPromotions, adminID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AdminListCategoryPromotionsRow{}
+	for rows.Next() {
+		var i AdminListCategoryPromotionsRow
+		if err := rows.Scan(
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.PromotionID,
+			&i.PromotionName,
+			&i.CategoryPromotionImage,
+			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminUpdateCategoryPromotion = `-- name: AdminUpdateCategoryPromotion :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $5
+    AND active = TRUE
+    )
+UPDATE "category_promotion"
+SET
+category_promotion_image = COALESCE($1,category_promotion_image),
+active = COALESCE($2,active)
+WHERE category_id = $3
+AND promotion_id = $4
+AND (SELECT is_admin FROM t1) = 1
+RETURNING category_id, promotion_id, category_promotion_image, active
+`
+
+type AdminUpdateCategoryPromotionParams struct {
+	CategoryPromotionImage null.String `json:"category_promotion_image"`
+	Active                 null.Bool   `json:"active"`
+	CategoryID             int64       `json:"category_id"`
+	PromotionID            int64       `json:"promotion_id"`
+	AdminID                int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error) {
+	row := q.db.QueryRow(ctx, adminUpdateCategoryPromotion,
+		arg.CategoryPromotionImage,
+		arg.Active,
+		arg.CategoryID,
+		arg.PromotionID,
+		arg.AdminID,
+	)
+	var i CategoryPromotion
+	err := row.Scan(
+		&i.CategoryID,
+		&i.PromotionID,
+		&i.CategoryPromotionImage,
+		&i.Active,
+	)
+	return i, err
+}
+
 const createCategoryPromotion = `-- name: CreateCategoryPromotion :one
 INSERT INTO "category_promotion" (
   category_id,
