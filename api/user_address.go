@@ -17,6 +17,7 @@ type createUserAddressParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type createUserAddressJsonRequest struct {
+	Name           string   `json:"name" validate:"omitempty,required"`
 	AddressLine    string   `json:"address_line" validate:"omitempty,required"`
 	Region         string   `json:"region" validate:"omitempty,required"`
 	City           string   `json:"city" validate:"omitempty,required"`
@@ -27,6 +28,7 @@ type userAddressResponse struct {
 	UserID         int64  `json:"user_id"`
 	AddressID      int64  `json:"address_id"`
 	DefaultAddress int64  `json:"default_address"`
+	Name           string `json:"name"`
 	AddressLine    string `json:"address_line"`
 	Region         string `json:"region"`
 	City           string `json:"city"`
@@ -36,6 +38,7 @@ func newUserAddressResponseForCreate(address db.Address, userAddress db.UserAddr
 	return userAddressResponse{
 		UserID:         userAddress.UserID,
 		AddressID:      userAddress.AddressID,
+		Name:           address.Name,
 		AddressLine:    address.AddressLine,
 		Region:         address.Region,
 		City:           address.City,
@@ -60,6 +63,7 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 	}
 
 	arg1 := db.CreateAddressParams{
+		Name:        req.Name,
 		AddressLine: req.AddressLine,
 		Region:      req.Region,
 		City:        req.City,
@@ -186,6 +190,7 @@ type listUserAddressResponse struct {
 	UserID         int64    `json:"user_id"`
 	AddressID      int64    `json:"address_id"`
 	DefaultAddress null.Int `json:"default_address"`
+	Name           string   `json:"name"`
 	AddressLine    string   `json:"address_line"`
 	Region         string   `json:"region"`
 	City           string   `json:"city"`
@@ -200,6 +205,7 @@ func newlistUserAddressResponse(userAddress []db.UserAddress, address []db.Addre
 					UserID:         userAddress[i].UserID,
 					AddressID:      userAddress[i].AddressID,
 					DefaultAddress: null.IntFromPtr(&userAddress[i].DefaultAddress.Int64),
+					Name:           address[j].Name,
 					AddressLine:    address[j].AddressLine,
 					Region:         address[j].Region,
 					City:           address[j].City,

@@ -13,6 +13,12 @@ SELECT * FROM "notification"
 WHERE user_id = $1
 AND device_id = $2;
 
+-- name: GetNotificationV2 :one
+SELECT * FROM "notification"
+WHERE user_id = $1
+ORDER BY updated_at DESC, created_at DESC
+LIMIT 1;
+
 -- name: UpdateNotification :one
 UPDATE "notification"
 SET 

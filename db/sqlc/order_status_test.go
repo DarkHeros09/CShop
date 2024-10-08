@@ -109,3 +109,25 @@ func TestListOrderStatuses(t *testing.T) {
 	}
 
 }
+
+func TestAdminListOrderStatuses(t *testing.T) {
+	admin := createRandomAdmin(t)
+	orderStatuses1 := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
+	for i := 0; i < len(orderStatuses1); i++ {
+		createRandomOrderStatus(t)
+	}
+	// arg := ListOrderStatusesParams{
+	// 	Limit:  int32(len(orderStatuses1)),
+	// 	Offset: int32(len(orderStatuses1)),
+	// }
+
+	orderStatuses, err := testStore.AdminListOrderStatuses(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, orderStatuses)
+
+	for _, orderStatus := range orderStatuses {
+		require.NotEmpty(t, orderStatus)
+	}
+
+}

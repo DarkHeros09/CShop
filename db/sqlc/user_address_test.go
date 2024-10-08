@@ -41,6 +41,7 @@ func createRandomUserAddressWithAddress(t *testing.T) CreateUserAddressWithAddre
 	address1 := createRandomAddress(t)
 
 	arg := CreateUserAddressWithAddressParams{
+		Name:           address1.Name,
 		AddressLine:    address1.AddressLine,
 		Region:         address1.Region,
 		City:           address1.City,

@@ -86,6 +86,17 @@ RETURNING *;
 DELETE FROM "product"
 WHERE id = $1;
 
+-- name: AdminDeleteProduct :exec
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+DELETE FROM "product" AS p
+WHERE p.id = $1
+AND (SELECT is_admin FROM t1) = 1;
+
 -- name: GetProductsByIDs :many
 SELECT * FROM "product"
 WHERE id = ANY(sqlc.arg(ids)::bigint[]);

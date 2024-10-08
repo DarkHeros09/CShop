@@ -23,9 +23,16 @@ type Querier interface {
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error)
+	AdminDeleteProduct(ctx context.Context, arg AdminDeleteProductParams) error
 	AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error)
 	AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error)
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2;
+	AdminListOrderStatuses(ctx context.Context, adminID int64) ([]OrderStatus, error)
 	AdminListProductPromotions(ctx context.Context, adminID int64) ([]AdminListProductPromotionsRow, error)
+	AdminListShopOrdersNextPage(ctx context.Context, arg AdminListShopOrdersNextPageParams) ([]AdminListShopOrdersNextPageRow, error)
+	AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error)
 	AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error)
 	AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error)
 	// product_image = COALESCE(sqlc.narg(product_image),product_image),
@@ -99,7 +106,7 @@ type Querier interface {
 	DeletePromotion(ctx context.Context, id int64) error
 	DeleteShippingMethod(ctx context.Context, id int64) error
 	DeleteShopOrder(ctx context.Context, id int64) error
-	DeleteShopOrderItem(ctx context.Context, id int64) error
+	DeleteShopOrderItem(ctx context.Context, arg DeleteShopOrderItemParams) (ShopOrderItem, error)
 	DeleteShoppingCart(ctx context.Context, id int64) error
 	DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error
 	DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]ShoppingCartItem, error)
@@ -157,6 +164,7 @@ type Querier interface {
 	GetCompletedDailyOrderTotal(ctx context.Context, adminID int64) (string, error)
 	GetHomePageTextBanner(ctx context.Context, id int64) (HomePageTextBanner, error)
 	GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error)
+	GetNotificationV2(ctx context.Context, userID int64) (Notification, error)
 	GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error)
 	GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatusByUserIDParams) (GetOrderStatusByUserIDRow, error)
 	// id = $1
@@ -171,6 +179,7 @@ type Querier interface {
 	GetProductImage(ctx context.Context, id int64) (ProductImage, error)
 	GetProductItem(ctx context.Context, id int64) (ProductItem, error)
 	GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error)
+	GetProductItemWithPromotions(ctx context.Context, id int64) (GetProductItemWithPromotionsRow, error)
 	GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error)
 	GetProductSize(ctx context.Context, id int64) (ProductSize, error)
 	GetProductsByIDs(ctx context.Context, ids []int64) ([]Product, error)
@@ -213,9 +222,6 @@ type Querier interface {
 	ListCategoryPromotionsWithImages(ctx context.Context) ([]ListCategoryPromotionsWithImagesRow, error)
 	ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBanner, error)
 	ListOrderStatuses(ctx context.Context) ([]OrderStatus, error)
-	// ORDER BY id
-	// LIMIT $1
-	// OFFSET $2;
 	ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error)
 	ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]PaymentMethod, error)
 	ListPaymentTypes(ctx context.Context) ([]PaymentType, error)
@@ -278,7 +284,7 @@ type Querier interface {
 	// pi.product_image,
 	// , pt.value AS payment_type
 	// LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
-	// LEFT JOIN "payment_type" AS pt ON pt.id = pm.payment_type_id
+	// LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
 	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error)
 	ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error)
 	ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]ListShopOrdersByUserIDRow, error)
@@ -342,7 +348,6 @@ type Querier interface {
 	UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error)
 	UpdateResetPassword(ctx context.Context, arg UpdateResetPasswordParams) (ResetPassword, error)
 	UpdateShippingMethod(ctx context.Context, arg UpdateShippingMethodParams) (ShippingMethod, error)
-	// payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 	UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error)
 	// -- name: ListShopOrderItemsByOrderID :many
 	// SELECT * FROM "shop_order_item"

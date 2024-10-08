@@ -12,12 +12,209 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminListShopOrdersNextPage = `-- name: AdminListShopOrdersNextPage :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    ),
+t2 AS (
+SELECT os.status,
+(
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count,
+usr.username,
+so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+LEFT JOIN "user" AS usr ON usr.id = so.user_id
+WHERE so.id < $3
+AND (SELECT is_admin FROM t1) = 1
+AND CASE
+WHEN COALESCE($4, '') != ''
+THEN os.status = $4
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1 + 1
+)
+SELECT status, item_count, username, id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at, total_count,COUNT(*) OVER()>10 AS next_available FROM t2
+LIMIT $1
+`
+
+type AdminListShopOrdersNextPageParams struct {
+	Limit       int32       `json:"limit"`
+	AdminID     int64       `json:"admin_id"`
+	ShopOrderID int64       `json:"shop_order_id"`
+	OrderStatus interface{} `json:"order_status"`
+}
+
+type AdminListShopOrdersNextPageRow struct {
+	Status            null.String `json:"status"`
+	ItemCount         int64       `json:"item_count"`
+	Username          null.String `json:"username"`
+	ID                int64       `json:"id"`
+	TrackNumber       string      `json:"track_number"`
+	OrderNumber       int32       `json:"order_number"`
+	UserID            int64       `json:"user_id"`
+	PaymentTypeID     int64       `json:"payment_type_id"`
+	ShippingAddressID int64       `json:"shipping_address_id"`
+	OrderTotal        string      `json:"order_total"`
+	ShippingMethodID  int64       `json:"shipping_method_id"`
+	OrderStatusID     null.Int    `json:"order_status_id"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+	CompletedAt       time.Time   `json:"completed_at"`
+	TotalCount        int64       `json:"total_count"`
+	NextAvailable     bool        `json:"next_available"`
+}
+
+func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminListShopOrdersNextPageParams) ([]AdminListShopOrdersNextPageRow, error) {
+	rows, err := q.db.Query(ctx, adminListShopOrdersNextPage,
+		arg.Limit,
+		arg.AdminID,
+		arg.ShopOrderID,
+		arg.OrderStatus,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AdminListShopOrdersNextPageRow{}
+	for rows.Next() {
+		var i AdminListShopOrdersNextPageRow
+		if err := rows.Scan(
+			&i.Status,
+			&i.ItemCount,
+			&i.Username,
+			&i.ID,
+			&i.TrackNumber,
+			&i.OrderNumber,
+			&i.UserID,
+			&i.PaymentTypeID,
+			&i.ShippingAddressID,
+			&i.OrderTotal,
+			&i.ShippingMethodID,
+			&i.OrderStatusID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CompletedAt,
+			&i.TotalCount,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminListShopOrdersV2 = `-- name: AdminListShopOrdersV2 :many
+WITH t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    ),
+t2 AS (
+  SELECT os.status,(
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count,
+usr.username,
+so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+LEFT JOIN "user" AS usr ON usr.id = so.user_id
+WHERE (SELECT is_admin FROM t1) = 1
+AND CASE
+WHEN COALESCE($3, '') != ''
+THEN os.status = $3
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1 + 1
+)
+
+SELECT status, item_count, username, id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at, total_count,COUNT(*) OVER()>10 AS next_available FROM t2 
+LIMIT $1
+`
+
+type AdminListShopOrdersV2Params struct {
+	Limit       int32       `json:"limit"`
+	AdminID     int64       `json:"admin_id"`
+	OrderStatus interface{} `json:"order_status"`
+}
+
+type AdminListShopOrdersV2Row struct {
+	Status            null.String `json:"status"`
+	ItemCount         int64       `json:"item_count"`
+	Username          null.String `json:"username"`
+	ID                int64       `json:"id"`
+	TrackNumber       string      `json:"track_number"`
+	OrderNumber       int32       `json:"order_number"`
+	UserID            int64       `json:"user_id"`
+	PaymentTypeID     int64       `json:"payment_type_id"`
+	ShippingAddressID int64       `json:"shipping_address_id"`
+	OrderTotal        string      `json:"order_total"`
+	ShippingMethodID  int64       `json:"shipping_method_id"`
+	OrderStatusID     null.Int    `json:"order_status_id"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
+	CompletedAt       time.Time   `json:"completed_at"`
+	TotalCount        int64       `json:"total_count"`
+	NextAvailable     bool        `json:"next_available"`
+}
+
+func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error) {
+	rows, err := q.db.Query(ctx, adminListShopOrdersV2, arg.Limit, arg.AdminID, arg.OrderStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AdminListShopOrdersV2Row{}
+	for rows.Next() {
+		var i AdminListShopOrdersV2Row
+		if err := rows.Scan(
+			&i.Status,
+			&i.ItemCount,
+			&i.Username,
+			&i.ID,
+			&i.TrackNumber,
+			&i.OrderNumber,
+			&i.UserID,
+			&i.PaymentTypeID,
+			&i.ShippingAddressID,
+			&i.OrderTotal,
+			&i.ShippingMethodID,
+			&i.OrderStatusID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CompletedAt,
+			&i.TotalCount,
+			&i.NextAvailable,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createShopOrder = `-- name: CreateShopOrder :one
 INSERT INTO "shop_order" (
   track_number,
   order_number,
   user_id,
-  -- payment_method_id,
+  payment_type_id,
   shipping_address_id,
   order_total,
   shipping_method_id,
@@ -28,14 +225,15 @@ INSERT INTO "shop_order" (
     SELECT COUNT(*) FROM "shop_order" so
     WHERE so.user_id = $2
      ) + 1, 
-    $2, $3, $4, $5, $6
+    $2, $3, $4, $5, $6, $7
 )
-RETURNING id, track_number, order_number, user_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at
+RETURNING id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at
 `
 
 type CreateShopOrderParams struct {
 	TrackNumber       string   `json:"track_number"`
 	UserID            int64    `json:"user_id"`
+	PaymentTypeID     int64    `json:"payment_type_id"`
 	ShippingAddressID int64    `json:"shipping_address_id"`
 	OrderTotal        string   `json:"order_total"`
 	ShippingMethodID  int64    `json:"shipping_method_id"`
@@ -46,6 +244,7 @@ func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams
 	row := q.db.QueryRow(ctx, createShopOrder,
 		arg.TrackNumber,
 		arg.UserID,
+		arg.PaymentTypeID,
 		arg.ShippingAddressID,
 		arg.OrderTotal,
 		arg.ShippingMethodID,
@@ -57,6 +256,7 @@ func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams
 		&i.TrackNumber,
 		&i.OrderNumber,
 		&i.UserID,
+		&i.PaymentTypeID,
 		&i.ShippingAddressID,
 		&i.OrderTotal,
 		&i.ShippingMethodID,
@@ -103,7 +303,7 @@ func (q *Queries) GetCompletedDailyOrderTotal(ctx context.Context, adminID int64
 }
 
 const getShopOrder = `-- name: GetShopOrder :one
-SELECT id, track_number, order_number, user_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at FROM "shop_order"
+SELECT id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at FROM "shop_order"
 WHERE id = $1 LIMIT 1
 `
 
@@ -115,6 +315,7 @@ func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
 		&i.TrackNumber,
 		&i.OrderNumber,
 		&i.UserID,
+		&i.PaymentTypeID,
 		&i.ShippingAddressID,
 		&i.OrderTotal,
 		&i.ShippingMethodID,
@@ -169,7 +370,7 @@ func (q *Queries) GetTotalShopOrder(ctx context.Context, adminID int64) (int64, 
 }
 
 const listShopOrders = `-- name: ListShopOrders :many
-SELECT id, track_number, order_number, user_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at FROM "shop_order"
+SELECT id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at FROM "shop_order"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -194,6 +395,7 @@ func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) 
 			&i.TrackNumber,
 			&i.OrderNumber,
 			&i.UserID,
+			&i.PaymentTypeID,
 			&i.ShippingAddressID,
 			&i.OrderTotal,
 			&i.ShippingMethodID,
@@ -218,7 +420,7 @@ ROW_NUMBER() OVER(ORDER BY so.id) as order_number,
 (
   SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
-) AS item_count,so.id, so.track_number, so.order_number, so.user_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at
+) AS item_count,so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $1
@@ -241,6 +443,7 @@ type ListShopOrdersByUserIDRow struct {
 	TrackNumber       string      `json:"track_number"`
 	OrderNumber_2     int32       `json:"order_number_2"`
 	UserID            int64       `json:"user_id"`
+	PaymentTypeID     int64       `json:"payment_type_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
 	OrderTotal        string      `json:"order_total"`
 	ShippingMethodID  int64       `json:"shipping_method_id"`
@@ -267,6 +470,7 @@ func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrders
 			&i.TrackNumber,
 			&i.OrderNumber_2,
 			&i.UserID,
+			&i.PaymentTypeID,
 			&i.ShippingAddressID,
 			&i.OrderTotal,
 			&i.ShippingMethodID,
@@ -291,7 +495,7 @@ SELECT os.status,
   SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
 ) AS item_count
-, so.id, so.track_number, so.order_number, so.user_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
+, so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $2
@@ -319,6 +523,7 @@ type ListShopOrdersByUserIDNextPageRow struct {
 	TrackNumber       string      `json:"track_number"`
 	OrderNumber       int32       `json:"order_number"`
 	UserID            int64       `json:"user_id"`
+	PaymentTypeID     int64       `json:"payment_type_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
 	OrderTotal        string      `json:"order_total"`
 	ShippingMethodID  int64       `json:"shipping_method_id"`
@@ -351,6 +556,7 @@ func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListSh
 			&i.TrackNumber,
 			&i.OrderNumber,
 			&i.UserID,
+			&i.PaymentTypeID,
 			&i.ShippingAddressID,
 			&i.OrderTotal,
 			&i.ShippingMethodID,
@@ -376,7 +582,7 @@ SELECT os.status,
   SELECT COUNT(*) FROM "shop_order_item" AS soi
   WHERE soi.order_id = so.id
 ) AS item_count
-, so.id, so.track_number, so.order_number, so.user_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
+, so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, COUNT(*) OVER() AS total_count
 FROM "shop_order" AS so
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 WHERE so.user_id = $2
@@ -402,6 +608,7 @@ type ListShopOrdersByUserIDV2Row struct {
 	TrackNumber       string      `json:"track_number"`
 	OrderNumber       int32       `json:"order_number"`
 	UserID            int64       `json:"user_id"`
+	PaymentTypeID     int64       `json:"payment_type_id"`
 	ShippingAddressID int64       `json:"shipping_address_id"`
 	OrderTotal        string      `json:"order_total"`
 	ShippingMethodID  int64       `json:"shipping_method_id"`
@@ -429,6 +636,7 @@ func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrde
 			&i.TrackNumber,
 			&i.OrderNumber,
 			&i.UserID,
+			&i.PaymentTypeID,
 			&i.ShippingAddressID,
 			&i.OrderTotal,
 			&i.ShippingMethodID,
@@ -449,44 +657,55 @@ func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrde
 }
 
 const updateShopOrder = `-- name: UpdateShopOrder :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $9
+    AND active = TRUE
+    )
 UPDATE "shop_order"
 SET 
 track_number = COALESCE($1,track_number),
 user_id = COALESCE($2,user_id),
-shipping_address_id = COALESCE($3,shipping_address_id),
-order_total = COALESCE($4,order_total),
-shipping_method_id = COALESCE($5,shipping_method_id),
-order_status_id = COALESCE($6,order_status_id),
+payment_type_id = COALESCE($3,payment_type_id),
+shipping_address_id = COALESCE($4,shipping_address_id),
+order_total = COALESCE($5,order_total),
+shipping_method_id = COALESCE($6,shipping_method_id),
+order_status_id = COALESCE($7,order_status_id),
 updated_at = NOW(),
 completed_at = CASE
-    WHEN order_status_id != 2 AND $6 =2
+    WHEN order_status_id != 2 AND $7 =2
     THEN NOW()
     ELSE completed_at
 END
-WHERE id = $7
-RETURNING id, track_number, order_number, user_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at
+WHERE "shop_order".id = $8
+AND (SELECT is_admin FROM t1) = 1 
+RETURNING id, track_number, order_number, user_id, payment_type_id, shipping_address_id, order_total, shipping_method_id, order_status_id, created_at, updated_at, completed_at
 `
 
 type UpdateShopOrderParams struct {
 	TrackNumber       null.String `json:"track_number"`
 	UserID            null.Int    `json:"user_id"`
+	PaymentTypeID     null.Int    `json:"payment_type_id"`
 	ShippingAddressID null.Int    `json:"shipping_address_id"`
 	OrderTotal        null.String `json:"order_total"`
 	ShippingMethodID  null.Int    `json:"shipping_method_id"`
 	OrderStatusID     null.Int    `json:"order_status_id"`
 	ID                int64       `json:"id"`
+	AdminID           int64       `json:"admin_id"`
 }
 
-// payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
 func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error) {
 	row := q.db.QueryRow(ctx, updateShopOrder,
 		arg.TrackNumber,
 		arg.UserID,
+		arg.PaymentTypeID,
 		arg.ShippingAddressID,
 		arg.OrderTotal,
 		arg.ShippingMethodID,
 		arg.OrderStatusID,
 		arg.ID,
+		arg.AdminID,
 	)
 	var i ShopOrder
 	err := row.Scan(
@@ -494,6 +713,7 @@ func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams
 		&i.TrackNumber,
 		&i.OrderNumber,
 		&i.UserID,
+		&i.PaymentTypeID,
 		&i.ShippingAddressID,
 		&i.OrderTotal,
 		&i.ShippingMethodID,

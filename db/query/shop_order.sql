@@ -3,7 +3,7 @@ INSERT INTO "shop_order" (
   track_number,
   order_number,
   user_id,
-  -- payment_method_id,
+  payment_type_id,
   shipping_address_id,
   order_total,
   shipping_method_id,
@@ -14,7 +14,7 @@ INSERT INTO "shop_order" (
     SELECT COUNT(*) FROM "shop_order" so
     WHERE so.user_id = $2
      ) + 1, 
-    $2, $3, $4, $5, $6
+    $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
@@ -82,11 +82,17 @@ ORDER BY so.id DESC
 LIMIT $1;
 
 -- name: UpdateShopOrder :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
 UPDATE "shop_order"
 SET 
 track_number = COALESCE(sqlc.narg(track_number),track_number),
 user_id = COALESCE(sqlc.narg(user_id),user_id),
--- payment_method_id = COALESCE(sqlc.narg(payment_method_id),payment_method_id),
+payment_type_id = COALESCE(sqlc.narg(payment_type_id),payment_type_id),
 shipping_address_id = COALESCE(sqlc.narg(shipping_address_id),shipping_address_id),
 order_total = COALESCE(sqlc.narg(order_total),order_total),
 shipping_method_id = COALESCE(sqlc.narg(shipping_method_id),shipping_method_id),
@@ -97,7 +103,8 @@ completed_at = CASE
     THEN NOW()
     ELSE completed_at
 END
-WHERE id = sqlc.arg(id)
+WHERE "shop_order".id = sqlc.arg(id)
+AND (SELECT is_admin FROM t1) = 1 
 RETURNING *;
 
 -- name: DeleteShopOrder :exec
@@ -140,3 +147,64 @@ WHERE order_status_id = 2
 AND updated_at >= CURRENT_DATE
 AND updated_at < CURRENT_DATE + INTERVAL '1 day'
 AND EXISTS(SELECT is_admin FROM t1);
+
+-- name: AdminListShopOrdersV2 :many
+WITH t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    ),
+t2 AS (
+  SELECT os.status,(
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count,
+usr.username,
+so.*, COUNT(*) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+LEFT JOIN "user" AS usr ON usr.id = so.user_id
+WHERE (SELECT is_admin FROM t1) = 1
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status), '') != ''
+THEN os.status = sqlc.narg(order_status)
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1 + 1
+)
+
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t2 
+LIMIT $1;
+
+-- name: AdminListShopOrdersNextPage :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    ),
+t2 AS (
+SELECT os.status,
+(
+  SELECT COUNT(*) FROM "shop_order_item" AS soi
+  WHERE soi.order_id = so.id
+) AS item_count,
+usr.username,
+so.*, COUNT(*) OVER() AS total_count
+FROM "shop_order" AS so
+LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
+LEFT JOIN "user" AS usr ON usr.id = so.user_id
+WHERE so.id < sqlc.arg(shop_order_id)
+AND (SELECT is_admin FROM t1) = 1
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status), '') != ''
+THEN os.status = sqlc.narg(order_status)
+    ELSE 1=1
+END
+ORDER BY so.id DESC
+LIMIT $1 + 1
+)
+SELECT *,COUNT(*) OVER()>10 AS next_available FROM t2
+LIMIT $1;

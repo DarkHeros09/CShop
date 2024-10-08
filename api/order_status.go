@@ -146,7 +146,7 @@ type updateOrderStatusParamsRequest struct {
 type updateOrderStatusJsonRequest struct {
 	Status *string `json:"status" validate:"omitempty,required"`
 	//? why is device_id is defined
-	DeviceID *string `json:"device_id" validate:"omitempty,required"`
+	// DeviceID *string `json:"device_id" validate:"omitempty,required"`
 }
 
 func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
@@ -226,5 +226,38 @@ func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
 	}
 
 	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return nil
+}
+
+// //////////////* Admin List API //////////////
+type adminListOrderStatusParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+
+func (server *Server) listOrderStatusesForAdmin(ctx *fiber.Ctx) error {
+	params := &adminListOrderStatusParamsRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if params.AdminID != authPayload.AdminID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	orderStatuses, err := server.store.AdminListOrderStatuses(ctx.Context(), authPayload.AdminID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	ctx.Status(fiber.StatusOK).JSON(orderStatuses)
 	return nil
 }

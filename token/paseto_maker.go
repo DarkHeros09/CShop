@@ -80,7 +80,7 @@ func (maker *PasetoMaker) VerifyTokenForUser(signedToken string) (*UserPayload, 
 // CreateToken creates a new admin token for specific admin and duration
 func (maker *PasetoMaker) CreateTokenForAdmin(adminID int64, username string, type_id int64, active bool, duration time.Duration) (string, *AdminPayload, error) {
 	payload, err := NewPayloadForAdmin(adminID, username, type_id, active, duration)
-	if err != nil {
+	if err != nil || payload == nil {
 		return "", payload, err
 	}
 

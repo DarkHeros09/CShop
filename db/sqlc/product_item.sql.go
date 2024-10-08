@@ -277,6 +277,119 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 	return i, err
 }
 
+const getProductItemWithPromotions = `-- name: GetProductItemWithPromotions :one
+SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+WHERE pi.id = $1 LIMIT 1
+`
+
+type GetProductItemWithPromotionsRow struct {
+	ID                        int64       `json:"id"`
+	ProductID                 int64       `json:"product_id"`
+	SizeID                    int64       `json:"size_id"`
+	ImageID                   int64       `json:"image_id"`
+	ColorID                   int64       `json:"color_id"`
+	ProductSku                int64       `json:"product_sku"`
+	QtyInStock                int32       `json:"qty_in_stock"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	CreatedAt                 time.Time   `json:"created_at"`
+	UpdatedAt                 time.Time   `json:"updated_at"`
+	SizeValue                 null.String `json:"size_value"`
+	ProductImage1             null.String `json:"product_image_1"`
+	ProductImage2             null.String `json:"product_image_2"`
+	ProductImage3             null.String `json:"product_image_3"`
+	ColorValue                null.String `json:"color_value"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       bool        `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          bool        `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
+}
+
+func (q *Queries) GetProductItemWithPromotions(ctx context.Context, id int64) (GetProductItemWithPromotionsRow, error) {
+	row := q.db.QueryRow(ctx, getProductItemWithPromotions, id)
+	var i GetProductItemWithPromotionsRow
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.SizeID,
+		&i.ImageID,
+		&i.ColorID,
+		&i.ProductSku,
+		&i.QtyInStock,
+		&i.Price,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SizeValue,
+		&i.ProductImage1,
+		&i.ProductImage2,
+		&i.ProductImage3,
+		&i.ColorValue,
+		&i.CategoryPromoID,
+		&i.CategoryPromoName,
+		&i.CategoryPromoDescription,
+		&i.CategoryPromoDiscountRate,
+		&i.CategoryPromoActive,
+		&i.CategoryPromoStartDate,
+		&i.CategoryPromoEndDate,
+		&i.BrandPromoID,
+		&i.BrandPromoName,
+		&i.BrandPromoDescription,
+		&i.BrandPromoDiscountRate,
+		&i.BrandPromoActive,
+		&i.BrandPromoStartDate,
+		&i.BrandPromoEndDate,
+		&i.ProductPromoID,
+		&i.ProductPromoName,
+		&i.ProductPromoDescription,
+		&i.ProductPromoDiscountRate,
+		&i.ProductPromoActive,
+		&i.ProductPromoStartDate,
+		&i.ProductPromoEndDate,
+	)
+	return i, err
+}
+
 const getTotalProductItems = `-- name: GetTotalProductItems :one
 With t1 AS (
 SELECT 1 AS is_admin
@@ -394,26 +507,64 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 const listProductItemsByIDs = `-- name: ListProductItemsByIDs :many
 SELECT pi.id, p.name, pi.product_id, 
 pi.price, pi.active, ps.size_value, pimg.product_image_1,
-pimg.product_image_2, pimg.product_image_3, pclr.color_value
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE pi.id = ANY($1::bigint[])
 `
 
 type ListProductItemsByIDsRow struct {
-	ID            int64       `json:"id"`
-	Name          null.String `json:"name"`
-	ProductID     int64       `json:"product_id"`
-	Price         string      `json:"price"`
-	Active        bool        `json:"active"`
-	SizeValue     null.String `json:"size_value"`
-	ProductImage1 null.String `json:"product_image_1"`
-	ProductImage2 null.String `json:"product_image_2"`
-	ProductImage3 null.String `json:"product_image_3"`
-	ColorValue    null.String `json:"color_value"`
+	ID                        int64       `json:"id"`
+	Name                      null.String `json:"name"`
+	ProductID                 int64       `json:"product_id"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	SizeValue                 null.String `json:"size_value"`
+	ProductImage1             null.String `json:"product_image_1"`
+	ProductImage2             null.String `json:"product_image_2"`
+	ProductImage3             null.String `json:"product_image_3"`
+	ColorValue                null.String `json:"color_value"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       bool        `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          bool        `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
 func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error) {
@@ -436,6 +587,27 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 			&i.ProductImage2,
 			&i.ProductImage3,
 			&i.ColorValue,
+			&i.CategoryPromoID,
+			&i.CategoryPromoName,
+			&i.CategoryPromoDescription,
+			&i.CategoryPromoDiscountRate,
+			&i.CategoryPromoActive,
+			&i.CategoryPromoStartDate,
+			&i.CategoryPromoEndDate,
+			&i.BrandPromoID,
+			&i.BrandPromoName,
+			&i.BrandPromoDescription,
+			&i.BrandPromoDiscountRate,
+			&i.BrandPromoActive,
+			&i.BrandPromoStartDate,
+			&i.BrandPromoEndDate,
+			&i.ProductPromoID,
+			&i.ProductPromoName,
+			&i.ProductPromoDescription,
+			&i.ProductPromoDiscountRate,
+			&i.ProductPromoActive,
+			&i.ProductPromoStartDate,
+			&i.ProductPromoEndDate,
 		); err != nil {
 			return nil, err
 		}

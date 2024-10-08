@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-06-28T19:57:17.552Z
+-- Generated at: 2024-10-02T18:38:33.554Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -88,6 +88,7 @@ CREATE TABLE "notification" (
 
 CREATE TABLE "address" (
   "id" bigserial PRIMARY KEY NOT NULL,
+  "name" varchar NOT NULL,
   "address_line" varchar NOT NULL,
   "region" varchar NOT NULL,
   "city" varchar NOT NULL,
@@ -161,10 +162,10 @@ CREATE TABLE "shop_order_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_item_id" bigint NOT NULL,
   "order_id" bigint NOT NULL,
-  "size" varchar NOT NULL DEFAULT '',
-  "color" varchar NOT NULL DEFAULT '',
   "quantity" int NOT NULL DEFAULT 0,
   "price" varchar NOT NULL,
+  "discount" int NOT NULL DEFAULT 0,
+  "shipping_method_price" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -283,6 +284,7 @@ CREATE TABLE "shop_order" (
   "track_number" varchar NOT NULL,
   "order_number" int NOT NULL,
   "user_id" bigint NOT NULL,
+  "payment_type_id" bigint NOT NULL,
   "shipping_address_id" bigint NOT NULL,
   "order_total" varchar NOT NULL,
   "shipping_method_id" bigint NOT NULL,
@@ -320,6 +322,10 @@ CREATE UNIQUE INDEX ON "brand_promotion" ("brand_id", "promotion_id");
 COMMENT ON COLUMN "payment_type"."value" IS 'for companies payment system like BCD';
 
 COMMENT ON COLUMN "shop_order_item"."price" IS 'price of product when ordered';
+
+COMMENT ON COLUMN "shop_order_item"."discount" IS 'discount of product when ordered';
+
+COMMENT ON COLUMN "shop_order_item"."shipping_method_price" IS 'shipping method price when the order was made';
 
 COMMENT ON COLUMN "product_item"."active" IS 'default is false';
 
@@ -414,8 +420,3 @@ ALTER TABLE "variation_option" ADD FOREIGN KEY ("variation_id") REFERENCES "vari
 ALTER TABLE "product_configuration" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "product_configuration" ADD FOREIGN KEY ("variation_option_id") REFERENCES "variation_option" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "address" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
-

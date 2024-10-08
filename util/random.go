@@ -12,7 +12,7 @@ import (
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 // Random generate a random integer between min and max
@@ -49,7 +49,7 @@ func RandomUser() string {
 
 // RandomMoney generates a random amount of money
 func RandomMoney() int64 {
-	return RandomInt(1, 1000)
+	return RandomInt(1, 100000)
 }
 
 // RandomEmail generates a random email

@@ -26,10 +26,11 @@ type updateShopOrderJsonRequest struct {
 	UserID            *int64  `json:"user_id" validate:"omitempty,required,min=1"`
 	ShippingAddressID *int64  `json:"shipping_address_id" validate:"omitempty,required,min=1"`
 	ShippingMethodID  *int64  `json:"shipping_method_id" validate:"omitempty,required,min=1"`
+	PaymentTypeID     *int64  `json:"payment_type_id" validate:"omitempty,required,min=1"`
 	OrderStatusID     *int64  `json:"order_status_id" validate:"omitempty,required,min=1"`
 	TrackNumber       *string `json:"track_number" validate:"omitempty,required"`
 	OrderTotal        *string `json:"order_total" validate:"omitempty,required"`
-	DeviceID          string  `json:"device_id" validate:"required"`
+	// DeviceID          string  `json:"device_id" validate:"required"`
 }
 
 func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
@@ -49,9 +50,11 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateShopOrderParams{
+		AdminID:           authPayload.AdminID,
 		ID:                params.ShopOrderID,
 		TrackNumber:       null.StringFromPtr(req.TrackNumber),
 		UserID:            null.IntFromPtr(req.UserID),
+		PaymentTypeID:     null.IntFromPtr(req.PaymentTypeID),
 		ShippingAddressID: null.IntFromPtr(req.ShippingAddressID),
 		OrderTotal:        null.StringFromPtr(req.OrderTotal),
 		ShippingMethodID:  null.IntFromPtr(req.ShippingMethodID),
@@ -76,12 +79,12 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	//? new code fcm
 	contextBG := context.Background()
 
-	notiArg := db.GetNotificationParams{
-		UserID:   shopOrder.UserID,
-		DeviceID: null.StringFrom(req.DeviceID),
-	}
+	// notiArg := db.GetNotificationParams{
+	// 	UserID:   shopOrder.UserID,
+	// 	DeviceID: null.StringFrom(req.DeviceID),
+	// }
 
-	notification, err := server.store.GetNotification(contextBG, notiArg)
+	notification, err := server.store.GetNotificationV2(contextBG, shopOrder.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -126,7 +129,7 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 
 	// Send a message to the device corresponding to the provided
 	// registration token.
-	isVerified, err := fcmClient.Send(contextBG, message)
+	isVerified, err := fcmClient.SendDryRun(contextBG, message)
 	if err != nil {
 		log.Println(err)
 	} else {
@@ -292,6 +295,100 @@ func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
 	}
 
 	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Status(fiber.StatusOK).JSON(shopOrders)
+	return nil
+}
+
+//////////////* Admin Pagination List API //////////////
+
+type adminListShopOrdersV2ParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+
+type adminListShopOrdersV2QueryRequest struct {
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
+	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+}
+
+func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
+	params := &adminListShopOrdersV2ParamsRequest{}
+	query := &adminListShopOrdersV2QueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminListShopOrdersV2Params{
+		AdminID:     authPayload.AdminID,
+		Limit:       query.Limit,
+		OrderStatus: query.OrderStatus,
+	}
+	shopOrders, err := server.store.AdminListShopOrdersV2(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
+	ctx.Status(fiber.StatusOK).JSON(shopOrders)
+	return nil
+}
+
+type adminListShopOrdersNextPageParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+
+type adminListShopOrdersNextPageQueryRequest struct {
+	Cursor      int64       `query:"cursor" validate:"required,min=1"`
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
+	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+}
+
+func (server *Server) listShopOrdersNextPageForAdmin(ctx *fiber.Ctx) error {
+	params := &adminListShopOrdersNextPageParamsRequest{}
+	query := &adminListShopOrdersNextPageQueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminListShopOrdersNextPageParams{
+		AdminID:     authPayload.AdminID,
+		ShopOrderID: query.Cursor,
+		Limit:       query.Limit,
+		OrderStatus: query.OrderStatus,
+	}
+	shopOrders, err := server.store.AdminListShopOrdersNextPage(ctx.Context(), arg)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(shopOrders)
 	return nil
 }

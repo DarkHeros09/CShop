@@ -13,6 +13,7 @@ import (
 
 type Address struct {
 	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
 	AddressLine string    `json:"address_line"`
 	Region      string    `json:"region"`
 	City        string    `json:"city"`
@@ -208,6 +209,7 @@ type ShopOrder struct {
 	TrackNumber       string    `json:"track_number"`
 	OrderNumber       int32     `json:"order_number"`
 	UserID            int64     `json:"user_id"`
+	PaymentTypeID     int64     `json:"payment_type_id"`
 	ShippingAddressID int64     `json:"shipping_address_id"`
 	OrderTotal        string    `json:"order_total"`
 	ShippingMethodID  int64     `json:"shipping_method_id"`
@@ -218,16 +220,18 @@ type ShopOrder struct {
 }
 
 type ShopOrderItem struct {
-	ID            int64  `json:"id"`
-	ProductItemID int64  `json:"product_item_id"`
-	OrderID       int64  `json:"order_id"`
-	Size          string `json:"size"`
-	Color         string `json:"color"`
-	Quantity      int32  `json:"quantity"`
+	ID            int64 `json:"id"`
+	ProductItemID int64 `json:"product_item_id"`
+	OrderID       int64 `json:"order_id"`
+	Quantity      int32 `json:"quantity"`
 	// price of product when ordered
-	Price     string    `json:"price"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Price string `json:"price"`
+	// discount of product when ordered
+	Discount int32 `json:"discount"`
+	// shipping method price when the order was made
+	ShippingMethodPrice string    `json:"shipping_method_price"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 type ShoppingCart struct {

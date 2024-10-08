@@ -64,6 +64,28 @@ func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProduct
 	return i, err
 }
 
+const adminDeleteProduct = `-- name: AdminDeleteProduct :exec
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    )
+DELETE FROM "product" AS p
+WHERE p.id = $1
+AND (SELECT is_admin FROM t1) = 1
+`
+
+type AdminDeleteProductParams struct {
+	ID      int64 `json:"id"`
+	AdminID int64 `json:"admin_id"`
+}
+
+func (q *Queries) AdminDeleteProduct(ctx context.Context, arg AdminDeleteProductParams) error {
+	_, err := q.db.Exec(ctx, adminDeleteProduct, arg.ID, arg.AdminID)
+	return err
+}
+
 const adminUpdateProduct = `-- name: AdminUpdateProduct :one
 With t1 AS (
 SELECT 1 AS is_admin

@@ -616,7 +616,7 @@ func TestUpdateProductAPI(t *testing.T) {
 	}
 }
 
-func TestDeleteProductAPI(t *testing.T) {
+func TestAdminDeleteProductAPI(t *testing.T) {
 	admin, _ := randomPromotionSuperAdmin(t)
 	product := randomProduct()
 
@@ -636,8 +636,13 @@ func TestDeleteProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+
+				arg := db.AdminDeleteProductParams{
+					AdminID: admin.ID,
+					ID:      product.ID,
+				}
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Eq(product.ID)).
+					AdminDeleteProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(nil)
 			},
@@ -653,8 +658,12 @@ func TestDeleteProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.AdminDeleteProductParams{
+					AdminID: admin.ID,
+					ID:      product.ID,
+				}
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Eq(product.ID)).
+					AdminDeleteProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -668,8 +677,12 @@ func TestDeleteProductAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.AdminDeleteProductParams{
+					AdminID: admin.ID,
+					ID:      product.ID,
+				}
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Eq(product.ID)).
+					AdminDeleteProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -684,8 +697,12 @@ func TestDeleteProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.AdminDeleteProductParams{
+					AdminID: admin.ID,
+					ID:      product.ID,
+				}
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Eq(product.ID)).
+					AdminDeleteProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
@@ -701,8 +718,12 @@ func TestDeleteProductAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
+				arg := db.AdminDeleteProductParams{
+					AdminID: admin.ID,
+					ID:      product.ID,
+				}
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Eq(product.ID)).
+					AdminDeleteProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
@@ -719,7 +740,7 @@ func TestDeleteProductAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteProduct(gomock.Any(), gomock.Any()).
+					AdminDeleteProduct(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},

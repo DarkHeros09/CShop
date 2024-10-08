@@ -10,14 +10,15 @@ RETURNING *;
 
 -- name: CreateUserAddressWithAddress :one
 WITH t1 AS (
-  INSERT INTO "address" as a (
+  INSERT INTO "address" AS a (
+    name,
     address_line,
     region,
     city
     ) VALUES (
-    $1, $2, $3
+    $1, $2, $3, $4
     )
-   RETURNING a.id, a.address_line, a.region, a.city
+   RETURNING a.id, a.name, a.address_line, a.region, a.city
   ),
 
   t2 AS ( 
@@ -26,9 +27,9 @@ WITH t1 AS (
     address_id,
     default_address
     ) VALUES 
-    ( $4,
+    ( $5,
     (SELECT id FROM t1),
-      $5
+      $6
     ) 
   RETURNING *
   )
@@ -37,6 +38,7 @@ SELECT
 user_id,
 address_id,
 default_address,
+"name",
 address_line,
 region,
 city 
@@ -53,7 +55,7 @@ SELECT COUNT(*) FROM "user_address"
 WHERE user_id = $1;
 
 -- name: GetUserAddressWithAddress :one
-SELECT ua.user_id, ua.address_id, ua.default_address, "address".address_line,  "address".region,  "address".city
+SELECT ua.user_id, ua.address_id, ua.default_address, "address".name, "address".address_line,  "address".region,  "address".city
 FROM "user_address" AS ua 
 JOIN "user" ON ua.user_id = "user".id 
 JOIN "address" ON ua.address_id = "address".id

@@ -316,11 +316,17 @@ func (server *Server) setupRouter() {
 	userRouter.Get("/users/:id/shop-order-items/:orderId", server.getShopOrderItems)
 	userRouter.Get("/users/:id/shop-order-items", server.listShopOrderItems)
 
+	adminRouter.Get("/admins/:adminId/shop-order-items/:orderId", server.getShopOrderItemsForAdmin) //! Admin Only
+	adminRouter.Delete("/admins/:adminId/shop-order-items/:id", server.deleteShopOrderItem)         //! Admin Only
+
 	//? ShopOrders
 	userRouter.Get("/users/:id/shop-orders", server.listShopOrders)
 	userRouter.Get("/users/:id/shop-orders-v2", server.listShopOrdersV2)
 	userRouter.Get("/users/:id/shop-orders-next-page", server.listShopOrdersNextPage)
-	adminRouter.Put("/admins/:adminId/shop-orders/:shopOrderId", server.updateShopOrder) //! Admin Only
+
+	adminRouter.Get("/admins/:adminId/shop-orders-v2", server.listShopOrdersV2ForAdmin)              //! Admin Only
+	adminRouter.Get("/admins/:adminId/shop-orders-next-page", server.listShopOrdersNextPageForAdmin) //! Admin Only
+	adminRouter.Put("/admins/:adminId/shop-orders/:shopOrderId", server.updateShopOrder)             //! Admin Only
 
 	userRouter.Post("/users/:id/shipping-method", server.createShippingMethod)
 	userRouter.Get("/users/:id/shipping-method/:methodId", server.getShippingMethod)
@@ -331,6 +337,7 @@ func (server *Server) setupRouter() {
 	adminRouter.Post("/admins/:adminId/order-status", server.createOrderStatus) //! Admin Only
 	userRouter.Get("/users/:id/order-status/:statusId", server.getOrderStatus)
 	userRouter.Get("/users/:id/order-status", server.listOrderStatuses)
+	adminRouter.Get("/admins/:adminId/order-status", server.listOrderStatusesForAdmin)      //! Admin Only
 	adminRouter.Put("/admins/:adminId/order-status/:statusId", server.updateOrderStatus)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/order-status/:statusId", server.deleteOrderStatus) //! Admin Only
 

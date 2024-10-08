@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -301,6 +302,318 @@ func TestListShopOrderItemAPI(t *testing.T) {
 	}
 }
 
+func TestAdminGetShopOrderItemAPI(t *testing.T) {
+	admin, _ := randomShopOrderItemSuperAdmin(t)
+	user, _ := randomSOIUser(t)
+	shopOrder := createRandomShopOrder(user)
+	var shopOrderItemsList []db.ListShopOrderItemsByUserIDOrderIDRow
+	for i := 0; i < 5; i++ {
+		shopOrderItems := createRandomShopOrderItem()
+		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
+	}
+	// shopOrderItem := createRandomShopOrderItemForGet(t, shopOrder)
+
+	testCases := []struct {
+		name          string
+		ShopOrderID   int64
+		AdminID       int64
+		body          fiber.Map
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:        "OK",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id": user.ID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.ListShopOrderItemsByUserIDOrderIDParams{
+					UserID:  user.ID,
+					OrderID: shopOrder.ID,
+				}
+
+				store.EXPECT().
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(shopOrderItemsList, nil)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchShopOrderItemForList(t, rsp.Body, shopOrderItemsList)
+			},
+		},
+		{
+			name:        "NoAuthorization",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id": user.ID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:        "InternalError",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     admin.ID,
+			body: fiber.Map{
+				"user_id": user.ID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.ListShopOrderItemsByUserIDOrderIDParams{
+					UserID:  user.ID,
+					OrderID: shopOrder.ID,
+				}
+
+				store.EXPECT().
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return([]db.ListShopOrderItemsByUserIDOrderIDRow{}, pgx.ErrTxClosed)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:        "InvalidUserID",
+			ShopOrderID: shopOrder.ID,
+			AdminID:     0,
+			body: fiber.Map{
+				"user_id": user.ID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/shop-order-items/%d", tc.AdminID, tc.ShopOrderID)
+			request, err := http.NewRequest(fiber.MethodGet, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestDeleteShopOrderItemTxAPI(t *testing.T) {
+	admin, _ := randomShopOrderItemSuperAdmin(t)
+	shopOrderItem := createRandomShopOrderItem()
+
+	testCases := []struct {
+		name            string
+		shopOrderItemID int64
+		AdminID         int64
+		setupAuth       func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStub       func(store *mockdb.MockStore)
+		checkResponse   func(t *testing.T, rsp *http.Response)
+	}{
+		{
+			name:            "OK",
+			shopOrderItemID: shopOrderItem.ID,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStub: func(store *mockdb.MockStore) {
+
+				arg := db.DeleteShopOrderItemTxParams{
+					AdminID:         admin.ID,
+					ShopOrderItemID: shopOrderItem.ID,
+				}
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(nil)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name:            "Unauthorized",
+			shopOrderItemID: shopOrderItem.ID,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteShopOrderItemTxParams{
+					AdminID:         admin.ID,
+					ShopOrderItemID: shopOrderItem.ID,
+				}
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:            "NoAuthorization",
+			shopOrderItemID: shopOrderItem.ID,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteShopOrderItemTxParams{
+					AdminID:         admin.ID,
+					ShopOrderItemID: shopOrderItem.ID,
+				}
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:            "NotFound",
+			shopOrderItemID: shopOrderItem.ID,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteShopOrderItemTxParams{
+					AdminID:         admin.ID,
+					ShopOrderItemID: shopOrderItem.ID,
+				}
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(pgx.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
+			},
+		},
+		{
+			name:            "InternalError",
+			shopOrderItemID: shopOrderItem.ID,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				arg := db.DeleteShopOrderItemTxParams{
+					AdminID:         admin.ID,
+					ShopOrderItemID: shopOrderItem.ID,
+				}
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(pgx.ErrTxClosed)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:            "InvalidID",
+			shopOrderItemID: 0,
+			AdminID:         admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					DeleteShopOrderItemTx(gomock.Any(), gomock.Any()).
+					Times(0)
+
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t) // no need to call defer ctrl.finish() in 1.6V
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+
+			// build stubs
+			tc.buildStub(store)
+
+			// start test server and send request
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/shop-order-items/%d", tc.AdminID, tc.shopOrderItemID)
+			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(t, rsp)
+		})
+
+	}
+
+}
+
 func randomSOIUser(t *testing.T) (user db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
@@ -325,6 +638,22 @@ func createRandomShopOrder(user db.User) (shopOrder db.ShopOrder) {
 		OrderTotal:        util.RandomDecimalString(1, 1000),
 		ShippingMethodID:  util.RandomMoney(),
 		OrderStatusID:     null.IntFrom(util.RandomMoney()),
+	}
+	return
+}
+
+func randomShopOrderItemSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+	password = util.RandomString(6)
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	admin = db.Admin{
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Email:    util.RandomEmail(),
+		Password: hashedPassword,
+		Active:   true,
+		TypeID:   1,
 	}
 	return
 }

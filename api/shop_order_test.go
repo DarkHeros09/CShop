@@ -55,6 +55,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.UpdateShopOrderParams{
+					AdminID:           admin.ID,
 					TrackNumber:       null.StringFrom(shopOrder.TrackNumber),
 					UserID:            null.IntFrom(shopOrder.UserID),
 					ShippingAddressID: null.IntFrom(shopOrder.ShippingAddressID),
@@ -70,7 +71,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 					Return(shopOrder, nil)
 
 				store.EXPECT().
-					GetNotification(gomock.Any(), gomock.Any()).
+					GetNotificationV2(gomock.Any(), gomock.Any()).
 					Times(1)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -119,6 +120,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateShopOrderParams{
+					AdminID:           admin.ID,
 					TrackNumber:       null.StringFrom(shopOrder.TrackNumber),
 					UserID:            null.IntFrom(shopOrder.UserID),
 					ShippingAddressID: null.IntFrom(shopOrder.ShippingAddressID),
@@ -342,6 +344,287 @@ func TestListShopOrderAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestAdminListShopOrdersV2API(t *testing.T) {
+	admin, _ := randomOrderStatusSuperAdmin(t)
+	user, _ := randomSOUser(t)
+	orderStatus := createRandomOrderStatus()
+	n := 10
+	shopOrders := make([]db.AdminListShopOrdersV2Row, n)
+	for i := 0; i < n; i++ {
+		shopOrders[i] = randomListShopOrdersV2ForAdmin(user, orderStatus)
+	}
+
+	type Query struct {
+		Limit int
+	}
+
+	testCases := []struct {
+		name          string
+		AdminID       int64
+		query         Query
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:    "OK",
+			AdminID: admin.ID,
+			query: Query{
+				Limit: n,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminListShopOrdersV2Params{
+					Limit:       10,
+					AdminID:     admin.ID,
+					OrderStatus: null.String{},
+				}
+				store.EXPECT().
+					AdminListShopOrdersV2(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(shopOrders, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListShopOrdersV2ForAdmin(t, rsp.Body, shopOrders)
+			},
+		},
+		{
+			name:    "No Authorization",
+			AdminID: admin.ID,
+			query: Query{
+				Limit: n,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminListShopOrdersV2Params{
+					Limit:       10,
+					AdminID:     admin.ID,
+					OrderStatus: null.String{},
+				}
+				store.EXPECT().
+					AdminListShopOrdersV2(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			query: Query{
+				Limit: n,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminListShopOrdersV2(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.AdminListShopOrdersV2Row{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/shop-orders-v2", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			request.URL.RawQuery = q.Encode()
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestAdminListShopOrdersNextPageAPI(t *testing.T) {
+	admin, _ := randomOrderStatusSuperAdmin(t)
+	user, _ := randomSOUser(t)
+	orderStatus := createRandomOrderStatus()
+	n := 10
+	shopOrders1 := make([]db.AdminListShopOrdersNextPageRow, n)
+	shopOrders2 := make([]db.AdminListShopOrdersNextPageRow, n)
+	for i := 0; i < n; i++ {
+		shopOrders1[i] = randomListShopOrdersByUserIDNextPageForAdmin(user, orderStatus)
+	}
+	for i := 0; i < n; i++ {
+		shopOrders2[i] = randomListShopOrdersByUserIDNextPageForAdmin(user, orderStatus)
+	}
+
+	type Query struct {
+		Limit  int
+		Cursor int
+	}
+
+	testCases := []struct {
+		name          string
+		AdminID       int64
+		query         Query
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:    "OK",
+			AdminID: admin.ID,
+			query: Query{
+				Limit:  n,
+				Cursor: int(shopOrders1[len(shopOrders1)-1].ID),
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.AdminListShopOrdersNextPageParams{
+					Limit:       int32(n),
+					AdminID:     admin.ID,
+					ShopOrderID: shopOrders1[len(shopOrders1)-1].ID,
+					OrderStatus: null.String{},
+				}
+
+				store.EXPECT().
+					AdminListShopOrdersNextPage(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(shopOrders2, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListShopOrdersNextPageForAdmin(t, rsp.Body, shopOrders2)
+			},
+		},
+		{
+			name:    "No Authentication",
+			AdminID: admin.ID,
+			query: Query{
+				Limit:  n,
+				Cursor: int(shopOrders1[len(shopOrders1)-1].ID),
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				arg := db.AdminListShopOrdersNextPageParams{
+					Limit:       int32(n),
+					AdminID:     admin.ID,
+					ShopOrderID: shopOrders1[len(shopOrders1)-1].ID,
+					OrderStatus: null.String{},
+				}
+
+				store.EXPECT().
+					AdminListShopOrdersNextPage(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			query: Query{
+				Limit:  n,
+				Cursor: int(shopOrders1[len(shopOrders1)-1].ID),
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					AdminListShopOrdersNextPage(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.AdminListShopOrdersNextPageRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InvalidLimit",
+			AdminID: admin.ID,
+			query: Query{
+				Limit:  11,
+				Cursor: int(shopOrders1[len(shopOrders1)-1].ID),
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminListShopOrdersNextPage(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/shop-orders-next-page", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			request.URL.RawQuery = q.Encode()
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)
@@ -673,9 +956,42 @@ func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListSho
 		TotalCount:        util.RandomMoney(),
 	}
 }
+func randomListShopOrdersV2ForAdmin(user db.User, orderStatus db.OrderStatus) db.AdminListShopOrdersV2Row {
+	return db.AdminListShopOrdersV2Row{
+		Status:      null.StringFrom(orderStatus.Status),
+		OrderNumber: int32(util.RandomMoney()),
+		ItemCount:   util.RandomMoney(),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
+		ShippingAddressID: util.RandomMoney(),
+		OrderTotal:        util.RandomDecimalString(0, 1000),
+		ShippingMethodID:  util.RandomMoney(),
+		OrderStatusID:     null.IntFrom(util.RandomMoney()),
+		TotalCount:        util.RandomMoney(),
+	}
+}
 
 func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDNextPageRow {
 	return db.ListShopOrdersByUserIDNextPageRow{
+		Status:      null.StringFrom(orderStatus.Status),
+		OrderNumber: int32(util.RandomMoney()),
+		ItemCount:   util.RandomMoney(),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
+		ShippingAddressID: util.RandomMoney(),
+		OrderTotal:        util.RandomDecimalString(0, 1000),
+		ShippingMethodID:  util.RandomMoney(),
+		OrderStatusID:     null.IntFrom(util.RandomMoney()),
+		TotalCount:        util.RandomMoney(),
+	}
+}
+
+func randomListShopOrdersByUserIDNextPageForAdmin(user db.User, orderStatus db.OrderStatus) db.AdminListShopOrdersNextPageRow {
+	return db.AdminListShopOrdersNextPageRow{
 		Status:      null.StringFrom(orderStatus.Status),
 		OrderNumber: int32(util.RandomMoney()),
 		ItemCount:   util.RandomMoney(),
@@ -752,11 +1068,31 @@ func requireBodyMatchListShopOrdersV2(t *testing.T, body io.ReadCloser, shopOrde
 	require.Equal(t, shopOrders, gotShopOrders)
 }
 
+func requireBodyMatchListShopOrdersV2ForAdmin(t *testing.T, body io.ReadCloser, shopOrders []db.AdminListShopOrdersV2Row) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotShopOrders []db.AdminListShopOrdersV2Row
+	err = json.Unmarshal(data, &gotShopOrders)
+	require.NoError(t, err)
+	require.Equal(t, shopOrders, gotShopOrders)
+}
+
 func requireBodyMatchListShopOrdersByUserIDNextPage(t *testing.T, body io.ReadCloser, shopOrders []db.ListShopOrdersByUserIDNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
 	var gotShopOrders []db.ListShopOrdersByUserIDNextPageRow
+	err = json.Unmarshal(data, &gotShopOrders)
+	require.NoError(t, err)
+	require.Equal(t, shopOrders, gotShopOrders)
+}
+
+func requireBodyMatchListShopOrdersNextPageForAdmin(t *testing.T, body io.ReadCloser, shopOrders []db.AdminListShopOrdersNextPageRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotShopOrders []db.AdminListShopOrdersNextPageRow
 	err = json.Unmarshal(data, &gotShopOrders)
 	require.NoError(t, err)
 	require.Equal(t, shopOrders, gotShopOrders)

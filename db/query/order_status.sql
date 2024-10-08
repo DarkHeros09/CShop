@@ -25,6 +25,17 @@ SELECT * FROM "order_status";
 -- LIMIT $1
 -- OFFSET $2;
 
+-- name: AdminListOrderStatuses :many
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+SELECT * FROM "order_status"
+WHERE EXISTS (SELECT 1 FROM t1);
+
+
 -- name: ListOrderStatusesByUserID :many
 SELECT os.*, so.user_id
 FROM "order_status" AS os

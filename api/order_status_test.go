@@ -432,6 +432,101 @@ func TestListOrderStatusAPI(t *testing.T) {
 	}
 }
 
+func TestAdminListOrderStatusAPI(t *testing.T) {
+	n := 3
+	orderStatuses := make([]db.OrderStatus, n)
+	admin, _ := randomOrderStatusSuperAdmin(t)
+	orderStatus1 := createRandomOrderStatus()
+	orderStatus2 := createRandomOrderStatus()
+	orderStatus3 := createRandomOrderStatus()
+
+	orderStatuses = append(orderStatuses, orderStatus1, orderStatus2, orderStatus3)
+
+	testCases := []struct {
+		name          string
+		Admin         int64
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name:  "OK",
+			Admin: admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminListOrderStatuses(gomock.Any(), gomock.Eq(admin.ID)).
+					Times(1).
+					Return(orderStatuses, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchOrderStatusesForAdmin(t, rsp.Body, orderStatuses)
+			},
+		},
+		{
+			name:  "InternalError",
+			Admin: admin.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminListOrderStatuses(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.OrderStatus{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:  "InvalidAdminID",
+			Admin: 0,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminListOrderStatuses(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik)
+			//recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/order-status", tc.Admin)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
 func TestUpdateOrderStatusAPI(t *testing.T) {
 	admin, _ := randomOrderStatusSuperAdmin(t)
 	orderStatus := createRandomOrderStatusForStatus()
@@ -785,5 +880,18 @@ func requireBodyMatchOrderStatuses(t *testing.T, body io.ReadCloser, orderStatus
 		require.Equal(t, orderStatuses[i].ID, gotOrderStatuses[i].ID)
 		require.Equal(t, orderStatuses[i].Status, gotOrderStatuses[i].Status)
 		require.Equal(t, orderStatuses[i].UserID.Int64, gotOrderStatuses[i].UserID.Int64)
+	}
+}
+
+func requireBodyMatchOrderStatusesForAdmin(t *testing.T, body io.ReadCloser, orderStatuses []db.OrderStatus) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotOrderStatuses []db.OrderStatus
+	err = json.Unmarshal(data, &gotOrderStatuses)
+	require.NoError(t, err)
+	for i := range gotOrderStatuses {
+		require.Equal(t, orderStatuses[i].ID, gotOrderStatuses[i].ID)
+		require.Equal(t, orderStatuses[i].Status, gotOrderStatuses[i].Status)
 	}
 }

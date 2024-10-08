@@ -10,6 +10,7 @@ import (
 type Store interface {
 	Querier
 	FinishedPurchaseTx(ctx context.Context, arg FinishedPurchaseTxParams) (FinishedPurchaseTxResult, error)
+	DeleteShopOrderItemTx(ctx context.Context, arg DeleteShopOrderItemTxParams) error
 }
 
 // Store provides all functions to execute db queries and transactions

@@ -45,15 +45,59 @@ SELECT * FROM "product_item"
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE;
 
--- name: ListProductItemsByIDs :many
-SELECT pi.id, p.name, pi.product_id, 
-pi.price, pi.active, ps.size_value, pimg.product_image_1,
-pimg.product_image_2, pimg.product_image_3, pclr.color_value
+-- name: GetProductItemWithPromotions :one
+SELECT pi.*, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+WHERE pi.id = $1 LIMIT 1;
+
+-- name: ListProductItemsByIDs :many
+SELECT pi.id, p.name, pi.product_id, 
+pi.price, pi.active, ps.size_value, pimg.product_image_1,
+pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+FROM "product_item" AS pi
+LEFT JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE pi.id = ANY(sqlc.arg(products_ids)::bigint[]);
 
 -- name: ListProductItems :many

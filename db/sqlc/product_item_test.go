@@ -233,6 +233,50 @@ func TestGetProductItem(t *testing.T) {
 
 }
 
+func TestGetProductItemForUpdate(t *testing.T) {
+	productItem1 := createRandomProductItem(t)
+
+	productItem2, err := testStore.GetProductItemForUpdate(context.Background(), productItem1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem2)
+
+	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
+	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
+	require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
+	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
+	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
+	require.Equal(t, productItem1.Price, productItem2.Price)
+	require.Equal(t, productItem1.Active, productItem2.Active)
+	require.Equal(t, productItem1.CreatedAt, productItem2.CreatedAt)
+	require.Equal(t, productItem1.UpdatedAt, productItem2.UpdatedAt)
+	require.True(t, productItem2.Active)
+
+}
+
+func TestGetProductItemForUpdateWithPromotion(t *testing.T) {
+	productItem1 := createRandomProductItem(t)
+
+	productItem2, err := testStore.GetProductItemWithPromotions(context.Background(), productItem1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, productItem2)
+
+	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
+	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
+	require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
+	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
+	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
+	require.Equal(t, productItem1.Price, productItem2.Price)
+	require.Equal(t, productItem1.Active, productItem2.Active)
+	require.Equal(t, productItem1.CreatedAt, productItem2.CreatedAt)
+	require.Equal(t, productItem1.UpdatedAt, productItem2.UpdatedAt)
+	require.True(t, productItem2.Active)
+
+}
+
 func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
 	arg := UpdateProductItemParams{

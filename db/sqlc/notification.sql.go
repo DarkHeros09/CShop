@@ -100,6 +100,26 @@ func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams
 	return i, err
 }
 
+const getNotificationV2 = `-- name: GetNotificationV2 :one
+SELECT user_id, device_id, fcm_token, created_at, updated_at FROM "notification"
+WHERE user_id = $1
+ORDER BY updated_at DESC, created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (Notification, error) {
+	row := q.db.QueryRow(ctx, getNotificationV2, userID)
+	var i Notification
+	err := row.Scan(
+		&i.UserID,
+		&i.DeviceID,
+		&i.FcmToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateNotification = `-- name: UpdateNotification :one
 UPDATE "notification"
 SET 

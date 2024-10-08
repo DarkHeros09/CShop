@@ -57,6 +57,21 @@ func TestGetNotification(t *testing.T) {
 	require.Equal(t, notification1.UpdatedAt, notification2.UpdatedAt)
 
 }
+func TestGetNotificationV2(t *testing.T) {
+	t.Parallel()
+	notification1 := createRandomNotification(t)
+
+	notification2, err := testStore.GetNotificationV2(context.Background(), notification1.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, notification2)
+
+	require.Equal(t, notification1.UserID, notification2.UserID)
+	require.Equal(t, notification1.DeviceID, notification2.DeviceID)
+	require.Equal(t, notification1.FcmToken, notification2.FcmToken)
+	require.Equal(t, notification1.CreatedAt, notification2.CreatedAt)
+	require.Equal(t, notification1.UpdatedAt, notification2.UpdatedAt)
+
+}
 
 func TestUpdateNotification(t *testing.T) {
 	notification1 := createRandomNotification(t)

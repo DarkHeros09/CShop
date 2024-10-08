@@ -70,7 +70,6 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			UserID:         user.ID,
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
-
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
@@ -91,7 +90,6 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			UserID:         user.ID,
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
-
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},
@@ -120,7 +118,6 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			UserID:         0,
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
-
 				"product_item_id": shoppingCartItem.ProductItemID,
 				"qty":             shoppingCartItem.Qty,
 			},

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null/v5"
@@ -58,14 +59,19 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 		// }
 
 		createdShopOrder, err := q.CreateShopOrder(ctx, CreateShopOrderParams{
-			TrackNumber: trackNumber,
-			UserID:      arg.UserID,
-			// PaymentMethodID:   paymentMethod.ID,
+			TrackNumber:       trackNumber,
+			UserID:            arg.UserID,
+			PaymentTypeID:     arg.PaymentTypeID,
 			ShippingAddressID: arg.UserAddressID,
 			OrderTotal:        arg.OrderTotal,
 			ShippingMethodID:  arg.ShippingMethodID,
 			OrderStatusID:     null.IntFrom(arg.OrderStatusID),
 		})
+		if err != nil {
+			return err
+		}
+
+		shippingMethod, err := q.GetShippingMethod(ctx, arg.ShippingMethodID)
 		if err != nil {
 			return err
 		}
@@ -97,11 +103,31 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			}
 			result.UpdatedProductItemID = updatedProductItem.ID
 
+			productItemAfterUpdate, err := q.GetProductItemWithPromotions(ctx, shopCartItems[i].ProductItemID)
+			if err != nil {
+				return err
+			}
+
+			bestDiscount := discount(productItemAfterUpdate)
+
+			// discountValue := decimal.NewFromInt(bestDiscount)
+
+			// discountDecimal := decimal.NewFromInt(1).Sub(discountValue.Div(decimal.NewFromInt(100)))
+
+			// price, err := decimal.NewFromString(productItem.Price)
+			// if err != nil {
+			// 	return err
+			// }
+
+			// bestPrice := price.Mul(decimal.NewFromInt(int64(shopCartItems[i].Qty))).Mul(discountDecimal)
+
 			createdShopOrderItem, err := q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
-				ProductItemID: shopCartItems[i].ProductItemID,
-				OrderID:       createdShopOrder.ID,
-				Quantity:      shopCartItems[i].Qty,
-				Price:         productItem.Price,
+				ProductItemID:       shopCartItems[i].ProductItemID,
+				OrderID:             createdShopOrder.ID,
+				Quantity:            shopCartItems[i].Qty,
+				Price:               productItem.Price,
+				Discount:            int32(bestDiscount),
+				ShippingMethodPrice: shippingMethod.Price,
 			})
 			if err != nil {
 				return err
@@ -120,4 +146,71 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 	})
 
 	return result, err
+}
+
+func discount(productItem GetProductItemWithPromotionsRow) int64 {
+	var promos []Promotion
+
+	if productItem.ProductPromoDiscountRate.Valid {
+		promos = append(promos, Promotion{
+			ID:           productItem.ProductPromoID.Int64,
+			Name:         productItem.ProductPromoName.String,
+			Description:  productItem.ProductPromoDescription.String,
+			DiscountRate: productItem.ProductPromoDiscountRate.Int64,
+			Active:       productItem.ProductPromoActive,
+			StartDate:    productItem.ProductPromoStartDate.Time,
+			EndDate:      productItem.ProductPromoEndDate.Time,
+		})
+	}
+
+	if productItem.CategoryPromoDiscountRate.Valid {
+		promos = append(promos, Promotion{
+			ID:           productItem.CategoryPromoID.Int64,
+			Name:         productItem.CategoryPromoName.String,
+			Description:  productItem.CategoryPromoDescription.String,
+			DiscountRate: productItem.CategoryPromoDiscountRate.Int64,
+			Active:       productItem.CategoryPromoActive,
+			StartDate:    productItem.CategoryPromoStartDate.Time,
+			EndDate:      productItem.CategoryPromoEndDate.Time,
+		})
+	}
+
+	if productItem.BrandPromoDiscountRate.Valid {
+		promos = append(promos, Promotion{
+			ID:           productItem.BrandPromoID.Int64,
+			Name:         productItem.BrandPromoName.String,
+			Description:  productItem.BrandPromoDescription.String,
+			DiscountRate: productItem.BrandPromoDiscountRate.Int64,
+			Active:       productItem.BrandPromoActive,
+			StartDate:    productItem.BrandPromoStartDate.Time,
+			EndDate:      productItem.BrandPromoEndDate.Time,
+		})
+	}
+
+	var validPromos []Promotion
+	now := time.Now()
+
+	for _, promo := range promos {
+		if promo.Active &&
+			now.After(promo.StartDate) && now.Before(promo.EndDate) {
+			validPromos = append(validPromos, promo)
+		}
+	}
+
+	if len(validPromos) == 0 {
+		return 0
+	}
+
+	bestPromo := validPromos[0]
+	for _, promo := range validPromos {
+		if promo.DiscountRate > bestPromo.DiscountRate {
+			bestPromo = promo
+		}
+	}
+
+	if bestPromo.DiscountRate > 0 {
+		return bestPromo.DiscountRate
+	}
+
+	return 0
 }

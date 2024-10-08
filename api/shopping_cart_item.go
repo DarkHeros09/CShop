@@ -179,15 +179,36 @@ type listShoppingCartItemsResponse struct {
 	CreatedAt      null.Time `json:"created_at"`
 	UpdatedAt      null.Time `json:"updated_at"`
 	// ProductItems  []db.ListProductItemsByIDsRow         `json:"product_items"`
-	ProductItemID null.Int    `json:"product_item_id"`
-	Name          null.String `json:"name"`
-	Size          null.String `json:"size"`
-	Color         null.String `json:"color"`
-	Qty           null.Int    `json:"qty"`
-	ProductID     int64       `json:"product_id"`
-	ProductImage  string      `json:"product_image"`
-	Price         string      `json:"price"`
-	Active        bool        `json:"active"`
+	ProductItemID             null.Int    `json:"product_item_id"`
+	Name                      null.String `json:"name"`
+	Size                      null.String `json:"size"`
+	Color                     null.String `json:"color"`
+	Qty                       null.Int    `json:"qty"`
+	ProductID                 int64       `json:"product_id"`
+	ProductImage              string      `json:"product_image"`
+	Price                     string      `json:"price"`
+	Active                    bool        `json:"active"`
+	CategoryPromoID           null.Int    `json:"category_promo_id"`
+	CategoryPromoName         null.String `json:"category_promo_name"`
+	CategoryPromoDescription  null.String `json:"category_promo_description"`
+	CategoryPromoDiscountRate null.Int    `json:"category_promo_discount_rate"`
+	CategoryPromoActive       bool        `json:"category_promo_active"`
+	CategoryPromoStartDate    null.Time   `json:"category_promo_start_date"`
+	CategoryPromoEndDate      null.Time   `json:"category_promo_end_date"`
+	BrandPromoID              null.Int    `json:"brand_promo_id"`
+	BrandPromoName            null.String `json:"brand_promo_name"`
+	BrandPromoDescription     null.String `json:"brand_promo_description"`
+	BrandPromoDiscountRate    null.Int    `json:"brand_promo_discount_rate"`
+	BrandPromoActive          bool        `json:"brand_promo_active"`
+	BrandPromoStartDate       null.Time   `json:"brand_promo_start_date"`
+	BrandPromoEndDate         null.Time   `json:"brand_promo_end_date"`
+	ProductPromoID            null.Int    `json:"product_promo_id"`
+	ProductPromoName          null.String `json:"product_promo_name"`
+	ProductPromoDescription   null.String `json:"product_promo_description"`
+	ProductPromoDiscountRate  null.Int    `json:"product_promo_discount_rate"`
+	ProductPromoActive        bool        `json:"product_promo_active"`
+	ProductPromoStartDate     null.Time   `json:"product_promo_start_date"`
+	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
 func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) []listShoppingCartItemsResponse {
@@ -205,11 +226,32 @@ func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsBy
 					Qty:            shopCartItems[j].Qty,
 					ProductID:      productItems[i].ProductID,
 					// ProductImage:   productItems[i].ProductImage,
-					ProductImage: productItems[i].ProductImage1.String,
-					Size:         productItems[i].SizeValue,
-					Color:        productItems[i].ColorValue,
-					Price:        productItems[i].Price,
-					Active:       productItems[i].Active,
+					ProductImage:              productItems[i].ProductImage1.String,
+					Size:                      productItems[i].SizeValue,
+					Color:                     productItems[i].ColorValue,
+					Price:                     productItems[i].Price,
+					Active:                    productItems[i].Active,
+					CategoryPromoID:           productItems[i].CategoryPromoID,
+					CategoryPromoName:         productItems[i].CategoryPromoName,
+					CategoryPromoDescription:  productItems[i].CategoryPromoDescription,
+					CategoryPromoDiscountRate: productItems[i].CategoryPromoDiscountRate,
+					CategoryPromoActive:       productItems[i].CategoryPromoActive,
+					CategoryPromoStartDate:    productItems[i].CategoryPromoStartDate,
+					CategoryPromoEndDate:      productItems[i].CategoryPromoEndDate,
+					BrandPromoID:              productItems[i].BrandPromoID,
+					BrandPromoName:            productItems[i].BrandPromoName,
+					BrandPromoDescription:     productItems[i].BrandPromoDescription,
+					BrandPromoDiscountRate:    productItems[i].BrandPromoDiscountRate,
+					BrandPromoActive:          productItems[i].BrandPromoActive,
+					BrandPromoStartDate:       productItems[i].BrandPromoStartDate,
+					BrandPromoEndDate:         productItems[i].BrandPromoEndDate,
+					ProductPromoID:            productItems[i].ProductPromoID,
+					ProductPromoName:          productItems[i].ProductPromoName,
+					ProductPromoDescription:   productItems[i].ProductPromoDescription,
+					ProductPromoDiscountRate:  productItems[i].ProductPromoDiscountRate,
+					ProductPromoActive:        productItems[i].ProductPromoActive,
+					ProductPromoStartDate:     productItems[i].ProductPromoStartDate,
+					ProductPromoEndDate:       productItems[i].ProductPromoEndDate,
 				}
 			}
 		}

@@ -13,6 +13,7 @@ import (
 func createRandomAddress(t *testing.T) Address {
 	// defer goleak.VerifyNone(t)
 	arg := CreateAddressParams{
+		Name:        util.RandomString(5),
 		AddressLine: util.RandomString(5),
 		Region:      util.RandomString(5),
 		City:        util.RandomString(5),
@@ -22,6 +23,7 @@ func createRandomAddress(t *testing.T) Address {
 	require.NoError(t, err)
 	require.NotEmpty(t, address)
 
+	require.Equal(t, arg.Name, address.Name)
 	require.Equal(t, arg.AddressLine, address.AddressLine)
 	require.Equal(t, arg.Region, address.Region)
 	require.Equal(t, arg.City, address.City)
@@ -69,10 +71,9 @@ func TestUpdateAddressLine(t *testing.T) {
 func TestUpdateAddressCity(t *testing.T) {
 	address1 := createRandomAddress(t)
 	arg := UpdateAddressParams{
-		ID:          address1.ID,
-		AddressLine: null.String{},
-		Region:      null.String{},
-		City:        null.StringFrom("New Benghazi"),
+		ID:   address1.ID,
+		Name: null.StringFrom("New Name"),
+		City: null.StringFrom("New Benghazi"),
 	}
 
 	address2, err := testStore.UpdateAddress(context.Background(), arg)
@@ -83,6 +84,7 @@ func TestUpdateAddressCity(t *testing.T) {
 	require.Equal(t, address1.AddressLine, address2.AddressLine)
 	require.Equal(t, address1.Region, address2.Region)
 	require.NotEqual(t, address1.City, address2.City)
+	require.NotEqual(t, address1.Name, address2.Name)
 
 }
 

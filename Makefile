@@ -97,14 +97,14 @@ dotenv_push:
 	docker run -w "${CURDIR}" -v "${CURDIR}:${CURDIR}" -it dotenv/dotenv-vault push 	
 
 init_docker:
-	@pwsh -noprofile -command 'if ([bool]([System.Environment]::OSVersion))\
+	@pwsh -noprofile -command "if ([bool]([System.Environment]::OSVersion))\
 	{\
 		if (![bool](docker ps 2>NUL))\
 		{\
-			Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe" -WindowStyle Hidden\
+			Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe' -WindowStyle Hidden\
 		}\
 		while (![bool](docker ps 2>NUL)) {}\
-	}'
+	}"
 
 	@docker start redis
 	@docker start psql_$(DB_VERSION)-cshop
@@ -113,24 +113,30 @@ test:
 	dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./...
 
 testwin:
-	powershell -command "dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./...  | tee test_output.txt"
-	powershell -command "Select-String -Path test_output.txt -Pattern 'FAIL'"
-	powershell -command "del test_output.txt"
+	powershell -command "\
+		dotenvx run -f $(ENVFILE) -- go test -race -v -cover -timeout 1m -shuffle on -count=1 ./... | Tee-Object -Variable result;\
+		Get-Variable result | Select-Object -ExpandProperty Value | \
+		Select-String -Pattern 'FAIL:', 'Error Trace:', 'Error:', 'Test:', '\[build failed\]';\
+	"
 
 docker_login:
-	powershell -command '$$env:DOCKER_ACCESS_TOKEN' | powershell 'docker login -u mohammednajib --password-stdin'
+	powershell -command '$$env:DOCKER_ACCESS_TOKEN | docker login -u mohammednajib --password-stdin'
 
 dagger_test:
 	docker start redis
 	docker start psql_$(DB_VERSION)-cshop
-	make docker_login
-	go run ./dagger/dagger_test_workflow.go
+	docker login
+	powershell -command "go run ./dagger/dagger_test_workflow.go \
+	| Tee-Object -Variable result;\
+		Get-Variable result | Select-Object -ExpandProperty Value | \
+		Select-String -Pattern 'FAIL:', 'Error Trace:', 'Error:', 'Test:';\
+	"
 
 dagger_test2:
 	go run ./dagger2/dagger_test_workflow.go
 
 server:
-	dotenvx run -f $(ENVFILE) -- go run main.go
+	dotenvx run -f $(ENVFILE) -- go run -race main.go
 
 stop:
 	@-docker stop $(shell docker ps -q) >nul 2>nul

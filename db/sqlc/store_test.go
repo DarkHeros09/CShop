@@ -437,3 +437,26 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		require.Empty(t, result)
 	}
 }
+
+func TestDeleteShopOrderItemTx(t *testing.T) {
+	admin := createRandomAdmin(t)
+	shopOrderItem, shopOrder := createRandomShopOrderItem(t)
+
+	err := testStore.DeleteShopOrderItemTx(context.Background(), DeleteShopOrderItemTxParams{
+		ShopOrderItemID: shopOrderItem.ID,
+		AdminID:         admin.ID,
+	})
+
+	require.NoError(t, err)
+
+	deletedShopOrderItem, err := testStore.GetShopOrderItem(context.Background(), shopOrderItem.ID)
+
+	require.Error(t, err)
+	require.Empty(t, deletedShopOrderItem)
+
+	updatedShopOrder, err := testStore.GetShopOrder(context.Background(), shopOrder.ID)
+
+	require.NoError(t, err)
+	require.NotEqual(t, updatedShopOrder.OrderTotal, shopOrder.OrderTotal)
+
+}

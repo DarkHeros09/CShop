@@ -228,7 +228,12 @@ func (server *Server) deleteProduct(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	err := server.store.DeleteProduct(ctx.Context(), params.ProductID)
+	arg := db.AdminDeleteProductParams{
+		AdminID: authPayload.AdminID,
+		ID:      params.ProductID,
+	}
+
+	err := server.store.AdminDeleteProduct(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

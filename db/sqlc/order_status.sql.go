@@ -12,6 +12,46 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminListOrderStatuses = `-- name: AdminListOrderStatuses :many
+
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT id, status, created_at, updated_at FROM "order_status"
+WHERE EXISTS (SELECT 1 FROM t1)
+`
+
+// ORDER BY id
+// LIMIT $1
+// OFFSET $2;
+func (q *Queries) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]OrderStatus, error) {
+	rows, err := q.db.Query(ctx, adminListOrderStatuses, adminID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OrderStatus{}
+	for rows.Next() {
+		var i OrderStatus
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createOrderStatus = `-- name: CreateOrderStatus :one
 INSERT INTO "order_status" (
   status
@@ -126,7 +166,6 @@ func (q *Queries) ListOrderStatuses(ctx context.Context) ([]OrderStatus, error) 
 }
 
 const listOrderStatusesByUserID = `-- name: ListOrderStatusesByUserID :many
-
 SELECT os.id, os.status, os.created_at, os.updated_at, so.user_id
 FROM "order_status" AS os
 LEFT JOIN "shop_order" AS so ON so.order_status_id = os.id
@@ -150,9 +189,6 @@ type ListOrderStatusesByUserIDRow struct {
 	UserID    null.Int  `json:"user_id"`
 }
 
-// ORDER BY id
-// LIMIT $1
-// OFFSET $2;
 func (q *Queries) ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listOrderStatusesByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {

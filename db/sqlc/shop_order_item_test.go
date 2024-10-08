@@ -14,10 +14,12 @@ func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 	shopOrder := createRandomShopOrder(t)
 	productItem := createRandomProductItem(t)
 	arg := CreateShopOrderItemParams{
-		ProductItemID: productItem.ID,
-		OrderID:       shopOrder.ID,
-		Quantity:      int32(util.RandomInt(0, 100)),
-		Price:         util.RandomDecimalString(1, 100),
+		ProductItemID:       productItem.ID,
+		OrderID:             shopOrder.ID,
+		Quantity:            int32(util.RandomInt(0, 100)),
+		Price:               util.RandomDecimalString(1, 100),
+		Discount:            int32(util.RandomInt(0, 90)),
+		ShippingMethodPrice: util.RandomDecimalString(1, 100),
 	}
 
 	shopOrderItem, err := testStore.CreateShopOrderItem(context.Background(), arg)
@@ -28,7 +30,8 @@ func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 	require.Equal(t, arg.OrderID, shopOrderItem.OrderID)
 	require.Equal(t, arg.Quantity, shopOrderItem.Quantity)
 	require.Equal(t, arg.Price, shopOrderItem.Price)
-	require.Equal(t, arg.Price, shopOrderItem.Price)
+	require.Equal(t, arg.Discount, shopOrderItem.Discount)
+	require.Equal(t, arg.ShippingMethodPrice, shopOrderItem.ShippingMethodPrice)
 
 	return shopOrderItem, shopOrder
 }
@@ -49,13 +52,14 @@ func TestGetShopOrderItem(t *testing.T) {
 	require.Equal(t, shopOrderItem1.OrderID, shopOrderItem2.OrderID)
 	require.Equal(t, shopOrderItem1.Quantity, shopOrderItem2.Quantity)
 	require.Equal(t, shopOrderItem1.Price, shopOrderItem2.Price)
+	require.Equal(t, shopOrderItem1.Discount, shopOrderItem2.Discount)
 }
 
 func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 	shopOrderItem1, _ := createRandomShopOrderItem(t)
 	arg := UpdateShopOrderItemParams{
-		ProductItemID: null.Int{},
-		OrderID:       null.Int{},
+		ProductItemID: shopOrderItem1.ProductItemID,
+		OrderID:       shopOrderItem1.OrderID,
 		Quantity:      null.Int{},
 		Price:         null.StringFrom(util.RandomDecimalString(1, 100)),
 		ID:            shopOrderItem1.ID,
@@ -70,12 +74,21 @@ func TestUpdateShopOrderItemOrderTotal(t *testing.T) {
 	require.Equal(t, shopOrderItem1.OrderID, shopOrderItem2.OrderID)
 	require.Equal(t, shopOrderItem1.Quantity, shopOrderItem2.Quantity)
 	require.NotEqual(t, shopOrderItem1.Price, shopOrderItem2.Price)
+	require.Equal(t, shopOrderItem1.Discount, shopOrderItem2.Discount)
 }
 
 func TestDeleteShopOrderItem(t *testing.T) {
+	admin := createRandomAdmin(t)
 	shopOrderItem1, _ := createRandomShopOrderItem(t)
-	err := testStore.DeleteShopOrderItem(context.Background(), shopOrderItem1.ID)
 
+	arg := DeleteShopOrderItemParams{
+		AdminID: admin.ID,
+		ID:      shopOrderItem1.ID,
+	}
+
+	deletedShopOrderItem, err := testStore.DeleteShopOrderItem(context.Background(), arg)
+
+	require.NotEmpty(t, deletedShopOrderItem)
 	require.NoError(t, err)
 
 	shopOrderItem2, err := testStore.GetShopOrderItem(context.Background(), shopOrderItem1.ID)

@@ -188,6 +188,26 @@ func TestDeleteProduct(t *testing.T) {
 
 }
 
+func TestAdminDeleteProduct(t *testing.T) {
+	admin := createRandomAdmin(t)
+	product1 := createRandomProduct(t)
+
+	arg := AdminDeleteProductParams{
+		AdminID: admin.ID,
+		ID:      product1.ID,
+	}
+	err := testStore.AdminDeleteProduct(context.Background(), arg)
+
+	require.NoError(t, err)
+
+	product2, err := testStore.GetProduct(context.Background(), product1.ID)
+
+	require.Error(t, err)
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
+	require.Empty(t, product2)
+
+}
+
 func TestListProducts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomProduct(t)

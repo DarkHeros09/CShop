@@ -48,7 +48,7 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
 		TrackNumber: util.GenerateTrackNumber(),
-		UserID:      paymentMethod.UserID,
+		UserID:      paymentMethod.UserID, PaymentTypeID: util.RandomMoney(),
 		// PaymentMethodID:   paymentMethod.ID,
 		ShippingAddressID: address.ID,
 		OrderTotal:        util.RandomDecimalString(1, 100),
@@ -95,15 +95,12 @@ func TestGetShopOrder(t *testing.T) {
 }
 
 func TestUpdateShopOrderOrderTotal(t *testing.T) {
+	admin := createRandomAdmin(t)
 	shopOrder1 := createRandomShopOrder(t)
 	arg := UpdateShopOrderParams{
-		UserID: null.Int{},
-		// PaymentMethodID:   null.Int{},
-		ShippingAddressID: null.Int{},
-		OrderTotal:        null.StringFrom(util.RandomDecimalString(1, 100)),
-		ShippingMethodID:  null.Int{},
-		OrderStatusID:     null.Int{},
-		ID:                shopOrder1.ID,
+		AdminID:    admin.ID,
+		OrderTotal: null.StringFrom(util.RandomDecimalString(1, 100)),
+		ID:         shopOrder1.ID,
 	}
 
 	shopOrder2, err := testStore.UpdateShopOrder(context.Background(), arg)
@@ -119,10 +116,12 @@ func TestUpdateShopOrderOrderTotal(t *testing.T) {
 	require.Equal(t, shopOrder1.OrderStatusID, shopOrder2.OrderStatusID)
 }
 func TestUpdateShopOrderOrderStatus(t *testing.T) {
+	admin := createRandomAdmin(t)
 	for {
 		shopOrder1 := createRandomShopOrder(t)
 		if shopOrder1.OrderStatusID.Int64 != 2 {
 			arg := UpdateShopOrderParams{
+				AdminID:       admin.ID,
 				OrderStatusID: null.IntFrom(2),
 				ID:            shopOrder1.ID,
 			}
@@ -275,6 +274,7 @@ func TestGetShopOrdersCountByStatusId(t *testing.T) {
 
 func TestGetTotalShopOrder(t *testing.T) {
 	admin := createRandomAdmin(t)
+	createRandomShopOrder(t)
 
 	shopOrder2, err := testStore.GetTotalShopOrder(context.Background(), admin.ID)
 
@@ -289,4 +289,47 @@ func TestGetDailyOrderTotal(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, shopOrder2)
+}
+
+func TestAdminListShopOrdersV2(t *testing.T) {
+	admin := createRandomAdmin(t)
+	shopOrder := createRandomShopOrderForListV2(t)
+
+	fmt.Println(shopOrder.UserID)
+
+	arg := AdminListShopOrdersV2Params{
+		AdminID: admin.ID,
+		Limit:   10,
+	}
+
+	initialSearchResult, err := testStore.AdminListShopOrdersV2(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 10)
+
+	arg1 := AdminListShopOrdersNextPageParams{
+		AdminID:     admin.ID,
+		ShopOrderID: initialSearchResult[len(initialSearchResult)-1].ID,
+		Limit:       10,
+	}
+
+	secondPage, err := testStore.AdminListShopOrdersNextPage(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
+
+	arg2 := AdminListShopOrdersNextPageParams{
+		AdminID:     admin.ID,
+		ShopOrderID: secondPage[len(initialSearchResult)-1].ID,
+		Limit:       10,
+	}
+
+	thirdPage, err := testStore.AdminListShopOrdersNextPage(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, len(initialSearchResult), 10)
+	require.Greater(t, secondPage[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
+	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(secondPage)-1].ID)
 }
