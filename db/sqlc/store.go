@@ -11,6 +11,7 @@ type Store interface {
 	Querier
 	FinishedPurchaseTx(ctx context.Context, arg FinishedPurchaseTxParams) (FinishedPurchaseTxResult, error)
 	DeleteShopOrderItemTx(ctx context.Context, arg DeleteShopOrderItemTxParams) error
+	SignUpTx(ctx context.Context, arg SignUpTxParams) (SignUpTxResult, error)
 }
 
 // Store provides all functions to execute db queries and transactions

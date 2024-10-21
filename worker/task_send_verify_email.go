@@ -7,6 +7,7 @@ import (
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null/v5"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
 )
@@ -50,8 +51,8 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	}
 
 	verifyEmail, err := processor.store.CreateVerifyEmail(ctx, db.CreateVerifyEmailParams{
-		UserID:     user.ID,
-		Email:      user.Email,
+		UserID: null.IntFrom(user.ID),
+		// Email:      user.Email,
 		SecretCode: util.RandomString(32),
 	})
 	if err != nil {

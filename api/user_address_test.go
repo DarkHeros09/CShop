@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -40,6 +41,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "OK",
 			ID:   user.ID,
 			body: fiber.Map{
+				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -50,6 +52,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg1 := db.CreateAddressParams{
+					Telephone:   address.Telephone,
 					AddressLine: address.AddressLine,
 					Region:      address.Region,
 					City:        address.City,
@@ -84,6 +87,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "NoAuthorization",
 			ID:   user.ID,
 			body: fiber.Map{
+				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -106,6 +110,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "InternalError",
 			ID:   user.ID,
 			body: fiber.Map{
+				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -115,6 +120,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg1 := db.CreateAddressParams{
+					Telephone:   address.Telephone,
 					AddressLine: address.AddressLine,
 					Region:      address.Region,
 					City:        address.City,
@@ -137,6 +143,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "InvalidUserID",
 			ID:   0,
 			body: fiber.Map{
+				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
 				"city":         address.City,
@@ -168,9 +175,10 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -312,11 +320,12 @@ func TestGetUserAddressAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			emailSender := mockemail.NewMockEmailSender(ctrl)
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, emailSender)
 			// //recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
@@ -481,9 +490,10 @@ func TestListUsersAddressAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			// //recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/addresses", tc.ID)
@@ -660,9 +670,10 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			// //recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -792,12 +803,13 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			// //recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/addresses/%d", tc.ID, tc.AddressID)
@@ -823,11 +835,11 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		ID:        util.RandomMoney(),
-		Username:  util.RandomUser(),
-		Email:     util.RandomEmail(),
-		Password:  hashedPassword,
-		Telephone: int32(util.RandomInt(910000000, 929999999)),
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Email:    util.RandomEmail(),
+		Password: hashedPassword,
+		// Telephone: int32(util.RandomInt(910000000, 929999999)),
 	}
 	return
 }
@@ -835,6 +847,7 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 func createRandomAddress() (address db.Address) {
 	address = db.Address{
 		ID:          util.RandomMoney(),
+		Telephone:   int32(util.RandomInt(910000000, 929999999)),
 		AddressLine: util.RandomUser(),
 		Region:      util.RandomUser(),
 		City:        util.RandomUser(),

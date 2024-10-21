@@ -20,39 +20,41 @@ import (
 //////////////* Create API //////////////
 
 type createUserRequest struct {
-	//alphanum
-	Username  string `json:"username" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=6"`
-	Telephone int32  `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
+	//alphanumunicode
+	Username string `json:"username" validate:"required,alphanumunicode"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+	// Telephone int32  `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
 	// FcmToken  string `json:"fcm_token" validate:"omitempty,required"`
 	// DeviceID  string `json:"device_id" validate:"omitempty,required"`
 }
 
 type userResponse struct {
-	UserID         int64  `json:"id"`
-	Username       string `json:"username"`
-	Email          string `json:"email"`
-	Telephone      int32  `json:"telephone"`
-	ShoppingCartID int64  `json:"cart_id"`
-	WishListID     int64  `json:"wish_id"`
+	UserID   int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	// Telephone      int32  `json:"telephone"`
+	ShoppingCartID  int64 `json:"cart_id"`
+	WishListID      int64 `json:"wish_id"`
+	IsBlocked       bool  `json:"is_blocked"`
+	IsEmailVerified bool  `json:"is_email_verified"`
 }
 
 func newUserResponse(user db.User) userResponse {
 	return userResponse{
-		UserID:    user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		Telephone: user.Telephone,
+		UserID:   user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		// Telephone: user.Telephone,
 	}
 }
 
 func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userResponse {
 	return userResponse{
-		UserID:         user.ID,
-		Username:       user.Username,
-		Email:          user.Email,
-		Telephone:      user.Telephone,
+		UserID:   user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		// Telephone:      user.Telephone,
 		ShoppingCartID: user.ShoppingCartID,
 		WishListID:     user.WishListID,
 	}
@@ -82,10 +84,10 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.CreateUserWithCartAndWishListParams{
-		Username:  req.Username,
-		Email:     req.Email,
-		Password:  hashedPassword,
-		Telephone: req.Telephone,
+		Username: req.Username,
+		Email:    req.Email,
+		Password: hashedPassword,
+		// Telephone: req.Telephone,
 	}
 
 	user, err := server.store.CreateUserWithCartAndWishList(ctx.Context(), arg)
@@ -159,6 +161,268 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 	}
 
 	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
+}
+
+//////////////* SignUpV2 API //////////////
+
+func (server *Server) signUp(ctx *fiber.Ctx) error {
+	req := &createUserRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	// check if user already exists
+	checkUser, err := server.store.GetVerifyEmailByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err != pgx.ErrNoRows {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	if checkUser.IsEmailVerified {
+		ctx.Status(fiber.StatusConflict).JSON(errorResponse(errors.New("email already exists")))
+		return nil
+	}
+
+	if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
+		ctx.Status(fiber.StatusConflict).JSON(errorResponse(errors.New("email already exists")))
+		return nil
+	}
+
+	err = server.store.DeleteUserByEmailNotVerified(ctx.Context(), checkUser.Email)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		} else if err != pgx.ErrNoRows {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.SignUpTxParams{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: hashedPassword,
+		// Telephone: req.Telephone,
+	}
+
+	user, err := server.store.SignUpTx(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return err
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	// send email
+	subject := "Verify your email"
+
+	content := "Please verify your email by entering the following code in the mobile app: " + user.SecretCode
+
+	to := []string{user.Email}
+
+	err = server.sender.SendEmail(
+		subject,
+		content,
+		to,
+		nil, nil, nil,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	createdUser := userResponse{
+		UserID:   user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		// Telephone: user.Telephone,
+		IsBlocked:       user.IsBlocked,
+		IsEmailVerified: user.IsEmailVerified,
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(createdUser)
+	return nil
+}
+
+// //////////////* Verify OTP API //////////////
+
+type verifyOTPJsonRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	OTP   string `json:"otp" validate:"required,numeric,len=6"`
+}
+
+func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
+	req := &verifyOTPJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.UpdateVerifyEmailParams{
+		Email:      req.Email,
+		SecretCode: req.OTP,
+	}
+
+	user, err := server.store.UpdateVerifyEmail(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	accessToken, accessPayload, err := server.userTokenMaker.CreateTokenForUser(
+		user.ID,
+		user.Username,
+		server.config.AccessTokenDuration,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	refreshToken, refreshPayload, err := server.userTokenMaker.CreateTokenForUser(
+		user.ID,
+		user.Username,
+		server.config.RefreshTokenDuration,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg1 := db.CreateUserSessionParams{
+		ID:           refreshPayload.ID,
+		UserID:       user.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    string(ctx.Context().UserAgent()),
+		ClientIp:     ctx.IP(),
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	}
+
+	userSession, err := server.store.CreateUserSession(ctx.Context(), arg1)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	userResponse := userResponse{
+		UserID:          user.ID,
+		Username:        user.Username,
+		Email:           user.Email,
+		IsBlocked:       user.IsBlocked,
+		IsEmailVerified: user.IsEmailVerified,
+		ShoppingCartID:  user.ShoppingCartID,
+		WishListID:      user.WishListID,
+	}
+
+	rsp := createUserResponse{
+		UserSessionID:         userSession.ID.String(),
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  userResponse,
+	}
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
+}
+
+// //////////////* Resend OTP API //////////////
+
+type resendOTPJsonRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+func (server *Server) resendOTP(ctx *fiber.Ctx) error {
+	req := &resendOTPJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	var secretCode string
+
+	// check if user already exists
+	checkUser, err := server.store.GetVerifyEmailByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err != pgx.ErrNoRows {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	if checkUser.IsEmailVerified {
+		ctx.Status(fiber.StatusConflict).JSON(errorResponse(errors.New("email already verified")))
+		return nil
+	}
+
+	if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
+		secretCode = checkUser.SecretCode
+	} else {
+		secretCode = util.GenerateOTP()
+
+		arg := db.CreateVerifyEmailParams{
+			UserID:     checkUser.UserID,
+			SecretCode: secretCode,
+		}
+		_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+		if err != nil {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	// send email
+	subject := "Verify your email"
+
+	content := "Please verify your email by entering the following code in the mobile app: " + secretCode
+
+	to := []string{req.Email}
+
+	err = server.sender.SendEmail(
+		subject,
+		content,
+		to,
+		nil, nil, nil,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "OTP sent successfully"})
 	return nil
 }
 
@@ -450,8 +714,8 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.UpdateUserParams{
-		ID:             authPayload.UserID,
-		Telephone:      null.IntFromPtr(req.Telephone),
+		ID: authPayload.UserID,
+		// Telephone:      null.IntFromPtr(req.Telephone),
 		DefaultPayment: null.IntFromPtr(req.DefaultPayment),
 	}
 
@@ -532,10 +796,12 @@ type loginUserResponse struct {
 
 func newUserLoginResponse(user db.GetUserByEmailRow) userResponse {
 	return userResponse{
-		UserID:         user.ID,
-		Username:       user.Username,
-		Email:          user.Email,
-		Telephone:      user.Telephone,
+		UserID:          user.ID,
+		Username:        user.Username,
+		Email:           user.Email,
+		IsBlocked:       user.IsBlocked,
+		IsEmailVerified: user.IsEmailVerified,
+		// Telephone:      user.Telephone,
 		ShoppingCartID: user.ShopCartID.Int64,
 		WishListID:     user.WishListID.Int64,
 	}
@@ -568,6 +834,65 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	err = util.CheckPassword(req.Password, user.Password)
 	if err != nil {
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	if !user.IsEmailVerified {
+		var secretCode string
+
+		// check if user already exists
+		checkUser, err := server.store.GetVerifyEmailByEmail(ctx.Context(), req.Email)
+		if err != nil {
+			if err != pgx.ErrNoRows {
+				ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+				return nil
+			}
+		}
+
+		if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
+			secretCode = checkUser.SecretCode
+		} else {
+			secretCode = util.GenerateOTP()
+
+			arg := db.CreateVerifyEmailParams{
+				UserID:     checkUser.UserID,
+				SecretCode: secretCode,
+			}
+			_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+			if err != nil {
+				ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+				return nil
+			}
+		}
+
+		// send email
+		subject := "Verify your email"
+
+		content := "Please verify your email by entering the following code in the mobile app: " + secretCode
+
+		to := []string{req.Email}
+
+		err = server.sender.SendEmail(
+			subject,
+			content,
+			to,
+			nil, nil, nil,
+		)
+		if err != nil {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+
+		createdUser := userResponse{
+			UserID:   user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			// Telephone: user.Telephone,
+			IsBlocked:       user.IsBlocked,
+			IsEmailVerified: user.IsEmailVerified,
+		}
+
+		ctx.Status(fiber.StatusPreconditionFailed).JSON(createdUser)
 		return nil
 	}
 
@@ -606,7 +931,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := loginUserResponse{
+	rsp := createUserResponse{
 		UserSessionID:         userSession.ID.String(),
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,

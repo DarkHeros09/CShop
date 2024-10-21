@@ -14,6 +14,7 @@ func createRandomAddress(t *testing.T) Address {
 	// defer goleak.VerifyNone(t)
 	arg := CreateAddressParams{
 		Name:        util.RandomString(5),
+		Telephone:   int32(util.RandomInt(910000000, 929999999)),
 		AddressLine: util.RandomString(5),
 		Region:      util.RandomString(5),
 		City:        util.RandomString(5),

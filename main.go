@@ -64,10 +64,12 @@ func main() {
 		UrlEndpoint: config.ImageKitUrlEndPoint,
 	})
 
+	sender := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
 	runTaskProcessor(ctx, waitGroup, config, redisOpt, store)
-	runFiberServer(config, store, fb, taskDistributor, ik)
+	runFiberServer(config, store, fb, taskDistributor, ik, sender)
 
 	err = waitGroup.Wait()
 	if err != nil {
@@ -111,8 +113,9 @@ func runFiberServer(
 	fb *firebase.App,
 	taskDistributor worker.TaskDistributor,
 	ik image.ImageKitManagement,
+	sender mail.EmailSender,
 ) {
-	server, err := api.NewServer(config, store, fb, taskDistributor, ik)
+	server, err := api.NewServer(config, store, fb, taskDistributor, ik, sender)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

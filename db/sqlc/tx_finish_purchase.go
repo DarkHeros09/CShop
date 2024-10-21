@@ -110,16 +110,16 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 
 			bestDiscount := discount(productItemAfterUpdate)
 
-			// discountValue := decimal.NewFromInt(bestDiscount)
+			// discountValue := udecimal.NewFromInt(bestDiscount)
 
-			// discountDecimal := decimal.NewFromInt(1).Sub(discountValue.Div(decimal.NewFromInt(100)))
+			// discountDecimal := udecimal.NewFromInt(1).Sub(discountValue.Div(udecimal.NewFromInt(100)))
 
-			// price, err := decimal.NewFromString(productItem.Price)
+			// price, err := udecimal.NewFromString(productItem.Price)
 			// if err != nil {
 			// 	return err
 			// }
 
-			// bestPrice := price.Mul(decimal.NewFromInt(int64(shopCartItems[i].Qty))).Mul(discountDecimal)
+			// bestPrice := price.Mul(udecimal.NewFromInt(int64(shopCartItems[i].Qty))).Mul(discountDecimal)
 
 			createdShopOrderItem, err := q.CreateShopOrderItem(ctx, CreateShopOrderItemParams{
 				ProductItemID:       shopCartItems[i].ProductItemID,

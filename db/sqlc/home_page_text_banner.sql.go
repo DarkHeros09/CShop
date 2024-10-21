@@ -12,34 +12,53 @@ import (
 )
 
 const createHomePageTextBanner = `-- name: CreateHomePageTextBanner :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
 INSERT INTO "home_page_text_banner" (
   name,
   description
-) VALUES (
-  $1, $2
-)
+) 
+SELECT $1, $2 FROM t1
+WHERE EXISTS (SELECT 1 FROM t1)
 RETURNING id, name, description
 `
 
 type CreateHomePageTextBannerParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	AdminID     int64  `json:"admin_id"`
 }
 
 func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error) {
-	row := q.db.QueryRow(ctx, createHomePageTextBanner, arg.Name, arg.Description)
+	row := q.db.QueryRow(ctx, createHomePageTextBanner, arg.Name, arg.Description, arg.AdminID)
 	var i HomePageTextBanner
 	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
 }
 
 const deleteHomePageTextBanner = `-- name: DeleteHomePageTextBanner :exec
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    )
 DELETE FROM "home_page_text_banner"
-WHERE id = $1
+WHERE "home_page_text_banner".id = $1
+AND EXISTS (SELECT 1 FROM t1)
 `
 
-func (q *Queries) DeleteHomePageTextBanner(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteHomePageTextBanner, id)
+type DeleteHomePageTextBannerParams struct {
+	ID      int64 `json:"id"`
+	AdminID int64 `json:"admin_id"`
+}
+
+func (q *Queries) DeleteHomePageTextBanner(ctx context.Context, arg DeleteHomePageTextBannerParams) error {
+	_, err := q.db.Exec(ctx, deleteHomePageTextBanner, arg.ID, arg.AdminID)
 	return err
 }
 
@@ -80,11 +99,18 @@ func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBa
 }
 
 const updateHomePageTextBanner = `-- name: UpdateHomePageTextBanner :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $4
+    AND active = TRUE
+    )
 UPDATE "home_page_text_banner"
 SET 
 name = COALESCE($1,name),
 description = COALESCE($2,description)
-WHERE id = $3
+WHERE "home_page_text_banner".id = $3
+AND EXISTS (SELECT 1 FROM t1)
 RETURNING id, name, description
 `
 
@@ -92,10 +118,16 @@ type UpdateHomePageTextBannerParams struct {
 	Name        null.String `json:"name"`
 	Description null.String `json:"description"`
 	ID          int64       `json:"id"`
+	AdminID     int64       `json:"admin_id"`
 }
 
 func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePageTextBannerParams) (HomePageTextBanner, error) {
-	row := q.db.QueryRow(ctx, updateHomePageTextBanner, arg.Name, arg.Description, arg.ID)
+	row := q.db.QueryRow(ctx, updateHomePageTextBanner,
+		arg.Name,
+		arg.Description,
+		arg.ID,
+		arg.AdminID,
+	)
 	var i HomePageTextBanner
 	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err

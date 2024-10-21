@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -96,12 +97,13 @@ func TestGetPromotionAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/promotions/%d", tc.PromotionID)
@@ -282,9 +284,10 @@ func TestCreatePromotionAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -402,9 +405,10 @@ func TestListPromotionsAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/promotions"
@@ -606,9 +610,10 @@ func TestUpdatePromotionAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -751,12 +756,13 @@ func TestDeletePromotionAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/promotions/%d", tc.AdminID, tc.PromotionID)

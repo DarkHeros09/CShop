@@ -40,6 +40,7 @@ func (server *Server) createHomePageTextBanner(ctx *fiber.Ctx) error {
 	arg := db.CreateHomePageTextBannerParams{
 		Name:        req.Name,
 		Description: req.Description,
+		AdminID:     authPayload.AdminID,
 	}
 
 	textBanner, err := server.store.CreateHomePageTextBanner(ctx.Context(), arg)
@@ -152,6 +153,7 @@ func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
 		ID:          params.HomePageTextBannerID,
 		Name:        null.StringFromPtr(req.Name),
 		Description: null.StringFromPtr(req.Description),
+		AdminID:     authPayload.AdminID,
 	}
 
 	textBanner, err := server.store.UpdateHomePageTextBanner(ctx.Context(), arg)
@@ -192,7 +194,12 @@ func (server *Server) deleteHomePageTextBanner(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	err := server.store.DeleteHomePageTextBanner(ctx.Context(), params.HomePageTextBannerID)
+	arg := db.DeleteHomePageTextBannerParams{
+		ID:      params.HomePageTextBannerID,
+		AdminID: authPayload.AdminID,
+	}
+
+	err := server.store.DeleteHomePageTextBanner(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

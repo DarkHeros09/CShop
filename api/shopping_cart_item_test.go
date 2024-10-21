@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -145,9 +146,10 @@ func TestCreateShoppingCartItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -271,9 +273,10 @@ func TestGetShoppingCartItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d/items", tc.UserID, tc.ShoppingCartID)
@@ -405,9 +408,10 @@ func TestListShoppingCartItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/carts/items", tc.UserID)
@@ -547,9 +551,10 @@ func TestUpdateShoppingCartItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -685,12 +690,13 @@ func TestDeleteShoppingCartItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// // Marshal body data to JSON
@@ -821,12 +827,13 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/carts/%d", tc.UserID, tc.ShoppingCartID)
@@ -989,9 +996,10 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -1018,11 +1026,11 @@ func randomSCIUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		ID:        util.RandomMoney(),
-		Username:  util.RandomUser(),
-		Password:  hashedPassword,
-		Telephone: int32(util.RandomInt(7, 7)),
-		Email:     util.RandomEmail(),
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Password: hashedPassword,
+		// Telephone: int32(util.RandomInt(7, 7)),
+		Email: util.RandomEmail(),
 	}
 	return
 }

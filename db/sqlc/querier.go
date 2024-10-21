@@ -48,6 +48,7 @@ type Querier interface {
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)
 	CreateAdminSession(ctx context.Context, arg CreateAdminSessionParams) (AdminSession, error)
 	CreateAdminType(ctx context.Context, adminType string) (AdminType, error)
+	CreateAppPolicy(ctx context.Context, arg CreateAppPolicyParams) (AppPolicy, error)
 	CreateBrandPromotion(ctx context.Context, arg CreateBrandPromotionParams) (BrandPromotion, error)
 	CreateCategoryPromotion(ctx context.Context, arg CreateCategoryPromotionParams) (CategoryPromotion, error)
 	CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error)
@@ -86,9 +87,10 @@ type Querier interface {
 	DeleteAdmin(ctx context.Context, id int64) error
 	DeleteAdminTypeByID(ctx context.Context, id int64) error
 	DeleteAdminTypeByType(ctx context.Context, adminType string) error
+	DeleteAppPolicy(ctx context.Context, arg DeleteAppPolicyParams) (AppPolicy, error)
 	DeleteBrandPromotion(ctx context.Context, arg DeleteBrandPromotionParams) error
 	DeleteCategoryPromotion(ctx context.Context, arg DeleteCategoryPromotionParams) error
-	DeleteHomePageTextBanner(ctx context.Context, id int64) error
+	DeleteHomePageTextBanner(ctx context.Context, arg DeleteHomePageTextBannerParams) error
 	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) (Notification, error)
 	DeleteNotificationAllByUser(ctx context.Context, userID int64) error
 	DeleteOrderStatus(ctx context.Context, id int64) error
@@ -138,6 +140,7 @@ type Querier interface {
 	// region,
 	// city From t1,t2;
 	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (UserAddress, error)
+	DeleteUserByEmailNotVerified(ctx context.Context, email string) error
 	DeleteUserReview(ctx context.Context, arg DeleteUserReviewParams) (UserReview, error)
 	DeleteVariation(ctx context.Context, id int64) error
 	DeleteVariationOption(ctx context.Context, id int64) error
@@ -159,6 +162,7 @@ type Querier interface {
 	GetAdminByEmail(ctx context.Context, email string) (Admin, error)
 	GetAdminSession(ctx context.Context, id uuid.UUID) (AdminSession, error)
 	GetAdminType(ctx context.Context, id int64) (AdminType, error)
+	GetAppPolicy(ctx context.Context) (AppPolicy, error)
 	GetBrandPromotion(ctx context.Context, arg GetBrandPromotionParams) (BrandPromotion, error)
 	GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error)
 	GetCompletedDailyOrderTotal(ctx context.Context, adminID int64) (string, error)
@@ -208,6 +212,8 @@ type Querier interface {
 	GetUserSession(ctx context.Context, id uuid.UUID) (UserSession, error)
 	GetVariation(ctx context.Context, id int64) (Variation, error)
 	GetVariationOption(ctx context.Context, id int64) (VariationOption, error)
+	GetVerifyEmail(ctx context.Context, id int64) (VerifyEmail, error)
+	GetVerifyEmailByEmail(ctx context.Context, email string) (GetVerifyEmailByEmailRow, error)
 	GetWishList(ctx context.Context, id int64) (WishList, error)
 	GetWishListByUserID(ctx context.Context, userID int64) (WishList, error)
 	GetWishListItem(ctx context.Context, id int64) (WishListItem, error)
@@ -316,6 +322,7 @@ type Querier interface {
 	UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error)
 	UpdateAdminSession(ctx context.Context, arg UpdateAdminSessionParams) (AdminSession, error)
 	UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error)
+	UpdateAppPolicy(ctx context.Context, arg UpdateAppPolicyParams) (AppPolicy, error)
 	UpdateBrandPromotion(ctx context.Context, arg UpdateBrandPromotionParams) (BrandPromotion, error)
 	UpdateCategoryPromotion(ctx context.Context, arg UpdateCategoryPromotionParams) (CategoryPromotion, error)
 	UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePageTextBannerParams) (HomePageTextBanner, error)
@@ -356,13 +363,14 @@ type Querier interface {
 	UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderItemParams) (ShopOrderItem, error)
 	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) (ShoppingCart, error)
 	UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (UpdateShoppingCartItemRow, error)
+	// telephone = COALESCE(sqlc.narg(telephone),telephone),
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (UserSession, error)
 	UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error)
 	UpdateVariationOption(ctx context.Context, arg UpdateVariationOptionParams) (VariationOption, error)
-	UpdateVerifyEmail(ctx context.Context, arg UpdateVerifyEmailParams) (VerifyEmail, error)
+	UpdateVerifyEmail(ctx context.Context, arg UpdateVerifyEmailParams) (UpdateVerifyEmailRow, error)
 	UpdateWishList(ctx context.Context, arg UpdateWishListParams) (WishList, error)
 	// WITH t1 AS (
 	//   SELECT user_id FROM "wish_list" AS wl

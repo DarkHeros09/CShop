@@ -11,6 +11,7 @@ import (
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	image "github.com/cshop/v3/image"
+	"github.com/cshop/v3/mail"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
@@ -28,6 +29,7 @@ type Server struct {
 	router          *fiber.App
 	taskDistributor worker.TaskDistributor
 	ik              image.ImageKitManagement
+	sender          mail.EmailSender
 }
 
 // NewServer creates a new HTTP server and setup routing.
@@ -37,6 +39,7 @@ func NewServer(
 	fb *firebase.App,
 	taskDistributor worker.TaskDistributor,
 	ik image.ImageKitManagement,
+	sender mail.EmailSender,
 ) (*Server, error) {
 	userTokenMaker, err := token.NewPasetoMaker(config.UserTokenSymmetricKey)
 	if err != nil {
@@ -55,6 +58,7 @@ func NewServer(
 		adminTokenMaker: adminTokenMaker,
 		taskDistributor: taskDistributor,
 		ik:              ik,
+		sender:          sender,
 	}
 
 	server.setupRouter()
@@ -103,6 +107,10 @@ func (server *Server) setupRouter() {
 	app.Post("/api/v1/users/reset-password", server.resetPassword)
 	app.Post("/api/v1/users/new-password", server.newPassword)
 
+	app.Post("/api/v1/users/signup", server.signUp)
+	app.Post("/api/v1/users/verify-otp", server.verifyOTP)
+	app.Post("/api/v1/users/resend-otp", server.resendOTP)
+
 	//* Admins
 	app.Post("/api/v1/admins/login", server.loginAdmin) //! For Admin Only
 
@@ -117,6 +125,8 @@ func (server *Server) setupRouter() {
 	//*HomePageTextBanner
 	app.Get("/api/v1/text-banners/:textBannerId", server.getHomePageTextBanner) //? no auth required
 	app.Get("/api/v1/text-banners", server.listHomePageTextBanners)             //? no auth required
+
+	app.Get("/api/v1/app-policy", server.getAppPolicy) //? no auth required
 
 	//*Products
 	app.Get("/api/v1/products/:productId", server.getProduct)                   //? no auth required
@@ -210,6 +220,10 @@ func (server *Server) setupRouter() {
 	userRouter.Get("/users/:id/notification/:deviceId", server.getNotification)
 	userRouter.Put("/users/:id/notification/:deviceId", server.updateNotification)
 	userRouter.Delete("/users/:id/notification/:deviceId", server.deleteNotification)
+
+	adminRouter.Post("/admins/:adminId/app-policy", server.createAppPolicy)       //! Admin Only
+	adminRouter.Put("/admins/:adminId/app-policy/:id", server.updateAppPolicy)    //! Admin Only
+	adminRouter.Delete("/admins/:adminId/app-policy/:id", server.deleteAppPolicy) //! Admin Only
 
 	adminRouter.Get("/admins/:adminId/users", server.listUsers) //! Admin Only
 	userRouter.Put("/users/:id", server.updateUser)

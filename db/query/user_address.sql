@@ -12,13 +12,14 @@ RETURNING *;
 WITH t1 AS (
   INSERT INTO "address" AS a (
     name,
+    telephone,
     address_line,
     region,
     city
     ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
     )
-   RETURNING a.id, a.name, a.address_line, a.region, a.city
+   RETURNING a.id, a.name, a.telephone, a.address_line, a.region, a.city
   ),
 
   t2 AS ( 
@@ -27,9 +28,9 @@ WITH t1 AS (
     address_id,
     default_address
     ) VALUES 
-    ( $5,
+    ( $6,
     (SELECT id FROM t1),
-      $6
+      $7
     ) 
   RETURNING *
   )
@@ -39,6 +40,7 @@ user_id,
 address_id,
 default_address,
 "name",
+telephone,
 address_line,
 region,
 city 

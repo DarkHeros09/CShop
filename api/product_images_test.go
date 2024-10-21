@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -164,9 +165,10 @@ func TestCreateProductImagesAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -260,9 +262,10 @@ func TestListProductImagesV2API(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/images-v2"
@@ -371,9 +374,10 @@ func TestListProductImagesNextPageAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/images-next-page"
@@ -551,9 +555,10 @@ func TestUpdateProductImageAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON

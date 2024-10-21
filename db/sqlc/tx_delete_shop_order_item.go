@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/guregu/null/v5"
-	"github.com/shopspring/decimal"
+	"github.com/quagmt/udecimal"
 )
 
 // DeleteShopOrderItemTx contains the input parameters of the purchase transaction
@@ -36,21 +36,44 @@ func (store *SQLStore) DeleteShopOrderItemTx(ctx context.Context, arg DeleteShop
 			return err
 		}
 
-		deletedShopOrderItemPrice, err := decimal.NewFromString(deletedShopOrderItem.Price)
+		deletedShopOrderItemPrice, err := udecimal.Parse(deletedShopOrderItem.Price)
 		if err != nil {
 			return err
 		}
 
-		deletedShopOrderItemDiscount := decimal.NewFromInt(int64(deletedShopOrderItem.Discount))
-
-		shopOrderTotalPrice, err := decimal.NewFromString(shopOrder.OrderTotal)
+		deletedShopOrderItemDiscount, err := udecimal.NewFromInt64(int64(deletedShopOrderItem.Discount), 2)
 		if err != nil {
 			return err
 		}
 
-		discountDecimal := decimal.NewFromInt(1).Sub(deletedShopOrderItemDiscount.Div(decimal.NewFromInt(100)))
+		shopOrderTotalPrice, err := udecimal.Parse(shopOrder.OrderTotal)
+		if err != nil {
+			return err
+		}
 
-		newTotalPrice := shopOrderTotalPrice.Sub(deletedShopOrderItemPrice.Mul(decimal.NewFromInt(int64(deletedShopOrderItem.Quantity))).Mul(discountDecimal))
+		diviBy100, err := udecimal.NewFromInt64(100, 2)
+		if err != nil {
+			return err
+		}
+
+		one, err := udecimal.NewFromInt64(1, 2)
+		if err != nil {
+			return err
+		}
+
+		divResult, err := deletedShopOrderItemDiscount.Div(diviBy100)
+		if err != nil {
+			return err
+		}
+
+		discountDecimal := one.Sub(divResult)
+
+		qunt, err := udecimal.NewFromInt64(int64(deletedShopOrderItem.Quantity), 2)
+		if err != nil {
+			return err
+		}
+
+		newTotalPrice := shopOrderTotalPrice.Sub(deletedShopOrderItemPrice.Mul(qunt).Mul(discountDecimal))
 
 		_, err = q.UpdateShopOrder(ctx, UpdateShopOrderParams{
 			AdminID:    arg.AdminID,

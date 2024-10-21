@@ -1,11 +1,12 @@
 -- name: CreateAddress :one
 INSERT INTO "address" (
   name,
+  telephone,
   address_line,
   region,
   city
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -34,6 +35,7 @@ OFFSET $3;
 UPDATE "address"
 SET 
 name = COALESCE(sqlc.narg(name),name),
+telephone = COALESCE(sqlc.narg(telephone),telephone),
 address_line = COALESCE(sqlc.narg(address_line),address_line),
 region = COALESCE(sqlc.narg(region),region),
 city = COALESCE(sqlc.narg(city),city),

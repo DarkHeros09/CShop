@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -112,12 +113,13 @@ func TestGetHomePageTextBannerAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/text-banners/%d", tc.HomePageTextBannerID)
@@ -161,6 +163,7 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 				arg := db.CreateHomePageTextBannerParams{
 					Name:        textBanner.Name,
 					Description: textBanner.Description,
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -186,6 +189,7 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 				arg := db.CreateHomePageTextBannerParams{
 					Name:        textBanner.Name,
 					Description: textBanner.Description,
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -211,6 +215,7 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 				arg := db.CreateHomePageTextBannerParams{
 					Name:        textBanner.Name,
 					Description: textBanner.Description,
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -271,9 +276,10 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -344,9 +350,10 @@ func TestListHomePageTextBannersAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := "/api/v1/text-banners"
@@ -399,6 +406,7 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 					ID:          textBanner.ID,
 					Name:        null.StringFrom(changedName),
 					Description: null.StringFrom(textBanner.Description),
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -427,6 +435,7 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 					ID:          textBanner.ID,
 					Name:        null.StringFrom(changedName),
 					Description: null.StringFrom(textBanner.Description),
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -453,6 +462,7 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 					ID:          textBanner.ID,
 					Name:        null.StringFrom(changedName),
 					Description: null.StringFrom(textBanner.Description),
+					AdminID:     admin.ID,
 				}
 
 				store.EXPECT().
@@ -479,6 +489,7 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 					ID:          textBanner.ID,
 					Name:        null.StringFrom(changedName),
 					Description: null.StringFrom(textBanner.Description),
+					AdminID:     admin.ID,
 				}
 				store.EXPECT().
 					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
@@ -520,9 +531,10 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -563,12 +575,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				// arg := db.DeleteHomePageTextBannerParams{
-				// 	HomePageTextBannerID:     textBanner.ID,
-
-				// }
+				arg := db.DeleteHomePageTextBannerParams{
+					ID:      textBanner.ID,
+					AdminID: admin.ID,
+				}
 				store.EXPECT().
-					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(nil)
 			},
@@ -585,12 +597,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, 2, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				// arg := db.DeleteHomePageTextBannerParams{
-				// 	HomePageTextBannerID:     textBanner.ID,
-
-				// }
+				arg := db.DeleteHomePageTextBannerParams{
+					ID:      textBanner.ID,
+					AdminID: admin.ID,
+				}
 				store.EXPECT().
-					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -605,12 +617,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				// arg := db.DeleteHomePageTextBannerParams{
-				// 	HomePageTextBannerID:     textBanner.ID,
-
-				// }
+				arg := db.DeleteHomePageTextBannerParams{
+					ID:      textBanner.ID,
+					AdminID: admin.ID,
+				}
 				store.EXPECT().
-					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -626,12 +638,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				// arg := db.DeleteHomePageTextBannerParams{
-				// 	HomePageTextBannerID:     textBanner.ID,
-
-				// }
+				arg := db.DeleteHomePageTextBannerParams{
+					ID:      textBanner.ID,
+					AdminID: admin.ID,
+				}
 				store.EXPECT().
-					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrNoRows)
 			},
@@ -648,12 +660,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				// arg := db.DeleteHomePageTextBannerParams{
-				// 	HomePageTextBannerID:     textBanner.ID,
-
-				// }
+				arg := db.DeleteHomePageTextBannerParams{
+					ID:      textBanner.ID,
+					AdminID: admin.ID,
+				}
 				store.EXPECT().
-					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
+					DeleteHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(pgx.ErrTxClosed)
 			},
@@ -689,12 +701,13 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/text-banners/%d", tc.AdminID, tc.HomePageTextBannerID)

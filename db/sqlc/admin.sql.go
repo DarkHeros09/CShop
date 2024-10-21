@@ -149,7 +149,7 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin
 const updateAdmin = `-- name: UpdateAdmin :one
 UPDATE "admin"
 SET active = $2,
-updated_at = now()
+updated_at = NOW()
 WHERE id = $1
 RETURNING id, username, email, password, active, type_id, created_at, updated_at, last_login
 `

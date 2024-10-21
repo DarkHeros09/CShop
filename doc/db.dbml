@@ -8,7 +8,7 @@ Project Classic_Shop {
 /// Creating tables
 // ADMIN
 Table admin_type as ADT{
-  id bigserial [pk, not null, ref: - AD.type_id]// auto-increment
+  id bigserial [pk, not null, ref: < AD.type_id]// auto-increment
   admin_type varchar [not null, unique]
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
@@ -44,7 +44,7 @@ Table user as U {
   username varchar [not null]
   email varchar [not null, unique]
   password varchar [not null]
-  telephone int [not null, default: 0]
+  // telephone int [not null, default: 0]
   is_blocked boolean [not null, default: false]
   is_email_verified boolean [not null, default: false]
   default_payment bigint
@@ -54,19 +54,21 @@ Table user as U {
   indexes {
     username
     email
-    telephone
+    // telephone
   }
 }
 
-Table verify_emails as VE {
+Table verify_email as VE {
   id bigserial [pk]
-  user_id bigint [ref: > U.id, not null]
-  email varchar [not null]
+  user_id bigint
+  // email varchar [not null]
   secret_code varchar [not null]
   is_used bool [not null, default: false]
   created_at timestamptz [not null, default: `now()`]
   expired_at timestamptz [not null, default: `now() + interval '15 minutes'`]
 }
+
+Ref: VE.user_id > U.id [not null, delete: set null]
 
 Table reset_passwords as RP {
   id bigserial [pk]
@@ -98,9 +100,17 @@ Table notification as N {
   updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z'] 
 }
 
+Table app_policy as AP {
+  id bigserial [pk]
+  policy varchar
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z'] 
+}
+
 Table address as A {
   id bigserial [pk,not null] // auto-increment
   name varchar [not null]
+  telephone int [not null]
   address_line varchar [not null]
   region varchar [not null]
   city varchar [not null]

@@ -12,6 +12,7 @@ import (
 	mockdb "github.com/cshop/v3/db/mock"
 	db "github.com/cshop/v3/db/sqlc"
 	mockik "github.com/cshop/v3/image/mock"
+	mockemail "github.com/cshop/v3/mail/mock"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
@@ -135,9 +136,10 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -278,11 +280,12 @@ func TestGetShippingMethodAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			emailSender := mockemail.NewMockEmailSender(ctrl)
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, emailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/shipping-method/%d", tc.UserID, tc.ID)
@@ -420,9 +423,10 @@ func TestListShippingMethodAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/usr/v1/users/%d/shipping-method", tc.UserID)
@@ -563,9 +567,10 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -681,12 +686,13 @@ func TestDeleteShippingMethodAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			worker := mockwk.NewMockTaskDistributor(ctrl)
 			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
 
 			// build stubs
 			tc.buildStub(store)
 
 			// start test server and send request
-			server := newTestServer(t, store, worker, ik)
+			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/admin/v1/admins/%d/shipping-method/%d", tc.AdminID, tc.ID)
@@ -711,11 +717,11 @@ func randomSMUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		ID:        util.RandomMoney(),
-		Username:  util.RandomUser(),
-		Email:     util.RandomEmail(),
-		Password:  hashedPassword,
-		Telephone: int32(util.RandomInt(910000000, 929999999)),
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Email:    util.RandomEmail(),
+		Password: hashedPassword,
+		// Telephone: int32(util.RandomInt(910000000, 929999999)),
 	}
 	return
 }

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shopspring/decimal"
+	"github.com/quagmt/udecimal"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -20,15 +20,35 @@ func RandomInt(min, max int64) int64 {
 	return min + rand.Int63n(max-min+1)
 }
 
+func GenerateOTP() string {
+
+	otpChars := "0123456789"
+	otpCharsLength := len(otpChars)
+	var otp strings.Builder
+
+	// Pre-allocate space for a 6-character OTP
+	otp.Grow(6)
+
+	// Generate OTP
+	for i := 0; i < 6; i++ {
+		otp.WriteByte(otpChars[rand.Intn(otpCharsLength)])
+	}
+
+	return otp.String()
+
+}
+
 // Random generate a random decimal between min and max
 func RandomDecimalString(min, max float64) string {
 	rF64 := min + rand.Float64()*(max-min)
-	return decimal.NewFromFloat(rF64).Abs().StringFixed(2)
+	decimal, _ := udecimal.NewFromFloat64(rF64)
+	return decimal.Abs().RoundBank(2).String()
 }
 
-func RandomDecimal(min, max float64) decimal.Decimal {
+func RandomDecimal(min, max float64) udecimal.Decimal {
 	rF64 := min + rand.Float64()*(max-min)
-	return decimal.NewFromFloat(rF64).Abs().Round(2)
+	decimal, _ := udecimal.NewFromFloat64(rF64)
+	return decimal.Abs().RoundBank(2)
 }
 
 func RandomString(n int) string {

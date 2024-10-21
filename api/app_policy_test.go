@@ -23,59 +23,56 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestCreateNotificationAPI(t *testing.T) {
-	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(user)
+func TestCreateAppPolicyAPI(t *testing.T) {
+	admin, _ := randomAppPolicySuperAdmin(t)
+	appPolicy := createRandomAppPolicy()
 
 	testCases := []struct {
 		name          string
 		body          fiber.Map
-		UserID        int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:   "OK",
-			UserID: user.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-					FcmToken: notification.FcmToken,
+				arg := db.CreateAppPolicyParams{
+					AdminID: admin.ID,
+					Policy:  appPolicy.Policy,
 				}
 
 				store.EXPECT().
-					CreateNotification(gomock.Any(), gomock.Eq(arg)).
+					CreateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(notification, nil)
+					Return(appPolicy, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchNotification(t, rsp.Body, notification)
+				requireBodyMatchAppPolicy(t, rsp.Body, appPolicy)
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			UserID: user.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					CreateNotification(gomock.Any(), gomock.Any()).
+					CreateAppPolicy(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -83,46 +80,43 @@ func TestCreateNotificationAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: user.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-					FcmToken: notification.FcmToken,
+				arg := db.CreateAppPolicyParams{
+					AdminID: admin.ID,
+					Policy:  appPolicy.Policy,
 				}
 
 				store.EXPECT().
-					CreateNotification(gomock.Any(), gomock.Eq(arg)).
+					CreateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(db.AppPolicy{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:   "InvalidUserID",
-			UserID: 0,
+			name:    "InvalidAdminID",
+			AdminID: 0,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					CreateNotification(gomock.Any(), gomock.Any()).
+					CreateAppPolicy(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -150,11 +144,11 @@ func TestCreateNotificationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/notification", tc.UserID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/app-policy", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.userTokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)
@@ -164,95 +158,27 @@ func TestCreateNotificationAPI(t *testing.T) {
 	}
 }
 
-func TestGetNotificationAPI(t *testing.T) {
-	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(user)
+func TestGetAppPolicyAPI(t *testing.T) {
+	appPolicy := createRandomAppPolicy()
 
 	testCases := []struct {
 		name          string
-		UserID        int64
-		DeviceID      string
-		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:     "OK",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
-			},
+			name: "OK",
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.GetNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-				}
-
 				store.EXPECT().
-					GetNotification(gomock.Any(), gomock.Eq(arg)).
+					GetAppPolicy(gomock.Any()).
 					Times(1).
-					Return(notification, nil)
+					Return(appPolicy, nil)
 
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchNotification(t, rsp.Body, notification)
-			},
-		},
-		{
-			name:     "NoAuthorization",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetNotification(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
-			},
-		},
-		{
-			name:     "InternalError",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.GetNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-				}
-
-				store.EXPECT().
-					GetNotification(gomock.Any(), gomock.Eq(arg)).
-					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
-
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
-			},
-		},
-		{
-			name:     "InvalidUserID",
-			DeviceID: notification.DeviceID.String,
-			UserID:   0,
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					GetNotification(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+				requireBodyMatchAppPolicy(t, rsp.Body, appPolicy)
 			},
 		},
 	}
@@ -272,11 +198,10 @@ func TestGetNotificationAPI(t *testing.T) {
 			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/usr/v1/users/%d/notification/%s", tc.UserID, tc.DeviceID)
+			url := fmt.Sprintf("/api/v1/app-policy")
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.userTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)
@@ -286,59 +211,58 @@ func TestGetNotificationAPI(t *testing.T) {
 	}
 }
 
-func TestUpdateNotificationAPI(t *testing.T) {
-	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(user)
-	fcmToken := util.RandomString(10)
+func TestUpdateAppPolicyAPI(t *testing.T) {
+	admin, _ := randomAppPolicySuperAdmin(t)
+	appPolicy := createRandomAppPolicy()
 
 	testCases := []struct {
 		name          string
-		DeviceID      string
-		UserID        int64
+		AdminID       int64
+		ID            int64
 		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:     "OK",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
+			name:    "OK",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.UpdateNotificationParams{
-					DeviceID: notification.DeviceID,
-					UserID:   user.ID,
-					FcmToken: null.StringFrom(fcmToken),
+				arg := db.UpdateAppPolicyParams{
+					ID:      appPolicy.ID,
+					AdminID: admin.ID,
+					Policy:  appPolicy.Policy,
 				}
 
 				store.EXPECT().
-					UpdateNotification(gomock.Any(), gomock.Eq(arg)).
+					UpdateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(notification, nil)
+					Return(appPolicy, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:     "NoAuthorization",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateNotification(gomock.Any(), gomock.Any()).
+					UpdateAppPolicy(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -346,26 +270,26 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			},
 		},
 		{
-			name:     "InternalError",
-			DeviceID: notification.DeviceID.String,
-			UserID:   user.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"policy": appPolicy.Policy.String,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateNotificationParams{
-					DeviceID: notification.DeviceID,
-					UserID:   user.ID,
-					FcmToken: null.StringFrom(fcmToken),
+				arg := db.UpdateAppPolicyParams{
+					ID:      appPolicy.ID,
+					AdminID: admin.ID,
+					Policy:  appPolicy.Policy,
 				}
 
 				store.EXPECT().
-					UpdateNotification(gomock.Any(), gomock.Eq(arg)).
+					UpdateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(db.AppPolicy{}, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -373,14 +297,14 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			},
 		},
 		{
-			name:     "InvalidDeviceID",
-			DeviceID: notification.DeviceID.String,
+			name: "InvalidID",
+			ID:   0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateNotification(gomock.Any(), gomock.Any()).
+					UpdateAppPolicy(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -409,11 +333,11 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/notification/%s", tc.UserID, tc.DeviceID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/app-policy/%d", tc.AdminID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.userTokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)
@@ -423,94 +347,94 @@ func TestUpdateNotificationAPI(t *testing.T) {
 	}
 }
 
-func TestDeleteNotificationAPI(t *testing.T) {
-	user, _ := randomNotificationUser(t)
-	notification := createRandomNotification(user)
+func TestDeleteAppPolicyAPI(t *testing.T) {
+	admin, _ := randomAppPolicySuperAdmin(t)
+	appPolicy := createRandomAppPolicy()
 
 	testCases := []struct {
 		name          string
-		DeviceID      string
-		UserID        int64
+		ID            int64
+		AdminID       int64
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStub     func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, rsp *http.Response)
 	}{
 		{
-			name:     "OK",
-			UserID:   user.ID,
-			DeviceID: notification.DeviceID.String,
+			name:    "OK",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteNotificationParams{
-					UserID:   notification.UserID,
-					DeviceID: notification.DeviceID,
+				arg := db.DeleteAppPolicyParams{
+					AdminID: admin.ID,
+					ID:      appPolicy.ID,
 				}
 
 				store.EXPECT().
-					DeleteNotification(gomock.Any(), gomock.Eq(arg)).
+					DeleteAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(notification, nil)
+					Return(appPolicy, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
 			},
 		},
 		{
-			name:     "NotFound",
-			UserID:   user.ID,
-			DeviceID: notification.DeviceID.String,
+			name:    "NotFound",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteNotificationParams{
-					UserID:   notification.UserID,
-					DeviceID: notification.DeviceID,
+				arg := db.DeleteAppPolicyParams{
+					AdminID: admin.ID,
+					ID:      appPolicy.ID,
 				}
 
 				store.EXPECT().
-					DeleteNotification(gomock.Any(), gomock.Eq(arg)).
+					DeleteAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrNoRows)
+					Return(db.AppPolicy{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
-			name:     "InternalError",
-			UserID:   user.ID,
-			DeviceID: notification.DeviceID.String,
+			name:    "InternalError",
+			AdminID: admin.ID,
+			ID:      appPolicy.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.DeleteNotificationParams{
-					UserID:   notification.UserID,
-					DeviceID: notification.DeviceID,
+				arg := db.DeleteAppPolicyParams{
+					AdminID: admin.ID,
+					ID:      appPolicy.ID,
 				}
 
 				store.EXPECT().
-					DeleteNotification(gomock.Any(), gomock.Eq(arg)).
+					DeleteAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(db.AppPolicy{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
 			},
 		},
 		{
-			name:     "InvalidID",
-			UserID:   0,
-			DeviceID: notification.DeviceID.String,
+			name:    "InvalidID",
+			AdminID: admin.ID,
+			ID:      0,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					DeleteNotification(gomock.Any(), gomock.Any()).
+					DeleteAppPolicy(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -542,11 +466,11 @@ func TestDeleteNotificationAPI(t *testing.T) {
 			// data, err := json.Marshal(tc.body)
 			// require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/notification/%s", tc.UserID, tc.DeviceID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/app-policy/%d", tc.AdminID, tc.ID)
 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.userTokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)
@@ -558,39 +482,37 @@ func TestDeleteNotificationAPI(t *testing.T) {
 
 }
 
-// func TestDeleteNotificationAllByUserAPI(t *testing.T) {
-// 	user, _ := randomNotificationUser(t)
-// 	shoppingCart := createRandomShoppingCart(t, user)
-// 	notification := createRandomNotification( shoppingCart)
+// func TestDeleteAppPolicyAllByUserAPI(t *testing.T) {
+// 	admin, _ := randomAppPolicyUser(t)
+// 	shoppingCart := createRandomShoppingCart(t, admin)
+// 	appPolicy := createRandomAppPolicy( shoppingCart)
 
-// 	var NotificationList []db.Notification
-// 	NotificationList = append(NotificationList, notification...)
+// 	var AppPolicyList []db.AppPolicy
+// 	AppPolicyList = append(AppPolicyList, appPolicy...)
 
 // 	testCases := []struct {
 // 		name           string
-// 		UserID         int64
-// 		DeviceID int64
+// 		AdminID         int64
+// 		ID int64
 // 		setupAuth      func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 // 		buildStub      func(store *mockdb.MockStore)
 // 		checkResponse  func(t *testing.T, rsp *http.Response)
 // 	}{
 // 		{
 // 			name:           "OK",
-// 			UserID:         user.ID,
-// 			DeviceID: notification.DeviceID.String,
-// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+// 			AdminID:         admin.ID,
+// // 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, time.Minute)
 // 			},
 // 			buildStub: func(store *mockdb.MockStore) {
 
-// 				arg := db.DeleteNotificationAllByUserParams{
-// 					UserID:         user.ID,
-// 					DeviceID: notification.DeviceID.String,
-// 				}
+// 				arg := db.DeleteAppPolicyAllByUserParams{
+// 					AdminID:         admin.ID,
+// 		// 				}
 // 				store.EXPECT().
-// 					DeleteNotificationAllByUser(gomock.Any(), gomock.Eq(arg)).
+// 					DeleteAppPolicyAllByUser(gomock.Any(), gomock.Eq(arg)).
 // 					Times(1).
-// 					Return(notificationList, nil)
+// 					Return(appPolicyList, nil)
 // 			},
 // 			checkResponse: func(t *testing.T, rsp *http.Response) {
 // 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -598,20 +520,18 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 		},
 // 		{
 // 			name:           "NotFound",
-// 			UserID:         user.ID,
-// 			DeviceID: notification.DeviceID.String,
-// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+// 			AdminID:         admin.ID,
+// // 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, time.Minute)
 // 			},
 // 			buildStub: func(store *mockdb.MockStore) {
-// 				arg := db.DeleteNotificationAllByUserParams{
-// 					UserID:         user.ID,
-// 					DeviceID: notification.DeviceID.String,
-// 				}
+// 				arg := db.DeleteAppPolicyAllByUserParams{
+// 					AdminID:         admin.ID,
+// 		// 				}
 // 				store.EXPECT().
-// 					DeleteNotificationAllByUser(gomock.Any(), gomock.Eq(arg)).
+// 					DeleteAppPolicyAllByUser(gomock.Any(), gomock.Eq(arg)).
 // 					Times(1).
-// 					Return([]db.Notification{}, pgx.ErrNoRows)
+// 					Return([]db.AppPolicy{}, pgx.ErrNoRows)
 // 			},
 // 			checkResponse: func(t *testing.T, rsp *http.Response) {
 // 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -619,20 +539,18 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 		},
 // 		{
 // 			name:           "InternalError",
-// 			UserID:         user.ID,
-// 			DeviceID: notification.DeviceID.String,
-// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+// 			AdminID:         admin.ID,
+// // 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, time.Minute)
 // 			},
 // 			buildStub: func(store *mockdb.MockStore) {
-// 				arg := db.DeleteNotificationAllByUserParams{
-// 					UserID:         user.ID,
-// 					DeviceID: notification.DeviceID.String,
-// 				}
+// 				arg := db.DeleteAppPolicyAllByUserParams{
+// 					AdminID:         admin.ID,
+// 		// 				}
 // 				store.EXPECT().
-// 					DeleteNotificationAllByUser(gomock.Any(), gomock.Eq(arg)).
+// 					DeleteAppPolicyAllByUser(gomock.Any(), gomock.Eq(arg)).
 // 					Times(1).
-// 					Return([]db.Notification{}, pgx.ErrTxClosed)
+// 					Return([]db.AppPolicy{}, pgx.ErrTxClosed)
 // 			},
 // 			checkResponse: func(t *testing.T, rsp *http.Response) {
 // 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -640,14 +558,13 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 		},
 // 		{
 // 			name:           "InvalidID",
-// 			UserID:         0,
-// 			DeviceID: notification.DeviceID.String,
-// 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+// 			AdminID:         0,
+// // 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+// 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, time.Minute)
 // 			},
 // 			buildStub: func(store *mockdb.MockStore) {
 // 				store.EXPECT().
-// 					DeleteNotification(gomock.Any(), gomock.Any()).
+// 					DeleteAppPolicy(gomock.Any(), gomock.Any()).
 // 					Times(0)
 
 // 			},
@@ -673,11 +590,11 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 			server := newTestServer(t, store, worker,ik)
 // 			//recorder := httptest.NewRecorder()
 
-// 			url := fmt.Sprintf("/usr/v1/users/%d/notification/%d", tc.UserID, tc.DeviceID)
+// 			url := fmt.Sprintf("/admin/v1/admins/%d/app-policy/%d", tc.AdminID, tc.ID)
 // 			request, err := http.NewRequest(fiber.MethodDelete, url, nil)
 // 			require.NoError(t, err)
 
-// 			tc.setupAuth(t, request, server.userTokenMaker)
+// 			tc.setupAuth(t, request, server.adminTokenMaker)
 // 			request.Header.Set("Content-Type", "application/json")
 
 // 			rsp, err := server.router.Test(request)
@@ -689,12 +606,12 @@ func TestDeleteNotificationAPI(t *testing.T) {
 
 // }
 
-func randomNotificationUser(t *testing.T) (user db.User, password string) {
+func randomAppPolicyUser(t *testing.T) (admin db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.User{
+	admin = db.User{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -703,27 +620,39 @@ func randomNotificationUser(t *testing.T) (user db.User, password string) {
 	}
 	return
 }
+func randomAppPolicySuperAdmin(t *testing.T) (admin db.Admin, password string) {
+	password = util.RandomString(6)
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
 
-func createRandomNotification(user db.User) (Notification db.Notification) {
-	Notification = db.Notification{
-		UserID:   user.ID,
-		DeviceID: null.StringFrom(util.RandomString(10)),
-		FcmToken: null.StringFrom(util.RandomString(10)),
+	admin = db.Admin{
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Email:    util.RandomEmail(),
+		Password: hashedPassword,
+		Active:   true,
+		TypeID:   1,
 	}
 	return
 }
 
-func requireBodyMatchNotification(t *testing.T, body io.ReadCloser, notification db.Notification) {
+func createRandomAppPolicy() (AppPolicy db.AppPolicy) {
+	AppPolicy = db.AppPolicy{
+		ID:     util.RandomMoney(),
+		Policy: null.StringFrom(util.RandomString(10)),
+	}
+	return
+}
+
+func requireBodyMatchAppPolicy(t *testing.T, body io.ReadCloser, appPolicy db.AppPolicy) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotNotification db.Notification
-	err = json.Unmarshal(data, &gotNotification)
+	var gotAppPolicy db.AppPolicy
+	err = json.Unmarshal(data, &gotAppPolicy)
 
 	require.NoError(t, err)
-	require.Equal(t, notification.UserID, gotNotification.UserID)
-	require.Equal(t, notification.DeviceID, gotNotification.DeviceID)
-	require.Equal(t, notification.FcmToken, gotNotification.FcmToken)
-	require.Equal(t, notification.CreatedAt, gotNotification.CreatedAt)
-	require.Equal(t, notification.CreatedAt, gotNotification.CreatedAt)
+	require.Equal(t, appPolicy.Policy, gotAppPolicy.Policy)
+	require.Equal(t, appPolicy.CreatedAt, gotAppPolicy.CreatedAt)
+	require.Equal(t, appPolicy.CreatedAt, gotAppPolicy.CreatedAt)
 }

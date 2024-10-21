@@ -10,6 +10,7 @@ import (
 	firebase "firebase.google.com/go"
 	db "github.com/cshop/v3/db/sqlc"
 	image "github.com/cshop/v3/image"
+	"github.com/cshop/v3/mail"
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func newTestServer(
 	store db.Store,
 	taskDistributor worker.TaskDistributor,
 	ik image.ImageKitManagement,
+	sender mail.EmailSender,
 ) *Server {
 	config := util.Config{
 		UserTokenSymmetricKey:  util.RandomString(32),
@@ -36,7 +38,7 @@ func newTestServer(
 		log.Fatal("error initializing firebase:", err)
 	}
 
-	server, err := NewServer(config, store, fb, taskDistributor, ik)
+	server, err := NewServer(config, store, fb, taskDistributor, ik, sender)
 	require.NoError(t, err)
 
 	return server

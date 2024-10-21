@@ -18,6 +18,7 @@ type createUserAddressParamsRequest struct {
 }
 type createUserAddressJsonRequest struct {
 	Name           string   `json:"name" validate:"omitempty,required"`
+	Telephone      int32    `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
 	AddressLine    string   `json:"address_line" validate:"omitempty,required"`
 	Region         string   `json:"region" validate:"omitempty,required"`
 	City           string   `json:"city" validate:"omitempty,required"`
@@ -28,6 +29,7 @@ type userAddressResponse struct {
 	UserID         int64  `json:"user_id"`
 	AddressID      int64  `json:"address_id"`
 	DefaultAddress int64  `json:"default_address"`
+	Telephone      int32  `json:"telephone"`
 	Name           string `json:"name"`
 	AddressLine    string `json:"address_line"`
 	Region         string `json:"region"`
@@ -38,6 +40,7 @@ func newUserAddressResponseForCreate(address db.Address, userAddress db.UserAddr
 	return userAddressResponse{
 		UserID:         userAddress.UserID,
 		AddressID:      userAddress.AddressID,
+		Telephone:      address.Telephone,
 		Name:           address.Name,
 		AddressLine:    address.AddressLine,
 		Region:         address.Region,
@@ -64,6 +67,7 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 
 	arg1 := db.CreateAddressParams{
 		Name:        req.Name,
+		Telephone:   req.Telephone,
 		AddressLine: req.AddressLine,
 		Region:      req.Region,
 		City:        req.City,

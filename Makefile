@@ -1,6 +1,6 @@
 DB_HOST ?= localhost
 DB_PORT ?= 6666
-DB_VERSION ?= 16.0
+DB_VERSION ?= 17
 ENVFILE ?=./.env.test
 
 DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
@@ -114,7 +114,7 @@ test:
 
 testwin:
 	powershell -command "\
-		dotenvx run -f $(ENVFILE) -- go test -race -v -cover -timeout 1m -shuffle on -count=1 ./... | Tee-Object -Variable result;\
+		dotenvx run -f $(ENVFILE) -- go test -v -cover -timeout 1m -shuffle on -count=1 ./... | Tee-Object -Variable result;\
 		Get-Variable result | Select-Object -ExpandProperty Value | \
 		Select-String -Pattern 'FAIL:', 'Error Trace:', 'Error:', 'Test:', '\[build failed\]';\
 	"
@@ -152,6 +152,7 @@ mock:
 	mockgen --build_flags=--mod=mod -package mockdb -destination db/mock/store.go github.com/cshop/v3/db/sqlc Store
 	mockgen --build_flags=--mod=mod -package mockwk -destination worker/mock/distributor.go github.com/cshop/v3/worker TaskDistributor
 	mockgen --build_flags=--mod=mod -package mockik -destination image/mock/imagekit.go github.com/cshop/v3/image ImageKitManagement
+	mockgen --build_flags=--mod=mod -package mockemail -destination mail/mock/sender.go github.com/cshop/v3/mail EmailSender
 
 proto:
 	rm -f pb/*.go

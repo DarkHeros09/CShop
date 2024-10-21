@@ -3,11 +3,11 @@ INSERT INTO "user" (
   username,
   email,
   password,
-  telephone,
+  -- telephone,
   is_blocked,
   default_payment
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
 RETURNING *;
 
@@ -17,11 +17,11 @@ INSERT INTO "user" (
   username,
   email,
   password,
-  telephone,
+  -- telephone,
   is_blocked,
   default_payment
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5
 )
 RETURNING *
 ),
@@ -64,7 +64,7 @@ SET
 username = COALESCE(sqlc.narg(username),username),
 email = COALESCE(sqlc.narg(email),email),
 password = COALESCE(sqlc.narg(password),password),
-telephone = COALESCE(sqlc.narg(telephone),telephone),
+-- telephone = COALESCE(sqlc.narg(telephone),telephone),
 default_payment = COALESCE(sqlc.narg(default_payment),default_payment),
 updated_at = now()
 WHERE id = sqlc.arg(id)
@@ -74,6 +74,11 @@ RETURNING *;
 DELETE FROM "user"
 WHERE id = $1
 RETURNING *;
+
+-- name: DeleteUserByEmailNotVerified :exec
+DELETE FROM "user"
+WHERE email = $1
+AND is_email_verified = false;
 
 -- name: GetActiveUsersCount :one
 With t1 AS (

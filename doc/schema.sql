@@ -38,7 +38,6 @@ CREATE TABLE "user" (
   "username" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
-  "telephone" int NOT NULL DEFAULT 0,
   "is_blocked" boolean NOT NULL DEFAULT false,
   "is_email_verified" boolean NOT NULL DEFAULT false,
   "default_payment" bigint,
@@ -46,10 +45,9 @@ CREATE TABLE "user" (
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
-CREATE TABLE "verify_emails" (
+CREATE TABLE "verify_email" (
   "id" bigserial PRIMARY KEY,
-  "user_id" bigint NOT NULL,
-  "email" varchar NOT NULL,
+  "user_id" bigint,
   "secret_code" varchar NOT NULL,
   "is_used" bool NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -86,9 +84,17 @@ CREATE TABLE "notification" (
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
+CREATE TABLE "app_policy" (
+  "id" bigserial PRIMARY KEY,
+  "policy" varchar,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
 CREATE TABLE "address" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
+  "telephone" int NOT NULL,
   "address_line" varchar NOT NULL,
   "region" varchar NOT NULL,
   "city" varchar NOT NULL,
@@ -311,8 +317,6 @@ CREATE INDEX ON "user" ("username");
 
 CREATE INDEX ON "user" ("email");
 
-CREATE INDEX ON "user" ("telephone");
-
 CREATE UNIQUE INDEX ON "product_promotion" ("product_id", "promotion_id");
 
 CREATE UNIQUE INDEX ON "category_promotion" ("category_id", "promotion_id");
@@ -351,7 +355,7 @@ ALTER TABLE "admin" ADD FOREIGN KEY ("type_id") REFERENCES "admin_type" ("id");
 
 ALTER TABLE "admin_session" ADD FOREIGN KEY ("admin_id") REFERENCES "admin" ("id");
 
-ALTER TABLE "verify_emails" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "verify_email" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE SET NULL;
 
 ALTER TABLE "reset_passwords" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 

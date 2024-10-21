@@ -16,7 +16,7 @@ type createVariationParamsRequest struct {
 	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createVariationJsonRequest struct {
-	Name       string `json:"name" validate:"required,alphanum"`
+	Name       string `json:"name" validate:"required,alphanumunicode"`
 	CategoryID int64  `json:"category_id" validate:"required,min=1"`
 }
 

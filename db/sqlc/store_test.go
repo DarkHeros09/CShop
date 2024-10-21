@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/shopspring/decimal"
+	"github.com/quagmt/udecimal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,8 +40,8 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
 	var err error
-	var price decimal.Decimal
-	// var listPrice []decimal.Decimal
+	var price udecimal.Decimal
+	// var listPrice []udecimal.Decimal
 	var totalPrice string
 	// var listTotalPrice []string
 
@@ -73,7 +73,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
-		price = decimal.Zero
+		price = udecimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
 			size := createRandomProductSize(t)
@@ -104,7 +104,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			}
 			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
-			price, err = decimal.NewFromString(productItem.Price)
+			price, err = udecimal.Parse(productItem.Price)
 			if err != nil {
 				log.Fatal("err is: ", err)
 			}
@@ -215,8 +215,8 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
 	var err error
-	var price decimal.Decimal
-	// var listPrice []decimal.Decimal
+	var price udecimal.Decimal
+	// var listPrice []udecimal.Decimal
 	var totalPrice string
 	// var listTotalPrice []string
 
@@ -247,7 +247,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
-		price = decimal.Zero
+		price = udecimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
 			size := createRandomProductSize(t)
@@ -278,7 +278,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			}
 			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
-			price, err = decimal.NewFromString(productItem.Price)
+			price, err = udecimal.Parse(productItem.Price)
 			if err != nil {
 				log.Fatal("err is: ", err)
 			}
@@ -338,8 +338,8 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	var paymentMethod PaymentMethod
 	var listPaymentMethod []PaymentMethod
 	var err error
-	var price decimal.Decimal
-	// var listPrice []decimal.Decimal
+	var price udecimal.Decimal
+	// var listPrice []udecimal.Decimal
 	var totalPrice string
 	// var listTotalPrice []string
 	var result FinishedPurchaseTxResult
@@ -371,7 +371,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
-		price = decimal.Zero
+		price = udecimal.Zero
 		for x := 0; x < n; x++ {
 			product := createRandomProduct(t)
 			size := createRandomProductSize(t)
@@ -402,7 +402,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			}
 			listShoppingCartItem = append(listShoppingCartItem, shoppingCartItem)
 
-			price, err = decimal.NewFromString(productItem.Price)
+			price, err = udecimal.Parse(productItem.Price)
 			if err != nil {
 				log.Fatal("err is: ", err)
 			}

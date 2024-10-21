@@ -73,8 +73,8 @@ type listproductImagesParamsResquest struct {
 }
 
 type listproductImagesQueryRequest struct {
-	Path string `query:"path" validate:"omitempty,required,alpha"`
-	Tag  string `query:"tag" validate:"omitempty,required,alpha"`
+	Path string `query:"path" validate:"omitempty,required,alphaunicode"`
+	Tag  string `query:"tag" validate:"omitempty,required,alphaunicode"`
 }
 
 func (server *Server) listproductImages(ctx *fiber.Ctx) error {

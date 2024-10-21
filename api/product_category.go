@@ -18,7 +18,7 @@ type createProductCategoryParamsRequest struct {
 
 type createProductCategoryJsonRequest struct {
 	ParentCategoryID *int64 `json:"parent_category_id" validate:"omitempty,required,min=1"`
-	CategoryName     string `json:"category_name" validate:"required,alphanum"`
+	CategoryName     string `json:"category_name" validate:"required,alphanumunicode"`
 	CategoryImage    string `json:"category_image" validate:"required,http_url"`
 }
 

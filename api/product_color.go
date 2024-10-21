@@ -17,7 +17,7 @@ type createProductColorParamsRequest struct {
 }
 
 type createProductColorJsonRequest struct {
-	ColorValue string `json:"color_value" validate:"required,alphanum"`
+	ColorValue string `json:"color_value" validate:"required,alphanumunicode"`
 }
 
 func (server *Server) createProductColor(ctx *fiber.Ctx) error {
@@ -84,7 +84,7 @@ type updateProductColorParamsRequest struct {
 }
 
 type updateProductColorJsonRequest struct {
-	Color *string `json:"color" validate:"omitempty,required,alpha"`
+	Color *string `json:"color" validate:"omitempty,required,alphaunicode"`
 }
 
 func (server *Server) updateProductColor(ctx *fiber.Ctx) error {

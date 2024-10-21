@@ -17,7 +17,7 @@ type createProductSizeParamsRequest struct {
 }
 
 type createProductSizeJsonRequest struct {
-	SizeValue string `json:"size_value" validate:"required,alphanum"`
+	SizeValue string `json:"size_value" validate:"required,alphanumunicode"`
 }
 
 func (server *Server) createProductSize(ctx *fiber.Ctx) error {
@@ -84,7 +84,7 @@ type updateProductSizeParamsRequest struct {
 }
 
 type updateProductSizeJsonRequest struct {
-	Size *string `json:"size" validate:"omitempty,required,alpha"`
+	Size *string `json:"size" validate:"omitempty,required,alphaunicode"`
 }
 
 func (server *Server) updateProductSize(ctx *fiber.Ctx) error {

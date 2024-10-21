@@ -19,7 +19,7 @@ type createPromotionParamsRequest struct {
 	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createPromotionJsonRequest struct {
-	Name         string `json:"name" validate:"required,alphanum"`
+	Name         string `json:"name" validate:"required,alphanumunicode"`
 	Description  string `json:"description" validate:"required"`
 	DiscountRate int64  `json:"discount_rate" validate:"required,min=1"`
 	Active       bool   `json:"active" validate:"boolean"`
@@ -162,7 +162,7 @@ type updatePromotionParamsRequest struct {
 }
 
 type updatePromotionJsonRequest struct {
-	Name         *string `json:"name" validate:"omitempty,required,alphanum"`
+	Name         *string `json:"name" validate:"omitempty,required,alphanumunicode"`
 	Description  *string `json:"description" validate:"omitempty,required"`
 	DiscountRate *int64  `json:"discount_rate" validate:"omitempty,required,min=1"`
 	Active       *bool   `json:"active" validate:"omitempty,required,boolean"`

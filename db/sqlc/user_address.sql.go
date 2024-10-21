@@ -57,13 +57,14 @@ const createUserAddressWithAddress = `-- name: CreateUserAddressWithAddress :one
 WITH t1 AS (
   INSERT INTO "address" AS a (
     name,
+    telephone,
     address_line,
     region,
     city
     ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
     )
-   RETURNING a.id, a.name, a.address_line, a.region, a.city
+   RETURNING a.id, a.name, a.telephone, a.address_line, a.region, a.city
   ),
 
   t2 AS ( 
@@ -72,9 +73,9 @@ WITH t1 AS (
     address_id,
     default_address
     ) VALUES 
-    ( $5,
+    ( $6,
     (SELECT id FROM t1),
-      $6
+      $7
     ) 
   RETURNING user_id, address_id, default_address, created_at, updated_at
   )
@@ -84,6 +85,7 @@ user_id,
 address_id,
 default_address,
 "name",
+telephone,
 address_line,
 region,
 city 
@@ -92,6 +94,7 @@ FROM t1, t2
 
 type CreateUserAddressWithAddressParams struct {
 	Name           string   `json:"name"`
+	Telephone      int32    `json:"telephone"`
 	AddressLine    string   `json:"address_line"`
 	Region         string   `json:"region"`
 	City           string   `json:"city"`
@@ -104,6 +107,7 @@ type CreateUserAddressWithAddressRow struct {
 	AddressID      int64    `json:"address_id"`
 	DefaultAddress null.Int `json:"default_address"`
 	Name           string   `json:"name"`
+	Telephone      int32    `json:"telephone"`
 	AddressLine    string   `json:"address_line"`
 	Region         string   `json:"region"`
 	City           string   `json:"city"`
@@ -112,6 +116,7 @@ type CreateUserAddressWithAddressRow struct {
 func (q *Queries) CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error) {
 	row := q.db.QueryRow(ctx, createUserAddressWithAddress,
 		arg.Name,
+		arg.Telephone,
 		arg.AddressLine,
 		arg.Region,
 		arg.City,
@@ -124,6 +129,7 @@ func (q *Queries) CreateUserAddressWithAddress(ctx context.Context, arg CreateUs
 		&i.AddressID,
 		&i.DefaultAddress,
 		&i.Name,
+		&i.Telephone,
 		&i.AddressLine,
 		&i.Region,
 		&i.City,

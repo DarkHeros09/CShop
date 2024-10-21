@@ -17,7 +17,7 @@ type createVariationOptionParamsRequest struct {
 }
 type createVariationOptionJsonRequest struct {
 	VariationID int64  `json:"variation_id" validate:"required,min=1"`
-	Value       string `json:"value" validate:"required,alphanum"`
+	Value       string `json:"value" validate:"required,alphanumunicode"`
 }
 
 func (server *Server) createVariationOption(ctx *fiber.Ctx) error {

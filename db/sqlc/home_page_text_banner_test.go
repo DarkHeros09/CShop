@@ -11,10 +11,12 @@ import (
 )
 
 func createRandomHomePageTextBanner(t *testing.T) HomePageTextBanner {
+	admin := createRandomAdmin(t)
 
 	arg := CreateHomePageTextBannerParams{
 		Name:        util.RandomUser(),
 		Description: util.RandomUser(),
+		AdminID:     admin.ID,
 	}
 	productImage, err := testStore.CreateHomePageTextBanner(context.Background(), arg)
 	require.NoError(t, err)
@@ -43,10 +45,12 @@ func TestGetHomePageTextBanner(t *testing.T) {
 }
 
 func TestUpdateHomePageTextBanner(t *testing.T) {
+	admin := createRandomAdmin(t)
 	productImage1 := createRandomHomePageTextBanner(t)
 	arg := UpdateHomePageTextBannerParams{
 		ID:          productImage1.ID,
 		Description: null.StringFrom(util.RandomUser()),
+		AdminID:     admin.ID,
 	}
 
 	productImage2, err := testStore.UpdateHomePageTextBanner(context.Background(), arg)
@@ -59,8 +63,13 @@ func TestUpdateHomePageTextBanner(t *testing.T) {
 }
 
 func TestDeleteHomePageTextBanner(t *testing.T) {
+	admin := createRandomAdmin(t)
 	productImage1 := createRandomHomePageTextBanner(t)
-	err := testStore.DeleteHomePageTextBanner(context.Background(), productImage1.ID)
+	arg := DeleteHomePageTextBannerParams{
+		ID:      productImage1.ID,
+		AdminID: admin.ID,
+	}
+	err := testStore.DeleteHomePageTextBanner(context.Background(), arg)
 
 	require.NoError(t, err)
 

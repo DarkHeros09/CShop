@@ -14,6 +14,7 @@ import (
 type Address struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
+	Telephone   int32     `json:"telephone"`
 	AddressLine string    `json:"address_line"`
 	Region      string    `json:"region"`
 	City        string    `json:"city"`
@@ -50,6 +51,13 @@ type AdminType struct {
 	AdminType string    `json:"admin_type"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type AppPolicy struct {
+	ID        int64       `json:"id"`
+	Policy    null.String `json:"policy"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 type BrandPromotion struct {
@@ -255,7 +263,6 @@ type User struct {
 	Username        string    `json:"username"`
 	Email           string    `json:"email"`
 	Password        string    `json:"password"`
-	Telephone       int32     `json:"telephone"`
 	IsBlocked       bool      `json:"is_blocked"`
 	IsEmailVerified bool      `json:"is_email_verified"`
 	DefaultPayment  null.Int  `json:"default_payment"`
@@ -308,8 +315,7 @@ type VariationOption struct {
 
 type VerifyEmail struct {
 	ID         int64     `json:"id"`
-	UserID     int64     `json:"user_id"`
-	Email      string    `json:"email"`
+	UserID     null.Int  `json:"user_id"`
 	SecretCode string    `json:"secret_code"`
 	IsUsed     bool      `json:"is_used"`
 	CreatedAt  time.Time `json:"created_at"`

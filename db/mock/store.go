@@ -521,6 +521,21 @@ func (mr *MockStoreMockRecorder) CreateAdminType(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdminType", reflect.TypeOf((*MockStore)(nil).CreateAdminType), arg0, arg1)
 }
 
+// CreateAppPolicy mocks base method.
+func (m *MockStore) CreateAppPolicy(arg0 context.Context, arg1 db.CreateAppPolicyParams) (db.AppPolicy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAppPolicy", arg0, arg1)
+	ret0, _ := ret[0].(db.AppPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAppPolicy indicates an expected call of CreateAppPolicy.
+func (mr *MockStoreMockRecorder) CreateAppPolicy(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAppPolicy", reflect.TypeOf((*MockStore)(nil).CreateAppPolicy), arg0, arg1)
+}
+
 // CreateBrandPromotion mocks base method.
 func (m *MockStore) CreateBrandPromotion(arg0 context.Context, arg1 db.CreateBrandPromotionParams) (db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
@@ -1087,6 +1102,21 @@ func (mr *MockStoreMockRecorder) DeleteAdminTypeByType(arg0, arg1 any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAdminTypeByType", reflect.TypeOf((*MockStore)(nil).DeleteAdminTypeByType), arg0, arg1)
 }
 
+// DeleteAppPolicy mocks base method.
+func (m *MockStore) DeleteAppPolicy(arg0 context.Context, arg1 db.DeleteAppPolicyParams) (db.AppPolicy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAppPolicy", arg0, arg1)
+	ret0, _ := ret[0].(db.AppPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAppPolicy indicates an expected call of DeleteAppPolicy.
+func (mr *MockStoreMockRecorder) DeleteAppPolicy(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAppPolicy", reflect.TypeOf((*MockStore)(nil).DeleteAppPolicy), arg0, arg1)
+}
+
 // DeleteBrandPromotion mocks base method.
 func (m *MockStore) DeleteBrandPromotion(arg0 context.Context, arg1 db.DeleteBrandPromotionParams) error {
 	m.ctrl.T.Helper()
@@ -1116,7 +1146,7 @@ func (mr *MockStoreMockRecorder) DeleteCategoryPromotion(arg0, arg1 any) *gomock
 }
 
 // DeleteHomePageTextBanner mocks base method.
-func (m *MockStore) DeleteHomePageTextBanner(arg0 context.Context, arg1 int64) error {
+func (m *MockStore) DeleteHomePageTextBanner(arg0 context.Context, arg1 db.DeleteHomePageTextBannerParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteHomePageTextBanner", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -1471,6 +1501,20 @@ func (mr *MockStoreMockRecorder) DeleteUserAddress(arg0, arg1 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserAddress", reflect.TypeOf((*MockStore)(nil).DeleteUserAddress), arg0, arg1)
 }
 
+// DeleteUserByEmailNotVerified mocks base method.
+func (m *MockStore) DeleteUserByEmailNotVerified(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUserByEmailNotVerified", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUserByEmailNotVerified indicates an expected call of DeleteUserByEmailNotVerified.
+func (mr *MockStoreMockRecorder) DeleteUserByEmailNotVerified(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserByEmailNotVerified", reflect.TypeOf((*MockStore)(nil).DeleteUserByEmailNotVerified), arg0, arg1)
+}
+
 // DeleteUserReview mocks base method.
 func (m *MockStore) DeleteUserReview(arg0 context.Context, arg1 db.DeleteUserReviewParams) (db.UserReview, error) {
 	m.ctrl.T.Helper()
@@ -1690,6 +1734,21 @@ func (m *MockStore) GetAdminType(arg0 context.Context, arg1 int64) (db.AdminType
 func (mr *MockStoreMockRecorder) GetAdminType(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdminType", reflect.TypeOf((*MockStore)(nil).GetAdminType), arg0, arg1)
+}
+
+// GetAppPolicy mocks base method.
+func (m *MockStore) GetAppPolicy(arg0 context.Context) (db.AppPolicy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAppPolicy", arg0)
+	ret0, _ := ret[0].(db.AppPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAppPolicy indicates an expected call of GetAppPolicy.
+func (mr *MockStoreMockRecorder) GetAppPolicy(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppPolicy", reflect.TypeOf((*MockStore)(nil).GetAppPolicy), arg0)
 }
 
 // GetBrandPromotion mocks base method.
@@ -2380,6 +2439,36 @@ func (m *MockStore) GetVariationOption(arg0 context.Context, arg1 int64) (db.Var
 func (mr *MockStoreMockRecorder) GetVariationOption(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVariationOption", reflect.TypeOf((*MockStore)(nil).GetVariationOption), arg0, arg1)
+}
+
+// GetVerifyEmail mocks base method.
+func (m *MockStore) GetVerifyEmail(arg0 context.Context, arg1 int64) (db.VerifyEmail, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVerifyEmail", arg0, arg1)
+	ret0, _ := ret[0].(db.VerifyEmail)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVerifyEmail indicates an expected call of GetVerifyEmail.
+func (mr *MockStoreMockRecorder) GetVerifyEmail(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVerifyEmail", reflect.TypeOf((*MockStore)(nil).GetVerifyEmail), arg0, arg1)
+}
+
+// GetVerifyEmailByEmail mocks base method.
+func (m *MockStore) GetVerifyEmailByEmail(arg0 context.Context, arg1 string) (db.GetVerifyEmailByEmailRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVerifyEmailByEmail", arg0, arg1)
+	ret0, _ := ret[0].(db.GetVerifyEmailByEmailRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVerifyEmailByEmail indicates an expected call of GetVerifyEmailByEmail.
+func (mr *MockStoreMockRecorder) GetVerifyEmailByEmail(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVerifyEmailByEmail", reflect.TypeOf((*MockStore)(nil).GetVerifyEmailByEmail), arg0, arg1)
 }
 
 // GetWishList mocks base method.
@@ -3447,6 +3536,21 @@ func (mr *MockStoreMockRecorder) SearchProductsNextPage(arg0, arg1 any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchProductsNextPage", reflect.TypeOf((*MockStore)(nil).SearchProductsNextPage), arg0, arg1)
 }
 
+// SignUpTx mocks base method.
+func (m *MockStore) SignUpTx(arg0 context.Context, arg1 db.SignUpTxParams) (db.SignUpTxResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignUpTx", arg0, arg1)
+	ret0, _ := ret[0].(db.SignUpTxResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignUpTx indicates an expected call of SignUpTx.
+func (mr *MockStoreMockRecorder) SignUpTx(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignUpTx", reflect.TypeOf((*MockStore)(nil).SignUpTx), arg0, arg1)
+}
+
 // UpdateAddress mocks base method.
 func (m *MockStore) UpdateAddress(arg0 context.Context, arg1 db.UpdateAddressParams) (db.Address, error) {
 	m.ctrl.T.Helper()
@@ -3505,6 +3609,21 @@ func (m *MockStore) UpdateAdminType(arg0 context.Context, arg1 db.UpdateAdminTyp
 func (mr *MockStoreMockRecorder) UpdateAdminType(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAdminType", reflect.TypeOf((*MockStore)(nil).UpdateAdminType), arg0, arg1)
+}
+
+// UpdateAppPolicy mocks base method.
+func (m *MockStore) UpdateAppPolicy(arg0 context.Context, arg1 db.UpdateAppPolicyParams) (db.AppPolicy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAppPolicy", arg0, arg1)
+	ret0, _ := ret[0].(db.AppPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAppPolicy indicates an expected call of UpdateAppPolicy.
+func (mr *MockStoreMockRecorder) UpdateAppPolicy(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAppPolicy", reflect.TypeOf((*MockStore)(nil).UpdateAppPolicy), arg0, arg1)
 }
 
 // UpdateBrandPromotion mocks base method.
@@ -3943,10 +4062,10 @@ func (mr *MockStoreMockRecorder) UpdateVariationOption(arg0, arg1 any) *gomock.C
 }
 
 // UpdateVerifyEmail mocks base method.
-func (m *MockStore) UpdateVerifyEmail(arg0 context.Context, arg1 db.UpdateVerifyEmailParams) (db.VerifyEmail, error) {
+func (m *MockStore) UpdateVerifyEmail(arg0 context.Context, arg1 db.UpdateVerifyEmailParams) (db.UpdateVerifyEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVerifyEmail", arg0, arg1)
-	ret0, _ := ret[0].(db.VerifyEmail)
+	ret0, _ := ret[0].(db.UpdateVerifyEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
