@@ -274,6 +274,7 @@ INNER JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -302,10 +303,18 @@ AND bpromo.start_date <= CURRENT_DATE
 AND bpromo.end_date >= CURRENT_DATE))=TRUE 
 ELSE TRUE
 END 
+AND CASE
+WHEN COALESCE(sqlc.narg(is_featured), FALSE) = TRUE
+THEN 
+((fpi.active = TRUE
+AND fpi.start_date <= CURRENT_DATE 
+AND fpi.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
 AND
 CASE
 WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '10 days'
 ELSE 1=1
 END
 AND CASE
@@ -378,6 +387,7 @@ INNER JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -430,6 +440,14 @@ OR (bp.active = TRUE
 AND bpromo.active =TRUE 
 AND bpromo.start_date <= CURRENT_DATE 
 AND bpromo.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
+AND CASE
+WHEN COALESCE(sqlc.narg(is_featured), FALSE) = TRUE
+THEN 
+((fpi.active = TRUE
+AND fpi.start_date <= CURRENT_DATE 
+AND fpi.end_date >= CURRENT_DATE))=TRUE 
 ELSE TRUE
 END 
 AND

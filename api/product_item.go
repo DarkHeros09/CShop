@@ -251,6 +251,7 @@ type listProductItemsV2QueryRequest struct {
 	ColorID          null.Int  `query:"color_id" validate:"omitempty"`
 	IsNew            null.Bool `query:"is_new" validate:"omitempty"`
 	IsPromoted       null.Bool `query:"is_promoted" validate:"omitempty"`
+	IsFeatured       null.Bool `query:"is_featured" validate:"omitempty"`
 	OrderByLowPrice  null.Bool `query:"order_by_low_price" validate:"omitempty"`
 	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
@@ -272,6 +273,7 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
+		IsFeatured:       query.IsFeatured,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}
@@ -318,6 +320,7 @@ type listProductItemsNextPageQueryRequest struct {
 	ColorID           null.Int  `query:"color_id" validate:"omitempty"`
 	IsNew             null.Bool `query:"is_new" validate:"omitempty"`
 	IsPromoted        null.Bool `query:"is_promoted" validate:"omitempty"`
+	IsFeatured        null.Bool `query:"is_featured" validate:"omitempty"`
 	OrderByLowPrice   null.Bool `query:"order_by_low_price" validate:"omitempty"`
 	OrderByHighPrice  null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
@@ -341,6 +344,7 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
+		IsFeatured:       query.IsFeatured,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}

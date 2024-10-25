@@ -14,6 +14,7 @@ import (
 type Querier interface {
 	AdminCreateBrandPromotion(ctx context.Context, arg AdminCreateBrandPromotionParams) (BrandPromotion, error)
 	AdminCreateCategoryPromotion(ctx context.Context, arg AdminCreateCategoryPromotionParams) (CategoryPromotion, error)
+	AdminCreateFeaturedProductItem(ctx context.Context, arg AdminCreateFeaturedProductItemParams) (FeaturedProductItem, error)
 	AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error)
 	AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error)
 	AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error)
@@ -26,6 +27,7 @@ type Querier interface {
 	AdminDeleteProduct(ctx context.Context, arg AdminDeleteProductParams) error
 	AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error)
 	AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error)
+	AdminListFeaturedProductItems(ctx context.Context, adminID int64) ([]AdminListFeaturedProductItemsRow, error)
 	// ORDER BY id
 	// LIMIT $1
 	// OFFSET $2;
@@ -35,6 +37,7 @@ type Querier interface {
 	AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error)
 	AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error)
 	AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error)
+	AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminUpdateFeaturedProductItemParams) (FeaturedProductItem, error)
 	// product_image = COALESCE(sqlc.narg(product_image),product_image),
 	AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error)
 	AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error)
@@ -90,6 +93,7 @@ type Querier interface {
 	DeleteAppPolicy(ctx context.Context, arg DeleteAppPolicyParams) (AppPolicy, error)
 	DeleteBrandPromotion(ctx context.Context, arg DeleteBrandPromotionParams) error
 	DeleteCategoryPromotion(ctx context.Context, arg DeleteCategoryPromotionParams) error
+	DeleteFeaturedProductItem(ctx context.Context, arg DeleteFeaturedProductItemParams) error
 	DeleteHomePageTextBanner(ctx context.Context, arg DeleteHomePageTextBannerParams) error
 	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) (Notification, error)
 	DeleteNotificationAllByUser(ctx context.Context, userID int64) error
@@ -166,6 +170,7 @@ type Querier interface {
 	GetBrandPromotion(ctx context.Context, arg GetBrandPromotionParams) (BrandPromotion, error)
 	GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error)
 	GetCompletedDailyOrderTotal(ctx context.Context, adminID int64) (string, error)
+	GetFeaturedProductItem(ctx context.Context, productItemID int64) (FeaturedProductItem, error)
 	GetHomePageTextBanner(ctx context.Context, id int64) (HomePageTextBanner, error)
 	GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error)
 	GetNotificationV2(ctx context.Context, userID int64) (Notification, error)
@@ -226,6 +231,7 @@ type Querier interface {
 	ListBrandPromotionsWithImages(ctx context.Context) ([]ListBrandPromotionsWithImagesRow, error)
 	ListCategoryPromotions(ctx context.Context, arg ListCategoryPromotionsParams) ([]CategoryPromotion, error)
 	ListCategoryPromotionsWithImages(ctx context.Context) ([]ListCategoryPromotionsWithImagesRow, error)
+	ListFeaturedProductItems(ctx context.Context, arg ListFeaturedProductItemsParams) ([]FeaturedProductItem, error)
 	ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBanner, error)
 	ListOrderStatuses(ctx context.Context) ([]OrderStatus, error)
 	ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error)

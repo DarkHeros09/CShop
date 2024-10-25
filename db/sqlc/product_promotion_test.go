@@ -161,13 +161,13 @@ func TestListProductPromotionsWithImages(t *testing.T) {
 		createRandomProductPromotion(t)
 	}
 
-	ProductPromotions, err := testStore.ListProductPromotionsWithImages(context.Background())
+	productPromotions, err := testStore.ListProductPromotionsWithImages(context.Background())
 
 	require.NoError(t, err)
-	require.NotEmpty(t, ProductPromotions)
+	require.NotEmpty(t, productPromotions)
 
-	for _, ProductPromotion := range ProductPromotions {
-		require.NotEmpty(t, ProductPromotion)
+	for _, productPromotion := range productPromotions {
+		require.NotEmpty(t, productPromotion)
 	}
 
 }

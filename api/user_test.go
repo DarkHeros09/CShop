@@ -1513,7 +1513,7 @@ func TestListUsersAPI(t *testing.T) {
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
-				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+				require.Equal(t, http.StatusForbidden, rsp.StatusCode)
 			},
 		},
 		{

@@ -452,7 +452,7 @@ func (server *Server) resetPassword(ctx *fiber.Ctx) error {
 
 	if getUser.IsBlocked {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -557,7 +557,7 @@ func (server *Server) newPassword(ctx *fiber.Ctx) error {
 
 	if getUser.IsBlocked {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -632,7 +632,7 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 
 	if user.IsBlocked {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -664,7 +664,7 @@ func (server *Server) listUsers(ctx *fiber.Ctx) error {
 	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 
@@ -755,7 +755,7 @@ func (server *Server) deleteUser(ctx *fiber.Ctx) error {
 	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
 	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 	_, err := server.store.DeleteUser(ctx.Context(), params.UserID)
@@ -827,7 +827,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 
 	if user.IsBlocked {
 		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 

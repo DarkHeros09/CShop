@@ -76,6 +76,15 @@ type CategoryPromotion struct {
 	Active bool `json:"active"`
 }
 
+type FeaturedProductItem struct {
+	ID            int64     `json:"id"`
+	ProductItemID int64     `json:"product_item_id"`
+	Active        bool      `json:"active"`
+	StartDate     time.Time `json:"start_date"`
+	EndDate       time.Time `json:"end_date"`
+	Priority      null.Int  `json:"priority"`
+}
+
 type HomePageTextBanner struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`

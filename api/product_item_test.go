@@ -476,6 +476,7 @@ func TestListProductItemsV2API(t *testing.T) {
 					SizeID:           null.IntFromPtr(nil),
 					IsNew:            null.BoolFromPtr(nil),
 					IsPromoted:       null.BoolFromPtr(nil),
+					IsFeatured:       null.BoolFromPtr(nil),
 					OrderByLowPrice:  null.BoolFromPtr(nil),
 					OrderByHighPrice: null.BoolFromPtr(nil),
 				}
@@ -595,6 +596,7 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 					SizeID:           null.IntFromPtr(nil),
 					IsNew:            null.BoolFromPtr(nil),
 					IsPromoted:       null.BoolFromPtr(nil),
+					IsFeatured:       null.BoolFromPtr(nil),
 					OrderByLowPrice:  null.BoolFromPtr(nil),
 					OrderByHighPrice: null.BoolFromPtr(nil),
 				}

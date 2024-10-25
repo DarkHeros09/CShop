@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS "product_brand" CASCADE;
 DROP TABLE IF EXISTS "product_promotion" CASCADE;
 DROP TABLE IF EXISTS "product" CASCADE;
 DROP TABLE IF EXISTS "product_item" CASCADE;
+DROP TABLE IF EXISTS "featured_product_item" CASCADE;
 DROP TABLE IF EXISTS "product_size" CASCADE;
 DROP TABLE IF EXISTS "product_color" CASCADE;
 DROP TABLE IF EXISTS "product_image" CASCADE;

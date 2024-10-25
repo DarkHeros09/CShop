@@ -639,6 +639,7 @@ INNER JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -693,9 +694,17 @@ AND bpromo.start_date <= CURRENT_DATE
 AND bpromo.end_date >= CURRENT_DATE))=TRUE 
 ELSE TRUE
 END 
+AND CASE
+WHEN COALESCE($10, FALSE) = TRUE
+THEN 
+((fpi.active = TRUE
+AND fpi.start_date <= CURRENT_DATE 
+AND fpi.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
 AND
 CASE
-WHEN COALESCE($10, FALSE) = TRUE
+WHEN COALESCE($11, FALSE) = TRUE
 THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
 ELSE 1=1
 END
@@ -710,13 +719,13 @@ AND CASE
     ELSE 1=1
 END 
 AND CASE
-    WHEN COALESCE($11, 0) > 0 
-    THEN pi.color_id = $11
+    WHEN COALESCE($12, 0) > 0 
+    THEN pi.color_id = $12
     ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($12, 0) > 0 
-    THEN pi.size_id = $12
+    WHEN COALESCE($13, 0) > 0 
+    THEN pi.size_id = $13
     ELSE 1=1
 END
 ORDER BY 
@@ -760,6 +769,7 @@ type ListProductItemsNextPageParams struct {
 	ProductID        int64       `json:"product_id"`
 	OrderByLowPrice  interface{} `json:"order_by_low_price"`
 	IsPromoted       interface{} `json:"is_promoted"`
+	IsFeatured       interface{} `json:"is_featured"`
 	IsNew            interface{} `json:"is_new"`
 	ColorID          interface{} `json:"color_id"`
 	SizeID           interface{} `json:"size_id"`
@@ -827,6 +837,7 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		arg.ProductID,
 		arg.OrderByLowPrice,
 		arg.IsPromoted,
+		arg.IsFeatured,
 		arg.IsNew,
 		arg.ColorID,
 		arg.SizeID,
@@ -1130,6 +1141,7 @@ INNER JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -1158,54 +1170,62 @@ AND bpromo.start_date <= CURRENT_DATE
 AND bpromo.end_date >= CURRENT_DATE))=TRUE 
 ELSE TRUE
 END 
+AND CASE
+WHEN COALESCE($3, FALSE) = TRUE
+THEN 
+((fpi.active = TRUE
+AND fpi.start_date <= CURRENT_DATE 
+AND fpi.end_date >= CURRENT_DATE))=TRUE 
+ELSE TRUE
+END 
 AND
 CASE
-WHEN COALESCE($3, FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+WHEN COALESCE($4, FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '10 days'
 ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($4, 0) > 0 
-    THEN pc.id = $4
-    ELSE 1=1
-END 
-AND CASE
     WHEN COALESCE($5, 0) > 0 
-    THEN pb.id = $5
+    THEN pc.id = $5
     ELSE 1=1
 END 
 AND CASE
     WHEN COALESCE($6, 0) > 0 
-    THEN pi.color_id = $6
+    THEN pb.id = $6
+    ELSE 1=1
+END 
+AND CASE
+    WHEN COALESCE($7, 0) > 0 
+    THEN pi.color_id = $7
     ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($7, 0) > 0 
-    THEN pi.size_id = $7
+    WHEN COALESCE($8, 0) > 0 
+    THEN pi.size_id = $8
     ELSE 1=1
 END
 ORDER BY 
 CASE
-	WHEN COALESCE($8, FALSE) = TRUE
+	WHEN COALESCE($9, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END ASC,
 CASE
-	WHEN COALESCE($9, FALSE) = TRUE
+	WHEN COALESCE($10, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END DESC,
 CASE
-    WHEN $8 IS NOT NULL
+    WHEN $9 IS NOT NULL
     THEN pi.id END ASC,
 CASE
-	WHEN ($8,$4,$5) IS NOT NULL
+	WHEN ($9,$5,$6) IS NOT NULL
 	THEN pi.product_id
     END ASC,
-CASE WHEN $8 IS NULL
+CASE WHEN $9 IS NULL
 	THEN pi.id END DESC,
     CASE
-	WHEN $8 IS NULL AND ($4,$5) IS NOT NULL
+	WHEN $9 IS NULL AND ($5,$6) IS NOT NULL
 	THEN pi.product_id
     END DESC
 LIMIT $1 +1
@@ -1218,6 +1238,7 @@ LIMIT $1
 type ListProductItemsV2Params struct {
 	Limit            int32       `json:"limit"`
 	IsPromoted       interface{} `json:"is_promoted"`
+	IsFeatured       interface{} `json:"is_featured"`
 	IsNew            interface{} `json:"is_new"`
 	CategoryID       interface{} `json:"category_id"`
 	BrandID          interface{} `json:"brand_id"`
@@ -1282,6 +1303,7 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 	rows, err := q.db.Query(ctx, listProductItemsV2,
 		arg.Limit,
 		arg.IsPromoted,
+		arg.IsFeatured,
 		arg.IsNew,
 		arg.CategoryID,
 		arg.BrandID,

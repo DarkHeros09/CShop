@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-10-02T18:38:33.554Z
+-- Generated at: 2024-10-25T15:11:41.353Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -174,6 +174,15 @@ CREATE TABLE "shop_order_item" (
   "shipping_method_price" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+);
+
+CREATE TABLE "featured_product_item" (
+  "id" bigserial PRIMARY KEY NOT NULL,
+  "product_item_id" bigint NOT NULL,
+  "active" boolean NOT NULL DEFAULT false,
+  "start_date" timestamptz NOT NULL DEFAULT 'now()',
+  "end_date" timestamptz NOT NULL,
+  "priority" int DEFAULT 0
 );
 
 CREATE TABLE "product_item" (
@@ -390,6 +399,8 @@ ALTER TABLE "wish_list_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "pro
 ALTER TABLE "shop_order_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "shop_order_item" ADD FOREIGN KEY ("order_id") REFERENCES "shop_order" ("id");
+
+ALTER TABLE "featured_product_item" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "product_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 

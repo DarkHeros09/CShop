@@ -72,6 +72,21 @@ func (mr *MockStoreMockRecorder) AdminCreateCategoryPromotion(arg0, arg1 any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateCategoryPromotion", reflect.TypeOf((*MockStore)(nil).AdminCreateCategoryPromotion), arg0, arg1)
 }
 
+// AdminCreateFeaturedProductItem mocks base method.
+func (m *MockStore) AdminCreateFeaturedProductItem(arg0 context.Context, arg1 db.AdminCreateFeaturedProductItemParams) (db.FeaturedProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreateFeaturedProductItem", arg0, arg1)
+	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreateFeaturedProductItem indicates an expected call of AdminCreateFeaturedProductItem.
+func (mr *MockStoreMockRecorder) AdminCreateFeaturedProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).AdminCreateFeaturedProductItem), arg0, arg1)
+}
+
 // AdminCreateProduct mocks base method.
 func (m *MockStore) AdminCreateProduct(arg0 context.Context, arg1 db.AdminCreateProductParams) (db.Product, error) {
 	m.ctrl.T.Helper()
@@ -251,6 +266,21 @@ func (mr *MockStoreMockRecorder) AdminListCategoryPromotions(arg0, arg1 any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminListCategoryPromotions", reflect.TypeOf((*MockStore)(nil).AdminListCategoryPromotions), arg0, arg1)
 }
 
+// AdminListFeaturedProductItems mocks base method.
+func (m *MockStore) AdminListFeaturedProductItems(arg0 context.Context, arg1 int64) ([]db.AdminListFeaturedProductItemsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminListFeaturedProductItems", arg0, arg1)
+	ret0, _ := ret[0].([]db.AdminListFeaturedProductItemsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminListFeaturedProductItems indicates an expected call of AdminListFeaturedProductItems.
+func (mr *MockStoreMockRecorder) AdminListFeaturedProductItems(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminListFeaturedProductItems", reflect.TypeOf((*MockStore)(nil).AdminListFeaturedProductItems), arg0, arg1)
+}
+
 // AdminListOrderStatuses mocks base method.
 func (m *MockStore) AdminListOrderStatuses(arg0 context.Context, arg1 int64) ([]db.OrderStatus, error) {
 	m.ctrl.T.Helper()
@@ -339,6 +369,21 @@ func (m *MockStore) AdminUpdateCategoryPromotion(arg0 context.Context, arg1 db.A
 func (mr *MockStoreMockRecorder) AdminUpdateCategoryPromotion(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateCategoryPromotion", reflect.TypeOf((*MockStore)(nil).AdminUpdateCategoryPromotion), arg0, arg1)
+}
+
+// AdminUpdateFeaturedProductItem mocks base method.
+func (m *MockStore) AdminUpdateFeaturedProductItem(arg0 context.Context, arg1 db.AdminUpdateFeaturedProductItemParams) (db.FeaturedProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdateFeaturedProductItem", arg0, arg1)
+	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdateFeaturedProductItem indicates an expected call of AdminUpdateFeaturedProductItem.
+func (mr *MockStoreMockRecorder) AdminUpdateFeaturedProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).AdminUpdateFeaturedProductItem), arg0, arg1)
 }
 
 // AdminUpdateProduct mocks base method.
@@ -1145,6 +1190,20 @@ func (mr *MockStoreMockRecorder) DeleteCategoryPromotion(arg0, arg1 any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCategoryPromotion", reflect.TypeOf((*MockStore)(nil).DeleteCategoryPromotion), arg0, arg1)
 }
 
+// DeleteFeaturedProductItem mocks base method.
+func (m *MockStore) DeleteFeaturedProductItem(arg0 context.Context, arg1 db.DeleteFeaturedProductItemParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFeaturedProductItem", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFeaturedProductItem indicates an expected call of DeleteFeaturedProductItem.
+func (mr *MockStoreMockRecorder) DeleteFeaturedProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).DeleteFeaturedProductItem), arg0, arg1)
+}
+
 // DeleteHomePageTextBanner mocks base method.
 func (m *MockStore) DeleteHomePageTextBanner(arg0 context.Context, arg1 db.DeleteHomePageTextBannerParams) error {
 	m.ctrl.T.Helper()
@@ -1794,6 +1853,21 @@ func (m *MockStore) GetCompletedDailyOrderTotal(arg0 context.Context, arg1 int64
 func (mr *MockStoreMockRecorder) GetCompletedDailyOrderTotal(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCompletedDailyOrderTotal", reflect.TypeOf((*MockStore)(nil).GetCompletedDailyOrderTotal), arg0, arg1)
+}
+
+// GetFeaturedProductItem mocks base method.
+func (m *MockStore) GetFeaturedProductItem(arg0 context.Context, arg1 int64) (db.FeaturedProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFeaturedProductItem", arg0, arg1)
+	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFeaturedProductItem indicates an expected call of GetFeaturedProductItem.
+func (mr *MockStoreMockRecorder) GetFeaturedProductItem(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).GetFeaturedProductItem), arg0, arg1)
 }
 
 // GetHomePageTextBanner mocks base method.
@@ -2649,6 +2723,21 @@ func (m *MockStore) ListCategoryPromotionsWithImages(arg0 context.Context) ([]db
 func (mr *MockStoreMockRecorder) ListCategoryPromotionsWithImages(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCategoryPromotionsWithImages", reflect.TypeOf((*MockStore)(nil).ListCategoryPromotionsWithImages), arg0)
+}
+
+// ListFeaturedProductItems mocks base method.
+func (m *MockStore) ListFeaturedProductItems(arg0 context.Context, arg1 db.ListFeaturedProductItemsParams) ([]db.FeaturedProductItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFeaturedProductItems", arg0, arg1)
+	ret0, _ := ret[0].([]db.FeaturedProductItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListFeaturedProductItems indicates an expected call of ListFeaturedProductItems.
+func (mr *MockStoreMockRecorder) ListFeaturedProductItems(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFeaturedProductItems", reflect.TypeOf((*MockStore)(nil).ListFeaturedProductItems), arg0, arg1)
 }
 
 // ListHomePageTextBanners mocks base method.

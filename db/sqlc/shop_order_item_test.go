@@ -17,7 +17,7 @@ func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 		ProductItemID:       productItem.ID,
 		OrderID:             shopOrder.ID,
 		Quantity:            int32(util.RandomInt(0, 100)),
-		Price:               util.RandomDecimalString(1, 100),
+		Price:               util.RandomDecimalString(1, 200),
 		Discount:            int32(util.RandomInt(0, 90)),
 		ShippingMethodPrice: util.RandomDecimalString(1, 100),
 	}
