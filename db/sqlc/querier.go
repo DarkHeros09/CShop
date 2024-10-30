@@ -264,6 +264,7 @@ type Querier interface {
 	// LIMIT 1
 	// )
 	ListProductItemsV2Old(ctx context.Context, arg ListProductItemsV2OldParams) ([]ListProductItemsV2OldRow, error)
+	ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]ListProductItemsWithBestSalesRow, error)
 	ListProductItemsWithBrandPromotions(ctx context.Context, arg ListProductItemsWithBrandPromotionsParams) ([]ListProductItemsWithBrandPromotionsRow, error)
 	ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg ListProductItemsWithBrandPromotionsNextPageParams) ([]ListProductItemsWithBrandPromotionsNextPageRow, error)
 	ListProductItemsWithCategoryPromotions(ctx context.Context, arg ListProductItemsWithCategoryPromotionsParams) ([]ListProductItemsWithCategoryPromotionsRow, error)

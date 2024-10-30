@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null/v5"
@@ -18,6 +19,7 @@ func adminCreateRandomFeaturedProductItem(t *testing.T) FeaturedProductItem {
 		Active:        util.RandomBool(),
 		Priority:      null.IntFrom(util.RandomMoney()),
 		AdminID:       admin.ID,
+		EndDate:       time.Now().Add(time.Hour * 24 * 7),
 	}
 
 	featuredProductItem, err := testStore.AdminCreateFeaturedProductItem(context.Background(), arg)
@@ -59,6 +61,7 @@ func TestAdminUpdateFeaturedProductItemActive(t *testing.T) {
 		Priority:      featuredProductItem1.Priority,
 		Active:        null.BoolFrom(!featuredProductItem1.Active),
 		StartDate:     null.TimeFrom(featuredProductItem1.StartDate),
+		EndDate:       null.TimeFrom(featuredProductItem1.EndDate),
 		ProductItemID: featuredProductItem1.ProductItemID,
 	}
 

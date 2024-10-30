@@ -627,3 +627,16 @@ func TestGetTotalProductItems(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem2)
 }
+
+func TestListProductItemsWithBestSales(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	arg := int32(20)
+	initialSearchResult, err := testStore.ListProductItemsWithBestSales(context.Background(), arg)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, len(initialSearchResult), 20)
+}

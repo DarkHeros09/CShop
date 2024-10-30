@@ -337,6 +337,11 @@ AND CASE
     THEN pi.size_id = sqlc.narg(size_id)
     ELSE 1=1
 END
+AND CASE
+    WHEN COALESCE(sqlc.narg(is_qty_limited), FALSE) = TRUE 
+    THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
+    ELSE 1=1
+END
 ORDER BY 
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
@@ -364,7 +369,7 @@ CASE WHEN sqlc.narg(order_by_low_price) IS NULL
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsNextPage :many
@@ -476,6 +481,11 @@ AND CASE
     THEN pi.size_id = sqlc.narg(size_id)
     ELSE 1=1
 END
+AND CASE
+    WHEN COALESCE(sqlc.narg(is_qty_limited), FALSE) = TRUE 
+    THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
+    ELSE 1=1
+END
 ORDER BY 
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
@@ -503,7 +513,7 @@ CASE WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NULL
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: SearchProductItemsOld :many
@@ -974,3 +984,44 @@ SELECT 1 AS is_admin
 SELECT COUNT(pi.id) FROM product_item AS pi
 JOIN product AS p ON p.id = pi.product_id
 WHERE EXISTS(SELECT is_admin FROM t1);
+
+-- name: ListProductItemsWithBestSales :many
+WITH sales_data AS (
+  SELECT product_item_id, SUM(quantity)::INT AS total_sold
+  FROM shop_order_item
+  WHERE date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+  GROUP BY product_item_id
+)
+SELECT 
+ pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
+ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
+ cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
+ bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
+ ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date, sd.total_sold
+FROM "product_item" AS pi
+INNER JOIN "product" AS p ON p.id = pi.product_id
+LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
+LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
+LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
+LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id  
+LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
+LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
+LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
+LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
+LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN "sales_data" AS sd ON sd.product_item_id = pi.id
+WHERE 
+pi.active = TRUE AND
+p.active =TRUE
+ORDER BY sd.total_sold DESC, pi.id DESC
+LIMIT $1;

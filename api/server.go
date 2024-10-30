@@ -129,12 +129,13 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/app-policy", server.getAppPolicy) //? no auth required
 
 	//*Products
-	app.Get("/api/v1/products/:productId", server.getProduct)                   //? no auth required
-	app.Get("/api/v1/products", server.listProducts)                            //? no auth required
-	app.Get("/api/v1/products-v2", server.listProductsV2)                       //? no auth required                                                       //? no auth required
-	app.Get("/api/v1/products-next-page", server.listProductsNextPage)          //? no auth required
-	app.Get("/api/v1/search-products", server.searchProducts)                   //? no auth required
-	app.Get("/api/v1/search-products-next-page", server.searchProductsNextPage) //? no auth required
+	app.Get("/api/v1/products/:productId", server.getProduct)                      //? no auth required
+	app.Get("/api/v1/products", server.listProducts)                               //? no auth required
+	app.Get("/api/v1/products-v2", server.listProductsV2)                          //? no auth required                                                       //? no auth required
+	app.Get("/api/v1/products-next-page", server.listProductsNextPage)             //? no auth required
+	app.Get("/api/v1/search-products", server.searchProducts)                      //? no auth required
+	app.Get("/api/v1/search-products-next-page", server.searchProductsNextPage)    //? no auth required
+	app.Get("/api/v1/products-best-sellers", server.listProductItemsWithBestSales) //? no auth required
 
 	//*Promotions
 	app.Get("/api/v1/promotions/:promotionId", server.getPromotion) //? no auth required

@@ -252,6 +252,7 @@ type listProductItemsV2QueryRequest struct {
 	IsNew            null.Bool `query:"is_new" validate:"omitempty"`
 	IsPromoted       null.Bool `query:"is_promoted" validate:"omitempty"`
 	IsFeatured       null.Bool `query:"is_featured" validate:"omitempty"`
+	IsQtyLimited     null.Bool `query:"is_qty_limited" validate:"omitempty"`
 	OrderByLowPrice  null.Bool `query:"order_by_low_price" validate:"omitempty"`
 	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
@@ -274,6 +275,7 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
 		IsFeatured:       query.IsFeatured,
+		IsQtyLimited:     query.IsQtyLimited,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}
@@ -321,6 +323,7 @@ type listProductItemsNextPageQueryRequest struct {
 	IsNew             null.Bool `query:"is_new" validate:"omitempty"`
 	IsPromoted        null.Bool `query:"is_promoted" validate:"omitempty"`
 	IsFeatured        null.Bool `query:"is_featured" validate:"omitempty"`
+	IsQtyLimited      null.Bool `query:"is_qty_limited" validate:"omitempty"`
 	OrderByLowPrice   null.Bool `query:"order_by_low_price" validate:"omitempty"`
 	OrderByHighPrice  null.Bool `query:"order_by_high_price" validate:"omitempty"`
 }
@@ -345,6 +348,7 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
 		IsFeatured:       query.IsFeatured,
+		IsQtyLimited:     query.IsQtyLimited,
 		OrderByLowPrice:  query.OrderByLowPrice,
 		OrderByHighPrice: query.OrderByHighPrice,
 	}
@@ -738,6 +742,39 @@ func (server *Server) listProductItemsWithCategoryPromotionsNextPage(ctx *fiber.
 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
 
 	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Status(fiber.StatusOK).JSON(productItems)
+	return nil
+
+}
+
+////////////// * Products with Best Sells Per Month List API //////////////
+
+type listProductItemsWithBestSalesQueryRequest struct {
+	Limit int32 `query:"limit" validate:"required,min=1,max=50"`
+}
+
+func (server *Server) listProductItemsWithBestSales(ctx *fiber.Ctx) error {
+	query := &listProductItemsWithBestSalesQueryRequest{}
+
+	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	productItems, err := server.store.ListProductItemsWithBestSales(ctx.Context(), query.Limit)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	if len(productItems) == 0 {
+		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsWithBestSalesRow{})
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
