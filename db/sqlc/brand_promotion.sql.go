@@ -278,6 +278,7 @@ SELECT brand_id, promotion_id, brand_promotion_image, bp.active, pb.id, brand_na
 LEFT JOIN "product_brand" AS pb ON pb.id = bp.brand_id
 JOIN "promotion" AS promo ON promo.id = bp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 WHERE bp.brand_promotion_image IS NOT NULL AND bp.active = true
+ORDER BY promo.start_date DESC
 `
 
 type ListBrandPromotionsWithImagesRow struct {

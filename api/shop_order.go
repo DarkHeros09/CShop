@@ -111,8 +111,8 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 		// 	"time":  "2:45",
 		// },
 		Notification: &messaging.Notification{
-			Title: "$جاهز",
-			Body:  "الشحنة جاهزة للتسليم 🎉🎉🎉",
+			Title: "📦✨ طلبك جاهز للتوصيل!",
+			Body:  "مرحبًا! 🎉 طلبك أصبح جاهزًا للتوصيل 🚚. سيتم إرساله قريبًا إلى عنوانك 🏠. شكراً لتسوقك معنا! ❤️",
 		},
 		// Android: &messaging.AndroidConfig{
 		// 	Data: map[string]string{

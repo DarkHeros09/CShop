@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -410,7 +411,7 @@ func TestListProductItemsV2(t *testing.T) {
 	// fmt.Println(initialSearchResult)
 	require.NoError(t, err)
 	require.NotEmpty(t, initialSearchResult)
-	require.Equal(t, len(initialSearchResult), 10)
+	require.Equal(t, 10, len(initialSearchResult))
 
 	arg1 := ListProductItemsNextPageParams{
 		Limit:         10,
@@ -419,10 +420,10 @@ func TestListProductItemsV2(t *testing.T) {
 	}
 
 	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg1)
-	// fmt.Println(secondPage)
+	fmt.Println(len(secondPage))
 	require.NoError(t, err)
 	require.NotEmpty(t, secondPage)
-	require.Equal(t, len(secondPage), 10)
+	require.Equal(t, 10, len(secondPage))
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, secondPage[len(secondPage)-1].ID)
 
 	arg2 := ListProductItemsNextPageParams{
@@ -437,6 +438,245 @@ func TestListProductItemsV2(t *testing.T) {
 	require.Equal(t, len(initialSearchResult), 10)
 	require.Greater(t, secondPage[len(secondPage)-1].ID, thirdPage[len(thirdPage)-1].ID)
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+}
+func TestListProductItemsV2OrderByHighPrice(t *testing.T) {
+	t.Parallel()
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	arg1 := ListProductItemsV2Params{
+		Limit:            10,
+		OrderByHighPrice: true,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg1)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, 10, len(initialSearchResult))
+	for i := 0; i < len(initialSearchResult)-1; i++ {
+		price1, err := strconv.ParseFloat(initialSearchResult[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(initialSearchResult[i+1].Price, 64)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, price1, price2)
+
+	}
+
+	arg2 := ListProductItemsNextPageParams{
+		Limit:            10,
+		ProductItemID:    initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:        initialSearchResult[len(initialSearchResult)-1].ProductID,
+		OrderByHighPrice: true,
+		Price:            null.StringFrom(initialSearchResult[len(initialSearchResult)-1].Price),
+	}
+
+	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
+	fmt.Println(len(secondPage))
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, 10, len(secondPage))
+	require.GreaterOrEqual(t, initialSearchResult[len(initialSearchResult)-1].Price, secondPage[len(secondPage)-1].Price)
+	for i := 0; i < len(secondPage)-1; i++ {
+		price1, err := strconv.ParseFloat(secondPage[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(secondPage[i+1].Price, 64)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, price1, price2)
+
+	}
+
+	arg3 := ListProductItemsNextPageParams{
+		Limit:            10,
+		ProductItemID:    secondPage[len(secondPage)-1].ID,
+		ProductID:        secondPage[len(secondPage)-1].ProductID,
+		OrderByHighPrice: true,
+		Price:            null.StringFrom(secondPage[len(secondPage)-1].Price),
+	}
+
+	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg3)
+	require.NoError(t, err)
+	require.NotEmpty(t, thirdPage)
+	require.Equal(t, len(thirdPage), 10)
+	require.GreaterOrEqual(t, secondPage[len(secondPage)-1].Price, thirdPage[len(thirdPage)-1].Price)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+	for i := 0; i < len(thirdPage)-1; i++ {
+		price1, err := strconv.ParseFloat(thirdPage[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(thirdPage[i+1].Price, 64)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, price1, price2)
+
+	}
+}
+
+func TestListProductItemsV2OrderByLowPrice(t *testing.T) {
+	t.Parallel()
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	arg1 := ListProductItemsV2Params{
+		Limit:           10,
+		OrderByLowPrice: true,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg1)
+	// fmt.Println(initialSearchResult)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, 10, len(initialSearchResult))
+	for i := 0; i < len(initialSearchResult)-1; i++ {
+		price1, err := strconv.ParseFloat(initialSearchResult[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(initialSearchResult[i+1].Price, 64)
+		require.NoError(t, err)
+		require.LessOrEqual(t, price1, price2)
+
+	}
+
+	arg2 := ListProductItemsNextPageParams{
+		Limit:           10,
+		ProductItemID:   initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:       initialSearchResult[len(initialSearchResult)-1].ProductID,
+		OrderByLowPrice: true,
+		Price:           null.StringFrom(initialSearchResult[len(initialSearchResult)-1].Price),
+	}
+
+	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
+	fmt.Println(len(secondPage))
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, 10, len(secondPage))
+	require.LessOrEqual(t, initialSearchResult[len(initialSearchResult)-1].Price, secondPage[len(secondPage)-1].Price)
+	for i := 0; i < len(secondPage)-1; i++ {
+		price1, err := strconv.ParseFloat(secondPage[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(secondPage[i+1].Price, 64)
+		require.NoError(t, err)
+		require.LessOrEqual(t, price1, price2)
+
+	}
+
+	arg3 := ListProductItemsNextPageParams{
+		Limit:           10,
+		ProductItemID:   secondPage[len(secondPage)-1].ID,
+		ProductID:       secondPage[len(secondPage)-1].ProductID,
+		OrderByLowPrice: true,
+		Price:           null.StringFrom(secondPage[len(secondPage)-1].Price),
+	}
+
+	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg3)
+	require.NoError(t, err)
+	require.NotEmpty(t, thirdPage)
+	require.Equal(t, len(thirdPage), 10)
+	require.LessOrEqual(t, secondPage[len(secondPage)-1].Price, thirdPage[len(thirdPage)-1].Price)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+	for i := 0; i < len(thirdPage)-1; i++ {
+		price1, err := strconv.ParseFloat(thirdPage[i].Price, 64)
+		require.NoError(t, err)
+		price2, err := strconv.ParseFloat(thirdPage[i+1].Price, 64)
+		require.NoError(t, err)
+		require.LessOrEqual(t, price1, price2)
+
+	}
+}
+
+func TestListProductItemsV2OrderByNew(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	arg1 := ListProductItemsV2Params{
+		Limit:      10,
+		OrderByNew: true,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg1)
+	fmt.Println(initialSearchResult[len(initialSearchResult)-1].CreatedAt)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, 10, len(initialSearchResult))
+
+	arg2 := ListProductItemsNextPageParams{
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
+		OrderByNew:    true,
+		CreatedAt:     null.TimeFrom(initialSearchResult[len(initialSearchResult)-1].CreatedAt),
+	}
+
+	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
+	fmt.Println(len(secondPage))
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, 10, len(secondPage))
+	require.GreaterOrEqual(t, initialSearchResult[len(initialSearchResult)-1].CreatedAt, secondPage[len(secondPage)-1].CreatedAt)
+
+	arg3 := ListProductItemsNextPageParams{
+		Limit:         10,
+		ProductItemID: secondPage[len(secondPage)-1].ID,
+		ProductID:     secondPage[len(secondPage)-1].ProductID,
+		OrderByNew:    true,
+		CreatedAt:     null.TimeFrom(secondPage[len(secondPage)-1].CreatedAt),
+	}
+
+	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg3)
+	require.NoError(t, err)
+	require.NotEmpty(t, thirdPage)
+	require.Equal(t, len(thirdPage), 10)
+	require.GreaterOrEqual(t, secondPage[len(secondPage)-1].CreatedAt, thirdPage[len(thirdPage)-1].CreatedAt)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+
+}
+
+func TestListProductItemsV2OrderByOld(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		createRandomProductItem(t)
+	}
+
+	arg1 := ListProductItemsV2Params{
+		Limit:      10,
+		OrderByOld: true,
+	}
+
+	initialSearchResult, err := testStore.ListProductItemsV2(context.Background(), arg1)
+	fmt.Println(initialSearchResult[len(initialSearchResult)-1].CreatedAt)
+	require.NoError(t, err)
+	require.NotEmpty(t, initialSearchResult)
+	require.Equal(t, 10, len(initialSearchResult))
+
+	arg2 := ListProductItemsNextPageParams{
+		Limit:         10,
+		ProductItemID: initialSearchResult[len(initialSearchResult)-1].ID,
+		ProductID:     initialSearchResult[len(initialSearchResult)-1].ProductID,
+		OrderByOld:    true,
+		CreatedAt:     null.TimeFrom(initialSearchResult[len(initialSearchResult)-1].CreatedAt),
+	}
+
+	secondPage, err := testStore.ListProductItemsNextPage(context.Background(), arg2)
+	fmt.Println(len(secondPage))
+	require.NoError(t, err)
+	require.NotEmpty(t, secondPage)
+	require.Equal(t, 10, len(secondPage))
+	require.LessOrEqual(t, initialSearchResult[len(initialSearchResult)-1].CreatedAt, secondPage[len(secondPage)-1].CreatedAt)
+
+	arg3 := ListProductItemsNextPageParams{
+		Limit:         10,
+		ProductItemID: secondPage[len(secondPage)-1].ID,
+		ProductID:     secondPage[len(secondPage)-1].ProductID,
+		OrderByOld:    true,
+		CreatedAt:     null.TimeFrom(secondPage[len(secondPage)-1].CreatedAt),
+	}
+
+	thirdPage, err := testStore.ListProductItemsNextPage(context.Background(), arg3)
+	require.NoError(t, err)
+	require.NotEmpty(t, thirdPage)
+	require.Equal(t, len(thirdPage), 10)
+	require.LessOrEqual(t, secondPage[len(secondPage)-1].CreatedAt, thirdPage[len(thirdPage)-1].CreatedAt)
+	// require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
+
 }
 
 func TestSearchProductItems(t *testing.T) {
@@ -476,18 +716,25 @@ func TestSearchProductItems(t *testing.T) {
 func TestListProductItemsWithPromotion(t *testing.T) {
 	t.Parallel()
 	var productId int64
-	var isOK = true
-	for isOK {
+	var ok bool = false
+	for {
 		pi := createRandomProductItem(t)
-		arg := ListProductItemsWithPromotionsParams{
-			Limit:     10,
-			ProductID: pi.ProductID,
+		for pi.Active {
+			arg := ListProductItemsWithPromotionsParams{
+				Limit:     10,
+				ProductID: pi.ProductID,
+			}
+			productItem, err := testStore.ListProductItemsWithPromotions(context.Background(), arg)
+			require.NoError(t, err)
+			if len(productItem) > 0 && productItem[len(productItem)-1].ProductPromoActive == true {
+				productId = productItem[len(productItem)-1].ProductID
+				ok = true
+				break
+			}
+			break
 		}
-		productItem, err := testStore.ListProductItemsWithPromotions(context.Background(), arg)
-		require.NoError(t, err)
-		if len(productItem) > 0 && productItem[len(productItem)-1].ProductPromoActive == true {
-			productId = productItem[len(productItem)-1].ProductID
-			isOK = false
+		if ok {
+			break
 		}
 	}
 

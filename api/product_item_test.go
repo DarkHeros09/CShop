@@ -525,7 +525,119 @@ func TestListProductItemsWithBestSalesAPI(t *testing.T) {
 			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
-			url := "/api/v1/products-best-sellers"
+			url := "/api/v1/product-items-best-sellers"
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+	}
+}
+
+func TestListProductItemsV2API(t *testing.T) {
+	n := 10
+	productItems := make([]db.ListProductItemsV2Row, n)
+	for i := 0; i < n; i++ {
+		productItems[i] = randomListProductItemV2()
+	}
+
+	type Query struct {
+		Limit int
+	}
+
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			query: Query{
+				Limit: n,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.ListProductItemsV2Params{
+					Limit:            10,
+					CategoryID:       null.IntFromPtr(nil),
+					BrandID:          null.IntFromPtr(nil),
+					ColorID:          null.IntFromPtr(nil),
+					SizeID:           null.IntFromPtr(nil),
+					IsNew:            null.BoolFromPtr(nil),
+					IsPromoted:       null.BoolFromPtr(nil),
+					IsFeatured:       null.BoolFromPtr(nil),
+					IsQtyLimited:     null.BoolFromPtr(nil),
+					OrderByLowPrice:  null.BoolFromPtr(nil),
+					OrderByHighPrice: null.BoolFromPtr(nil),
+					OrderByNew:       null.BoolFromPtr(nil),
+					OrderByOld:       null.BoolFromPtr(nil),
+				}
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(productItems, nil)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchListProductItemsV2(t, rsp.Body, productItems)
+			},
+		},
+		{
+			name: "InternalError",
+			query: Query{
+				Limit: 10,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.ListProductItemsV2Row{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidLimit",
+			query: Query{
+				Limit: 11,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListProductItemsV2(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			//recorder := httptest.NewRecorder()
+
+			url := "/api/v1/product-items-v2"
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -583,12 +695,16 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 					BrandID:          null.IntFromPtr(nil),
 					ColorID:          null.IntFromPtr(nil),
 					SizeID:           null.IntFromPtr(nil),
+					Price:            null.StringFromPtr(nil),
+					CreatedAt:        null.TimeFromPtr(nil),
 					IsNew:            null.BoolFromPtr(nil),
 					IsPromoted:       null.BoolFromPtr(nil),
 					IsFeatured:       null.BoolFromPtr(nil),
 					IsQtyLimited:     null.BoolFromPtr(nil),
 					OrderByLowPrice:  null.BoolFromPtr(nil),
 					OrderByHighPrice: null.BoolFromPtr(nil),
+					OrderByNew:       null.BoolFromPtr(nil),
+					OrderByOld:       null.BoolFromPtr(nil),
 				}
 
 				store.EXPECT().
@@ -893,116 +1009,6 @@ func TestSearchProductItemsNextPageAPI(t *testing.T) {
 			q.Add("product_item_cursor", fmt.Sprintf("%d", tc.query.ProductItemCursor))
 			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
 			q.Add("query", tc.query.Query)
-			request.URL.RawQuery = q.Encode()
-
-			request.Header.Set("Content-Type", "application/json")
-
-			rsp, err := server.router.Test(request)
-			require.NoError(t, err)
-			tc.checkResponse(rsp)
-		})
-	}
-}
-
-func TestListProductItemsV2API(t *testing.T) {
-	n := 10
-	productItems := make([]db.ListProductItemsV2Row, n)
-	for i := 0; i < n; i++ {
-		productItems[i] = randomListProductItemV2()
-	}
-
-	type Query struct {
-		Limit int
-	}
-
-	testCases := []struct {
-		name          string
-		query         Query
-		buildStubs    func(store *mockdb.MockStore)
-		checkResponse func(rsp *http.Response)
-	}{
-		{
-			name: "OK",
-			query: Query{
-				Limit: n,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListProductItemsV2Params{
-					Limit:            10,
-					CategoryID:       null.IntFromPtr(nil),
-					BrandID:          null.IntFromPtr(nil),
-					ColorID:          null.IntFromPtr(nil),
-					SizeID:           null.IntFromPtr(nil),
-					IsNew:            null.BoolFromPtr(nil),
-					IsPromoted:       null.BoolFromPtr(nil),
-					IsFeatured:       null.BoolFromPtr(nil),
-					IsQtyLimited:     null.BoolFromPtr(nil),
-					OrderByLowPrice:  null.BoolFromPtr(nil),
-					OrderByHighPrice: null.BoolFromPtr(nil),
-				}
-				store.EXPECT().
-					ListProductItemsV2(gomock.Any(), gomock.Eq(arg)).
-					Times(1).
-					Return(productItems, nil)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchListProductItemsV2(t, rsp.Body, productItems)
-			},
-		},
-		{
-			name: "InternalError",
-			query: Query{
-				Limit: 10,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductItemsV2(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return([]db.ListProductItemsV2Row{}, pgx.ErrTxClosed)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidLimit",
-			query: Query{
-				Limit: 11,
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListProductItemsV2(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
-			},
-		},
-	}
-
-	for i := range testCases {
-		tc := testCases[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-
-			store := mockdb.NewMockStore(ctrl)
-			worker := mockwk.NewMockTaskDistributor(ctrl)
-			ik := mockik.NewMockImageKitManagement(ctrl)
-			mailSender := mockemail.NewMockEmailSender(ctrl)
-			tc.buildStubs(store)
-
-			server := newTestServer(t, store, worker, ik, mailSender)
-			//recorder := httptest.NewRecorder()
-
-			url := "/api/v1/product-items-v2"
-			request, err := http.NewRequest(fiber.MethodGet, url, nil)
-			require.NoError(t, err)
-
-			// Add query parameters to request URL
-			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")

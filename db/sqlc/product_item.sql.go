@@ -649,36 +649,54 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE
-(
     CASE
+    -- WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+    -- THEN (
+    --     fpi.active = TRUE
+    --     AND fpi.start_date <= CURRENT_DATE
+    --     AND fpi.end_date >= CURRENT_DATE
+    --     AND fpi.id < sqlc.arg(featured_product_item_id) AND
+    --      CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+    --      THEN (pi.price = sqlc.narg(price) 
+    --      AND  pi.id = sqlc.arg(product_item_id) 
+    --      AND pi.product_id < sqlc.arg(product_id))
+    --      END
+    --     )
     WHEN COALESCE($2, FALSE) = TRUE
+    THEN (
+        --  pi.created_at >= CURRENT_DATE - INTERVAL '10 days' AND
+        ((pi.created_at < $3) 
+        OR (pi.created_at = $3 AND pi.id < $4) 
+        OR (pi.created_at = $3 AND pi.id = $4 AND pi.product_id < $5))
+    ) 
+    WHEN COALESCE($6, FALSE) = TRUE
+    THEN (
+        --  pi.created_at >= CURRENT_DATE - INTERVAL '10 days' AND
+        ((pi.created_at > $3) 
+        OR (pi.created_at = $3 AND pi.id < $4) 
+        OR (pi.created_at = $3 AND pi.id = $4 AND pi.product_id < $5))
+    ) 
+    WHEN COALESCE($7, FALSE) = TRUE
 	THEN (
-        (pi.price < $3) OR
-         (pi.price = $3 AND  pi.id < $4) OR
-         CASE WHEN ($5::INTEGER,$6::INTEGER) IS NOT NULL
-         THEN (pi.price = $3 AND  pi.id = $4 AND pi.product_id < $7)
-         ELSE 1=1
-         END
-         )
-    WHEN COALESCE($8, FALSE) = TRUE
+        (pi.price < $8) OR
+        (pi.price = $8 AND pi.id < $4) OR
+        (pi.price = $8 AND pi.id = $4 AND pi.product_id < $5)
+        )
+    WHEN COALESCE($9, FALSE) = TRUE
 	THEN (
-        (pi.price > $3) OR
-         (pi.price = $3 AND  pi.id > $4) OR
-         CASE WHEN ($5::INTEGER,$6::INTEGER) IS NOT NULL
-         THEN (pi.price = $3 AND  pi.id = $4 AND pi.product_id > $7)
-         ELSE 1=1
-         END
+        (pi.price > $8) OR
+        (pi.price = $8 AND pi.id < $4) OR
+        (pi.price = $8 AND pi.id = $4 AND pi.product_id < $5)
          )
-	ELSE pi.id < $4 AND
-        CASE WHEN ($5::INTEGER,$6::INTEGER) IS NOT NULL
-        THEN pi.product_id < $7
-        ELSE 1=1
-        END
-END ) AND
+	ELSE (pi.id < $4 
+         OR (pi.id = $4 AND pi.product_id < $5))
+         END
+
+AND
 pi.active = TRUE AND
 p.active =TRUE AND
 CASE
-WHEN COALESCE($9, FALSE) = TRUE
+WHEN COALESCE($10, FALSE) = TRUE
 THEN 
 ((pp.active = TRUE
 AND ppromo.active = TRUE
@@ -695,7 +713,7 @@ AND bpromo.end_date >= CURRENT_DATE))=TRUE
 ELSE TRUE
 END 
 AND CASE
-WHEN COALESCE($10, FALSE) = TRUE
+WHEN COALESCE($11, FALSE) = TRUE
 THEN 
 ((fpi.active = TRUE
 AND fpi.start_date <= CURRENT_DATE 
@@ -704,60 +722,54 @@ ELSE TRUE
 END 
 AND
 CASE
-WHEN COALESCE($11, FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+WHEN COALESCE($12, FALSE) = TRUE
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '10 days'
 ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($5, 0) > 0 
-    THEN pc.id = $5
-    ELSE 1=1
-END 
-AND CASE
-    WHEN COALESCE($6, 0) > 0 
-    THEN pb.id = $6
-    ELSE 1=1
-END 
-AND CASE
-    WHEN COALESCE($12, 0) > 0 
-    THEN pi.color_id = $12
-    ELSE 1=1
-END
-AND CASE
     WHEN COALESCE($13, 0) > 0 
-    THEN pi.size_id = $13
+    THEN pc.id = $13
+    ELSE 1=1
+END 
+AND CASE
+    WHEN COALESCE($14, 0) > 0 
+    THEN pb.id = $14
+    ELSE 1=1
+END 
+AND CASE
+    WHEN COALESCE($15, 0) > 0 
+    THEN pi.color_id = $15
     ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($14, FALSE) = TRUE 
+    WHEN COALESCE($16, 0) > 0 
+    THEN pi.size_id = $16
+    ELSE 1=1
+END
+AND CASE
+    WHEN COALESCE($17, FALSE) = TRUE 
     THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
     ELSE 1=1
 END
-ORDER BY 
+ORDER BY
 CASE
-	WHEN COALESCE($8, FALSE) = TRUE
+    WHEN COALESCE($2, FALSE) = TRUE
+    THEN pi.created_at END DESC,
+CASE
+    WHEN COALESCE($6, FALSE) = TRUE
+    THEN pi.created_at END ASC,
+CASE
+	WHEN COALESCE($9, FALSE) = TRUE
 		THEN pi.price
-	ELSE ''
 END ASC,
 CASE
-	WHEN COALESCE($2, FALSE) = TRUE
+	WHEN COALESCE($7, FALSE) = TRUE
 		THEN pi.price
-	ELSE ''
 END DESC,
-CASE
-    WHEN $8::BOOLEAN IS NOT NULL
-    THEN pi.id END ASC,
-CASE
-	WHEN ($8::BOOLEAN,$5::INTEGER,$6::INTEGER) IS NOT NULL
-	THEN pi.product_id
-    END ASC,
-CASE WHEN $8::BOOLEAN IS NULL
-	THEN pi.id END DESC,
-    CASE
-	WHEN $8::BOOLEAN IS NULL AND ($5::INTEGER,$6::INTEGER) IS NOT NULL
-	THEN pi.product_id
-    END DESC
-LIMIT $1 +1
+    pi.id DESC,
+    pi.product_id DESC
+
+LIMIT $1 + 1
 )
 
 SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
@@ -766,16 +778,19 @@ LIMIT $1
 
 type ListProductItemsNextPageParams struct {
 	Limit            int32       `json:"limit"`
+	OrderByNew       interface{} `json:"order_by_new"`
+	CreatedAt        null.Time   `json:"created_at"`
+	ProductItemID    int64       `json:"product_item_id"`
+	ProductID        int64       `json:"product_id"`
+	OrderByOld       interface{} `json:"order_by_old"`
 	OrderByHighPrice interface{} `json:"order_by_high_price"`
 	Price            null.String `json:"price"`
-	ProductItemID    int64       `json:"product_item_id"`
-	CategoryID       null.Int    `json:"category_id"`
-	BrandID          null.Int    `json:"brand_id"`
-	ProductID        int64       `json:"product_id"`
 	OrderByLowPrice  interface{} `json:"order_by_low_price"`
 	IsPromoted       interface{} `json:"is_promoted"`
 	IsFeatured       interface{} `json:"is_featured"`
 	IsNew            interface{} `json:"is_new"`
+	CategoryID       interface{} `json:"category_id"`
+	BrandID          interface{} `json:"brand_id"`
 	ColorID          interface{} `json:"color_id"`
 	SizeID           interface{} `json:"size_id"`
 	IsQtyLimited     interface{} `json:"is_qty_limited"`
@@ -832,19 +847,26 @@ type ListProductItemsNextPageRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// CASE
+//
+//	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+//	THEN fpi.id END DESC,
 func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsNextPage,
 		arg.Limit,
+		arg.OrderByNew,
+		arg.CreatedAt,
+		arg.ProductItemID,
+		arg.ProductID,
+		arg.OrderByOld,
 		arg.OrderByHighPrice,
 		arg.Price,
-		arg.ProductItemID,
-		arg.CategoryID,
-		arg.BrandID,
-		arg.ProductID,
 		arg.OrderByLowPrice,
 		arg.IsPromoted,
 		arg.IsFeatured,
 		arg.IsNew,
+		arg.CategoryID,
+		arg.BrandID,
 		arg.ColorID,
 		arg.SizeID,
 		arg.IsQtyLimited,
@@ -1216,31 +1238,27 @@ AND CASE
     THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
     ELSE 1=1
 END
-ORDER BY 
+ORDER BY
 CASE
-	WHEN COALESCE($10, FALSE) = TRUE
+    WHEN COALESCE($10, FALSE) = TRUE
+    THEN pi.created_at END DESC,
+CASE
+    WHEN COALESCE($11, FALSE) = TRUE
+    THEN pi.created_at END ASC,
+CASE
+	WHEN COALESCE($12, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END ASC,
 CASE
-	WHEN COALESCE($11, FALSE) = TRUE
+	WHEN COALESCE($13, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END DESC,
-CASE
-    WHEN $10 IS NOT NULL
-    THEN pi.id END ASC,
-CASE
-	WHEN ($10,$5,$6) IS NOT NULL
-	THEN pi.product_id
-    END ASC,
-CASE WHEN $10 IS NULL
-	THEN pi.id END DESC,
-    CASE
-	WHEN $10 IS NULL AND ($5,$6) IS NOT NULL
-	THEN pi.product_id
-    END DESC
-LIMIT $1 +1
+    pi.id DESC,
+    pi.product_id DESC
+
+LIMIT $1 + 1
 )
 
 SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
@@ -1257,6 +1275,8 @@ type ListProductItemsV2Params struct {
 	ColorID          interface{} `json:"color_id"`
 	SizeID           interface{} `json:"size_id"`
 	IsQtyLimited     interface{} `json:"is_qty_limited"`
+	OrderByNew       interface{} `json:"order_by_new"`
+	OrderByOld       interface{} `json:"order_by_old"`
 	OrderByLowPrice  interface{} `json:"order_by_low_price"`
 	OrderByHighPrice interface{} `json:"order_by_high_price"`
 }
@@ -1312,6 +1332,10 @@ type ListProductItemsV2Row struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// CASE
+//
+//	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+//	THEN fpi.id END DESC,
 func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2Params) ([]ListProductItemsV2Row, error) {
 	rows, err := q.db.Query(ctx, listProductItemsV2,
 		arg.Limit,
@@ -1323,6 +1347,8 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 		arg.ColorID,
 		arg.SizeID,
 		arg.IsQtyLimited,
+		arg.OrderByNew,
+		arg.OrderByOld,
 		arg.OrderByLowPrice,
 		arg.OrderByHighPrice,
 	)
@@ -1640,7 +1666,7 @@ LEFT JOIN "sales_data" AS sd ON sd.product_item_id = pi.id
 WHERE 
 pi.active = TRUE AND
 p.active =TRUE
-ORDER BY sd.total_sold DESC, pi.id DESC
+ORDER BY sd.total_sold DESC, pi.id DESC, p.id DESC
 LIMIT $1
 `
 
@@ -1797,7 +1823,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -1919,8 +1945,8 @@ INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
  
 WHERE 
 pb.id = $2 AND
-pi.id < $3 AND
-p.id < $4 AND
+(pi.id < $3
+OR (pi.id = $3 AND p.id < $4)) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 ((bp.active = TRUE
@@ -1933,7 +1959,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2074,7 +2100,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2196,8 +2222,8 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
  
 WHERE 
 pc.id = $2 AND
-pi.id < $3 AND
-p.id < $4 AND
+(pi.id < $3
+OR (pi.id = $3 AND p.id < $4)) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 ((cp.active = TRUE
@@ -2210,7 +2236,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2346,12 +2372,12 @@ AND ppromo.active = TRUE
 AND ppromo.start_date <= CURRENT_DATE 
 AND ppromo.end_date >= CURRENT_DATE))
 ORDER BY 
-pi.id DESC,
-p.id DESC
+pi.id DESC
+
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2481,12 +2507,12 @@ AND ppromo.active = TRUE
 AND ppromo.start_date <= CURRENT_DATE 
 AND ppromo.end_date >= CURRENT_DATE))
 ORDER BY 
-pi.id DESC,
-p.id DESC
+pi.id DESC
+
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2636,7 +2662,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2794,8 +2820,8 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE 
-pi.id < $2 AND
-p.id < $3 AND
+(pi.id < $2
+OR (pi.id = $2 AND p.id < $3)) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 p.search @@ 
@@ -2815,7 +2841,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2965,7 +2991,7 @@ SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sk
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
+LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
@@ -2977,7 +3003,9 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
-WHERE pi.active = TRUE AND p.search @@  
+WHERE pi.active = TRUE 
+AND p.active = TRUE
+AND p.search @@  
 CASE
     WHEN char_length($3) > 0 THEN to_tsquery(concat($3, ':*'))
     ELSE to_tsquery($3)

@@ -248,6 +248,9 @@ type Querier interface {
 	ListProductImagesV2(ctx context.Context, limit int32) ([]ListProductImagesV2Row, error)
 	ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error)
 	ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error)
+	// CASE
+	//     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+	//     THEN fpi.id END DESC,
 	ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error)
 	// WITH t1 AS (
 	// SELECT COUNT(*) OVER() AS total_count
@@ -256,6 +259,9 @@ type Querier interface {
 	// LIMIT 1
 	// )
 	ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error)
+	// CASE
+	//     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+	//     THEN fpi.id END DESC,
 	ListProductItemsV2(ctx context.Context, arg ListProductItemsV2Params) ([]ListProductItemsV2Row, error)
 	// WITH t1 (total_count) AS (
 	// SELECT COUNT(*) OVER() AS total_count

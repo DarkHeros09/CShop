@@ -56,6 +56,7 @@ func adminCreateRandomProductPromotion(t *testing.T) ProductPromotion {
 func TestCreateProductPromotion(t *testing.T) {
 	createRandomProductPromotion(t)
 }
+
 func TestAdminCreateProductPromotion(t *testing.T) {
 	adminCreateRandomProductPromotion(t)
 }
@@ -136,6 +137,7 @@ func TestDeleteProductPromotion(t *testing.T) {
 }
 
 func TestListProductPromotions(t *testing.T) {
+	t.Parallel()
 	for i := 0; i < 5; i++ {
 		createRandomProductPromotion(t)
 	}
@@ -156,7 +158,7 @@ func TestListProductPromotions(t *testing.T) {
 }
 
 func TestListProductPromotionsWithImages(t *testing.T) {
-
+	t.Parallel()
 	for i := 0; i < 5; i++ {
 		createRandomProductPromotion(t)
 	}

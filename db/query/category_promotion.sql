@@ -43,7 +43,8 @@ LIMIT 1;
 SELECT * FROM "category_promotion" AS cp
 LEFT JOIN "product_category" AS pc ON pc.id = cp.category_id
 JOIN "promotion" AS promo ON promo.id = cp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
-WHERE cp.category_promotion_image IS NOT NULL AND cp.active = true;
+WHERE cp.category_promotion_image IS NOT NULL AND cp.active = true
+ORDER BY promo.start_date DESC;
 
 -- name: AdminListCategoryPromotions :many
 With t1 AS (

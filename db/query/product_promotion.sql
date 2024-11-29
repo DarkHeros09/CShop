@@ -35,8 +35,10 @@ LIMIT 1;
 -- name: ListProductPromotionsWithImages :many
 SELECT * FROM "product_promotion" AS pp
 LEFT JOIN "product" AS p ON p.id = pp.product_id
-JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
-WHERE pp.product_promotion_image IS NOT NULL AND pp.active = true;
+JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = TRUE AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
+JOIN "product_item" AS pi ON pi.product_id = p.id AND pi.active =TRUE
+WHERE pp.product_promotion_image IS NOT NULL AND pp.active = TRUE
+ORDER BY promo.start_date DESC;
 
 -- name: ListProductPromotions :many
 SELECT * FROM "product_promotion"

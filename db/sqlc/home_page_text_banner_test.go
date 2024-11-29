@@ -17,6 +17,7 @@ func createRandomHomePageTextBanner(t *testing.T) HomePageTextBanner {
 		Name:        util.RandomUser(),
 		Description: util.RandomUser(),
 		AdminID:     admin.ID,
+		Active:      util.RandomBool(),
 	}
 	productImage, err := testStore.CreateHomePageTextBanner(context.Background(), arg)
 	require.NoError(t, err)
@@ -82,6 +83,7 @@ func TestDeleteHomePageTextBanner(t *testing.T) {
 }
 
 func TestListHomePageTextBanners(t *testing.T) {
+	t.Parallel()
 	for i := 0; i < 5; i++ {
 		createRandomHomePageTextBanner(t)
 	}

@@ -15,28 +15,45 @@ const createHomePageTextBanner = `-- name: CreateHomePageTextBanner :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $3
+    WHERE "admin".id = $4
     AND active = TRUE
     )
 INSERT INTO "home_page_text_banner" (
   name,
-  description
+  description,
+  active
 ) 
-SELECT $1, $2 FROM t1
+SELECT $1,
+ $2,
+ $3
+FROM t1
 WHERE EXISTS (SELECT 1 FROM t1)
-RETURNING id, name, description
+RETURNING id, name, description, active, created_at, updated_at
 `
 
 type CreateHomePageTextBannerParams struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Active      bool   `json:"active"`
 	AdminID     int64  `json:"admin_id"`
 }
 
 func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error) {
-	row := q.db.QueryRow(ctx, createHomePageTextBanner, arg.Name, arg.Description, arg.AdminID)
+	row := q.db.QueryRow(ctx, createHomePageTextBanner,
+		arg.Name,
+		arg.Description,
+		arg.Active,
+		arg.AdminID,
+	)
 	var i HomePageTextBanner
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
@@ -63,19 +80,29 @@ func (q *Queries) DeleteHomePageTextBanner(ctx context.Context, arg DeleteHomePa
 }
 
 const getHomePageTextBanner = `-- name: GetHomePageTextBanner :one
-SELECT id, name, description FROM "home_page_text_banner"
+SELECT id, name, description, active, created_at, updated_at FROM "home_page_text_banner"
 WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetHomePageTextBanner(ctx context.Context, id int64) (HomePageTextBanner, error) {
 	row := q.db.QueryRow(ctx, getHomePageTextBanner, id)
 	var i HomePageTextBanner
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
 const listHomePageTextBanners = `-- name: ListHomePageTextBanners :many
-SELECT id, name, description FROM "home_page_text_banner"
+SELECT id, name, description, active, created_at, updated_at FROM "home_page_text_banner"
+WHERE active = TRUE
+ORDER BY created_at DESC, updated_at DESC
+LIMIT 5
 `
 
 func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBanner, error) {
@@ -87,7 +114,14 @@ func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBa
 	items := []HomePageTextBanner{}
 	for rows.Next() {
 		var i HomePageTextBanner
-		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -102,21 +136,23 @@ const updateHomePageTextBanner = `-- name: UpdateHomePageTextBanner :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $4
+    WHERE "admin".id = $5
     AND active = TRUE
     )
 UPDATE "home_page_text_banner"
 SET 
 name = COALESCE($1,name),
-description = COALESCE($2,description)
-WHERE "home_page_text_banner".id = $3
+description = COALESCE($2,description),
+active = COALESCE($3,active)
+WHERE "home_page_text_banner".id = $4
 AND EXISTS (SELECT 1 FROM t1)
-RETURNING id, name, description
+RETURNING id, name, description, active, created_at, updated_at
 `
 
 type UpdateHomePageTextBannerParams struct {
 	Name        null.String `json:"name"`
 	Description null.String `json:"description"`
+	Active      null.Bool   `json:"active"`
 	ID          int64       `json:"id"`
 	AdminID     int64       `json:"admin_id"`
 }
@@ -125,10 +161,18 @@ func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePa
 	row := q.db.QueryRow(ctx, updateHomePageTextBanner,
 		arg.Name,
 		arg.Description,
+		arg.Active,
 		arg.ID,
 		arg.AdminID,
 	)
 	var i HomePageTextBanner
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }

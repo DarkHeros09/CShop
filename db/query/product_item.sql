@@ -342,7 +342,16 @@ AND CASE
     THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
     ELSE 1=1
 END
-ORDER BY 
+ORDER BY
+CASE
+    WHEN COALESCE(sqlc.narg(order_by_new), FALSE) = TRUE
+    THEN pi.created_at END DESC,
+CASE
+    WHEN COALESCE(sqlc.narg(order_by_old), FALSE) = TRUE
+    THEN pi.created_at END ASC,
+-- CASE
+--     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+--     THEN fpi.id END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 		THEN pi.price
@@ -353,20 +362,10 @@ CASE
 		THEN pi.price
 	ELSE ''
 END DESC,
-CASE
-    WHEN sqlc.narg(order_by_low_price) IS NOT NULL
-    THEN pi.id END ASC,
-CASE
-	WHEN (sqlc.narg(order_by_low_price),sqlc.narg(category_id),sqlc.narg(brand_id)) IS NOT NULL
-	THEN pi.product_id
-    END ASC,
-CASE WHEN sqlc.narg(order_by_low_price) IS NULL
-	THEN pi.id END DESC,
-    CASE
-	WHEN sqlc.narg(order_by_low_price) IS NULL AND (sqlc.narg(category_id),sqlc.narg(brand_id)) IS NOT NULL
-	THEN pi.product_id
-    END DESC
-LIMIT $1 +1
+    pi.id DESC,
+    pi.product_id DESC
+
+LIMIT $1 + 1
 )
 
 SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
@@ -402,32 +401,50 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE
-(
     CASE
+    -- WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+    -- THEN (
+    --     fpi.active = TRUE
+    --     AND fpi.start_date <= CURRENT_DATE
+    --     AND fpi.end_date >= CURRENT_DATE
+    --     AND fpi.id < sqlc.arg(featured_product_item_id) AND
+    --      CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
+    --      THEN (pi.price = sqlc.narg(price) 
+    --      AND  pi.id = sqlc.arg(product_item_id) 
+    --      AND pi.product_id < sqlc.arg(product_id))
+    --      END
+    --     )
+    WHEN COALESCE(sqlc.narg(order_by_new), FALSE) = TRUE
+    THEN (
+        --  pi.created_at >= CURRENT_DATE - INTERVAL '10 days' AND
+        ((pi.created_at < sqlc.narg(created_at)) 
+        OR (pi.created_at = sqlc.narg(created_at) AND pi.id < sqlc.arg(product_item_id)) 
+        OR (pi.created_at = sqlc.narg(created_at) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id)))
+    ) 
+    WHEN COALESCE(sqlc.narg(order_by_old), FALSE) = TRUE
+    THEN (
+        --  pi.created_at >= CURRENT_DATE - INTERVAL '10 days' AND
+        ((pi.created_at > sqlc.narg(created_at)) 
+        OR (pi.created_at = sqlc.narg(created_at) AND pi.id < sqlc.arg(product_item_id)) 
+        OR (pi.created_at = sqlc.narg(created_at) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id)))
+    ) 
     WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
 	THEN (
         (pi.price < sqlc.narg(price)) OR
-         (pi.price = sqlc.narg(price) AND  pi.id < sqlc.arg(product_item_id)) OR
-         CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
-         THEN (pi.price = sqlc.narg(price) AND  pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
-         ELSE 1=1
-         END
-         )
+        (pi.price = sqlc.narg(price) AND pi.id < sqlc.arg(product_item_id)) OR
+        (pi.price = sqlc.narg(price) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
+        )
     WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 	THEN (
         (pi.price > sqlc.narg(price)) OR
-         (pi.price = sqlc.narg(price) AND  pi.id > sqlc.arg(product_item_id)) OR
-         CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
-         THEN (pi.price = sqlc.narg(price) AND  pi.id = sqlc.arg(product_item_id) AND pi.product_id > sqlc.arg(product_id))
-         ELSE 1=1
-         END
+        (pi.price = sqlc.narg(price) AND pi.id < sqlc.arg(product_item_id)) OR
+        (pi.price = sqlc.narg(price) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
          )
-	ELSE pi.id < sqlc.arg(product_item_id) AND
-        CASE WHEN (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
-        THEN pi.product_id < sqlc.arg(product_id)
-        ELSE 1=1
-        END
-END ) AND
+	ELSE (pi.id < sqlc.arg(product_item_id) 
+         OR (pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id)))
+         END
+
+AND
 pi.active = TRUE AND
 p.active =TRUE AND
 CASE
@@ -458,7 +475,7 @@ END
 AND
 CASE
 WHEN COALESCE(sqlc.narg(is_new), FALSE) = TRUE
-THEN pi.created_at >= CURRENT_DATE - INTERVAL '5 days'
+THEN pi.created_at >= CURRENT_DATE - INTERVAL '10 days'
 ELSE 1=1
 END
 AND CASE
@@ -486,31 +503,28 @@ AND CASE
     THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
     ELSE 1=1
 END
-ORDER BY 
+ORDER BY
+CASE
+    WHEN COALESCE(sqlc.narg(order_by_new), FALSE) = TRUE
+    THEN pi.created_at END DESC,
+CASE
+    WHEN COALESCE(sqlc.narg(order_by_old), FALSE) = TRUE
+    THEN pi.created_at END ASC,
+-- CASE
+--     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
+--     THEN fpi.id END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 		THEN pi.price
-	ELSE ''
 END ASC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
 		THEN pi.price
-	ELSE ''
 END DESC,
-CASE
-    WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NOT NULL
-    THEN pi.id END ASC,
-CASE
-	WHEN (sqlc.narg(order_by_low_price)::BOOLEAN,sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
-	THEN pi.product_id
-    END ASC,
-CASE WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NULL
-	THEN pi.id END DESC,
-    CASE
-	WHEN sqlc.narg(order_by_low_price)::BOOLEAN IS NULL AND (sqlc.narg(category_id)::INTEGER,sqlc.narg(brand_id)::INTEGER) IS NOT NULL
-	THEN pi.product_id
-    END DESC
-LIMIT $1 +1
+    pi.id DESC,
+    pi.product_id DESC
+
+LIMIT $1 + 1
 )
 
 SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
@@ -604,7 +618,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: SearchProductItemsNextPageOld :many
@@ -621,7 +635,7 @@ SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name,
  ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
-LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
+LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
@@ -633,7 +647,9 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
-WHERE pi.active = TRUE AND p.search @@  
+WHERE pi.active = TRUE 
+AND p.active = TRUE
+AND p.search @@  
 CASE
     WHEN char_length(sqlc.arg(query)) > 0 THEN to_tsquery(concat(sqlc.arg(query), ':*'))
     ELSE to_tsquery(sqlc.arg(query))
@@ -676,8 +692,8 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
 WHERE 
-pi.id < sqlc.arg(product_item_id) AND
-p.id < sqlc.arg(product_id) AND
+(pi.id < sqlc.arg(product_item_id)
+OR (pi.id = sqlc.arg(product_item_id) AND p.id < sqlc.arg(product_id))) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 p.search @@ 
@@ -697,7 +713,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: UpdateProductItem :one
@@ -769,12 +785,12 @@ AND ppromo.active = TRUE
 AND ppromo.start_date <= CURRENT_DATE 
 AND ppromo.end_date >= CURRENT_DATE))
 ORDER BY 
-pi.id DESC,
-p.id DESC
+pi.id DESC
+
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsWithPromotionsNextPage :many
@@ -806,12 +822,12 @@ AND ppromo.active = TRUE
 AND ppromo.start_date <= CURRENT_DATE 
 AND ppromo.end_date >= CURRENT_DATE))
 ORDER BY 
-pi.id DESC,
-p.id DESC
+pi.id DESC
+
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsWithBrandPromotions :many
@@ -847,7 +863,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsWithBrandPromotionsNextPage :many
@@ -871,8 +887,8 @@ INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
  
 WHERE 
 pb.id = sqlc.arg(brand_id) AND
-pi.id < sqlc.arg(product_item_id) AND
-p.id < sqlc.arg(product_id) AND
+(pi.id < sqlc.arg(product_item_id)
+OR (pi.id = sqlc.arg(product_item_id) AND p.id < sqlc.arg(product_id))) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 ((bp.active = TRUE
@@ -885,7 +901,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsWithCategoryPromotions :many
@@ -921,7 +937,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: ListProductItemsWithCategoryPromotionsNextPage :many
@@ -945,8 +961,8 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
  
 WHERE 
 pc.id = sqlc.arg(category_id) AND
-pi.id < sqlc.arg(product_item_id) AND
-p.id < sqlc.arg(product_id) AND
+(pi.id < sqlc.arg(product_item_id)
+OR (pi.id = sqlc.arg(product_item_id) AND p.id < sqlc.arg(product_id))) AND
 pi.active = TRUE AND
 p.active =TRUE AND
 ((cp.active = TRUE
@@ -959,7 +975,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT *,COUNT(*) OVER()>10 AS next_available FROM t1 
+SELECT *,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1;
 
 -- name: GetActiveProductItems :one
@@ -1023,5 +1039,5 @@ LEFT JOIN "sales_data" AS sd ON sd.product_item_id = pi.id
 WHERE 
 pi.active = TRUE AND
 p.active =TRUE
-ORDER BY sd.total_sold DESC, pi.id DESC
+ORDER BY sd.total_sold DESC, pi.id DESC, p.id DESC
 LIMIT $1;

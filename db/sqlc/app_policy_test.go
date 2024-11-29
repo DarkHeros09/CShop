@@ -13,8 +13,6 @@ func createRandomAppPolicy(t *testing.T) AppPolicy {
 	t.Helper()
 	admin := createRandomAdmin(t)
 	data := `
-	# سياسة الخصوصية
-
 ## المقدمة
 نحن نلتزم بحماية خصوصيتك. تهدف هذه السياسة إلى شرح كيفية جمع البيانات واستخدامها ومشاركتها عند استخدام تطبيقنا.
 

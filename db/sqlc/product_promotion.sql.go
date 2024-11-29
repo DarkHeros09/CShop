@@ -267,10 +267,12 @@ func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductProm
 }
 
 const listProductPromotionsWithImages = `-- name: ListProductPromotionsWithImages :many
-SELECT product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.active, created_at, updated_at, search, promo.id, promo.name, promo.description, discount_rate, promo.active, start_date, end_date FROM "product_promotion" AS pp
+SELECT pp.product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, search, promo.id, promo.name, promo.description, discount_rate, promo.active, start_date, end_date, pi.id, pi.product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, pi.active, pi.created_at, pi.updated_at FROM "product_promotion" AS pp
 LEFT JOIN "product" AS p ON p.id = pp.product_id
-JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
-WHERE pp.product_promotion_image IS NOT NULL AND pp.active = true
+JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = TRUE AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
+JOIN "product_item" AS pi ON pi.product_id = p.id AND pi.active =TRUE
+WHERE pp.product_promotion_image IS NOT NULL AND pp.active = TRUE
+ORDER BY promo.start_date DESC
 `
 
 type ListProductPromotionsWithImagesRow struct {
@@ -294,6 +296,17 @@ type ListProductPromotionsWithImagesRow struct {
 	Active_3              bool        `json:"active_3"`
 	StartDate             time.Time   `json:"start_date"`
 	EndDate               time.Time   `json:"end_date"`
+	ID_3                  int64       `json:"id_3"`
+	ProductID_2           int64       `json:"product_id_2"`
+	SizeID                int64       `json:"size_id"`
+	ImageID               int64       `json:"image_id"`
+	ColorID               int64       `json:"color_id"`
+	ProductSku            int64       `json:"product_sku"`
+	QtyInStock            int32       `json:"qty_in_stock"`
+	Price                 string      `json:"price"`
+	Active_4              bool        `json:"active_4"`
+	CreatedAt_2           time.Time   `json:"created_at_2"`
+	UpdatedAt_2           time.Time   `json:"updated_at_2"`
 }
 
 func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]ListProductPromotionsWithImagesRow, error) {
@@ -326,6 +339,17 @@ func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]ListPr
 			&i.Active_3,
 			&i.StartDate,
 			&i.EndDate,
+			&i.ID_3,
+			&i.ProductID_2,
+			&i.SizeID,
+			&i.ImageID,
+			&i.ColorID,
+			&i.ProductSku,
+			&i.QtyInStock,
+			&i.Price,
+			&i.Active_4,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
 		); err != nil {
 			return nil, err
 		}

@@ -272,6 +272,9 @@ Table home_page_text_banner as HPTB {
   id bigserial [pk,not null] // auto-increment
   name varchar [not null, unique]
   description varchar [not null]
+  active boolean [not null, default: false, note:'default is false']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
 }
 
 Table promotion as PROMO {

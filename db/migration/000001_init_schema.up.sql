@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-10-25T15:11:41.353Z
+-- Generated at: 2024-11-16T08:45:30.060Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -250,7 +250,10 @@ CREATE TABLE "product_brand" (
 CREATE TABLE "home_page_text_banner" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar UNIQUE NOT NULL,
-  "description" varchar NOT NULL
+  "description" varchar NOT NULL,
+  "active" boolean NOT NULL DEFAULT false,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
 
 CREATE TABLE "promotion" (
@@ -345,6 +348,8 @@ COMMENT ON COLUMN "product_item"."active" IS 'default is false';
 COMMENT ON COLUMN "product"."active" IS 'default is false';
 
 COMMENT ON COLUMN "product_promotion"."active" IS 'default is false';
+
+COMMENT ON COLUMN "home_page_text_banner"."active" IS 'default is false';
 
 COMMENT ON COLUMN "promotion"."active" IS 'default is false';
 
