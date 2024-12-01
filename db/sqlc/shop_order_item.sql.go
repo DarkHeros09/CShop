@@ -290,14 +290,13 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 const listShopOrderItemsByUserIDOrderID = `-- name: ListShopOrderItemsByUserIDOrderID :many
 SELECT os.status, so.track_number, soi.shipping_method_price AS delivery_price, so.order_total, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at, p.name AS product_name, pt.value as payment_type,
 pimg.product_image_1 AS product_image,
-pcolor.color_value AS product_color, psize.size_value AS product_size,
+pcolor.color_value AS product_color, /*psize.size_value AS product_size,*/
 pi.active AS product_active, a.address_line, a.region, a.city,
 DENSE_RANK() OVER(ORDER BY so.id) as order_number
 FROM "shop_order_item" AS soi
 LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
 LEFT JOIN "product_item" AS pi ON pi.id = soi.product_item_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
-LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
 LEFT JOIN "product_color" AS pcolor ON pcolor.id = pi.color_id
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 LEFT JOIN "product" AS p ON p.id = pi.product_id
@@ -330,7 +329,6 @@ type ListShopOrderItemsByUserIDOrderIDRow struct {
 	PaymentType         null.String `json:"payment_type"`
 	ProductImage        null.String `json:"product_image"`
 	ProductColor        null.String `json:"product_color"`
-	ProductSize         null.String `json:"product_size"`
 	ProductActive       null.Bool   `json:"product_active"`
 	AddressLine         null.String `json:"address_line"`
 	Region              null.String `json:"region"`
@@ -343,6 +341,7 @@ type ListShopOrderItemsByUserIDOrderIDRow struct {
 // ORDER BY id;
 // pi.product_image,
 // , pt.value AS payment_type
+// LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
 // LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
 // LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
 func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error) {
@@ -372,7 +371,6 @@ func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg Lis
 			&i.PaymentType,
 			&i.ProductImage,
 			&i.ProductColor,
-			&i.ProductSize,
 			&i.ProductActive,
 			&i.AddressLine,
 			&i.Region,

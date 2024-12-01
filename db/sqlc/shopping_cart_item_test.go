@@ -12,11 +12,13 @@ import (
 
 func createRandomShoppingCartItem(t *testing.T) (ShoppingCartItem, ShoppingCart) {
 	shoppingCart := createRandomShoppingCart(t)
-	productItem := createRandomProductItem(t)
+	// productItem := createRandomProductItem(t)
+	size := createRandomProductSize(t)
 	// var shoppingCartItems []ShoppingCartItem
 	arg := CreateShoppingCartItemParams{
 		ShoppingCartID: shoppingCart.ID,
-		ProductItemID:  productItem.ID,
+		ProductItemID:  size.ProductItemID,
+		SizeID:         size.ID,
 		Qty:            int32(util.RandomInt(0, 10)),
 	}
 

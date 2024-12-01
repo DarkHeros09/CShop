@@ -807,7 +807,7 @@ func (mr *MockStoreMockRecorder) CreateProductPromotion(arg0, arg1 any) *gomock.
 }
 
 // CreateProductSize mocks base method.
-func (m *MockStore) CreateProductSize(arg0 context.Context, arg1 string) (db.ProductSize, error) {
+func (m *MockStore) CreateProductSize(arg0 context.Context, arg1 db.CreateProductSizeParams) (db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductSize", arg0, arg1)
 	ret0, _ := ret[0].(db.ProductSize)
@@ -2081,10 +2081,10 @@ func (mr *MockStoreMockRecorder) GetProductImage(arg0, arg1 any) *gomock.Call {
 }
 
 // GetProductItem mocks base method.
-func (m *MockStore) GetProductItem(arg0 context.Context, arg1 int64) (db.ProductItem, error) {
+func (m *MockStore) GetProductItem(arg0 context.Context, arg1 int64) (db.GetProductItemRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductItem", arg0, arg1)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(db.GetProductItemRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2108,6 +2108,21 @@ func (m *MockStore) GetProductItemForUpdate(arg0 context.Context, arg1 int64) (d
 func (mr *MockStoreMockRecorder) GetProductItemForUpdate(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductItemForUpdate", reflect.TypeOf((*MockStore)(nil).GetProductItemForUpdate), arg0, arg1)
+}
+
+// GetProductItemSizeForUpdate mocks base method.
+func (m *MockStore) GetProductItemSizeForUpdate(arg0 context.Context, arg1 int64) (db.ProductSize, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductItemSizeForUpdate", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductSize)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductItemSizeForUpdate indicates an expected call of GetProductItemSizeForUpdate.
+func (mr *MockStoreMockRecorder) GetProductItemSizeForUpdate(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductItemSizeForUpdate", reflect.TypeOf((*MockStore)(nil).GetProductItemSizeForUpdate), arg0, arg1)
 }
 
 // GetProductItemWithPromotions mocks base method.

@@ -111,13 +111,13 @@ type listWishListItemsRequest struct {
 }
 
 type listWishListItemsResponse struct {
-	ID                        null.Int    `json:"id"`
-	WishListID                null.Int    `json:"wish_list_id"`
-	CreatedAt                 null.Time   `json:"created_at"`
-	UpdatedAt                 null.Time   `json:"updated_at"`
-	ProductItemID             null.Int    `json:"product_item_id"`
-	Name                      null.String `json:"name"`
-	Size                      null.String `json:"size"`
+	ID            null.Int    `json:"id"`
+	WishListID    null.Int    `json:"wish_list_id"`
+	CreatedAt     null.Time   `json:"created_at"`
+	UpdatedAt     null.Time   `json:"updated_at"`
+	ProductItemID null.Int    `json:"product_item_id"`
+	Name          null.String `json:"name"`
+	// Size                      null.String `json:"size"`
 	Color                     null.String `json:"color"`
 	ProductID                 int64       `json:"product_id"`
 	ProductImage              string      `json:"product_image"`
@@ -152,15 +152,15 @@ func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRo
 		for j := 0; j < len(wishListItems); j++ {
 			if productItems[i].ID == wishListItems[j].ProductItemID.Int64 {
 				rsp[i] = listWishListItemsResponse{
-					ID:                        wishListItems[j].ID,
-					WishListID:                wishListItems[j].WishListID,
-					CreatedAt:                 wishListItems[j].CreatedAt,
-					UpdatedAt:                 wishListItems[j].UpdatedAt,
-					ProductItemID:             wishListItems[j].ProductItemID,
-					Name:                      productItems[i].Name,
-					ProductID:                 productItems[i].ProductID,
-					ProductImage:              productItems[i].ProductImage1.String,
-					Size:                      productItems[i].SizeValue,
+					ID:            wishListItems[j].ID,
+					WishListID:    wishListItems[j].WishListID,
+					CreatedAt:     wishListItems[j].CreatedAt,
+					UpdatedAt:     wishListItems[j].UpdatedAt,
+					ProductItemID: wishListItems[j].ProductItemID,
+					Name:          productItems[i].Name,
+					ProductID:     productItems[i].ProductID,
+					ProductImage:  productItems[i].ProductImage1.String,
+					// Size:                      productItems[i].SizeValue,
 					Color:                     productItems[i].ColorValue,
 					Price:                     productItems[i].Price,
 					Active:                    productItems[i].Active,

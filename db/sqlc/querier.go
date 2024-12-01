@@ -20,6 +20,8 @@ type Querier interface {
 	AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error)
 	AdminCreateProductColor(ctx context.Context, arg AdminCreateProductColorParams) (ProductColor, error)
 	AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (ProductImage, error)
+	//   size_id,
+	//   qty_in_stock,
 	AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error)
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
@@ -42,6 +44,8 @@ type Querier interface {
 	AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error)
 	AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error)
 	AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (ProductImage, error)
+	// qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
+	// size_id = COALESCE(sqlc.narg(size_id),size_id),
 	AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error)
 	AdminUpdateProductPromotion(ctx context.Context, arg AdminUpdateProductPromotionParams) (ProductPromotion, error)
 	AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error)
@@ -65,9 +69,11 @@ type Querier interface {
 	CreateProductColor(ctx context.Context, colorValue string) (ProductColor, error)
 	CreateProductConfiguration(ctx context.Context, arg CreateProductConfigurationParams) (ProductConfiguration, error)
 	CreateProductImage(ctx context.Context, arg CreateProductImageParams) (ProductImage, error)
+	//   size_id,
+	//   qty_in_stock,
 	CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error)
 	CreateProductPromotion(ctx context.Context, arg CreateProductPromotionParams) (ProductPromotion, error)
-	CreateProductSize(ctx context.Context, sizeValue string) (ProductSize, error)
+	CreateProductSize(ctx context.Context, arg CreateProductSizeParams) (ProductSize, error)
 	CreatePromotion(ctx context.Context, arg CreatePromotionParams) (Promotion, error)
 	CreateResetPassword(ctx context.Context, arg CreateResetPasswordParams) (ResetPassword, error)
 	CreateShippingMethod(ctx context.Context, arg CreateShippingMethodParams) (ShippingMethod, error)
@@ -186,8 +192,9 @@ type Querier interface {
 	GetProductColor(ctx context.Context, id int64) (ProductColor, error)
 	GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (ProductConfiguration, error)
 	GetProductImage(ctx context.Context, id int64) (ProductImage, error)
-	GetProductItem(ctx context.Context, id int64) (ProductItem, error)
+	GetProductItem(ctx context.Context, productItemID int64) (GetProductItemRow, error)
 	GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error)
+	GetProductItemSizeForUpdate(ctx context.Context, id int64) (ProductSize, error)
 	GetProductItemWithPromotions(ctx context.Context, id int64) (GetProductItemWithPromotionsRow, error)
 	GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error)
 	GetProductSize(ctx context.Context, id int64) (ProductSize, error)
@@ -246,8 +253,16 @@ type Querier interface {
 	ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error)
 	ListProductImagesNextPage(ctx context.Context, arg ListProductImagesNextPageParams) ([]ListProductImagesNextPageRow, error)
 	ListProductImagesV2(ctx context.Context, limit int32) ([]ListProductImagesV2Row, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
+	// AND CASE
+	//     WHEN COALESCE(sqlc.narg(size_id), 0) > 0
+	//     THEN pi.size_id = sqlc.narg(size_id)
+	//     ELSE 1=1
+	// END
 	// CASE
 	//     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
 	//     THEN fpi.id END DESC,
@@ -258,7 +273,14 @@ type Querier interface {
 	// WHERE pi.active = TRUE
 	// LIMIT 1
 	// )
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
+	// AND CASE
+	//     WHEN COALESCE(sqlc.narg(size_id), 0) > 0
+	//     THEN pi.size_id = sqlc.narg(size_id)
+	//     ELSE 1=1
+	// END
 	// CASE
 	//     WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
 	//     THEN fpi.id END DESC,
@@ -269,13 +291,21 @@ type Querier interface {
 	// WHERE pi.active = TRUE
 	// LIMIT 1
 	// )
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsV2Old(ctx context.Context, arg ListProductItemsV2OldParams) ([]ListProductItemsV2OldRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]ListProductItemsWithBestSalesRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithBrandPromotions(ctx context.Context, arg ListProductItemsWithBrandPromotionsParams) ([]ListProductItemsWithBrandPromotionsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg ListProductItemsWithBrandPromotionsNextPageParams) ([]ListProductItemsWithBrandPromotionsNextPageRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithCategoryPromotions(ctx context.Context, arg ListProductItemsWithCategoryPromotionsParams) ([]ListProductItemsWithCategoryPromotionsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg ListProductItemsWithCategoryPromotionsNextPageParams) ([]ListProductItemsWithCategoryPromotionsNextPageRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithPromotions(ctx context.Context, arg ListProductItemsWithPromotionsParams) ([]ListProductItemsWithPromotionsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	ListProductItemsWithPromotionsNextPage(ctx context.Context, arg ListProductItemsWithPromotionsNextPageParams) ([]ListProductItemsWithPromotionsNextPageRow, error)
 	ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error)
 	ListProductPromotionsWithImages(ctx context.Context) ([]ListProductPromotionsWithImagesRow, error)
@@ -302,6 +332,7 @@ type Querier interface {
 	// ORDER BY id;
 	// pi.product_image,
 	// , pt.value AS payment_type
+	// LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
 	// LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
 	// LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
 	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error)
@@ -325,9 +356,13 @@ type Querier interface {
 	ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]WishListItem, error)
 	ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error)
 	ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error)
+	// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 	SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error)
 	SearchProducts(ctx context.Context, arg SearchProductsParams) ([]SearchProductsRow, error)
 	SearchProductsNextPage(ctx context.Context, arg SearchProductsNextPageParams) ([]SearchProductsNextPageRow, error)
@@ -360,6 +395,8 @@ type Querier interface {
 	UpdateProductColor(ctx context.Context, arg UpdateProductColorParams) (ProductColor, error)
 	UpdateProductConfiguration(ctx context.Context, arg UpdateProductConfigurationParams) (ProductConfiguration, error)
 	UpdateProductImage(ctx context.Context, arg UpdateProductImageParams) (ProductImage, error)
+	// qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
+	// size_id = COALESCE(sqlc.narg(size_id),size_id),
 	UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error)
 	UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (ProductPromotion, error)
 	UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (ProductSize, error)

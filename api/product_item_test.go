@@ -24,7 +24,7 @@ import (
 )
 
 func TestGetProductItemAPI(t *testing.T) {
-	productItem := randomProductItem()
+	productItem := randomProductItemForGet()
 
 	testCases := []struct {
 		name          string
@@ -43,7 +43,7 @@ func TestGetProductItemAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchProductItem(t, rsp.Body, productItem)
+				requireBodyMatchProductItemForGet(t, rsp.Body, productItem)
 			},
 		},
 
@@ -54,7 +54,7 @@ func TestGetProductItemAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductItem(gomock.Any(), gomock.Eq(productItem.ID)).
 					Times(1).
-					Return(db.ProductItem{}, pgx.ErrNoRows)
+					Return(db.GetProductItemRow{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +67,7 @@ func TestGetProductItemAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductItem(gomock.Any(), gomock.Eq(productItem.ID)).
 					Times(1).
-					Return(db.ProductItem{}, pgx.ErrTxClosed)
+					Return(db.GetProductItemRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -124,6 +124,7 @@ func TestGetProductItemAPI(t *testing.T) {
 func TestCreateProductItemAPI(t *testing.T) {
 	admin, _ := randomProductItemSuperAdmin(t)
 	productItem := randomProductItem()
+	// qty := util.RandomMoney()
 
 	testCases := []struct {
 		name          string
@@ -137,12 +138,12 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
-				"size_id":      productItem.SizeID,
-				"color_id":     productItem.ColorID,
-				"image_id":     productItem.ImageID,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": qty,
+				// "size_id":      productItem.SizeID,
+				"color_id": productItem.ColorID,
+				"image_id": productItem.ImageID,
 				// "product_image": productItem.ProductImage,
 				"price":  productItem.Price,
 				"active": productItem.Active,
@@ -155,12 +156,12 @@ func TestCreateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
-					QtyInStock: productItem.QtyInStock,
-					SizeID:     productItem.SizeID,
-					ColorID:    productItem.ColorID,
-					ImageID:    productItem.ImageID,
-					Price:      productItem.Price,
-					Active:     productItem.Active,
+					// QtyInStock: productItem.QtyInStock,
+					// SizeID:     productItem.SizeID,
+					ColorID: productItem.ColorID,
+					ImageID: productItem.ImageID,
+					Price:   productItem.Price,
+					Active:  productItem.Active,
 				}
 
 				store.EXPECT().
@@ -183,12 +184,12 @@ func TestCreateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
-					QtyInStock: productItem.QtyInStock,
-					SizeID:     productItem.SizeID,
-					ColorID:    productItem.ColorID,
-					ImageID:    productItem.ImageID,
-					Price:      productItem.Price,
-					Active:     productItem.Active,
+					// QtyInStock: productItem.QtyInStock,
+					// SizeID:     productItem.SizeID,
+					ColorID: productItem.ColorID,
+					ImageID: productItem.ImageID,
+					Price:   productItem.Price,
+					Active:  productItem.Active,
 				}
 
 				store.EXPECT().
@@ -204,14 +205,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "Unauthorized",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
-				"size_id":      productItem.SizeID,
-				"color_id":     productItem.ColorID,
-				"image_id":     productItem.ImageID,
-				"price":        productItem.Price,
-				"active":       productItem.Active,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
+				// "size_id":      productItem.SizeID,
+				"color_id": productItem.ColorID,
+				"image_id": productItem.ImageID,
+				"price":    productItem.Price,
+				"active":   productItem.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
@@ -221,12 +222,12 @@ func TestCreateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: productItem.ProductSku,
-					QtyInStock: productItem.QtyInStock,
-					SizeID:     productItem.SizeID,
-					ColorID:    productItem.ColorID,
-					ImageID:    productItem.ImageID,
-					Price:      productItem.Price,
-					Active:     productItem.Active,
+					// QtyInStock: productItem.QtyInStock,
+					// SizeID:     productItem.SizeID,
+					ColorID: productItem.ColorID,
+					ImageID: productItem.ImageID,
+					Price:   productItem.Price,
+					Active:  productItem.Active,
 				}
 
 				store.EXPECT().
@@ -241,14 +242,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
-				"size_id":      productItem.SizeID,
-				"color_id":     productItem.ColorID,
-				"image_id":     productItem.ImageID,
-				"price":        productItem.Price,
-				"active":       productItem.Active,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
+				// "size_id":      productItem.SizeID,
+				"color_id": productItem.ColorID,
+				"image_id": productItem.ImageID,
+				"price":    productItem.Price,
+				"active":   productItem.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -267,14 +268,14 @@ func TestCreateProductItemAPI(t *testing.T) {
 			name:    "InvalidID",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"product_id":   0,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
-				"size_id":      productItem.SizeID,
-				"color_id":     productItem.ColorID,
-				"image_id":     productItem.ImageID,
-				"price":        productItem.Price,
-				"active":       productItem.Active,
+				"product_id":  0,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
+				// "size_id":      productItem.SizeID,
+				"color_id": productItem.ColorID,
+				"image_id": productItem.ImageID,
+				"price":    productItem.Price,
+				"active":   productItem.Active,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -567,11 +568,11 @@ func TestListProductItemsV2API(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListProductItemsV2Params{
-					Limit:            10,
-					CategoryID:       null.IntFromPtr(nil),
-					BrandID:          null.IntFromPtr(nil),
-					ColorID:          null.IntFromPtr(nil),
-					SizeID:           null.IntFromPtr(nil),
+					Limit:      10,
+					CategoryID: null.IntFromPtr(nil),
+					BrandID:    null.IntFromPtr(nil),
+					ColorID:    null.IntFromPtr(nil),
+					// SizeID:           null.IntFromPtr(nil),
 					IsNew:            null.BoolFromPtr(nil),
 					IsPromoted:       null.BoolFromPtr(nil),
 					IsFeatured:       null.BoolFromPtr(nil),
@@ -688,13 +689,13 @@ func TestListProductItemsNextPageAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.ListProductItemsNextPageParams{
-					Limit:            int32(n),
-					ProductItemID:    productItems1[len(productItems1)-1].ID,
-					ProductID:        productItems1[len(productItems1)-1].ProductID,
-					CategoryID:       null.IntFromPtr(nil),
-					BrandID:          null.IntFromPtr(nil),
-					ColorID:          null.IntFromPtr(nil),
-					SizeID:           null.IntFromPtr(nil),
+					Limit:         int32(n),
+					ProductItemID: productItems1[len(productItems1)-1].ID,
+					ProductID:     productItems1[len(productItems1)-1].ProductID,
+					CategoryID:    null.IntFromPtr(nil),
+					BrandID:       null.IntFromPtr(nil),
+					ColorID:       null.IntFromPtr(nil),
+					// SizeID:           null.IntFromPtr(nil),
 					Price:            null.StringFromPtr(nil),
 					CreatedAt:        null.TimeFromPtr(nil),
 					IsNew:            null.BoolFromPtr(nil),
@@ -1725,11 +1726,11 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
 				// "product_image": productItem.ProductImage,
-				"size_id":  productItem.SizeID,
+				// "size_id":  productItem.SizeID,
 				"color_id": productItem.ColorID,
 				"image_id": productItem.ImageID,
 				"price":    "1000",
@@ -1743,7 +1744,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
-					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
+					// QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
 					// ProductImage: null.StringFrom(productItem.ProductImage),
 					Price:  null.StringFrom("1000"),
 					Active: null.BoolFromPtr(&productItem.Active),
@@ -1764,11 +1765,11 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
 				// "product_image": productItem.ProductImage,
-				"size_id":  productItem.SizeID,
+				// "size_id":  productItem.SizeID,
 				"color_id": productItem.ColorID,
 				"image_id": productItem.ImageID,
 				"price":    "1000",
@@ -1782,7 +1783,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
-					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
+					// QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
 					// ProductImage: null.StringFrom(productItem.ProductImage),
 					Price:  null.StringFrom("1000"),
 					Active: null.BoolFromPtr(&productItem.Active),
@@ -1802,11 +1803,11 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
 				// "product_image": productItem.ProductImage,
-				"size_id":  productItem.SizeID,
+				// "size_id":  productItem.SizeID,
 				"color_id": productItem.ColorID,
 				"image_id": productItem.ImageID,
 				"price":    "1000",
@@ -1819,7 +1820,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
-					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
+					// QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
 					// ProductImage: null.StringFrom(productItem.ProductImage),
 					Price:  null.StringFrom("1000"),
 					Active: null.BoolFromPtr(&productItem.Active),
@@ -1839,11 +1840,11 @@ func TestUpdateProductItemAPI(t *testing.T) {
 			productItemID: productItem.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"product_id":   productItem.ProductID,
-				"product_sku":  productItem.ProductSku,
-				"qty_in_stock": productItem.QtyInStock,
+				"product_id":  productItem.ProductID,
+				"product_sku": productItem.ProductSku,
+				// "qty_in_stock": productItem.QtyInStock,
 				// "product_image": productItem.ProductImage,
-				"size_id":  productItem.SizeID,
+				// "size_id":  productItem.SizeID,
 				"color_id": productItem.ColorID,
 				"image_id": productItem.ImageID,
 				"price":    "1000",
@@ -1857,7 +1858,7 @@ func TestUpdateProductItemAPI(t *testing.T) {
 					AdminID:    admin.ID,
 					ProductID:  productItem.ProductID,
 					ProductSku: null.IntFrom(productItem.ProductSku),
-					QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
+					// QtyInStock: null.IntFrom(int64(productItem.QtyInStock)),
 					// ProductImage: null.StringFrom(productItem.ProductImage),
 					Price:  null.StringFrom("1000"),
 					Active: null.BoolFromPtr(&productItem.Active),
@@ -2091,23 +2092,37 @@ func randomProductItem() db.ProductItem {
 		ID:         util.RandomInt(1, 1000),
 		ProductID:  util.RandomMoney(),
 		ProductSku: util.RandomMoney(),
-		QtyInStock: int32(util.RandomMoney()),
-		SizeID:     util.RandomMoney(),
-		ImageID:    util.RandomMoney(),
-		ColorID:    util.RandomMoney(),
-		Price:      util.RandomDecimalString(0, 1000),
-		Active:     util.RandomBool(),
+		// QtyInStock: int32(util.RandomMoney()),
+		// SizeID:     util.RandomMoney(),
+		ImageID: util.RandomMoney(),
+		ColorID: util.RandomMoney(),
+		Price:   util.RandomDecimalString(0, 1000),
+		Active:  util.RandomBool(),
+	}
+}
+
+func randomProductItemForGet() db.GetProductItemRow {
+	return db.GetProductItemRow{
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		QtyInStock: util.RandomMoney(),
+		// SizeID:     util.RandomMoney(),
+		ImageID: util.RandomMoney(),
+		ColorID: util.RandomMoney(),
+		Price:   util.RandomDecimalString(0, 1000),
+		Active:  util.RandomBool(),
 	}
 }
 
 func randomProductItemNew() db.ListProductItemsV2Row {
 	return db.ListProductItemsV2Row{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeID:        util.RandomMoney(),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeID:        util.RandomMoney(),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ImageID:       util.RandomMoney(),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2121,11 +2136,11 @@ func randomProductItemNew() db.ListProductItemsV2Row {
 
 func randomProductItemList() db.ListProductItemsRow {
 	return db.ListProductItemsRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2139,11 +2154,11 @@ func randomProductItemList() db.ListProductItemsRow {
 
 func randomListProductItemV2() db.ListProductItemsV2Row {
 	return db.ListProductItemsV2Row{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2156,11 +2171,11 @@ func randomListProductItemV2() db.ListProductItemsV2Row {
 
 func randomListProductItemWithBestSales() db.ListProductItemsWithBestSalesRow {
 	return db.ListProductItemsWithBestSalesRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2174,11 +2189,11 @@ func randomListProductItemWithBestSales() db.ListProductItemsWithBestSalesRow {
 
 func randomRestProductItemList() db.ListProductItemsNextPageRow {
 	return db.ListProductItemsNextPageRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2191,11 +2206,11 @@ func randomRestProductItemList() db.ListProductItemsNextPageRow {
 
 func randomSearchProductItems() db.SearchProductItemsRow {
 	return db.SearchProductItemsRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2208,11 +2223,11 @@ func randomSearchProductItems() db.SearchProductItemsRow {
 
 func randomSearchProductItemNextPage() db.SearchProductItemsNextPageRow {
 	return db.SearchProductItemsNextPageRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2225,11 +2240,11 @@ func randomSearchProductItemNextPage() db.SearchProductItemsNextPageRow {
 
 func randomListProductItemWithPromotions() db.ListProductItemsWithPromotionsRow {
 	return db.ListProductItemsWithPromotionsRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2242,11 +2257,11 @@ func randomListProductItemWithPromotions() db.ListProductItemsWithPromotionsRow 
 
 func randomRestProductItemWithPromotions() db.ListProductItemsWithPromotionsNextPageRow {
 	return db.ListProductItemsWithPromotionsNextPageRow{
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2259,12 +2274,12 @@ func randomRestProductItemWithPromotions() db.ListProductItemsWithPromotionsNext
 
 func randomListProductItemWithBrandPromotions() db.ListProductItemsWithBrandPromotionsRow {
 	return db.ListProductItemsWithBrandPromotionsRow{
-		BrandID:       util.RandomInt(1, 1000),
-		ID:            util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		BrandID:    util.RandomInt(1, 1000),
+		ID:         util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2277,12 +2292,12 @@ func randomListProductItemWithBrandPromotions() db.ListProductItemsWithBrandProm
 
 func randomRestProductItemWithBrandPromotions() db.ListProductItemsWithBrandPromotionsNextPageRow {
 	return db.ListProductItemsWithBrandPromotionsNextPageRow{
-		ID:            util.RandomInt(1, 1000),
-		BrandID:       util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		BrandID:    util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2295,12 +2310,12 @@ func randomRestProductItemWithBrandPromotions() db.ListProductItemsWithBrandProm
 
 func randomListProductItemWithCategoryPromotions() db.ListProductItemsWithCategoryPromotionsRow {
 	return db.ListProductItemsWithCategoryPromotionsRow{
-		ID:            util.RandomInt(1, 1000),
-		CategoryID:    util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		CategoryID: util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		// QtyInStock:    int32(util.RandomMoney()),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2313,12 +2328,12 @@ func randomListProductItemWithCategoryPromotions() db.ListProductItemsWithCatego
 
 func randomRestProductItemWithCategoryPromotions() db.ListProductItemsWithCategoryPromotionsNextPageRow {
 	return db.ListProductItemsWithCategoryPromotionsNextPageRow{
-		ID:            util.RandomInt(1, 1000),
-		CategoryID:    util.RandomInt(1, 1000),
-		ProductID:     util.RandomMoney(),
-		ProductSku:    util.RandomMoney(),
-		QtyInStock:    int32(util.RandomMoney()),
-		SizeValue:     null.StringFrom(util.RandomUser()),
+		ID:         util.RandomInt(1, 1000),
+		CategoryID: util.RandomInt(1, 1000),
+		ProductID:  util.RandomMoney(),
+		ProductSku: util.RandomMoney(),
+		QtyInStock: util.RandomMoney(),
+		// SizeValue:     null.StringFrom(util.RandomUser()),
 		ColorValue:    null.StringFrom(util.RandomUser()),
 		ProductImage1: null.StringFrom(util.RandomURL()),
 		ProductImage2: null.StringFrom(util.RandomURL()),
@@ -2334,6 +2349,16 @@ func requireBodyMatchProductItem(t *testing.T, body io.ReadCloser, productItem d
 	require.NoError(t, err)
 
 	var gotProductItem db.ProductItem
+	err = json.Unmarshal(data, &gotProductItem)
+	require.NoError(t, err)
+	require.Equal(t, productItem, gotProductItem)
+}
+
+func requireBodyMatchProductItemForGet(t *testing.T, body io.ReadCloser, productItem db.GetProductItemRow) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotProductItem db.GetProductItemRow
 	err = json.Unmarshal(data, &gotProductItem)
 	require.NoError(t, err)
 	require.Equal(t, productItem, gotProductItem)

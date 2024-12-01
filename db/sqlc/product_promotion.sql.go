@@ -267,7 +267,7 @@ func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductProm
 }
 
 const listProductPromotionsWithImages = `-- name: ListProductPromotionsWithImages :many
-SELECT pp.product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, search, promo.id, promo.name, promo.description, discount_rate, promo.active, start_date, end_date, pi.id, pi.product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, pi.active, pi.created_at, pi.updated_at FROM "product_promotion" AS pp
+SELECT pp.product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, search, promo.id, promo.name, promo.description, discount_rate, promo.active, start_date, end_date, pi.id, pi.product_id, image_id, color_id, product_sku, price, pi.active, pi.created_at, pi.updated_at FROM "product_promotion" AS pp
 LEFT JOIN "product" AS p ON p.id = pp.product_id
 JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = TRUE AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 JOIN "product_item" AS pi ON pi.product_id = p.id AND pi.active =TRUE
@@ -298,11 +298,9 @@ type ListProductPromotionsWithImagesRow struct {
 	EndDate               time.Time   `json:"end_date"`
 	ID_3                  int64       `json:"id_3"`
 	ProductID_2           int64       `json:"product_id_2"`
-	SizeID                int64       `json:"size_id"`
 	ImageID               int64       `json:"image_id"`
 	ColorID               int64       `json:"color_id"`
 	ProductSku            int64       `json:"product_sku"`
-	QtyInStock            int32       `json:"qty_in_stock"`
 	Price                 string      `json:"price"`
 	Active_4              bool        `json:"active_4"`
 	CreatedAt_2           time.Time   `json:"created_at_2"`
@@ -341,11 +339,9 @@ func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]ListPr
 			&i.EndDate,
 			&i.ID_3,
 			&i.ProductID_2,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active_4,
 			&i.CreatedAt_2,

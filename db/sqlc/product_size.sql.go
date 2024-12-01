@@ -15,26 +15,43 @@ const adminCreateProductSize = `-- name: AdminCreateProductSize :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $2
+    WHERE "admin".id = $4
     AND active = TRUE
     )
 INSERT INTO "product_size" (
-size_value
+ product_item_id,
+  size_value,
+  qty
 )
-SELECT $1 FROM t1
+SELECT 
+$1, 
+$2, 
+$3 FROM t1
 WHERE is_admin=1
-RETURNING id, size_value
+RETURNING id, product_item_id, size_value, qty
 `
 
 type AdminCreateProductSizeParams struct {
-	SizeValue string `json:"size_value"`
-	AdminID   int64  `json:"admin_id"`
+	ProductItemID int64  `json:"product_item_id"`
+	SizeValue     string `json:"size_value"`
+	Qty           int32  `json:"qty"`
+	AdminID       int64  `json:"admin_id"`
 }
 
 func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error) {
-	row := q.db.QueryRow(ctx, adminCreateProductSize, arg.SizeValue, arg.AdminID)
+	row := q.db.QueryRow(ctx, adminCreateProductSize,
+		arg.ProductItemID,
+		arg.SizeValue,
+		arg.Qty,
+		arg.AdminID,
+	)
 	var i ProductSize
-	err := row.Scan(&i.ID, &i.SizeValue)
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
 	return i, err
 }
 
@@ -42,43 +59,71 @@ const adminUpdateProductSize = `-- name: AdminUpdateProductSize :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $3
+    WHERE "admin".id = $5
     AND active = TRUE
     )
 UPDATE "product_size"
 SET 
-size_value = COALESCE($1,size_value)
-WHERE "product_size".id = $2
+size_value = COALESCE($1,size_value),
+qty = COALESCE($2,qty)
+WHERE "product_size".id = $3
+AND product_item_id = $4
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, size_value
+RETURNING id, product_item_id, size_value, qty
 `
 
 type AdminUpdateProductSizeParams struct {
-	SizeValue null.String `json:"size_value"`
-	ID        int64       `json:"id"`
-	AdminID   int64       `json:"admin_id"`
+	SizeValue     null.String `json:"size_value"`
+	Qty           null.Int    `json:"qty"`
+	ID            int64       `json:"id"`
+	ProductItemID int64       `json:"product_item_id"`
+	AdminID       int64       `json:"admin_id"`
 }
 
 func (q *Queries) AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error) {
-	row := q.db.QueryRow(ctx, adminUpdateProductSize, arg.SizeValue, arg.ID, arg.AdminID)
+	row := q.db.QueryRow(ctx, adminUpdateProductSize,
+		arg.SizeValue,
+		arg.Qty,
+		arg.ID,
+		arg.ProductItemID,
+		arg.AdminID,
+	)
 	var i ProductSize
-	err := row.Scan(&i.ID, &i.SizeValue)
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
 	return i, err
 }
 
 const createProductSize = `-- name: CreateProductSize :one
 INSERT INTO "product_size" (
-  size_value
+  product_item_id,
+  size_value,
+  qty
 ) VALUES (
-  $1
+  $1, $2, $3
 )
-RETURNING id, size_value
+RETURNING id, product_item_id, size_value, qty
 `
 
-func (q *Queries) CreateProductSize(ctx context.Context, sizeValue string) (ProductSize, error) {
-	row := q.db.QueryRow(ctx, createProductSize, sizeValue)
+type CreateProductSizeParams struct {
+	ProductItemID int64  `json:"product_item_id"`
+	SizeValue     string `json:"size_value"`
+	Qty           int32  `json:"qty"`
+}
+
+func (q *Queries) CreateProductSize(ctx context.Context, arg CreateProductSizeParams) (ProductSize, error) {
+	row := q.db.QueryRow(ctx, createProductSize, arg.ProductItemID, arg.SizeValue, arg.Qty)
 	var i ProductSize
-	err := row.Scan(&i.ID, &i.SizeValue)
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
 	return i, err
 }
 
@@ -92,20 +137,43 @@ func (q *Queries) DeleteProductSize(ctx context.Context, id int64) error {
 	return err
 }
 
+const getProductItemSizeForUpdate = `-- name: GetProductItemSizeForUpdate :one
+SELECT id, product_item_id, size_value, qty FROM "product_size"
+WHERE id = $1 LIMIT 1
+FOR NO KEY UPDATE
+`
+
+func (q *Queries) GetProductItemSizeForUpdate(ctx context.Context, id int64) (ProductSize, error) {
+	row := q.db.QueryRow(ctx, getProductItemSizeForUpdate, id)
+	var i ProductSize
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
+	return i, err
+}
+
 const getProductSize = `-- name: GetProductSize :one
-SELECT id, size_value FROM "product_size"
+SELECT id, product_item_id, size_value, qty FROM "product_size"
 WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetProductSize(ctx context.Context, id int64) (ProductSize, error) {
 	row := q.db.QueryRow(ctx, getProductSize, id)
 	var i ProductSize
-	err := row.Scan(&i.ID, &i.SizeValue)
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
 	return i, err
 }
 
 const listProductSizes = `-- name: ListProductSizes :many
-SELECT id, size_value FROM "product_size"
+SELECT id, product_item_id, size_value, qty FROM "product_size"
 ORDER BY id
 `
 
@@ -118,7 +186,12 @@ func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
 	items := []ProductSize{}
 	for rows.Next() {
 		var i ProductSize
-		if err := rows.Scan(&i.ID, &i.SizeValue); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductItemID,
+			&i.SizeValue,
+			&i.Qty,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -132,19 +205,33 @@ func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
 const updateProductSize = `-- name: UpdateProductSize :one
 UPDATE "product_size"
 SET 
-size_value = COALESCE($1,size_value)
-WHERE id = $2
-RETURNING id, size_value
+size_value = COALESCE($1,size_value),
+qty = COALESCE($2,qty)
+WHERE id = $3
+AND product_item_id = $4
+RETURNING id, product_item_id, size_value, qty
 `
 
 type UpdateProductSizeParams struct {
-	SizeValue null.String `json:"size_value"`
-	ID        int64       `json:"id"`
+	SizeValue     null.String `json:"size_value"`
+	Qty           null.Int    `json:"qty"`
+	ID            int64       `json:"id"`
+	ProductItemID int64       `json:"product_item_id"`
 }
 
 func (q *Queries) UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (ProductSize, error) {
-	row := q.db.QueryRow(ctx, updateProductSize, arg.SizeValue, arg.ID)
+	row := q.db.QueryRow(ctx, updateProductSize,
+		arg.SizeValue,
+		arg.Qty,
+		arg.ID,
+		arg.ProductItemID,
+	)
 	var i ProductSize
-	err := row.Scan(&i.ID, &i.SizeValue)
+	err := row.Scan(
+		&i.ID,
+		&i.ProductItemID,
+		&i.SizeValue,
+		&i.Qty,
+	)
 	return i, err
 }

@@ -980,10 +980,10 @@ func createRandomListProductsByIdsForWishList(wishListItem []db.ListWishListItem
 			ProductImage1: productItem[i].ProductImage1,
 			ProductImage2: productItem[i].ProductImage2,
 			ProductImage3: productItem[i].ProductImage3,
-			SizeValue:     productItem[i].SizeValue,
-			ColorValue:    productItem[i].ColorValue,
-			Price:         productItem[i].Price,
-			Active:        productItem[i].Active,
+			// SizeValue:     productItem[i].SizeValue,
+			ColorValue: productItem[i].ColorValue,
+			Price:      productItem[i].Price,
+			Active:     productItem[i].Active,
 		})
 	}
 

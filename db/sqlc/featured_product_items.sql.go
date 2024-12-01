@@ -69,7 +69,7 @@ SELECT 1 AS is_admin
     AND active = TRUE
     )
 SELECT 
-fp.id, fp.product_item_id, fp.active, fp.start_date, fp.end_date, fp.priority, pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name AS product_name, 
+fp.id, fp.product_item_id, fp.active, fp.start_date, fp.end_date, fp.priority, pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name AS product_name, 
 p.description FROM "featured_product_item" AS fp
 LEFT JOIN "product_item" AS pi ON pi.id = fp.product_item_id
 LEFT JOIN "product" AS p ON p.id = pi.product_id
@@ -86,11 +86,9 @@ type AdminListFeaturedProductItemsRow struct {
 	Priority      null.Int    `json:"priority"`
 	ID_2          null.Int    `json:"id_2"`
 	ProductID     null.Int    `json:"product_id"`
-	SizeID        null.Int    `json:"size_id"`
 	ImageID       null.Int    `json:"image_id"`
 	ColorID       null.Int    `json:"color_id"`
 	ProductSku    null.Int    `json:"product_sku"`
-	QtyInStock    null.Int    `json:"qty_in_stock"`
 	Price         null.String `json:"price"`
 	Active_2      null.Bool   `json:"active_2"`
 	CreatedAt     null.Time   `json:"created_at"`
@@ -117,11 +115,9 @@ func (q *Queries) AdminListFeaturedProductItems(ctx context.Context, adminID int
 			&i.Priority,
 			&i.ID_2,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active_2,
 			&i.CreatedAt,

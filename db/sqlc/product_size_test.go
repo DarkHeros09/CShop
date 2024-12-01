@@ -11,21 +11,61 @@ import (
 )
 
 func createRandomProductSize(t *testing.T) ProductSize {
-	arg := util.RandomSize()
+	productItem := createRandomProductItem(t)
+	arg := CreateProductSizeParams{
+		ProductItemID: productItem.ID,
+		SizeValue:     util.RandomSize(),
+		Qty:           int32(util.RandomInt(1, 100)),
+	}
 	productSize, err := testStore.CreateProductSize(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, productSize)
 
-	require.Equal(t, arg, productSize.SizeValue)
+	require.Equal(t, arg.SizeValue, productSize.SizeValue)
+
+	return productSize
+}
+
+func createRandomProductSizeWithItemID(t *testing.T, itemID int64) ProductSize {
+	// productItem := createRandomProductItem(t)
+	arg := CreateProductSizeParams{
+		ProductItemID: itemID,
+		SizeValue:     util.RandomSize(),
+		Qty:           int32(util.RandomInt(2, 100)),
+	}
+	productSize, err := testStore.CreateProductSize(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize)
+
+	require.Equal(t, arg.SizeValue, productSize.SizeValue)
+
+	return productSize
+}
+
+func createRandomProductSizeWithQTY(t *testing.T, qty int32) ProductSize {
+	productItem := createRandomProductItem(t)
+	arg := CreateProductSizeParams{
+		ProductItemID: productItem.ID,
+		SizeValue:     util.RandomSize(),
+		Qty:           qty,
+	}
+	productSize, err := testStore.CreateProductSize(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize)
+
+	require.Equal(t, arg.SizeValue, productSize.SizeValue)
 
 	return productSize
 }
 
 func adminCreateRandomProductSize(t *testing.T) ProductSize {
 	admin := createRandomAdmin(t)
+	productItem := createRandomProductItem(t)
 	arg := AdminCreateProductSizeParams{
-		AdminID:   admin.ID,
-		SizeValue: util.RandomSize(),
+		AdminID:       admin.ID,
+		ProductItemID: productItem.ID,
+		SizeValue:     util.RandomSize(),
+		Qty:           int32(util.RandomInt(1, 100)),
 	}
 	productSize, err := testStore.AdminCreateProductSize(context.Background(), arg)
 	require.NoError(t, err)
@@ -70,8 +110,9 @@ func TestUpdateProductSize(t *testing.T) {
 		updatedSize = null.StringFrom("XS")
 	}
 	arg := UpdateProductSizeParams{
-		ID:        productSize1.ID,
-		SizeValue: updatedSize,
+		ID:            productSize1.ID,
+		ProductItemID: productSize1.ProductItemID,
+		SizeValue:     updatedSize,
 	}
 
 	productSize2, err := testStore.UpdateProductSize(context.Background(), arg)
@@ -92,9 +133,10 @@ func TestAdminUpdateProductSize(t *testing.T) {
 	}
 
 	arg := AdminUpdateProductSizeParams{
-		AdminID:   admin.ID,
-		ID:        productSize1.ID,
-		SizeValue: null.StringFrom(updatedSizeValue),
+		AdminID:       admin.ID,
+		ID:            productSize1.ID,
+		SizeValue:     null.StringFrom(updatedSizeValue),
+		ProductItemID: productSize1.ProductItemID,
 	}
 
 	productSize2, err := testStore.AdminUpdateProductSize(context.Background(), arg)

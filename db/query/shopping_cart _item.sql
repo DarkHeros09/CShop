@@ -2,9 +2,10 @@
 INSERT INTO "shopping_cart_item" (
   shopping_cart_id,
   product_item_id,
+  size_id,
   qty
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
 RETURNING *;
 
@@ -46,6 +47,7 @@ WITH t1 AS (
 UPDATE "shopping_cart_item" AS sci
 SET 
 product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
+size_id = COALESCE(sqlc.narg(size_id),size_id),
 qty = COALESCE(sqlc.narg(qty),qty),
 updated_at = now()
 WHERE sci.id = sqlc.arg(id)

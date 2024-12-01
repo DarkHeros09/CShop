@@ -16,45 +16,41 @@ const adminCreateProductItem = `-- name: AdminCreateProductItem :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $9
+    WHERE "admin".id = $7
     AND active = TRUE
     )
 INSERT INTO "product_item" (
   product_id,
-  size_id,
   image_id,
   color_id,
   product_sku,
-  qty_in_stock,
   -- product_image,
   price,
   active
 )
-SELECT $1, $2, $3, $4, $5, $6, $7, $8 FROM t1
+SELECT $1,/* sqlc.arg(size_id),*/ $2, $3, $4, /*sqlc.arg(qty_in_stock), */$5, $6 FROM t1
 WHERE is_admin=1
-RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+RETURNING id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at
 `
 
 type AdminCreateProductItemParams struct {
 	ProductID  int64  `json:"product_id"`
-	SizeID     int64  `json:"size_id"`
 	ImageID    int64  `json:"image_id"`
 	ColorID    int64  `json:"color_id"`
 	ProductSku int64  `json:"product_sku"`
-	QtyInStock int32  `json:"qty_in_stock"`
 	Price      string `json:"price"`
 	Active     bool   `json:"active"`
 	AdminID    int64  `json:"admin_id"`
 }
 
+// size_id,
+// qty_in_stock,
 func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductItem,
 		arg.ProductID,
-		arg.SizeID,
 		arg.ImageID,
 		arg.ColorID,
 		arg.ProductSku,
-		arg.QtyInStock,
 		arg.Price,
 		arg.Active,
 		arg.AdminID,
@@ -63,11 +59,9 @@ func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreatePro
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -80,29 +74,25 @@ const adminUpdateProductItem = `-- name: AdminUpdateProductItem :one
 With t1 AS (
 SELECT 1 AS is_admin
     FROM "admin"
-    WHERE "admin".id = $10
+    WHERE "admin".id = $8
     AND active = TRUE
     )
 UPDATE "product_item"
 SET
 product_sku = COALESCE($1,product_sku),
-qty_in_stock = COALESCE($2,qty_in_stock),
-size_id = COALESCE($3,size_id),
-image_id = COALESCE($4,image_id),
-color_id = COALESCE($5,color_id),
-price = COALESCE($6,price),
-active = COALESCE($7,active),
+image_id = COALESCE($2,image_id),
+color_id = COALESCE($3,color_id),
+price = COALESCE($4,price),
+active = COALESCE($5,active),
 updated_at = now()
-WHERE "product_item".id = $8
-AND product_id = $9
+WHERE "product_item".id = $6
+AND product_id = $7
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+RETURNING id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at
 `
 
 type AdminUpdateProductItemParams struct {
 	ProductSku null.Int    `json:"product_sku"`
-	QtyInStock null.Int    `json:"qty_in_stock"`
-	SizeID     null.Int    `json:"size_id"`
 	ImageID    null.Int    `json:"image_id"`
 	ColorID    null.Int    `json:"color_id"`
 	Price      null.String `json:"price"`
@@ -112,11 +102,11 @@ type AdminUpdateProductItemParams struct {
 	AdminID    int64       `json:"admin_id"`
 }
 
+// qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
+// size_id = COALESCE(sqlc.narg(size_id),size_id),
 func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductItem,
 		arg.ProductSku,
-		arg.QtyInStock,
-		arg.SizeID,
 		arg.ImageID,
 		arg.ColorID,
 		arg.Price,
@@ -129,11 +119,9 @@ func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdatePro
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -145,39 +133,35 @@ func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdatePro
 const createProductItem = `-- name: CreateProductItem :one
 INSERT INTO "product_item" (
   product_id,
-  size_id,
   image_id,
   color_id,
   product_sku,
-  qty_in_stock,
   -- product_image,
   price,
   active
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8
+  $1, $2, $3, $4, $5, $6
 )
-RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+RETURNING id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at
 `
 
 type CreateProductItemParams struct {
 	ProductID  int64  `json:"product_id"`
-	SizeID     int64  `json:"size_id"`
 	ImageID    int64  `json:"image_id"`
 	ColorID    int64  `json:"color_id"`
 	ProductSku int64  `json:"product_sku"`
-	QtyInStock int32  `json:"qty_in_stock"`
 	Price      string `json:"price"`
 	Active     bool   `json:"active"`
 }
 
+// size_id,
+// qty_in_stock,
 func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, createProductItem,
 		arg.ProductID,
-		arg.SizeID,
 		arg.ImageID,
 		arg.ColorID,
 		arg.ProductSku,
-		arg.QtyInStock,
 		arg.Price,
 		arg.Active,
 	)
@@ -185,11 +169,9 @@ func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemPa
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -229,31 +211,58 @@ func (q *Queries) GetActiveProductItems(ctx context.Context, adminID int64) (int
 }
 
 const getProductItem = `-- name: GetProductItem :one
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at FROM "product_item"
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, product_item_id, total_stock ,COALESCE(stock.total_stock,0) as qty_in_stock FROM "product_item"
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        "product_size"
+    WHERE product_item_id = $1
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = "product_item".id
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProductItem(ctx context.Context, id int64) (ProductItem, error) {
-	row := q.db.QueryRow(ctx, getProductItem, id)
-	var i ProductItem
+type GetProductItemRow struct {
+	ID            int64     `json:"id"`
+	ProductID     int64     `json:"product_id"`
+	ImageID       int64     `json:"image_id"`
+	ColorID       int64     `json:"color_id"`
+	ProductSku    int64     `json:"product_sku"`
+	Price         string    `json:"price"`
+	Active        bool      `json:"active"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	ProductItemID int64     `json:"product_item_id"`
+	TotalStock    int64     `json:"total_stock"`
+	QtyInStock    int64     `json:"qty_in_stock"`
+}
+
+func (q *Queries) GetProductItem(ctx context.Context, productItemID int64) (GetProductItemRow, error) {
+	row := q.db.QueryRow(ctx, getProductItem, productItemID)
+	var i GetProductItemRow
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ProductItemID,
+		&i.TotalStock,
+		&i.QtyInStock,
 	)
 	return i, err
 }
 
 const getProductItemForUpdate = `-- name: GetProductItemForUpdate :one
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at FROM "product_item"
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at FROM "product_item"
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
@@ -264,11 +273,9 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
@@ -278,7 +285,7 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 }
 
 const getProductItemWithPromotions = `-- name: GetProductItemWithPromotions :one
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, ps.size_value, pimg.product_image_1,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/ pimg.product_image_1,
 pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -291,7 +298,7 @@ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.descr
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
+LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
@@ -301,23 +308,31 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.id = $1 LIMIT 1
 `
 
 type GetProductItemWithPromotionsRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
 	UpdatedAt                 time.Time   `json:"updated_at"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -351,16 +366,14 @@ func (q *Queries) GetProductItemWithPromotions(ctx context.Context, id int64) (G
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.SizeValue,
+		&i.QtyInStock,
 		&i.ProductImage1,
 		&i.ProductImage2,
 		&i.ProductImage3,
@@ -410,14 +423,23 @@ func (q *Queries) GetTotalProductItems(ctx context.Context, adminID int64) (int6
 }
 
 const listProductItems = `-- name: ListProductItems :many
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.id, p.category_id, p.brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, p.search, ps.size_value, pimg.product_image_1,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.id, p.category_id, p.brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, p.search, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/ pimg.product_image_1,
 pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 COUNT(*) OVER() AS total_count
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 ORDER BY pi.id
 LIMIT $1
 OFFSET $2
@@ -431,11 +453,9 @@ type ListProductItemsParams struct {
 type ListProductItemsRow struct {
 	ID            int64       `json:"id"`
 	ProductID     int64       `json:"product_id"`
-	SizeID        int64       `json:"size_id"`
 	ImageID       int64       `json:"image_id"`
 	ColorID       int64       `json:"color_id"`
 	ProductSku    int64       `json:"product_sku"`
-	QtyInStock    int32       `json:"qty_in_stock"`
 	Price         string      `json:"price"`
 	Active        bool        `json:"active"`
 	CreatedAt     time.Time   `json:"created_at"`
@@ -449,7 +469,7 @@ type ListProductItemsRow struct {
 	CreatedAt_2   null.Time   `json:"created_at_2"`
 	UpdatedAt_2   null.Time   `json:"updated_at_2"`
 	Search        null.String `json:"search"`
-	SizeValue     null.String `json:"size_value"`
+	QtyInStock    int64       `json:"qty_in_stock"`
 	ProductImage1 null.String `json:"product_image_1"`
 	ProductImage2 null.String `json:"product_image_2"`
 	ProductImage3 null.String `json:"product_image_3"`
@@ -457,6 +477,7 @@ type ListProductItemsRow struct {
 	TotalCount    int64       `json:"total_count"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItems, arg.Limit, arg.Offset)
 	if err != nil {
@@ -469,11 +490,9 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -487,7 +506,7 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 			&i.CreatedAt_2,
 			&i.UpdatedAt_2,
 			&i.Search,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -506,7 +525,7 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 
 const listProductItemsByIDs = `-- name: ListProductItemsByIDs :many
 SELECT pi.id, p.name, pi.product_id, 
-pi.price, pi.active, ps.size_value, pimg.product_image_1,
+pi.price, pi.active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/ pimg.product_image_1,
 pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -519,7 +538,6 @@ cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.descr
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
@@ -529,7 +547,18 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    WHERE product_item_id = ANY($1::bigint[])
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.id = ANY($1::bigint[])
 `
 
@@ -539,7 +568,7 @@ type ListProductItemsByIDsRow struct {
 	ProductID                 int64       `json:"product_id"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -567,6 +596,7 @@ type ListProductItemsByIDsRow struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsByIDs, productsIds)
 	if err != nil {
@@ -582,7 +612,7 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 			&i.ProductID,
 			&i.Price,
 			&i.Active,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -622,8 +652,8 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 const listProductItemsNextPage = `-- name: ListProductItemsNextPage :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -636,7 +666,6 @@ SELECT
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
@@ -647,7 +676,17 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id  
 WHERE
     CASE
     -- WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
@@ -742,13 +781,8 @@ AND CASE
     ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($16, 0) > 0 
-    THEN pi.size_id = $16
-    ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE($17, FALSE) = TRUE 
-    THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
+    WHEN COALESCE($16, FALSE) = TRUE 
+    THEN stock.total_stock > 0 AND stock.total_stock < 3
     ELSE 1=1
 END
 ORDER BY
@@ -772,7 +806,7 @@ END DESC,
 LIMIT $1 + 1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -792,18 +826,15 @@ type ListProductItemsNextPageParams struct {
 	CategoryID       interface{} `json:"category_id"`
 	BrandID          interface{} `json:"brand_id"`
 	ColorID          interface{} `json:"color_id"`
-	SizeID           interface{} `json:"size_id"`
 	IsQtyLimited     interface{} `json:"is_qty_limited"`
 }
 
 type ListProductItemsNextPageRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -818,7 +849,7 @@ type ListProductItemsNextPageRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -847,6 +878,14 @@ type ListProductItemsNextPageRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
+// AND CASE
+//
+//	WHEN COALESCE(sqlc.narg(size_id), 0) > 0
+//	THEN pi.size_id = sqlc.narg(size_id)
+//	ELSE 1=1
+//
+// END
 // CASE
 //
 //	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
@@ -868,7 +907,6 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		arg.CategoryID,
 		arg.BrandID,
 		arg.ColorID,
-		arg.SizeID,
 		arg.IsQtyLimited,
 	)
 	if err != nil {
@@ -881,11 +919,9 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -900,7 +936,7 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -939,8 +975,8 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 }
 
 const listProductItemsNextPageOld = `-- name: ListProductItemsNextPageOld :many
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
@@ -953,7 +989,6 @@ SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sk
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -964,7 +999,16 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
 
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.id < $2
 AND pi.active = TRUE
 
@@ -1018,11 +1062,9 @@ type ListProductItemsNextPageOldParams struct {
 type ListProductItemsNextPageOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -1037,7 +1079,7 @@ type ListProductItemsNextPageOldRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       null.Bool   `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -1072,6 +1114,7 @@ type ListProductItemsNextPageOldRow struct {
 // WHERE pi.active = TRUE
 // LIMIT 1
 // )
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsNextPageOld,
 		arg.Limit,
@@ -1093,11 +1136,9 @@ func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProdu
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -1112,7 +1153,7 @@ func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProdu
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -1153,8 +1194,8 @@ func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProdu
 const listProductItemsV2 = `-- name: ListProductItemsV2 :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -1167,7 +1208,6 @@ SELECT
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
@@ -1178,7 +1218,17 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE 
 pi.active = TRUE AND
 p.active =TRUE AND
@@ -1229,29 +1279,24 @@ AND CASE
     ELSE 1=1
 END
 AND CASE
-    WHEN COALESCE($8, 0) > 0 
-    THEN pi.size_id = $8
-    ELSE 1=1
-END
-AND CASE
-    WHEN COALESCE($9, FALSE) = TRUE 
-    THEN pi.qty_in_stock > 0 AND pi.qty_in_stock < 3
+    WHEN COALESCE($8, FALSE) = TRUE 
+    THEN stock.total_stock > 0 AND stock.total_stock < 3
     ELSE 1=1
 END
 ORDER BY
 CASE
-    WHEN COALESCE($10, FALSE) = TRUE
+    WHEN COALESCE($9, FALSE) = TRUE
     THEN pi.created_at END DESC,
 CASE
-    WHEN COALESCE($11, FALSE) = TRUE
+    WHEN COALESCE($10, FALSE) = TRUE
     THEN pi.created_at END ASC,
 CASE
-	WHEN COALESCE($12, FALSE) = TRUE
+	WHEN COALESCE($11, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END ASC,
 CASE
-	WHEN COALESCE($13, FALSE) = TRUE
+	WHEN COALESCE($12, FALSE) = TRUE
 		THEN pi.price
 	ELSE ''
 END DESC,
@@ -1261,7 +1306,7 @@ END DESC,
 LIMIT $1 + 1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -1273,7 +1318,6 @@ type ListProductItemsV2Params struct {
 	CategoryID       interface{} `json:"category_id"`
 	BrandID          interface{} `json:"brand_id"`
 	ColorID          interface{} `json:"color_id"`
-	SizeID           interface{} `json:"size_id"`
 	IsQtyLimited     interface{} `json:"is_qty_limited"`
 	OrderByNew       interface{} `json:"order_by_new"`
 	OrderByOld       interface{} `json:"order_by_old"`
@@ -1284,11 +1328,9 @@ type ListProductItemsV2Params struct {
 type ListProductItemsV2Row struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -1303,7 +1345,7 @@ type ListProductItemsV2Row struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -1332,6 +1374,14 @@ type ListProductItemsV2Row struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
+// AND CASE
+//
+//	WHEN COALESCE(sqlc.narg(size_id), 0) > 0
+//	THEN pi.size_id = sqlc.narg(size_id)
+//	ELSE 1=1
+//
+// END
 // CASE
 //
 //	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
@@ -1345,7 +1395,6 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 		arg.CategoryID,
 		arg.BrandID,
 		arg.ColorID,
-		arg.SizeID,
 		arg.IsQtyLimited,
 		arg.OrderByNew,
 		arg.OrderByOld,
@@ -1362,11 +1411,9 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -1381,7 +1428,7 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -1420,8 +1467,8 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 }
 
 const listProductItemsV2Old = `-- name: ListProductItemsV2Old :many
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
@@ -1434,7 +1481,6 @@ SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sk
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -1445,7 +1491,16 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
 
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.active = TRUE
 
 AND CASE
@@ -1497,11 +1552,9 @@ type ListProductItemsV2OldParams struct {
 type ListProductItemsV2OldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -1516,7 +1569,7 @@ type ListProductItemsV2OldRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       null.Bool   `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -1551,6 +1604,7 @@ type ListProductItemsV2OldRow struct {
 // WHERE pi.active = TRUE
 // LIMIT 1
 // )
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItemsV2OldParams) ([]ListProductItemsV2OldRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsV2Old,
 		arg.Limit,
@@ -1571,11 +1625,9 @@ func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItem
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -1590,7 +1642,7 @@ func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItem
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -1636,8 +1688,8 @@ WITH sales_data AS (
   GROUP BY product_item_id
 )
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -1650,7 +1702,6 @@ SELECT
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date, sd.total_sold
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "featured_product_item" AS fpi ON fpi.product_item_id = pi.id
@@ -1663,6 +1714,16 @@ LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
 LEFT JOIN "sales_data" AS sd ON sd.product_item_id = pi.id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE 
 pi.active = TRUE AND
 p.active =TRUE
@@ -1673,11 +1734,9 @@ LIMIT $1
 type ListProductItemsWithBestSalesRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -1692,7 +1751,7 @@ type ListProductItemsWithBestSalesRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -1721,6 +1780,7 @@ type ListProductItemsWithBestSalesRow struct {
 	TotalSold                 null.Int    `json:"total_sold"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]ListProductItemsWithBestSalesRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBestSales, limit)
 	if err != nil {
@@ -1733,11 +1793,9 @@ func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -1752,7 +1810,7 @@ func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -1793,22 +1851,30 @@ func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32
 const listProductItemsWithBrandPromotions = `-- name: ListProductItemsWithBrandPromotions :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
  bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 INNER JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 pb.id = $2 AND
 pi.active = TRUE AND
@@ -1823,7 +1889,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -1835,11 +1901,9 @@ type ListProductItemsWithBrandPromotionsParams struct {
 type ListProductItemsWithBrandPromotionsRow struct {
 	ID                     int64       `json:"id"`
 	ProductID              int64       `json:"product_id"`
-	SizeID                 int64       `json:"size_id"`
 	ImageID                int64       `json:"image_id"`
 	ColorID                int64       `json:"color_id"`
 	ProductSku             int64       `json:"product_sku"`
-	QtyInStock             int32       `json:"qty_in_stock"`
 	Price                  string      `json:"price"`
 	Active                 bool        `json:"active"`
 	CreatedAt              time.Time   `json:"created_at"`
@@ -1854,7 +1918,7 @@ type ListProductItemsWithBrandPromotionsRow struct {
 	BrandName              null.String `json:"brand_name"`
 	BrandImage             null.String `json:"brand_image"`
 	ParentProductActive    bool        `json:"parent_product_active"`
-	SizeValue              null.String `json:"size_value"`
+	QtyInStock             int64       `json:"qty_in_stock"`
 	ProductImage1          null.String `json:"product_image_1"`
 	ProductImage2          null.String `json:"product_image_2"`
 	ProductImage3          null.String `json:"product_image_3"`
@@ -1869,6 +1933,7 @@ type ListProductItemsWithBrandPromotionsRow struct {
 	NextAvailable          bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg ListProductItemsWithBrandPromotionsParams) ([]ListProductItemsWithBrandPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBrandPromotions, arg.Limit, arg.BrandID)
 	if err != nil {
@@ -1881,11 +1946,9 @@ func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg L
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -1900,7 +1963,7 @@ func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg L
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -1927,22 +1990,30 @@ func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg L
 const listProductItemsWithBrandPromotionsNextPage = `-- name: ListProductItemsWithBrandPromotionsNextPage :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
  bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 INNER JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
 INNER JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE 
 pb.id = $2 AND
 (pi.id < $3
@@ -1959,7 +2030,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -1973,11 +2044,9 @@ type ListProductItemsWithBrandPromotionsNextPageParams struct {
 type ListProductItemsWithBrandPromotionsNextPageRow struct {
 	ID                     int64       `json:"id"`
 	ProductID              int64       `json:"product_id"`
-	SizeID                 int64       `json:"size_id"`
 	ImageID                int64       `json:"image_id"`
 	ColorID                int64       `json:"color_id"`
 	ProductSku             int64       `json:"product_sku"`
-	QtyInStock             int32       `json:"qty_in_stock"`
 	Price                  string      `json:"price"`
 	Active                 bool        `json:"active"`
 	CreatedAt              time.Time   `json:"created_at"`
@@ -1992,7 +2061,7 @@ type ListProductItemsWithBrandPromotionsNextPageRow struct {
 	BrandName              null.String `json:"brand_name"`
 	BrandImage             null.String `json:"brand_image"`
 	ParentProductActive    bool        `json:"parent_product_active"`
-	SizeValue              null.String `json:"size_value"`
+	QtyInStock             int64       `json:"qty_in_stock"`
 	ProductImage1          null.String `json:"product_image_1"`
 	ProductImage2          null.String `json:"product_image_2"`
 	ProductImage3          null.String `json:"product_image_3"`
@@ -2007,6 +2076,7 @@ type ListProductItemsWithBrandPromotionsNextPageRow struct {
 	NextAvailable          bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg ListProductItemsWithBrandPromotionsNextPageParams) ([]ListProductItemsWithBrandPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBrandPromotionsNextPage,
 		arg.Limit,
@@ -2024,11 +2094,9 @@ func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Contex
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2043,7 +2111,7 @@ func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Contex
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2070,22 +2138,30 @@ func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Contex
 const listProductItemsWithCategoryPromotions = `-- name: ListProductItemsWithCategoryPromotions :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 INNER JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
 INNER JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id 
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 pc.id = $2 AND
 pi.active = TRUE AND
@@ -2100,7 +2176,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2112,11 +2188,9 @@ type ListProductItemsWithCategoryPromotionsParams struct {
 type ListProductItemsWithCategoryPromotionsRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -2131,7 +2205,7 @@ type ListProductItemsWithCategoryPromotionsRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -2146,6 +2220,7 @@ type ListProductItemsWithCategoryPromotionsRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, arg ListProductItemsWithCategoryPromotionsParams) ([]ListProductItemsWithCategoryPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithCategoryPromotions, arg.Limit, arg.CategoryID)
 	if err != nil {
@@ -2158,11 +2233,9 @@ func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, ar
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2177,7 +2250,7 @@ func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, ar
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2204,22 +2277,30 @@ func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, ar
 const listProductItemsWithCategoryPromotionsNextPage = `-- name: ListProductItemsWithCategoryPromotionsNextPage :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 INNER JOIN "category_promotion" AS cp ON cp.category_id = p.category_id 
 INNER JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 pc.id = $2 AND
 (pi.id < $3
@@ -2236,7 +2317,7 @@ p.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2250,11 +2331,9 @@ type ListProductItemsWithCategoryPromotionsNextPageParams struct {
 type ListProductItemsWithCategoryPromotionsNextPageRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -2269,7 +2348,7 @@ type ListProductItemsWithCategoryPromotionsNextPageRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -2284,6 +2363,7 @@ type ListProductItemsWithCategoryPromotionsNextPageRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg ListProductItemsWithCategoryPromotionsNextPageParams) ([]ListProductItemsWithCategoryPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithCategoryPromotionsNextPage,
 		arg.Limit,
@@ -2301,11 +2381,9 @@ func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Con
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2320,7 +2398,7 @@ func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Con
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2347,22 +2425,30 @@ func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Con
 const listProductItemsWithPromotions = `-- name: ListProductItemsWithPromotions :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
  ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 INNER JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 INNER JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id 
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 p.id = $2 AND
 pi.active = TRUE AND
@@ -2377,7 +2463,7 @@ pi.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2389,11 +2475,9 @@ type ListProductItemsWithPromotionsParams struct {
 type ListProductItemsWithPromotionsRow struct {
 	ID                       int64       `json:"id"`
 	ProductID                int64       `json:"product_id"`
-	SizeID                   int64       `json:"size_id"`
 	ImageID                  int64       `json:"image_id"`
 	ColorID                  int64       `json:"color_id"`
 	ProductSku               int64       `json:"product_sku"`
-	QtyInStock               int32       `json:"qty_in_stock"`
 	Price                    string      `json:"price"`
 	Active                   bool        `json:"active"`
 	CreatedAt                time.Time   `json:"created_at"`
@@ -2408,7 +2492,7 @@ type ListProductItemsWithPromotionsRow struct {
 	BrandName                null.String `json:"brand_name"`
 	BrandImage               null.String `json:"brand_image"`
 	ParentProductActive      bool        `json:"parent_product_active"`
-	SizeValue                null.String `json:"size_value"`
+	QtyInStock               int64       `json:"qty_in_stock"`
 	ProductImage1            null.String `json:"product_image_1"`
 	ProductImage2            null.String `json:"product_image_2"`
 	ProductImage3            null.String `json:"product_image_3"`
@@ -2423,6 +2507,7 @@ type ListProductItemsWithPromotionsRow struct {
 	NextAvailable            bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListProductItemsWithPromotionsParams) ([]ListProductItemsWithPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithPromotions, arg.Limit, arg.ProductID)
 	if err != nil {
@@ -2435,11 +2520,9 @@ func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListPr
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2454,7 +2537,7 @@ func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListPr
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2481,22 +2564,30 @@ func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListPr
 const listProductItemsWithPromotionsNextPage = `-- name: ListProductItemsWithPromotionsNextPage :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
  ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 INNER JOIN "product_promotion" AS pp ON pp.product_id = p.id 
 INNER JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id 
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
- 
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 p.id = $2 AND
 pi.id < $3 AND
@@ -2512,7 +2603,7 @@ pi.id DESC
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2525,11 +2616,9 @@ type ListProductItemsWithPromotionsNextPageParams struct {
 type ListProductItemsWithPromotionsNextPageRow struct {
 	ID                       int64       `json:"id"`
 	ProductID                int64       `json:"product_id"`
-	SizeID                   int64       `json:"size_id"`
 	ImageID                  int64       `json:"image_id"`
 	ColorID                  int64       `json:"color_id"`
 	ProductSku               int64       `json:"product_sku"`
-	QtyInStock               int32       `json:"qty_in_stock"`
 	Price                    string      `json:"price"`
 	Active                   bool        `json:"active"`
 	CreatedAt                time.Time   `json:"created_at"`
@@ -2544,7 +2633,7 @@ type ListProductItemsWithPromotionsNextPageRow struct {
 	BrandName                null.String `json:"brand_name"`
 	BrandImage               null.String `json:"brand_image"`
 	ParentProductActive      bool        `json:"parent_product_active"`
-	SizeValue                null.String `json:"size_value"`
+	QtyInStock               int64       `json:"qty_in_stock"`
 	ProductImage1            null.String `json:"product_image_1"`
 	ProductImage2            null.String `json:"product_image_2"`
 	ProductImage3            null.String `json:"product_image_3"`
@@ -2559,6 +2648,7 @@ type ListProductItemsWithPromotionsNextPageRow struct {
 	NextAvailable            bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, arg ListProductItemsWithPromotionsNextPageParams) ([]ListProductItemsWithPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithPromotionsNextPage, arg.Limit, arg.ProductID, arg.ProductItemID)
 	if err != nil {
@@ -2571,11 +2661,9 @@ func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, ar
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2590,7 +2678,7 @@ func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, ar
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2617,8 +2705,8 @@ func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, ar
 const searchProductItems = `-- name: SearchProductItems :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -2631,7 +2719,6 @@ SELECT
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
@@ -2641,7 +2728,17 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id 
 WHERE 
 pi.active = TRUE AND
 p.active =TRUE AND
@@ -2662,7 +2759,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2674,11 +2771,9 @@ type SearchProductItemsParams struct {
 type SearchProductItemsRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -2693,7 +2788,7 @@ type SearchProductItemsRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -2722,6 +2817,7 @@ type SearchProductItemsRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItems, arg.Limit, arg.Query)
 	if err != nil {
@@ -2734,11 +2830,9 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2753,7 +2847,7 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2794,8 +2888,8 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 const searchProductItemsNextPage = `-- name: SearchProductItemsNextPage :many
 WITH t1 AS(
 SELECT 
- pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, ps.size_value,
+ pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
  cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
@@ -2808,7 +2902,6 @@ SELECT
  ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id 
@@ -2818,7 +2911,17 @@ LEFT JOIN "category_promotion" AS cp ON cp.category_id = p.category_id
 LEFT JOIN "promotion" AS cpromo ON cpromo.id = cp.promotion_id  
 LEFT JOIN "product_brand" AS pb ON pb.id = p.brand_id
 LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id 
-LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id  
+LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id  
 WHERE 
 (pi.id < $2
 OR (pi.id = $2 AND p.id < $3)) AND
@@ -2841,7 +2944,7 @@ END
 LIMIT $1 +1
 )
 
-SELECT id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, size_value, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
+SELECT id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at, name, description, category_id, brand_id, category_name, parent_category_id, category_image, brand_name, brand_image, parent_product_active, qty_in_stock, product_image_1, product_image_2, product_image_3, color_value, category_promo_id, category_promo_name, category_promo_description, category_promo_discount_rate, category_promo_active, category_promo_start_date, category_promo_end_date, brand_promo_id, brand_promo_name, brand_promo_description, brand_promo_discount_rate, brand_promo_active, brand_promo_start_date, brand_promo_end_date, product_promo_id, product_promo_name, product_promo_description, product_promo_discount_rate, product_promo_active, product_promo_start_date, product_promo_end_date,COUNT(*) OVER()> $1 AS next_available FROM t1 
 LIMIT $1
 `
 
@@ -2855,11 +2958,9 @@ type SearchProductItemsNextPageParams struct {
 type SearchProductItemsNextPageRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -2874,7 +2975,7 @@ type SearchProductItemsNextPageRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       bool        `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -2903,6 +3004,7 @@ type SearchProductItemsNextPageRow struct {
 	NextAvailable             bool        `json:"next_available"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPage,
 		arg.Limit,
@@ -2920,11 +3022,9 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -2939,7 +3039,7 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -2978,8 +3078,8 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 }
 
 const searchProductItemsNextPageOld = `-- name: SearchProductItemsNextPageOld :many
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
@@ -2992,7 +3092,6 @@ SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sk
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -3003,6 +3102,16 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
+
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.active = TRUE 
 AND p.active = TRUE
 AND p.search @@  
@@ -3029,11 +3138,9 @@ type SearchProductItemsNextPageOldParams struct {
 type SearchProductItemsNextPageOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -3048,7 +3155,7 @@ type SearchProductItemsNextPageOldRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       null.Bool   `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -3077,6 +3184,7 @@ type SearchProductItemsNextPageOldRow struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPageOld, arg.Limit, arg.ID, arg.Query)
 	if err != nil {
@@ -3089,11 +3197,9 @@ func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchP
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -3108,7 +3214,7 @@ func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchP
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -3147,8 +3253,8 @@ func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchP
 }
 
 const searchProductItemsOld = `-- name: SearchProductItemsOld :many
-SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sku, pi.qty_in_stock, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, ps.size_value,
+SELECT pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
+ pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
  cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
@@ -3161,7 +3267,6 @@ SELECT pi.id, pi.product_id, pi.size_id, pi.image_id, pi.color_id, pi.product_sk
  ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
-LEFT JOIN "product_size" AS ps ON ps.id = pi.size_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
 LEFT JOIN "product_color" AS pclr ON pclr.id = pi.color_id
 LEFT JOIN "product_category" AS pc ON pc.id = p.category_id
@@ -3172,7 +3277,16 @@ LEFT JOIN "brand_promotion" AS bp ON bp.brand_id = p.brand_id AND bp.active = tr
 LEFT JOIN "promotion" AS bpromo ON bpromo.id = bp.promotion_id AND bpromo.active =true AND bpromo.start_date <= CURRENT_DATE AND bpromo.end_date >= CURRENT_DATE
 LEFT JOIN "product_promotion" AS pp ON pp.product_id = p.id AND pp.active = true
 LEFT JOIN "promotion" AS ppromo ON ppromo.id = pp.promotion_id AND ppromo.active = true AND ppromo.start_date <= CURRENT_DATE AND ppromo.end_date >= CURRENT_DATE
+LEFT JOIN (
+    SELECT 
+        product_item_id, 
+    SUM(qty) AS total_stock
+    FROM 
+        product_size
+    GROUP BY 
+        product_item_id
 
+) AS stock ON stock.product_item_id = pi.id
 WHERE pi.active = TRUE AND p.search @@ 
 CASE
     WHEN char_length($2) > 0 THEN to_tsquery(concat($2, ':*'))
@@ -3195,11 +3309,9 @@ type SearchProductItemsOldParams struct {
 type SearchProductItemsOldRow struct {
 	ID                        int64       `json:"id"`
 	ProductID                 int64       `json:"product_id"`
-	SizeID                    int64       `json:"size_id"`
 	ImageID                   int64       `json:"image_id"`
 	ColorID                   int64       `json:"color_id"`
 	ProductSku                int64       `json:"product_sku"`
-	QtyInStock                int32       `json:"qty_in_stock"`
 	Price                     string      `json:"price"`
 	Active                    bool        `json:"active"`
 	CreatedAt                 time.Time   `json:"created_at"`
@@ -3214,7 +3326,7 @@ type SearchProductItemsOldRow struct {
 	BrandName                 null.String `json:"brand_name"`
 	BrandImage                null.String `json:"brand_image"`
 	ParentProductActive       null.Bool   `json:"parent_product_active"`
-	SizeValue                 null.String `json:"size_value"`
+	QtyInStock                int64       `json:"qty_in_stock"`
 	ProductImage1             null.String `json:"product_image_1"`
 	ProductImage2             null.String `json:"product_image_2"`
 	ProductImage3             null.String `json:"product_image_3"`
@@ -3243,6 +3355,7 @@ type SearchProductItemsOldRow struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
+// LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
 func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsOld, arg.Limit, arg.Query)
 	if err != nil {
@@ -3255,11 +3368,9 @@ func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductIt
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductID,
-			&i.SizeID,
 			&i.ImageID,
 			&i.ColorID,
 			&i.ProductSku,
-			&i.QtyInStock,
 			&i.Price,
 			&i.Active,
 			&i.CreatedAt,
@@ -3274,7 +3385,7 @@ func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductIt
 			&i.BrandName,
 			&i.BrandImage,
 			&i.ParentProductActive,
-			&i.SizeValue,
+			&i.QtyInStock,
 			&i.ProductImage1,
 			&i.ProductImage2,
 			&i.ProductImage3,
@@ -3316,22 +3427,18 @@ const updateProductItem = `-- name: UpdateProductItem :one
 UPDATE "product_item"
 SET
 product_sku = COALESCE($1,product_sku),
-qty_in_stock = COALESCE($2,qty_in_stock),
-size_id = COALESCE($3,size_id),
-image_id = COALESCE($4,image_id),
-color_id = COALESCE($5,color_id),
-price = COALESCE($6,price),
-active = COALESCE($7,active),
+image_id = COALESCE($2,image_id),
+color_id = COALESCE($3,color_id),
+price = COALESCE($4,price),
+active = COALESCE($5,active),
 updated_at = now()
-WHERE id = $8
-AND product_id = $9
-RETURNING id, product_id, size_id, image_id, color_id, product_sku, qty_in_stock, price, active, created_at, updated_at
+WHERE id = $6
+AND product_id = $7
+RETURNING id, product_id, image_id, color_id, product_sku, price, active, created_at, updated_at
 `
 
 type UpdateProductItemParams struct {
 	ProductSku null.Int    `json:"product_sku"`
-	QtyInStock null.Int    `json:"qty_in_stock"`
-	SizeID     null.Int    `json:"size_id"`
 	ImageID    null.Int    `json:"image_id"`
 	ColorID    null.Int    `json:"color_id"`
 	Price      null.String `json:"price"`
@@ -3340,11 +3447,11 @@ type UpdateProductItemParams struct {
 	ProductID  int64       `json:"product_id"`
 }
 
+// qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
+// size_id = COALESCE(sqlc.narg(size_id),size_id),
 func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error) {
 	row := q.db.QueryRow(ctx, updateProductItem,
 		arg.ProductSku,
-		arg.QtyInStock,
-		arg.SizeID,
 		arg.ImageID,
 		arg.ColorID,
 		arg.Price,
@@ -3356,11 +3463,9 @@ func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemPa
 	err := row.Scan(
 		&i.ID,
 		&i.ProductID,
-		&i.SizeID,
 		&i.ImageID,
 		&i.ColorID,
 		&i.ProductSku,
-		&i.QtyInStock,
 		&i.Price,
 		&i.Active,
 		&i.CreatedAt,

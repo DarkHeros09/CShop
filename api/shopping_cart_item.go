@@ -179,9 +179,9 @@ type listShoppingCartItemsResponse struct {
 	CreatedAt      null.Time `json:"created_at"`
 	UpdatedAt      null.Time `json:"updated_at"`
 	// ProductItems  []db.ListProductItemsByIDsRow         `json:"product_items"`
-	ProductItemID             null.Int    `json:"product_item_id"`
-	Name                      null.String `json:"name"`
-	Size                      null.String `json:"size"`
+	ProductItemID null.Int    `json:"product_item_id"`
+	Name          null.String `json:"name"`
+	// Size                      null.String `json:"size"`
 	Color                     null.String `json:"color"`
 	Qty                       null.Int    `json:"qty"`
 	ProductID                 int64       `json:"product_id"`
@@ -226,8 +226,8 @@ func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsBy
 					Qty:            shopCartItems[j].Qty,
 					ProductID:      productItems[i].ProductID,
 					// ProductImage:   productItems[i].ProductImage,
-					ProductImage:              productItems[i].ProductImage1.String,
-					Size:                      productItems[i].SizeValue,
+					ProductImage: productItems[i].ProductImage1.String,
+					// Size:                      productItems[i].SizeValue,
 					Color:                     productItems[i].ColorValue,
 					Price:                     productItems[i].Price,
 					Active:                    productItems[i].Active,

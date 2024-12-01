@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/cshop/v3/util"
 	"github.com/guregu/null/v5"
-	"github.com/pkg/errors"
 )
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction
@@ -23,9 +23,10 @@ type FinishedPurchaseTxParams struct {
 
 // FinishedPurchaseTxResult is the result of the purchase transaction
 type FinishedPurchaseTxResult struct {
-	UpdatedProductItemID int64 `json:"product_item_id"`
-	ShopOrderID          int64 `json:"shop_order_id"`
-	ShopOrderItemID      int64 `json:"shop_order_item_id"`
+	UpdatedProductSizeID int64 `json:"product_size_id"`
+	// UpdatedProductItemID int64 `json:"product_item_id"`
+	ShopOrderID     int64 `json:"shop_order_id"`
+	ShopOrderItemID int64 `json:"shop_order_item_id"`
 }
 
 /*
@@ -78,30 +79,32 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 
 		for i := 0; i < len(shopCartItems); i++ {
 
-			productItem, err := q.GetProductItemForUpdate(ctx, shopCartItems[i].ProductItemID)
+			productSize, err := q.GetProductItemSizeForUpdate(ctx, shopCartItems[i].SizeID)
 			if err != nil {
 				return err
 			}
 
-			if productItem.QtyInStock <= shopCartItems[i].Qty && productItem.QtyInStock > 0 {
+			if productSize.Qty > 0 && productSize.Qty <= shopCartItems[i].Qty {
 				return errors.New("Not Enough Qty in Stock")
 			}
 
-			if productItem.QtyInStock <= 0 {
+			if productSize.Qty <= 0 {
 				return errors.New("Stock is Empty")
 			}
 
 			result.ShopOrderID = createdShopOrder.ID
 
-			updatedProductItem, err := q.UpdateProductItem(ctx, UpdateProductItemParams{
-				ID:         productItem.ID,
-				ProductID:  productItem.ProductID,
-				QtyInStock: null.IntFrom(int64(productItem.QtyInStock - shopCartItems[i].Qty)),
+			updatedProductSize, err := q.UpdateProductSize(ctx, UpdateProductSizeParams{
+				ID:            productSize.ID,
+				ProductItemID: productSize.ProductItemID,
+				Qty:           null.IntFrom(int64(productSize.Qty - shopCartItems[i].Qty)),
 			})
 			if err != nil {
 				return err
 			}
-			result.UpdatedProductItemID = updatedProductItem.ID
+			result.UpdatedProductSizeID = updatedProductSize.ID
+
+			// result.UpdatedProductItemID = updatedProductSize.ProductItemID
 
 			productItemAfterUpdate, err := q.GetProductItemWithPromotions(ctx, shopCartItems[i].ProductItemID)
 			if err != nil {
@@ -125,7 +128,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				ProductItemID:       shopCartItems[i].ProductItemID,
 				OrderID:             createdShopOrder.ID,
 				Quantity:            shopCartItems[i].Qty,
-				Price:               productItem.Price,
+				Price:               productItemAfterUpdate.Price,
 				Discount:            int32(bestDiscount),
 				ShippingMethodPrice: shippingMethod.Price,
 			})

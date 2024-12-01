@@ -172,11 +172,9 @@ type ProductImage struct {
 type ProductItem struct {
 	ID         int64  `json:"id"`
 	ProductID  int64  `json:"product_id"`
-	SizeID     int64  `json:"size_id"`
 	ImageID    int64  `json:"image_id"`
 	ColorID    int64  `json:"color_id"`
 	ProductSku int64  `json:"product_sku"`
-	QtyInStock int32  `json:"qty_in_stock"`
 	Price      string `json:"price"`
 	// default is false
 	Active    bool      `json:"active"`
@@ -193,8 +191,10 @@ type ProductPromotion struct {
 }
 
 type ProductSize struct {
-	ID        int64  `json:"id"`
-	SizeValue string `json:"size_value"`
+	ID            int64  `json:"id"`
+	ProductItemID int64  `json:"product_item_id"`
+	SizeValue     string `json:"size_value"`
+	Qty           int32  `json:"qty"`
 }
 
 type Promotion struct {
@@ -266,6 +266,7 @@ type ShoppingCartItem struct {
 	ID             int64     `json:"id"`
 	ShoppingCartID int64     `json:"shopping_cart_id"`
 	ProductItemID  int64     `json:"product_item_id"`
+	SizeID         int64     `json:"size_id"`
 	Qty            int32     `json:"qty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`

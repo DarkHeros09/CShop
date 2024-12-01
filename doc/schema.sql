@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-11-16T08:45:30.060Z
+-- Generated at: 2024-11-30T22:16:55.194Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -144,6 +144,7 @@ CREATE TABLE "shopping_cart_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "shopping_cart_id" bigint NOT NULL,
   "product_item_id" bigint NOT NULL,
+  "size_id" bigint NOT NULL,
   "qty" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -188,11 +189,9 @@ CREATE TABLE "featured_product_item" (
 CREATE TABLE "product_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_id" bigint NOT NULL,
-  "size_id" bigint NOT NULL,
   "image_id" bigint NOT NULL,
   "color_id" bigint NOT NULL,
   "product_sku" bigint NOT NULL,
-  "qty_in_stock" int NOT NULL,
   "price" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -212,7 +211,9 @@ CREATE TABLE "product" (
 
 CREATE TABLE "product_size" (
   "id" bigserial PRIMARY KEY NOT NULL,
-  "size_value" varchar NOT NULL
+  "product_item_id" bigint NOT NULL,
+  "size_value" varchar NOT NULL,
+  "qty" int NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "product_color" (
@@ -409,8 +410,6 @@ ALTER TABLE "featured_product_item" ADD FOREIGN KEY ("product_item_id") REFERENC
 
 ALTER TABLE "product_item" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 
-ALTER TABLE "product_item" ADD FOREIGN KEY ("size_id") REFERENCES "product_size" ("id");
-
 ALTER TABLE "product_item" ADD FOREIGN KEY ("image_id") REFERENCES "product_image" ("id");
 
 ALTER TABLE "product_item" ADD FOREIGN KEY ("color_id") REFERENCES "product_color" ("id");
@@ -418,6 +417,8 @@ ALTER TABLE "product_item" ADD FOREIGN KEY ("color_id") REFERENCES "product_colo
 ALTER TABLE "product" ADD FOREIGN KEY ("category_id") REFERENCES "product_category" ("id");
 
 ALTER TABLE "product" ADD FOREIGN KEY ("brand_id") REFERENCES "product_brand" ("id");
+
+ALTER TABLE "product_size" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "product_promotion" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 

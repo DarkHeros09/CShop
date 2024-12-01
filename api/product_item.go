@@ -24,12 +24,12 @@ type createProductItemsParamsRequest struct {
 }
 
 type createProductItemsJsonRequest struct {
-	ProductID  int64 `json:"product_id" validate:"required,min=1"`
-	SizeID     int64 `json:"size_id" validate:"required,min=1"`
+	ProductID int64 `json:"product_id" validate:"required,min=1"`
+	// SizeID     int64 `json:"size_id" validate:"required,min=1"`
 	ImageID    int64 `json:"image_id" validate:"required,min=1"`
 	ColorID    int64 `json:"color_id" validate:"required,min=1"`
 	ProductSKU int64 `json:"product_sku" validate:"required"`
-	QtyInStock int32 `json:"qty_in_stock" validate:"required"`
+	// QtyInStock int32 `json:"qty_in_stock" validate:"required"`
 	// ProductImage string `json:"product_image" validate:"required,url"`
 	Price  string `json:"price" validate:"required"`
 	Active bool   `json:"active" validate:"boolean"`
@@ -55,9 +55,9 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 		AdminID:    authPayload.AdminID,
 		ProductID:  req.ProductID,
 		ProductSku: req.ProductSKU,
-		QtyInStock: req.QtyInStock,
+		// QtyInStock: req.QtyInStock,
 		// ProductImage: req.ProductImage,
-		SizeID:  req.SizeID,
+		// SizeID:  req.SizeID,
 		ImageID: req.ImageID,
 		ColorID: req.ColorID,
 		Price:   req.Price,
@@ -182,7 +182,7 @@ func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
 		ID:         params.ProductItemID,
 		ProductID:  req.ProductID,
 		ProductSku: null.IntFromPtr(req.ProductSKU),
-		QtyInStock: null.IntFromPtr(req.QtyInStock),
+		// QtyInStock: null.IntFromPtr(req.QtyInStock),
 		// ProductImage: null.StringFromPtr(&req.ProductImage),
 		Price:  null.StringFromPtr(req.Price),
 		Active: null.BoolFromPtr(req.Active),
@@ -274,11 +274,11 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.ListProductItemsV2Params{
-		Limit:            query.Limit,
-		CategoryID:       query.CategoryID,
-		BrandID:          query.BrandID,
-		ColorID:          query.ColorID,
-		SizeID:           query.SizeID,
+		Limit:      query.Limit,
+		CategoryID: query.CategoryID,
+		BrandID:    query.BrandID,
+		ColorID:    query.ColorID,
+		// SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
 		IsFeatured:       query.IsFeatured,
@@ -353,13 +353,13 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	createdAt := util.ParseTimeOrNil(productTimeLayout, query.CreatedAtCursor.String)
 
 	arg := db.ListProductItemsNextPageParams{
-		Limit:            query.Limit,
-		ProductItemID:    query.ProductItemCursor,
-		ProductID:        query.ProductCursor,
-		CategoryID:       query.CategoryID,
-		BrandID:          query.BrandID,
-		ColorID:          query.ColorID,
-		SizeID:           query.SizeID,
+		Limit:         query.Limit,
+		ProductItemID: query.ProductItemCursor,
+		ProductID:     query.ProductCursor,
+		CategoryID:    query.CategoryID,
+		BrandID:       query.BrandID,
+		ColorID:       query.ColorID,
+		// SizeID:           query.SizeID,
 		IsNew:            query.IsNew,
 		IsPromoted:       query.IsPromoted,
 		IsFeatured:       query.IsFeatured,

@@ -15,16 +15,16 @@ import (
 
 func createRandomProductItem(t *testing.T) ProductItem {
 	product := createRandomProduct(t)
-	productSize := createRandomProductSize(t)
+	// productSize := createRandomProductSize(t)
 	productColor := createRandomProductColor(t)
 	productImage := createRandomProductImage(t)
 	arg := CreateProductItemParams{
 		ProductID:  product.ID,
 		ProductSku: util.RandomInt(100, 300),
-		QtyInStock: int32(util.RandomInt(0, 100)),
-		SizeID:     productSize.ID,
-		ImageID:    productImage.ID,
-		ColorID:    productColor.ID,
+		// QtyInStock: int32(util.RandomInt(0, 100)),
+		// SizeID:     productSize.ID,
+		ImageID: productImage.ID,
+		ColorID: productColor.ID,
 		// ProductImage: util.RandomURL(),
 		Price:  util.RandomDecimalString(1, 100),
 		Active: true,
@@ -36,9 +36,9 @@ func createRandomProductItem(t *testing.T) ProductItem {
 
 	require.Equal(t, arg.ProductID, productItem.ProductID)
 	require.Equal(t, arg.ProductSku, productItem.ProductSku)
-	require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
+	// require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
 	// require.Equal(t, arg.ProductImage, productItem.ProductImage)
-	require.Equal(t, arg.SizeID, productItem.SizeID)
+	// require.Equal(t, arg.SizeID, productItem.SizeID)
 	require.Equal(t, arg.ColorID, productItem.ColorID)
 	require.Equal(t, arg.ImageID, productItem.ImageID)
 	require.Equal(t, arg.Price, productItem.Price)
@@ -111,17 +111,17 @@ func createRandomProductItem(t *testing.T) ProductItem {
 func adminCreateRandomProductItem(t *testing.T) ProductItem {
 	admin := createRandomAdmin(t)
 	product := createRandomProduct(t)
-	productSize := createRandomProductSize(t)
+	// productSize := createRandomProductSize(t)
 	productColor := createRandomProductColor(t)
 	productImage := createRandomProductImage(t)
 	arg := AdminCreateProductItemParams{
 		AdminID:    admin.ID,
 		ProductID:  product.ID,
 		ProductSku: util.RandomInt(100, 300),
-		QtyInStock: int32(util.RandomInt(0, 100)),
-		SizeID:     productSize.ID,
-		ImageID:    productImage.ID,
-		ColorID:    productColor.ID,
+		// QtyInStock: int32(util.RandomInt(0, 100)),
+		// SizeID:     productSize.ID,
+		ImageID: productImage.ID,
+		ColorID: productColor.ID,
 		// ProductImage: util.RandomURL(),
 		Price:  util.RandomDecimalString(1, 100),
 		Active: true,
@@ -133,9 +133,9 @@ func adminCreateRandomProductItem(t *testing.T) ProductItem {
 
 	require.Equal(t, arg.ProductID, productItem.ProductID)
 	require.Equal(t, arg.ProductSku, productItem.ProductSku)
-	require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
+	// require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
 	// require.Equal(t, arg.ProductImage, productItem.ProductImage)
-	require.Equal(t, arg.SizeID, productItem.SizeID)
+	// require.Equal(t, arg.SizeID, productItem.SizeID)
 	require.Equal(t, arg.ColorID, productItem.ColorID)
 	require.Equal(t, arg.ImageID, productItem.ImageID)
 	require.Equal(t, arg.Price, productItem.Price)
@@ -214,16 +214,17 @@ func TestAdminCreateProductItem(t *testing.T) {
 
 func TestGetProductItem(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
+	size := createRandomProductSizeWithItemID(t, productItem1.ID)
 
-	productItem2, err := testStore.GetProductItem(context.Background(), productItem1.ID)
+	productItem2, err := testStore.GetProductItem(context.Background(), size.ProductItemID)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem2)
 
 	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
 	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
-	require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
 	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
-	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	// require.Equal(t, productItem1.SizeID, productItem2.SizeID)
 	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
 	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
 	require.Equal(t, productItem1.Price, productItem2.Price)
@@ -243,9 +244,9 @@ func TestGetProductItemForUpdate(t *testing.T) {
 
 	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
 	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
-	require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
 	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
-	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	// require.Equal(t, productItem1.SizeID, productItem2.SizeID)
 	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
 	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
 	require.Equal(t, productItem1.Price, productItem2.Price)
@@ -265,9 +266,9 @@ func TestGetProductItemForUpdateWithPromotion(t *testing.T) {
 
 	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
 	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
-	require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.Equal(t, productItem1.QtyInStock, productItem2.QtyInStock)
 	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
-	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	// require.Equal(t, productItem1.SizeID, productItem2.SizeID)
 	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
 	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
 	require.Equal(t, productItem1.Price, productItem2.Price)
@@ -283,7 +284,7 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 	arg := UpdateProductItemParams{
 		ProductID:  productItem1.ProductID,
 		ProductSku: null.Int{},
-		QtyInStock: null.IntFrom(util.RandomInt(1, 500)),
+		// QtyInStock: null.IntFrom(util.RandomInt(1, 500)),
 		// ProductImage: null.String{},
 		Price:  null.StringFrom(util.RandomDecimalString(1, 100)),
 		Active: null.BoolFrom(!productItem1.Active),
@@ -297,9 +298,9 @@ func TestUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 
 	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
 	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
-	require.NotEqual(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.NotEqual(t, productItem1.QtyInStock, productItem2.QtyInStock)
 	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
-	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	// require.Equal(t, productItem1.SizeID, productItem2.SizeID)
 	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
 	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
 	require.NotEqual(t, productItem1.Price, productItem2.Price)
@@ -316,7 +317,7 @@ func TestAdminUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 		AdminID:    admin.ID,
 		ProductID:  productItem1.ProductID,
 		ProductSku: null.Int{},
-		QtyInStock: null.IntFrom(util.RandomInt(1, 500)),
+		// QtyInStock: null.IntFrom(util.RandomInt(1, 500)),
 		// ProductImage: null.String{},
 		Price:  null.StringFrom(util.RandomDecimalString(1, 100)),
 		Active: null.BoolFrom(!productItem1.Active),
@@ -330,9 +331,9 @@ func TestAdminUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 
 	require.Equal(t, productItem1.ProductID, productItem2.ProductID)
 	require.Equal(t, productItem1.ProductSku, productItem2.ProductSku)
-	require.NotEqual(t, productItem1.QtyInStock, productItem2.QtyInStock)
+	// require.NotEqual(t, productItem1.QtyInStock, productItem2.QtyInStock)
 	// require.Equal(t, productItem1.ProductImage, productItem2.ProductImage)
-	require.Equal(t, productItem1.SizeID, productItem2.SizeID)
+	// require.Equal(t, productItem1.SizeID, productItem2.SizeID)
 	require.Equal(t, productItem1.ColorID, productItem2.ColorID)
 	require.Equal(t, productItem1.ImageID, productItem2.ImageID)
 	require.NotEqual(t, productItem1.Price, productItem2.Price)
@@ -388,6 +389,7 @@ func TestListProductItemsByIDs(t *testing.T) {
 	fmt.Println("ProductsIDS", productsIds)
 
 	productItems, err := testStore.ListProductItemsByIDs(context.Background(), productsIds)
+	fmt.Println("ProductsIDS", productItems)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItems)
 
@@ -632,6 +634,7 @@ func TestListProductItemsV2OrderByNew(t *testing.T) {
 }
 
 func TestListProductItemsV2OrderByOld(t *testing.T) {
+	t.Parallel()
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}

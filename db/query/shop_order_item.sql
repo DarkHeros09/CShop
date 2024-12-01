@@ -36,7 +36,7 @@ OFFSET $2;
 SELECT os.status, so.track_number, soi.shipping_method_price AS delivery_price, so.order_total, soi.*, p.name AS product_name, pt.value as payment_type,
 -- pi.product_image, 
 pimg.product_image_1 AS product_image,
-pcolor.color_value AS product_color, psize.size_value AS product_size,
+pcolor.color_value AS product_color, /*psize.size_value AS product_size,*/
 pi.active AS product_active, a.address_line, a.region, a.city,
 DENSE_RANK() OVER(ORDER BY so.id) as order_number
 -- , pt.value AS payment_type 
@@ -44,7 +44,7 @@ FROM "shop_order_item" AS soi
 LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
 LEFT JOIN "product_item" AS pi ON pi.id = soi.product_item_id
 LEFT JOIN "product_image" AS pimg ON pimg.id = pi.image_id
-LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
+-- LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
 LEFT JOIN "product_color" AS pcolor ON pcolor.id = pi.color_id
 LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 LEFT JOIN "product" AS p ON p.id = pi.product_id
