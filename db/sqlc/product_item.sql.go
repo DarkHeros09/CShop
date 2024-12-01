@@ -794,11 +794,11 @@ CASE
     THEN pi.created_at END ASC,
 CASE
 	WHEN COALESCE($9, FALSE) = TRUE
-		THEN pi.price
+		THEN pi.price::NUMERIC
 END ASC,
 CASE
 	WHEN COALESCE($7, FALSE) = TRUE
-		THEN pi.price
+		THEN pi.price::NUMERIC
 END DESC,
     pi.id DESC,
     pi.product_id DESC
@@ -1292,13 +1292,11 @@ CASE
     THEN pi.created_at END ASC,
 CASE
 	WHEN COALESCE($11, FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
+		THEN pi.price::NUMERIC
 END ASC,
 CASE
 	WHEN COALESCE($12, FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
+		THEN pi.price::NUMERIC
 END DESC,
     pi.id DESC,
     pi.product_id DESC

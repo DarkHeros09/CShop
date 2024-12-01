@@ -424,13 +424,11 @@ CASE
 --     THEN fpi.id END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
+		THEN pi.price::NUMERIC
 END ASC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
-		THEN pi.price
-	ELSE ''
+		THEN pi.price::NUMERIC
 END DESC,
     pi.id DESC,
     pi.product_id DESC
@@ -595,11 +593,11 @@ CASE
 --     THEN fpi.id END DESC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
-		THEN pi.price
+		THEN pi.price::NUMERIC
 END ASC,
 CASE
 	WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
-		THEN pi.price
+		THEN pi.price::NUMERIC
 END DESC,
     pi.id DESC,
     pi.product_id DESC

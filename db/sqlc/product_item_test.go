@@ -386,10 +386,7 @@ func TestListProductItemsByIDs(t *testing.T) {
 		productsIds = append(productsIds, pi.ID)
 	}
 
-	fmt.Println("ProductsIDS", productsIds)
-
 	productItems, err := testStore.ListProductItemsByIDs(context.Background(), productsIds)
-	fmt.Println("ProductsIDS", productItems)
 	require.NoError(t, err)
 	require.NotEmpty(t, productItems)
 
@@ -442,7 +439,7 @@ func TestListProductItemsV2(t *testing.T) {
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
 }
 func TestListProductItemsV2OrderByHighPrice(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}
@@ -514,7 +511,7 @@ func TestListProductItemsV2OrderByHighPrice(t *testing.T) {
 }
 
 func TestListProductItemsV2OrderByLowPrice(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}
