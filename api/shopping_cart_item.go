@@ -84,6 +84,7 @@ type createShoppingCartItemParamsRequest struct {
 }
 type createShoppingCartItemRequest struct {
 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
+	SizeID        int64 `json:"size_id" validate:"required,min=1"`
 	QTY           int32 `json:"qty" validate:"required,min=1"`
 }
 
@@ -107,6 +108,7 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 		ShoppingCartID: params.ShoppingCartID,
 		ProductItemID:  req.ProductItemID,
 		Qty:            req.QTY,
+		SizeID:         req.SizeID,
 	}
 
 	shoppingCartItem, err := server.store.CreateShoppingCartItem(ctx.Context(), arg)
@@ -179,9 +181,10 @@ type listShoppingCartItemsResponse struct {
 	CreatedAt      null.Time `json:"created_at"`
 	UpdatedAt      null.Time `json:"updated_at"`
 	// ProductItems  []db.ListProductItemsByIDsRow         `json:"product_items"`
-	ProductItemID null.Int    `json:"product_item_id"`
-	Name          null.String `json:"name"`
-	// Size                      null.String `json:"size"`
+	ProductItemID             null.Int    `json:"product_item_id"`
+	Name                      null.String `json:"name"`
+	SizeID                    null.Int    `json:"size_id"`
+	Size                      null.String `json:"size"`
 	Color                     null.String `json:"color"`
 	Qty                       null.Int    `json:"qty"`
 	ProductID                 int64       `json:"product_id"`
@@ -211,47 +214,50 @@ type listShoppingCartItemsResponse struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
-func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) []listShoppingCartItemsResponse {
+func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productsSizes []db.ProductSize) []listShoppingCartItemsResponse {
 	rsp := make([]listShoppingCartItemsResponse, len(productItems))
 	for i := 0; i < len(productItems); i++ {
 		for j := 0; j < len(shopCartItems); j++ {
-			if productItems[i].ID == shopCartItems[j].ProductItemID.Int64 {
-				rsp[i] = listShoppingCartItemsResponse{
-					ID:             shopCartItems[j].ID,
-					ShoppingCartID: shopCartItems[j].ShoppingCartID,
-					CreatedAt:      shopCartItems[j].CreatedAt,
-					UpdatedAt:      shopCartItems[j].UpdatedAt,
-					ProductItemID:  shopCartItems[j].ProductItemID,
-					Name:           productItems[i].Name,
-					Qty:            shopCartItems[j].Qty,
-					ProductID:      productItems[i].ProductID,
-					// ProductImage:   productItems[i].ProductImage,
-					ProductImage: productItems[i].ProductImage1.String,
-					// Size:                      productItems[i].SizeValue,
-					Color:                     productItems[i].ColorValue,
-					Price:                     productItems[i].Price,
-					Active:                    productItems[i].Active,
-					CategoryPromoID:           productItems[i].CategoryPromoID,
-					CategoryPromoName:         productItems[i].CategoryPromoName,
-					CategoryPromoDescription:  productItems[i].CategoryPromoDescription,
-					CategoryPromoDiscountRate: productItems[i].CategoryPromoDiscountRate,
-					CategoryPromoActive:       productItems[i].CategoryPromoActive,
-					CategoryPromoStartDate:    productItems[i].CategoryPromoStartDate,
-					CategoryPromoEndDate:      productItems[i].CategoryPromoEndDate,
-					BrandPromoID:              productItems[i].BrandPromoID,
-					BrandPromoName:            productItems[i].BrandPromoName,
-					BrandPromoDescription:     productItems[i].BrandPromoDescription,
-					BrandPromoDiscountRate:    productItems[i].BrandPromoDiscountRate,
-					BrandPromoActive:          productItems[i].BrandPromoActive,
-					BrandPromoStartDate:       productItems[i].BrandPromoStartDate,
-					BrandPromoEndDate:         productItems[i].BrandPromoEndDate,
-					ProductPromoID:            productItems[i].ProductPromoID,
-					ProductPromoName:          productItems[i].ProductPromoName,
-					ProductPromoDescription:   productItems[i].ProductPromoDescription,
-					ProductPromoDiscountRate:  productItems[i].ProductPromoDiscountRate,
-					ProductPromoActive:        productItems[i].ProductPromoActive,
-					ProductPromoStartDate:     productItems[i].ProductPromoStartDate,
-					ProductPromoEndDate:       productItems[i].ProductPromoEndDate,
+			for k := 0; k < len(productsSizes); k++ {
+				if productItems[i].ID == shopCartItems[j].ProductItemID.Int64 && productItems[i].ID == productsSizes[k].ProductItemID {
+					rsp[i] = listShoppingCartItemsResponse{
+						ID:             shopCartItems[j].ID,
+						ShoppingCartID: shopCartItems[j].ShoppingCartID,
+						CreatedAt:      shopCartItems[j].CreatedAt,
+						UpdatedAt:      shopCartItems[j].UpdatedAt,
+						ProductItemID:  shopCartItems[j].ProductItemID,
+						Name:           productItems[i].Name,
+						Qty:            shopCartItems[j].Qty,
+						ProductID:      productItems[i].ProductID,
+						// ProductImage:   productItems[i].ProductImage,
+						ProductImage:              productItems[i].ProductImage1.String,
+						SizeID:                    null.IntFromPtr(&productsSizes[k].ID),
+						Size:                      null.StringFromPtr(&productsSizes[k].SizeValue),
+						Color:                     productItems[i].ColorValue,
+						Price:                     productItems[i].Price,
+						Active:                    productItems[i].Active,
+						CategoryPromoID:           productItems[i].CategoryPromoID,
+						CategoryPromoName:         productItems[i].CategoryPromoName,
+						CategoryPromoDescription:  productItems[i].CategoryPromoDescription,
+						CategoryPromoDiscountRate: productItems[i].CategoryPromoDiscountRate,
+						CategoryPromoActive:       productItems[i].CategoryPromoActive,
+						CategoryPromoStartDate:    productItems[i].CategoryPromoStartDate,
+						CategoryPromoEndDate:      productItems[i].CategoryPromoEndDate,
+						BrandPromoID:              productItems[i].BrandPromoID,
+						BrandPromoName:            productItems[i].BrandPromoName,
+						BrandPromoDescription:     productItems[i].BrandPromoDescription,
+						BrandPromoDiscountRate:    productItems[i].BrandPromoDiscountRate,
+						BrandPromoActive:          productItems[i].BrandPromoActive,
+						BrandPromoStartDate:       productItems[i].BrandPromoStartDate,
+						BrandPromoEndDate:         productItems[i].BrandPromoEndDate,
+						ProductPromoID:            productItems[i].ProductPromoID,
+						ProductPromoName:          productItems[i].ProductPromoName,
+						ProductPromoDescription:   productItems[i].ProductPromoDescription,
+						ProductPromoDiscountRate:  productItems[i].ProductPromoDiscountRate,
+						ProductPromoActive:        productItems[i].ProductPromoActive,
+						ProductPromoStartDate:     productItems[i].ProductPromoStartDate,
+						ProductPromoEndDate:       productItems[i].ProductPromoEndDate,
+					}
 				}
 			}
 		}
@@ -299,6 +305,21 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	productsSizesIds := make([]int64, len(shoppingCartItems))
+	for i := 0; i < len(shoppingCartItems); i++ {
+		productsSizesIds[i] = shoppingCartItems[i].SizeID.Int64
+	}
+
+	productsSizes, err := server.store.ListProductSizesByIDs(ctx.Context(), productsSizesIds)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
 	// listShoppingCartItemsChan := make(chan []listShoppingCartItemsResponse, len(productItems))
 
 	// go func() {
@@ -307,7 +328,7 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 	// 	}()
 
 	// 	rsp := <-listShoppingCartItemsChan
-	rsp := newlistShoppingCartItemsResponse(shoppingCartItems, productItems)
+	rsp := newlistShoppingCartItemsResponse(shoppingCartItems, productItems, productsSizes)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
@@ -320,7 +341,8 @@ type updateShoppingCartItemParamsRequest struct {
 }
 
 type updateShoppingCartItemJsonRequest struct {
-	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required"`
+	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required,min=1"`
+	SizeID        *int64 `json:"size_id" validate:"omitempty,required,min=1"`
 	QTY           *int64 `json:"qty" validate:"omitempty,required"`
 }
 
@@ -344,6 +366,7 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 		ID:             params.ShoppingCartItemID,
 		ShoppingCartID: params.ShoppingCartID,
 		ProductItemID:  null.IntFromPtr(req.ProductItemID),
+		SizeID:         null.IntFromPtr(req.SizeID),
 		Qty:            null.IntFromPtr(req.QTY),
 	}
 

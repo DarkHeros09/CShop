@@ -106,6 +106,7 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	// fmt.Println("Registration token is:", registrationToken)
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
+		Topic: "delivery_status",
 		// Data: map[string]string{
 		// 	"score": "850",
 		// 	"time":  "2:45",

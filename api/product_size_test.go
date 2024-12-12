@@ -176,23 +176,26 @@ func TestCreateProductSizeAPI(t *testing.T) {
 }
 
 func TestListProductSizeSizesAPI(t *testing.T) {
+	productItem := randomProductItem()
 	n := 5
 	productSizes := make([]db.ProductSize, n)
 	for i := 0; i < n; i++ {
-		productSizes[i] = randomProductSizesForList()
+		productSizes[i] = randomProductSizesForList(productItem.ID)
 	}
 
 	testCases := []struct {
 		name          string
+		productItemID int64
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name: "OK",
+			name:          "OK",
+			productItemID: productItem.ID,
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
-					ListProductSizes(gomock.Any()).
+					ListProductSizesByProductItemID(gomock.Any(), productItem.ID).
 					Times(1).
 					Return(productSizes, nil)
 			},
@@ -202,10 +205,11 @@ func TestListProductSizeSizesAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "InternalError",
+			name:          "InternalError",
+			productItemID: productItem.ID,
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListProductSizes(gomock.Any()).
+					ListProductSizesByProductItemID(gomock.Any(), productItem.ID).
 					Times(1).
 					Return([]db.ProductSize{}, pgx.ErrTxClosed)
 			},
@@ -230,7 +234,7 @@ func TestListProductSizeSizesAPI(t *testing.T) {
 			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
-			url := "/api/v1/sizes"
+			url := fmt.Sprintf("/api/v1/sizes/%d", tc.productItemID)
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -423,10 +427,12 @@ func randomProductSizeSuperAdmin(t *testing.T) (admin db.Admin, password string)
 	return
 }
 
-func randomProductSizesForList() db.ProductSize {
+func randomProductSizesForList(productItemId int64) db.ProductSize {
 	return db.ProductSize{
-		ID:        util.RandomInt(1, 1000),
-		SizeValue: util.RandomSize(),
+		ID:            util.RandomInt(1, 1000),
+		SizeValue:     util.RandomSize(),
+		ProductItemID: productItemId,
+		Qty:           int32(util.RandomInt(1, 1000)),
 	}
 }
 
@@ -442,8 +448,19 @@ func requireBodyMatchProductSizesList(t *testing.T, body io.ReadCloser, productS
 
 func randomProductSize() db.ProductSize {
 	return db.ProductSize{
-		ID:        util.RandomInt(0, 1000),
-		SizeValue: util.RandomSize(),
+		ID:            util.RandomInt(0, 1000),
+		SizeValue:     util.RandomSize(),
+		ProductItemID: util.RandomInt(0, 1000),
+		Qty:           int32(util.RandomInt(0, 1000)),
+	}
+}
+
+func randomProductSizeWithProductItemID(productItemId int64) db.ProductSize {
+	return db.ProductSize{
+		ID:            util.RandomInt(0, 1000),
+		SizeValue:     util.RandomSize(),
+		ProductItemID: productItemId,
+		Qty:           int32(util.RandomInt(0, 1000)),
 	}
 }
 

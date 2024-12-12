@@ -1,9 +1,10 @@
 -- name: CreateWishListItem :one
 INSERT INTO "wish_list_item" (
   wish_list_id,
-  product_item_id
+  product_item_id,
+  size_id
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
 RETURNING *;
 
@@ -46,6 +47,7 @@ ORDER BY id;
 UPDATE "wish_list_item" AS wli
 SET 
 product_item_id = COALESCE(sqlc.narg(product_item_id),product_item_id),
+size_id = COALESCE(sqlc.narg(size_id),size_id),
 updated_at = now()
 WHERE wli.id = sqlc.arg(id)
 AND wli.wish_list_id = sqlc.arg(wish_list_id)

@@ -347,6 +347,7 @@ type WishListItem struct {
 	ID            int64     `json:"id"`
 	WishListID    int64     `json:"wish_list_id"`
 	ProductItemID int64     `json:"product_item_id"`
+	SizeID        int64     `json:"size_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

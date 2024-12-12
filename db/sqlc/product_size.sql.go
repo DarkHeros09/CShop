@@ -137,6 +137,16 @@ func (q *Queries) DeleteProductSize(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteProductSizeByProductItemID = `-- name: DeleteProductSizeByProductItemID :exec
+DELETE FROM "product_size"
+WHERE product_item_id = $1
+`
+
+func (q *Queries) DeleteProductSizeByProductItemID(ctx context.Context, productItemID int64) error {
+	_, err := q.db.Exec(ctx, deleteProductSizeByProductItemID, productItemID)
+	return err
+}
+
 const getProductItemSizeForUpdate = `-- name: GetProductItemSizeForUpdate :one
 SELECT id, product_item_id, size_value, qty FROM "product_size"
 WHERE id = $1 LIMIT 1
@@ -179,6 +189,67 @@ ORDER BY id
 
 func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
 	rows, err := q.db.Query(ctx, listProductSizes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProductSize{}
+	for rows.Next() {
+		var i ProductSize
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductItemID,
+			&i.SizeValue,
+			&i.Qty,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductSizesByIDs = `-- name: ListProductSizesByIDs :many
+SELECT id, product_item_id, size_value, qty FROM "product_size" AS ps
+WHERE ps.id = ANY($1::bigint[])
+`
+
+// JOIN "shopping_cart_item" AS sci ON sci.size_id = ps.product_item_id
+func (q *Queries) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]ProductSize, error) {
+	rows, err := q.db.Query(ctx, listProductSizesByIDs, sizesIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProductSize{}
+	for rows.Next() {
+		var i ProductSize
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductItemID,
+			&i.SizeValue,
+			&i.Qty,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductSizesByProductItemID = `-- name: ListProductSizesByProductItemID :many
+SELECT id, product_item_id, size_value, qty FROM "product_size"
+WHERE product_item_id = $1
+`
+
+func (q *Queries) ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]ProductSize, error) {
+	rows, err := q.db.Query(ctx, listProductSizesByProductItemID, productItemID)
 	if err != nil {
 		return nil, err
 	}

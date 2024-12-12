@@ -149,7 +149,7 @@ func (server *Server) setupRouter() {
 	app.Get("/api/v1/brands", server.listProductBrands)        //? no auth required
 
 	//* Product-Sizes
-	app.Get("/api/v1/sizes", server.listProductSizes) //? no auth required
+	app.Get("/api/v1/sizes/:itemId", server.listProductSizes) //? no auth required
 
 	//* Product-Colors
 	app.Get("/api/v1/colors", server.listProductColors) //? no auth required

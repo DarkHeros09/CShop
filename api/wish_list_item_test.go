@@ -43,6 +43,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			WishListID: wishList.ID,
 			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
+				"size_id":         wishListItem.SizeID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -52,6 +53,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 				arg := db.CreateWishListItemParams{
 					WishListID:    wishListItem.WishListID,
 					ProductItemID: wishListItem.ProductItemID,
+					SizeID:        wishListItem.SizeID,
 				}
 
 				store.EXPECT().
@@ -70,6 +72,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			WishListID: wishList.ID,
 			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
+				"size_id":         wishListItem.SizeID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -89,6 +92,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			WishListID: wishList.ID,
 			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
+				"size_id":         wishListItem.SizeID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -98,6 +102,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 				arg := db.CreateWishListItemParams{
 					WishListID:    wishListItem.WishListID,
 					ProductItemID: wishListItem.ProductItemID,
+					SizeID:        wishListItem.SizeID,
 				}
 
 				store.EXPECT().
@@ -115,6 +120,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 			WishListID: wishList.ID,
 			body: fiber.Map{
 				"product_item_id": wishListItem.ProductItemID,
+				"size_id":         wishListItem.SizeID,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -303,15 +309,22 @@ func TestListWishListItemAPI(t *testing.T) {
 	wishListItems := make([]db.ListWishListItemsByUserIDRow, n)
 	// productItems := make([]db.ProductItem, n)
 	var productItems []db.ListProductItemsV2Row
+	var productSizes []db.ProductSize
 	for i := 0; i < n; i++ {
 		randomProductItems := randomProductItemNew()
 		productItems = append(productItems, randomProductItems)
-		wishListItems[i] = createRandomListWishListItem(wishList, randomProductItems)
+		randomProductSize := randomProductSizeWithProductItemID(randomProductItems.ID)
+		productSizes = append(productSizes, randomProductSize)
+		wishListItems[i] = createRandomListWishListItem(wishList, randomProductItems, randomProductSize)
 	}
 
 	productIds := createProductIdsForWishList(wishListItems)
 	listProductsByIds := createRandomListProductsByIdsForWishList(wishListItems, productItems)
-	finalRsp := createFinalRspForWishList(wishListItems, listProductsByIds)
+
+	sizesIds := createSizeIdsForWishList(wishListItems)
+	listSizesByIds := createRandomListSizesByIdsForWishList(wishListItems, productSizes)
+
+	finalRsp := createFinalRspForWishList(wishListItems, listProductsByIds, listSizesByIds)
 
 	testCases := []struct {
 		name          string
@@ -338,6 +351,11 @@ func TestListWishListItemAPI(t *testing.T) {
 					ListProductItemsByIDs(gomock.Any(), gomock.Eq(productIds)).
 					Times(1).
 					Return(listProductsByIds, nil)
+
+				store.EXPECT().
+					ListProductSizesByIDs(gomock.Any(), gomock.Eq(sizesIds)).
+					Times(1).
+					Return(listSizesByIds, nil)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -854,15 +872,17 @@ func createRandomWishListItem(wishList db.WishList) (wishListItem db.WishListIte
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
+		SizeID:        util.RandomMoney(),
 	}
 	return
 }
 
-func createRandomListWishListItem(wishList db.WishList, productItem db.ListProductItemsV2Row) (wishListItem db.ListWishListItemsByUserIDRow) {
+func createRandomListWishListItem(wishList db.WishList, productItem db.ListProductItemsV2Row, productSize db.ProductSize) (wishListItem db.ListWishListItemsByUserIDRow) {
 	wishListItem = db.ListWishListItemsByUserIDRow{
 		UserID:        wishList.UserID,
 		ID:            null.IntFrom(util.RandomMoney()),
 		WishListID:    null.IntFrom(wishList.ID),
+		SizeID:        null.IntFrom(productSize.ID),
 		ProductItemID: null.IntFrom(productItem.ID),
 		CreatedAt:     null.TimeFrom(time.Now()),
 	}
@@ -951,7 +971,37 @@ func createProductIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow
 
 	return productsIds
 }
-func createFinalRspForWishList(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) (rsp []listWishListItemsResponse) {
+
+func createSizeIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow) (sizeId []int64) {
+	var sizesIds []int64
+
+	for i := 0; i < len(wishListItems); i++ {
+		sizesIds = append(sizesIds, wishListItems[i].SizeID.Int64)
+	}
+
+	return sizesIds
+}
+
+func createRandomListSizesByIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow, productSizes []db.ProductSize) (listByIds []db.ProductSize) {
+	sizesIds := make([]db.ProductSize, len(wishListItems))
+
+	for i := 0; i < len(wishListItems); i++ {
+		for j := 0; j < len(productSizes); j++ {
+			if wishListItems[i].ProductItemID.Int64 == productSizes[j].ProductItemID {
+				_ = append(sizesIds, db.ProductSize{
+					ID:            productSizes[j].ID,
+					ProductItemID: productSizes[j].ProductItemID,
+					SizeValue:     productSizes[j].SizeValue,
+					Qty:           productSizes[j].Qty,
+				})
+			}
+		}
+	}
+
+	return
+}
+
+func createFinalRspForWishList(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productSizes []db.ProductSize) (rsp []listWishListItemsResponse) {
 	for i := 0; i < len(productItems); i++ {
 		rsp = append(rsp, listWishListItemsResponse{
 			ID:            wishListItems[i].ID,
@@ -960,6 +1010,7 @@ func createFinalRspForWishList(wishListItems []db.ListWishListItemsByUserIDRow, 
 			UpdatedAt:     wishListItems[i].UpdatedAt,
 			ProductItemID: wishListItems[i].ProductItemID,
 			Name:          productItems[i].Name,
+			Size:          null.StringFrom(productSizes[i].SizeValue),
 			ProductID:     productItems[i].ProductID,
 			ProductImage:  productItems[i].ProductImage1.String,
 			Price:         productItems[i].Price,

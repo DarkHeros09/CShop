@@ -14,25 +14,28 @@ import (
 const createWishListItem = `-- name: CreateWishListItem :one
 INSERT INTO "wish_list_item" (
   wish_list_id,
-  product_item_id
+  product_item_id,
+  size_id
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
-RETURNING id, wish_list_id, product_item_id, created_at, updated_at
+RETURNING id, wish_list_id, product_item_id, size_id, created_at, updated_at
 `
 
 type CreateWishListItemParams struct {
 	WishListID    int64 `json:"wish_list_id"`
 	ProductItemID int64 `json:"product_item_id"`
+	SizeID        int64 `json:"size_id"`
 }
 
 func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItemParams) (WishListItem, error) {
-	row := q.db.QueryRow(ctx, createWishListItem, arg.WishListID, arg.ProductItemID)
+	row := q.db.QueryRow(ctx, createWishListItem, arg.WishListID, arg.ProductItemID, arg.SizeID)
 	var i WishListItem
 	err := row.Scan(
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
+		&i.SizeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -64,7 +67,7 @@ func (q *Queries) DeleteWishListItem(ctx context.Context, arg DeleteWishListItem
 const deleteWishListItemAll = `-- name: DeleteWishListItemAll :many
 DELETE FROM "wish_list_item"
 WHERE wish_list_id = $1
-RETURNING id, wish_list_id, product_item_id, created_at, updated_at
+RETURNING id, wish_list_id, product_item_id, size_id, created_at, updated_at
 `
 
 // WITH t1 AS(
@@ -85,6 +88,7 @@ func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) (
 			&i.ID,
 			&i.WishListID,
 			&i.ProductItemID,
+			&i.SizeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -99,7 +103,7 @@ func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) (
 }
 
 const getWishListItem = `-- name: GetWishListItem :one
-SELECT id, wish_list_id, product_item_id, created_at, updated_at FROM "wish_list_item"
+SELECT id, wish_list_id, product_item_id, size_id, created_at, updated_at FROM "wish_list_item"
 WHERE id = $1 LIMIT 1
 `
 
@@ -110,6 +114,7 @@ func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, 
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
+		&i.SizeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -117,7 +122,7 @@ func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, 
 }
 
 const getWishListItemByUserIDCartID = `-- name: GetWishListItemByUserIDCartID :one
-SELECT wli.id, wli.wish_list_id, wli.product_item_id, wli.created_at, wli.updated_at
+SELECT wli.id, wli.wish_list_id, wli.product_item_id, wli.size_id, wli.created_at, wli.updated_at
 FROM "wish_list_item" AS wli
 LEFT JOIN "wish_list" AS wl ON wl.id = wli.wish_list_id
 WHERE wl.user_id = $1
@@ -139,6 +144,7 @@ func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWish
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
+		&i.SizeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -146,7 +152,7 @@ func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWish
 }
 
 const listWishListItems = `-- name: ListWishListItems :many
-SELECT id, wish_list_id, product_item_id, created_at, updated_at FROM "wish_list_item"
+SELECT id, wish_list_id, product_item_id, size_id, created_at, updated_at FROM "wish_list_item"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -170,6 +176,7 @@ func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsPa
 			&i.ID,
 			&i.WishListID,
 			&i.ProductItemID,
+			&i.SizeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -184,7 +191,7 @@ func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsPa
 }
 
 const listWishListItemsByCartID = `-- name: ListWishListItemsByCartID :many
-SELECT id, wish_list_id, product_item_id, created_at, updated_at FROM "wish_list_item"
+SELECT id, wish_list_id, product_item_id, size_id, created_at, updated_at FROM "wish_list_item"
 WHERE wish_list_id = $1
 ORDER BY id
 `
@@ -202,6 +209,7 @@ func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int6
 			&i.ID,
 			&i.WishListID,
 			&i.ProductItemID,
+			&i.SizeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -216,7 +224,7 @@ func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int6
 }
 
 const listWishListItemsByUserID = `-- name: ListWishListItemsByUserID :many
-SELECT wl.user_id, wli.id, wli.wish_list_id, wli.product_item_id, wli.created_at, wli.updated_at
+SELECT wl.user_id, wli.id, wli.wish_list_id, wli.product_item_id, wli.size_id, wli.created_at, wli.updated_at
 FROM "wish_list" AS wl
 LEFT JOIN "wish_list_item" AS wli ON wli.wish_list_id = wl.id
 WHERE wl.user_id = $1
@@ -227,6 +235,7 @@ type ListWishListItemsByUserIDRow struct {
 	ID            null.Int  `json:"id"`
 	WishListID    null.Int  `json:"wish_list_id"`
 	ProductItemID null.Int  `json:"product_item_id"`
+	SizeID        null.Int  `json:"size_id"`
 	CreatedAt     null.Time `json:"created_at"`
 	UpdatedAt     null.Time `json:"updated_at"`
 }
@@ -245,6 +254,7 @@ func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) (
 			&i.ID,
 			&i.WishListID,
 			&i.ProductItemID,
+			&i.SizeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -263,14 +273,16 @@ const updateWishListItem = `-- name: UpdateWishListItem :one
 UPDATE "wish_list_item" AS wli
 SET 
 product_item_id = COALESCE($1,product_item_id),
+size_id = COALESCE($2,size_id),
 updated_at = now()
-WHERE wli.id = $2
-AND wli.wish_list_id = $3
-RETURNING id, wish_list_id, product_item_id, created_at, updated_at
+WHERE wli.id = $3
+AND wli.wish_list_id = $4
+RETURNING id, wish_list_id, product_item_id, size_id, created_at, updated_at
 `
 
 type UpdateWishListItemParams struct {
 	ProductItemID null.Int `json:"product_item_id"`
+	SizeID        null.Int `json:"size_id"`
 	ID            int64    `json:"id"`
 	WishListID    int64    `json:"wish_list_id"`
 }
@@ -282,12 +294,18 @@ type UpdateWishListItemParams struct {
 //
 // )
 func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error) {
-	row := q.db.QueryRow(ctx, updateWishListItem, arg.ProductItemID, arg.ID, arg.WishListID)
+	row := q.db.QueryRow(ctx, updateWishListItem,
+		arg.ProductItemID,
+		arg.SizeID,
+		arg.ID,
+		arg.WishListID,
+	)
 	var i WishListItem
 	err := row.Scan(
 		&i.ID,
 		&i.WishListID,
 		&i.ProductItemID,
+		&i.SizeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

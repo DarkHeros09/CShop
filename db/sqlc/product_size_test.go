@@ -103,6 +103,17 @@ func TestListProductSizes(t *testing.T) {
 	require.NotEmpty(t, productSize2)
 }
 
+func TestListProductSizesForProductItem(t *testing.T) {
+	productItem := createRandomProductItem(t)
+	for i := 0; i < 5; i++ {
+		createRandomProductSizeWithItemID(t, productItem.ID)
+	}
+	productSize2, err := testStore.ListProductSizesByProductItemID(context.Background(), productItem.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, productSize2)
+}
+
 func TestUpdateProductSize(t *testing.T) {
 	productSize1 := createRandomProductSize(t)
 	updatedSize := null.StringFrom(util.RandomSize())
@@ -150,6 +161,20 @@ func TestAdminUpdateProductSize(t *testing.T) {
 func TestDeleteProductSize(t *testing.T) {
 	productSize1 := createRandomProductSize(t)
 	err := testStore.DeleteProductSize(context.Background(), productSize1.ID)
+
+	require.NoError(t, err)
+
+	productSize2, err := testStore.GetProductSize(context.Background(), productSize1.ID)
+
+	require.Error(t, err)
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
+	require.Empty(t, productSize2)
+
+}
+
+func TestDeleteProductSizeByProductItemID(t *testing.T) {
+	productSize1 := createRandomProductSize(t)
+	err := testStore.DeleteProductSizeByProductItemID(context.Background(), productSize1.ProductItemID)
 
 	require.NoError(t, err)
 

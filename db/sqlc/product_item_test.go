@@ -34,6 +34,8 @@ func createRandomProductItem(t *testing.T) ProductItem {
 	require.NoError(t, err)
 	require.NotEmpty(t, productItem)
 
+	createRandomProductSizeWithItemID(t, productItem.ID)
+
 	require.Equal(t, arg.ProductID, productItem.ProductID)
 	require.Equal(t, arg.ProductSku, productItem.ProductSku)
 	// require.Equal(t, arg.QtyInStock, productItem.QtyInStock)
@@ -345,7 +347,9 @@ func TestAdminUpdateProductItemQtyAndPriceAndActive(t *testing.T) {
 
 func TestDeleteProductItem(t *testing.T) {
 	productItem1 := createRandomProductItem(t)
-	err := testStore.DeleteProductItem(context.Background(), productItem1.ID)
+	err := testStore.DeleteProductSizeByProductItemID(context.Background(), productItem1.ID)
+	require.NoError(t, err)
+	err = testStore.DeleteProductItem(context.Background(), productItem1.ID)
 
 	require.NoError(t, err)
 
@@ -392,7 +396,7 @@ func TestListProductItemsByIDs(t *testing.T) {
 
 	for i, productItem := range productItems {
 		require.NotEmpty(t, productItem)
-		require.Equal(t, productItems[i].ID, productsIds[i])
+		require.Equal(t, productItem.ID, productsIds[i])
 	}
 
 }
@@ -868,6 +872,7 @@ func TestGetActiveProductItems(t *testing.T) {
 }
 
 func TestGetTotalProductItems(t *testing.T) {
+	createRandomProductItem(t)
 	admin := createRandomAdmin(t)
 
 	productItem2, err := testStore.GetTotalProductItems(context.Background(), admin.ID)

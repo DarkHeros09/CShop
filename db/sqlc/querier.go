@@ -115,6 +115,7 @@ type Querier interface {
 	DeleteProductItem(ctx context.Context, id int64) error
 	DeleteProductPromotion(ctx context.Context, arg DeleteProductPromotionParams) error
 	DeleteProductSize(ctx context.Context, id int64) error
+	DeleteProductSizeByProductItemID(ctx context.Context, productItemID int64) error
 	DeletePromotion(ctx context.Context, id int64) error
 	DeleteShippingMethod(ctx context.Context, id int64) error
 	DeleteShopOrder(ctx context.Context, id int64) error
@@ -310,6 +311,9 @@ type Querier interface {
 	ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error)
 	ListProductPromotionsWithImages(ctx context.Context) ([]ListProductPromotionsWithImagesRow, error)
 	ListProductSizes(ctx context.Context) ([]ProductSize, error)
+	// JOIN "shopping_cart_item" AS sci ON sci.size_id = ps.product_item_id
+	ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]ProductSize, error)
+	ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]ProductSize, error)
 	// WITH total_records AS (
 	//   SELECT COUNT(id)
 	//   FROM "product"

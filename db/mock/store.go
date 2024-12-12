@@ -1416,6 +1416,20 @@ func (mr *MockStoreMockRecorder) DeleteProductSize(arg0, arg1 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductSize", reflect.TypeOf((*MockStore)(nil).DeleteProductSize), arg0, arg1)
 }
 
+// DeleteProductSizeByProductItemID mocks base method.
+func (m *MockStore) DeleteProductSizeByProductItemID(arg0 context.Context, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteProductSizeByProductItemID", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteProductSizeByProductItemID indicates an expected call of DeleteProductSizeByProductItemID.
+func (mr *MockStoreMockRecorder) DeleteProductSizeByProductItemID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductSizeByProductItemID", reflect.TypeOf((*MockStore)(nil).DeleteProductSizeByProductItemID), arg0, arg1)
+}
+
 // DeletePromotion mocks base method.
 func (m *MockStore) DeletePromotion(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -3173,6 +3187,36 @@ func (m *MockStore) ListProductSizes(arg0 context.Context) ([]db.ProductSize, er
 func (mr *MockStoreMockRecorder) ListProductSizes(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductSizes", reflect.TypeOf((*MockStore)(nil).ListProductSizes), arg0)
+}
+
+// ListProductSizesByIDs mocks base method.
+func (m *MockStore) ListProductSizesByIDs(arg0 context.Context, arg1 []int64) ([]db.ProductSize, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListProductSizesByIDs", arg0, arg1)
+	ret0, _ := ret[0].([]db.ProductSize)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListProductSizesByIDs indicates an expected call of ListProductSizesByIDs.
+func (mr *MockStoreMockRecorder) ListProductSizesByIDs(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductSizesByIDs", reflect.TypeOf((*MockStore)(nil).ListProductSizesByIDs), arg0, arg1)
+}
+
+// ListProductSizesByProductItemID mocks base method.
+func (m *MockStore) ListProductSizesByProductItemID(arg0 context.Context, arg1 int64) ([]db.ProductSize, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListProductSizesByProductItemID", arg0, arg1)
+	ret0, _ := ret[0].([]db.ProductSize)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListProductSizesByProductItemID indicates an expected call of ListProductSizesByProductItemID.
+func (mr *MockStoreMockRecorder) ListProductSizesByProductItemID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductSizesByProductItemID", reflect.TypeOf((*MockStore)(nil).ListProductSizesByProductItemID), arg0, arg1)
 }
 
 // ListProducts mocks base method.

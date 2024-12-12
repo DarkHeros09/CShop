@@ -60,9 +60,19 @@ func (server *Server) createProductSize(ctx *fiber.Ctx) error {
 
 // ////////////* List API //////////////
 
-func (server *Server) listProductSizes(ctx *fiber.Ctx) error {
+type listProductSizesParamsRequest struct {
+	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
+}
 
-	productSizes, err := server.store.ListProductSizes(ctx.Context())
+func (server *Server) listProductSizes(ctx *fiber.Ctx) error {
+	params := &getProductItemsParamsRequest{}
+
+	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	productSizes, err := server.store.ListProductSizesByProductItemID(ctx.Context(), params.ProductItemID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))

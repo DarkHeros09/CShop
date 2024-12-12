@@ -40,6 +40,15 @@ FOR NO KEY UPDATE;
 SELECT * FROM "product_size"
 ORDER BY id;
 
+-- name: ListProductSizesByIDs :many
+SELECT * FROM "product_size" AS ps
+-- JOIN "shopping_cart_item" AS sci ON sci.size_id = ps.product_item_id
+WHERE ps.id = ANY(sqlc.arg(sizes_ids)::bigint[]);
+
+-- name: ListProductSizesByProductItemID :many
+SELECT * FROM "product_size"
+WHERE product_item_id = $1;
+
 -- name: UpdateProductSize :one
 UPDATE "product_size"
 SET 
@@ -68,3 +77,7 @@ RETURNING *;
 -- name: DeleteProductSize :exec
 DELETE FROM "product_size"
 WHERE id = $1;
+
+-- name: DeleteProductSizeByProductItemID :exec
+DELETE FROM "product_size"
+WHERE product_item_id = $1;

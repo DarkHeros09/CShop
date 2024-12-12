@@ -20,6 +20,7 @@ type createWishListItemParamsRequest struct {
 
 type createWishListItemJsonRequest struct {
 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
+	SizeID        int64 `json:"size_id" validate:"required,min=1"`
 }
 
 func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
@@ -41,6 +42,7 @@ func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
 	arg := db.CreateWishListItemParams{
 		WishListID:    params.WishListID,
 		ProductItemID: req.ProductItemID,
+		SizeID:        req.SizeID,
 	}
 
 	wishListItem, err := server.store.CreateWishListItem(ctx.Context(), arg)
@@ -111,13 +113,14 @@ type listWishListItemsRequest struct {
 }
 
 type listWishListItemsResponse struct {
-	ID            null.Int    `json:"id"`
-	WishListID    null.Int    `json:"wish_list_id"`
-	CreatedAt     null.Time   `json:"created_at"`
-	UpdatedAt     null.Time   `json:"updated_at"`
-	ProductItemID null.Int    `json:"product_item_id"`
-	Name          null.String `json:"name"`
-	// Size                      null.String `json:"size"`
+	ID                        null.Int    `json:"id"`
+	WishListID                null.Int    `json:"wish_list_id"`
+	CreatedAt                 null.Time   `json:"created_at"`
+	UpdatedAt                 null.Time   `json:"updated_at"`
+	ProductItemID             null.Int    `json:"product_item_id"`
+	Name                      null.String `json:"name"`
+	SizeID                    null.Int    `json:"size_id"`
+	Size                      null.String `json:"size"`
 	Color                     null.String `json:"color"`
 	ProductID                 int64       `json:"product_id"`
 	ProductImage              string      `json:"product_image"`
@@ -146,45 +149,48 @@ type listWishListItemsResponse struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
-func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow) []listWishListItemsResponse {
+func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productsSizes []db.ProductSize) []listWishListItemsResponse {
 	rsp := make([]listWishListItemsResponse, len(productItems))
 	for i := 0; i < len(productItems); i++ {
 		for j := 0; j < len(wishListItems); j++ {
-			if productItems[i].ID == wishListItems[j].ProductItemID.Int64 {
-				rsp[i] = listWishListItemsResponse{
-					ID:            wishListItems[j].ID,
-					WishListID:    wishListItems[j].WishListID,
-					CreatedAt:     wishListItems[j].CreatedAt,
-					UpdatedAt:     wishListItems[j].UpdatedAt,
-					ProductItemID: wishListItems[j].ProductItemID,
-					Name:          productItems[i].Name,
-					ProductID:     productItems[i].ProductID,
-					ProductImage:  productItems[i].ProductImage1.String,
-					// Size:                      productItems[i].SizeValue,
-					Color:                     productItems[i].ColorValue,
-					Price:                     productItems[i].Price,
-					Active:                    productItems[i].Active,
-					CategoryPromoID:           productItems[i].CategoryPromoID,
-					CategoryPromoName:         productItems[i].CategoryPromoName,
-					CategoryPromoDescription:  productItems[i].CategoryPromoDescription,
-					CategoryPromoDiscountRate: productItems[i].CategoryPromoDiscountRate,
-					CategoryPromoActive:       productItems[i].CategoryPromoActive,
-					CategoryPromoStartDate:    productItems[i].CategoryPromoStartDate,
-					CategoryPromoEndDate:      productItems[i].CategoryPromoEndDate,
-					BrandPromoID:              productItems[i].BrandPromoID,
-					BrandPromoName:            productItems[i].BrandPromoName,
-					BrandPromoDescription:     productItems[i].BrandPromoDescription,
-					BrandPromoDiscountRate:    productItems[i].BrandPromoDiscountRate,
-					BrandPromoActive:          productItems[i].BrandPromoActive,
-					BrandPromoStartDate:       productItems[i].BrandPromoStartDate,
-					BrandPromoEndDate:         productItems[i].BrandPromoEndDate,
-					ProductPromoID:            productItems[i].ProductPromoID,
-					ProductPromoName:          productItems[i].ProductPromoName,
-					ProductPromoDescription:   productItems[i].ProductPromoDescription,
-					ProductPromoDiscountRate:  productItems[i].ProductPromoDiscountRate,
-					ProductPromoActive:        productItems[i].ProductPromoActive,
-					ProductPromoStartDate:     productItems[i].ProductPromoStartDate,
-					ProductPromoEndDate:       productItems[i].ProductPromoEndDate,
+			for k := 0; k < len(productsSizes); k++ {
+				if productItems[i].ID == wishListItems[j].ProductItemID.Int64 && productItems[i].ID == productsSizes[k].ProductItemID {
+					rsp[i] = listWishListItemsResponse{
+						ID:                        wishListItems[j].ID,
+						WishListID:                wishListItems[j].WishListID,
+						CreatedAt:                 wishListItems[j].CreatedAt,
+						UpdatedAt:                 wishListItems[j].UpdatedAt,
+						ProductItemID:             wishListItems[j].ProductItemID,
+						Name:                      productItems[i].Name,
+						ProductID:                 productItems[i].ProductID,
+						ProductImage:              productItems[i].ProductImage1.String,
+						SizeID:                    null.IntFromPtr(&productsSizes[k].ID),
+						Size:                      null.StringFromPtr(&productsSizes[k].SizeValue),
+						Color:                     productItems[i].ColorValue,
+						Price:                     productItems[i].Price,
+						Active:                    productItems[i].Active,
+						CategoryPromoID:           productItems[i].CategoryPromoID,
+						CategoryPromoName:         productItems[i].CategoryPromoName,
+						CategoryPromoDescription:  productItems[i].CategoryPromoDescription,
+						CategoryPromoDiscountRate: productItems[i].CategoryPromoDiscountRate,
+						CategoryPromoActive:       productItems[i].CategoryPromoActive,
+						CategoryPromoStartDate:    productItems[i].CategoryPromoStartDate,
+						CategoryPromoEndDate:      productItems[i].CategoryPromoEndDate,
+						BrandPromoID:              productItems[i].BrandPromoID,
+						BrandPromoName:            productItems[i].BrandPromoName,
+						BrandPromoDescription:     productItems[i].BrandPromoDescription,
+						BrandPromoDiscountRate:    productItems[i].BrandPromoDiscountRate,
+						BrandPromoActive:          productItems[i].BrandPromoActive,
+						BrandPromoStartDate:       productItems[i].BrandPromoStartDate,
+						BrandPromoEndDate:         productItems[i].BrandPromoEndDate,
+						ProductPromoID:            productItems[i].ProductPromoID,
+						ProductPromoName:          productItems[i].ProductPromoName,
+						ProductPromoDescription:   productItems[i].ProductPromoDescription,
+						ProductPromoDiscountRate:  productItems[i].ProductPromoDiscountRate,
+						ProductPromoActive:        productItems[i].ProductPromoActive,
+						ProductPromoStartDate:     productItems[i].ProductPromoStartDate,
+						ProductPromoEndDate:       productItems[i].ProductPromoEndDate,
+					}
 				}
 			}
 		}
@@ -232,7 +238,22 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := newlistWishListItemsResponse(wishListItems, productItems)
+	productsSizesIds := make([]int64, len(wishListItems))
+	for i := 0; i < len(wishListItems); i++ {
+		productsSizesIds[i] = wishListItems[i].SizeID.Int64
+	}
+
+	productsSizes, err := server.store.ListProductSizesByIDs(ctx.Context(), productsSizesIds)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newlistWishListItemsResponse(wishListItems, productItems, productsSizes)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
@@ -246,7 +267,8 @@ type updateWishListItemParamsRequest struct {
 }
 
 type updateWishListItemJsonRequest struct {
-	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required"`
+	ProductItemID *int64 `json:"product_item_id" validate:"omitempty,required,min=1"`
+	SizeID        *int64 `json:"size_id" validate:"omitempty,required,min=1"`
 }
 
 func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
@@ -269,6 +291,7 @@ func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
 		ID:            params.WishListItemID,
 		WishListID:    params.WishListID,
 		ProductItemID: null.IntFromPtr(req.ProductItemID),
+		SizeID:        null.IntFromPtr(req.SizeID),
 	}
 
 	wishList, err := server.store.UpdateWishListItem(ctx.Context(), arg)
