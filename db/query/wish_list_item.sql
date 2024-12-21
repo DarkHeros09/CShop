@@ -28,9 +28,10 @@ LIMIT $1
 OFFSET $2;
 
 -- name: ListWishListItemsByUserID :many
-SELECT wl.user_id, wli.*
+SELECT wl.user_id, wli.*, ps.qty AS size_qty, ps.size_value
 FROM "wish_list" AS wl
 LEFT JOIN "wish_list_item" AS wli ON wli.wish_list_id = wl.id
+JOIN "product_size" AS ps ON wli.size_id = ps.id
 WHERE wl.user_id = $1;
 
 -- name: ListWishListItemsByCartID :many

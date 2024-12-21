@@ -107,10 +107,9 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	// See documentation on defining a message payload.
 	message := &messaging.Message{
 		Topic: "delivery_status",
-		// Data: map[string]string{
-		// 	"score": "850",
-		// 	"time":  "2:45",
-		// },
+		Data: map[string]string{
+			"page": "orders",
+		},
 		Notification: &messaging.Notification{
 			Title: "📦✨ طلبك جاهز للتوصيل!",
 			Body:  "مرحبًا! 🎉 طلبك أصبح جاهزًا للتوصيل 🚚. سيتم إرساله قريبًا إلى عنوانك 🏠. شكراً لتسوقك معنا! ❤️",
@@ -342,7 +341,9 @@ func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
+	if len(shopOrders) != 0 {
+		ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
+	}
 	ctx.Status(fiber.StatusOK).JSON(shopOrders)
 	return nil
 }
@@ -389,7 +390,9 @@ func (server *Server) listShopOrdersNextPageForAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
+	if len(shopOrders) != 0 {
+		ctx.Set("Next-Available", fmt.Sprint(shopOrders[0].NextAvailable))
+	}
 	ctx.Status(fiber.StatusOK).JSON(shopOrders)
 	return nil
 }

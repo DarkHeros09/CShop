@@ -33,9 +33,10 @@ WHERE shopping_cart_id = $1
 ORDER BY id;
 
 -- name: ListShoppingCartItemsByUserID :many
-SELECT sc.user_id, sci.*
+SELECT sc.user_id, sci.*, ps.qty AS size_qty, ps.size_value
 FROM "shopping_cart" AS sc
 LEFT JOIN "shopping_cart_item" AS sci ON sci.shopping_cart_id = sc.id
+JOIN "product_size" AS ps ON sci.size_id = ps.id
 WHERE sc.user_id = $1;
 
 -- name: UpdateShoppingCartItem :one

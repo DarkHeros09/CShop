@@ -120,7 +120,8 @@ type listWishListItemsResponse struct {
 	ProductItemID             null.Int    `json:"product_item_id"`
 	Name                      null.String `json:"name"`
 	SizeID                    null.Int    `json:"size_id"`
-	Size                      null.String `json:"size"`
+	SizeValue                 null.String `json:"size_value"`
+	SizeQty                   null.Int32  `json:"size_qty"`
 	Color                     null.String `json:"color"`
 	ProductID                 int64       `json:"product_id"`
 	ProductImage              string      `json:"product_image"`
@@ -165,7 +166,8 @@ func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRo
 						ProductID:                 productItems[i].ProductID,
 						ProductImage:              productItems[i].ProductImage1.String,
 						SizeID:                    null.IntFromPtr(&productsSizes[k].ID),
-						Size:                      null.StringFromPtr(&productsSizes[k].SizeValue),
+						SizeValue:                 null.StringFromPtr(&productsSizes[k].SizeValue),
+						SizeQty:                   null.Int32FromPtr(&productsSizes[k].Qty),
 						Color:                     productItems[i].ColorValue,
 						Price:                     productItems[i].Price,
 						Active:                    productItems[i].Active,

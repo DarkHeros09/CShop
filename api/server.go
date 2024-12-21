@@ -111,6 +111,11 @@ func (server *Server) setupRouter() {
 	app.Post("/api/v1/users/verify-otp", server.verifyOTP)
 	app.Post("/api/v1/users/resend-otp", server.resendOTP)
 
+	app.Post("/api/v1/users/reset-password-request", server.resetPasswordRequest)
+	app.Post("/api/v1/users/verify-otp-mobile", server.verifyResetPasswordOTP)
+	app.Post("/api/v1/users/resend-otp-mobile", server.resendResetPasswordOTP)
+	app.Post("/api/v1/users/reset-password-mobile", server.resetPasswordMobile)
+
 	//* Admins
 	app.Post("/api/v1/admins/login", server.loginAdmin) //! For Admin Only
 

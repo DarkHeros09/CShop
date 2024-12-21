@@ -882,6 +882,489 @@ func TestResendOTPAPI(t *testing.T) {
 	}
 }
 
+func TestResetPasswordRequestAPI(t *testing.T) {
+	t.Parallel()
+	userChan := make(chan db.GetUserByEmailRow)
+	// passwordChan := make(chan string)
+	// verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+
+	go func() {
+		user, _ := randomUserLogin(t)
+		userChan <- user
+		// passwordChan <- password
+		// verifyEmailChan <- randomVerifyEmail(user)
+	}()
+	user := <-userChan
+	// password := <-passwordChan
+	// verifyEmail := <-verifyEmailChan
+	// user, password := randomUserWithCartAndWishList(t)
+
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		buildStubs    func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			body: fiber.Map{
+				"email": user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(user, nil)
+
+				store.EXPECT().CreateVerifyEmail(gomock.Any(), gomock.Any()).
+					Times(1)
+
+				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchResendOTP(t, rsp.Body, fiber.Map{"message": "OTP sent successfully"})
+			},
+		},
+		{
+			name: "InternalError",
+			body: fiber.Map{
+				"email": user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+
+				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidEmail",
+			body: fiber.Map{
+				"email": "invalid-user#1",
+			},
+
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			tc.buildStubs(store, mailSender, server.userTokenMaker)
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/api/v1/users/reset-password-request"
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+
+	}
+}
+
+func TestVerifyResetPasswordOTPAPI(t *testing.T) {
+	t.Parallel()
+	userChan := make(chan db.GetUserByEmailRow)
+	// passwordChan := make(chan string)
+	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+
+	go func() {
+		user, _ := randomUserLogin(t)
+		userChan <- user
+		// passwordChan <- password
+		verifyEmailChan <- randomVerifyPasswordResetOTP(user)
+	}()
+	user := <-userChan
+	// password := <-passwordChan
+	verifyEmail := <-verifyEmailChan
+	updateVerifyEmail := randomUpdateVerifyPasswordResetOTP(user, verifyEmail)
+	// user, password := randomUserWithCartAndWishList(t)
+
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		buildStubs    func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			body: fiber.Map{
+				"email": user.Email,
+				"otp":   verifyEmail.SecretCode,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+
+				arg := db.UpdateVerifyEmailParams{
+					Email:      user.Email,
+					SecretCode: verifyEmail.SecretCode,
+				}
+
+				store.EXPECT().UpdateVerifyEmail(gomock.Any(), arg).
+					Times(1).Return(updateVerifyEmail, nil)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InternalError",
+			body: fiber.Map{
+				"email": user.Email,
+				"otp":   verifyEmail.SecretCode,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				arg := db.UpdateVerifyEmailParams{
+					Email:      user.Email,
+					SecretCode: verifyEmail.SecretCode,
+				}
+
+				store.EXPECT().UpdateVerifyEmail(gomock.Any(), arg).
+					Times(1).Return(db.UpdateVerifyEmailRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidEmail",
+			body: fiber.Map{
+				"email": "1111",
+				"otp":   verifyEmail.SecretCode,
+			},
+
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().UpdateVerifyEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+		{
+			name: "TooShortOTP",
+			body: fiber.Map{
+				"email": user.Email,
+				"otp":   "12345",
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().UpdateVerifyEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			tc.buildStubs(store, mailSender, server.userTokenMaker)
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/api/v1/users/verify-otp-mobile"
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+
+	}
+}
+
+func TestResendPasswordResetOTPAPI(t *testing.T) {
+	t.Parallel()
+	userChan := make(chan db.GetUserByEmailRow)
+	// passwordChan := make(chan string)
+	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+
+	go func() {
+		user, _ := randomUserLogin(t)
+		userChan <- user
+		// passwordChan <- password
+		verifyEmailChan <- randomVerifyPasswordResetOTP(user)
+	}()
+	user := <-userChan
+	// password := <-passwordChan
+	verifyEmail := <-verifyEmailChan
+	// user, password := randomUserWithCartAndWishList(t)
+
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		buildStubs    func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			body: fiber.Map{
+				"email": user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(user, nil)
+
+				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
+					Times(1).Return(verifyEmail, nil)
+
+				store.EXPECT().CreateVerifyEmail(gomock.Any(), gomock.Any()).
+					Times(1)
+
+				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchResendOTP(t, rsp.Body, fiber.Map{"message": "OTP sent successfully"})
+			},
+		},
+		{
+			name: "InternalError",
+			body: fiber.Map{
+				"email": user.Email,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+
+				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
+					Times(0)
+
+				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidEmail",
+			body: fiber.Map{
+				"email": "invalid-user#1",
+			},
+
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			tc.buildStubs(store, mailSender, server.userTokenMaker)
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/api/v1/users/resend-otp-mobile"
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+
+	}
+}
+
+/////////
+
+type eqUpdateUserParamsMatcher struct {
+	arg      db.UpdateUserParams
+	password string
+}
+
+func (e eqUpdateUserParamsMatcher) Matches(x interface{}) bool {
+	arg, ok := x.(db.UpdateUserParams)
+	if !ok {
+		return false
+	}
+
+	err := util.CheckPassword(e.password, arg.Password.String)
+	if err != nil {
+		return false
+	}
+
+	e.arg.Password.String = arg.Password.String
+	return reflect.DeepEqual(e.arg, arg)
+}
+
+func (e eqUpdateUserParamsMatcher) String() string {
+	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
+}
+
+func EqUpdateUserParamsMatcher(arg db.UpdateUserParams, password string) gomock.Matcher {
+	return eqUpdateUserParamsMatcher{arg, password}
+}
+
+func TestResetPasswordMobileAPI(t *testing.T) {
+	t.Parallel()
+	userChan := make(chan db.GetUserByEmailRow)
+	newPasswordChan := make(chan string)
+	// verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+
+	go func() {
+		user, _ := randomUserLogin(t)
+		userChan <- user
+		newPasswordChan <- "newpassword"
+		// verifyEmailChan <- randomVerifyEmail(user)
+	}()
+	user := <-userChan
+	newPassword := <-newPasswordChan
+	// verifyEmail := <-verifyEmailChan
+	// user, password := randomUserWithCartAndWishList(t)
+
+	testCases := []struct {
+		name          string
+		body          fiber.Map
+		buildStubs    func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker)
+		checkResponse func(rsp *http.Response)
+	}{
+		{
+			name: "OK",
+			body: fiber.Map{
+				"email":    user.Email,
+				"password": newPassword,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(user, nil)
+
+				arg := db.UpdateUserParams{
+					ID:       user.ID,
+					Password: null.StringFrom(newPassword),
+				}
+
+				store.EXPECT().UpdateUser(gomock.Any(), EqUpdateUserParamsMatcher(arg, newPassword)).
+					Times(1)
+
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InternalError",
+			body: fiber.Map{
+				"email":    user.Email,
+				"password": newPassword,
+			},
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+
+				store.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name: "InvalidEmail",
+			body: fiber.Map{
+				"email":    "invalid-user#1",
+				"password": newPassword,
+			},
+
+			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+					Times(0)
+			},
+			checkResponse: func(rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			tc.buildStubs(store, mailSender, server.userTokenMaker)
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/api/v1/users/reset-password-mobile"
+			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
+
+			rsp, err := server.router.Test(request)
+			require.NoError(t, err)
+			tc.checkResponse(rsp)
+		})
+
+	}
+}
+
 func TestLoginUserAPI(t *testing.T) {
 	t.Parallel()
 	user, password := randomUserLogin(t)
@@ -1877,7 +2360,34 @@ func randomVerifyEmail(signUpUser db.SignUpTxResult) (user db.GetVerifyEmailByEm
 	}
 	return
 }
+func randomVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow) (user db.GetVerifyEmailByEmailRow) {
+
+	user = db.GetVerifyEmailByEmailRow{
+		ID:              util.RandomMoney(),
+		UserID:          null.IntFrom(signUpUser.ID),
+		IsUsed:          false,
+		ExpiredAt:       time.Now().Add(-time.Hour),
+		Email:           signUpUser.Email,
+		IsBlocked:       signUpUser.IsBlocked,
+		IsEmailVerified: signUpUser.IsEmailVerified,
+		SecretCode:      util.GenerateOTP(),
+	}
+	return
+}
 func randomUpdateVerifyEmail(signUpUser db.SignUpTxResult, verifyEmail db.GetVerifyEmailByEmailRow) (user db.UpdateVerifyEmailRow) {
+
+	user = db.UpdateVerifyEmailRow{
+		ID:              verifyEmail.UserID.Int64,
+		Username:        signUpUser.Username,
+		Email:           signUpUser.Email,
+		IsBlocked:       signUpUser.IsBlocked,
+		IsEmailVerified: signUpUser.IsEmailVerified,
+		WishListID:      util.RandomMoney(),
+		ShoppingCartID:  util.RandomMoney(),
+	}
+	return
+}
+func randomUpdateVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow, verifyEmail db.GetVerifyEmailByEmailRow) (user db.UpdateVerifyEmailRow) {
 
 	user = db.UpdateVerifyEmailRow{
 		ID:              verifyEmail.UserID.Int64,
@@ -1952,11 +2462,11 @@ func requireBodyMatchResendOTP(t *testing.T, body io.Reader, message map[string]
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUser map[string]interface{}
-	err = json.Unmarshal(data, &gotUser)
+	// var gotUser map[string]interface{}
+	err = json.Unmarshal(data, &message)
 
 	require.NoError(t, err)
-	require.Equal(t, "OTP sent successfully", gotUser["message"])
+	require.Equal(t, "OTP sent successfully", message["message"])
 }
 
 // func requireBodyMatchUserForCreate(t *testing.T, body io.Reader, user db.CreateUserWithCartAndWishListRow) {

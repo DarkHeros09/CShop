@@ -224,9 +224,10 @@ func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int6
 }
 
 const listWishListItemsByUserID = `-- name: ListWishListItemsByUserID :many
-SELECT wl.user_id, wli.id, wli.wish_list_id, wli.product_item_id, wli.size_id, wli.created_at, wli.updated_at
+SELECT wl.user_id, wli.id, wli.wish_list_id, wli.product_item_id, wli.size_id, wli.created_at, wli.updated_at, ps.qty AS size_qty, ps.size_value
 FROM "wish_list" AS wl
 LEFT JOIN "wish_list_item" AS wli ON wli.wish_list_id = wl.id
+JOIN "product_size" AS ps ON wli.size_id = ps.id
 WHERE wl.user_id = $1
 `
 
@@ -238,6 +239,8 @@ type ListWishListItemsByUserIDRow struct {
 	SizeID        null.Int  `json:"size_id"`
 	CreatedAt     null.Time `json:"created_at"`
 	UpdatedAt     null.Time `json:"updated_at"`
+	SizeQty       int32     `json:"size_qty"`
+	SizeValue     string    `json:"size_value"`
 }
 
 func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error) {
@@ -257,6 +260,8 @@ func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) (
 			&i.SizeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SizeQty,
+			&i.SizeValue,
 		); err != nil {
 			return nil, err
 		}

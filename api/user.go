@@ -426,6 +426,288 @@ func (server *Server) resendOTP(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// ////////////* Reset Password Request API Mobile //////////////
+type resetPasswordRequestJsonRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+func (server *Server) resetPasswordRequest(ctx *fiber.Ctx) error {
+	req := &resetPasswordRequestJsonRequest{}
+
+	var secretCode string
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+	user, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	} else {
+		secretCode = util.GenerateOTP()
+
+		arg := db.CreateVerifyEmailParams{
+			UserID:     null.IntFromPtr(&user.ID),
+			SecretCode: secretCode,
+		}
+		_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+		if err != nil {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	// send email
+	subject := "Reset Your Password"
+
+	content := `Dear ` + user.Username + `,
+
+	You have requested to reset your account password. Please use the One-Time Password (OTP) below to complete the password reset process:
+	
+	Your OTP: ` + secretCode + `
+	
+	For security reasons, this code is valid for 10 minutes only. If you did not request a password reset, you can safely ignore this email.
+	
+	If you need further assistance, please contact our support team.
+	
+	Best regards,  
+	Classic Shop`
+
+	to := []string{req.Email}
+
+	err = server.sender.SendEmail(
+		subject,
+		content,
+		to,
+		nil, nil, nil,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "OTP sent successfully"})
+	return nil
+}
+
+// //////////////* Verify Reset Password Request OTP Mobile API //////////////
+
+type verifyResetPasswordOTPJsonRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	OTP   string `json:"otp" validate:"required,numeric,len=6"`
+}
+
+func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
+	req := &verifyResetPasswordOTPJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.UpdateVerifyEmailParams{
+		Email:      req.Email,
+		SecretCode: req.OTP,
+	}
+
+	_, err := server.store.UpdateVerifyEmail(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK)
+	return nil
+}
+
+// //////////////* Resend Reset Password Request OTP Mobile API //////////////
+
+type resendResetPasswordOTPJsonRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
+	req := &resendResetPasswordOTPJsonRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	var secretCode string
+	user, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	}
+
+	// check if user already exists
+	checkUser, err := server.store.GetVerifyEmailByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err != pgx.ErrNoRows {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
+		secretCode = checkUser.SecretCode
+	} else {
+		secretCode = util.GenerateOTP()
+
+		arg := db.CreateVerifyEmailParams{
+			UserID:     checkUser.UserID,
+			SecretCode: secretCode,
+		}
+		_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+		if err != nil {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+	}
+
+	// send email
+	subject := "Verify your email"
+
+	content := `Dear ` + user.Username + `,
+
+	You have requested to reset your account password. Please use the One-Time Password (OTP) below to complete the password reset process:
+	
+	Your OTP: ` + secretCode + `
+	
+	For security reasons, this code is valid for 10 minutes only. If you did not request a password reset, you can safely ignore this email.
+	
+	If you need further assistance, please contact our support team.
+	
+	Best regards,  
+	Classic Shop`
+
+	to := []string{req.Email}
+
+	err = server.sender.SendEmail(
+		subject,
+		content,
+		to,
+		nil, nil, nil,
+	)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "OTP sent successfully"})
+	return nil
+}
+
+//////////////* Reset Password Mobile API //////////////
+
+type resetPasswordMobileRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+}
+
+func (server *Server) resetPasswordMobile(ctx *fiber.Ctx) error {
+	req := &resetPasswordMobileRequest{}
+
+	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if getUser.IsBlocked {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	}
+
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	// taskPayload := &worker.PayloadSendResetPassword{
+	// 	Email: getUser.Email,
+	// }
+
+	// opts := []asynq.Option{
+	// 	asynq.MaxRetry(10),
+	// 	asynq.ProcessIn(10 * time.Second),
+	// 	asynq.Queue(worker.QueueCritical),
+	// }
+
+	// err = server.taskDistributor.DistributeTaskSendResetPassword(ctx.Context(), taskPayload, opts...)
+	// if err != nil {
+	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+	// 	return nil
+	// }
+
+	arg := db.UpdateUserParams{
+		ID:       getUser.ID,
+		Password: null.StringFromPtr(&hashedPassword),
+	}
+
+	_, err = server.store.UpdateUser(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	// //! i think it should be empty response
+	// rsp := newUserResponse(user)
+	// ctx.Status(fiber.StatusOK).JSON(rsp)
+	ctx.Status(fiber.StatusOK)
+	return nil
+}
+
 //////////////* Reset Password API //////////////
 
 type resetPasswordRequest struct {
@@ -693,7 +975,7 @@ type updateUserParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type updateUserJsonRequest struct {
-	Telephone      *int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
+	// Telephone      *int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
 	DefaultPayment *int64 `json:"default_payment" validate:"omitempty,required"`
 }
 
