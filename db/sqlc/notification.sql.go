@@ -18,7 +18,7 @@ INSERT INTO "notification" (
 fcm_token
 ) VALUES (
   $1, $2, $3
-)
+) 
 RETURNING user_id, device_id, fcm_token, created_at, updated_at
 `
 
@@ -28,6 +28,9 @@ type CreateNotificationParams struct {
 	FcmToken null.String `json:"fcm_token"`
 }
 
+// ON CONFLICT(user_id) DO UPDATE SET
+// device_id = EXCLUDED.device_id,
+// fcm_token = EXCLUDED.fcm_token
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
 	row := q.db.QueryRow(ctx, createNotification, arg.UserID, arg.DeviceID, arg.FcmToken)
 	var i Notification

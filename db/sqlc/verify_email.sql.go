@@ -61,7 +61,7 @@ func (q *Queries) GetVerifyEmail(ctx context.Context, id int64) (VerifyEmail, er
 }
 
 const getVerifyEmailByEmail = `-- name: GetVerifyEmailByEmail :one
-SELECT u.email, u.is_blocked, u.is_email_verified, 
+SELECT u.email, u.username, u.is_blocked, u.is_email_verified, 
 ve.id, ve.user_id, ve.secret_code, ve.is_used, ve.created_at, ve.expired_at FROM "verify_email" AS ve
 JOIN "user" AS u ON u.id = ve.user_id
 WHERE u.email = $1
@@ -71,6 +71,7 @@ LIMIT 1
 
 type GetVerifyEmailByEmailRow struct {
 	Email           string    `json:"email"`
+	Username        string    `json:"username"`
 	IsBlocked       bool      `json:"is_blocked"`
 	IsEmailVerified bool      `json:"is_email_verified"`
 	ID              int64     `json:"id"`
@@ -86,6 +87,7 @@ func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (GetV
 	var i GetVerifyEmailByEmailRow
 	err := row.Scan(
 		&i.Email,
+		&i.Username,
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.ID,

@@ -5,9 +5,10 @@ INSERT INTO "notification" (
 fcm_token
 ) VALUES (
   $1, $2, $3
-) ON CONFLICT(user_id) DO UPDATE SET 
-device_id = EXCLUDED.device_id,
-fcm_token = EXCLUDED.fcm_token
+) 
+-- ON CONFLICT(user_id) DO UPDATE SET 
+-- device_id = EXCLUDED.device_id,
+-- fcm_token = EXCLUDED.fcm_token
 RETURNING *;
 
 -- name: GetNotification :one

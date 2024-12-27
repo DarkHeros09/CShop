@@ -119,6 +119,45 @@ func TestGetUserByEmail(t *testing.T) {
 	require.WithinDuration(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
 
+func TestUpdateUsePassword(t *testing.T) {
+	t.Parallel()
+	hashedPassword, err := util.HashPassword(util.RandomString(6))
+	require.NoError(t, err)
+	require.NotEmpty(t, hashedPassword)
+
+	arg := CreateUserParams{
+		Username: util.RandomUser(),
+		Email:    util.RandomEmail(),
+		Password: hashedPassword,
+		// Telephone: int32(util.RandomInt(0, 1000000)),
+		IsBlocked: false,
+	}
+
+	user1, err := testStore.CreateUser(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, user1)
+
+	newPassword, err := util.HashPassword(util.RandomString(6))
+	require.NoError(t, err)
+
+	arg1 := UpdateUserPasswordParams{
+		ID:          user1.ID,
+		Oldpassword: user1.Password,
+		Newpassword: newPassword}
+
+	user2, err := testStore.UpdateUserPassword(context.Background(), arg1)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+
+	require.Equal(t, user1.ID, user2.ID)
+	require.Equal(t, user1.Email, user2.Email)
+	require.NotEqual(t, user1.Password, user2.Password)
+	require.Equal(t, user1.IsBlocked, user2.IsBlocked)
+	require.Equal(t, user1.CreatedAt, user2.CreatedAt, time.Second)
+	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
+}
+
 func TestUpdateUser(t *testing.T) {
 	t.Parallel()
 	user1 := createRandomUser(t)
@@ -141,6 +180,7 @@ func TestUpdateUser(t *testing.T) {
 	require.Equal(t, user1.CreatedAt, user2.CreatedAt, time.Second)
 	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
+
 func TestDeleteUser(t *testing.T) {
 	user1 := createRandomUser(t)
 

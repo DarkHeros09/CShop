@@ -59,6 +59,9 @@ type Querier interface {
 	CreateBrandPromotion(ctx context.Context, arg CreateBrandPromotionParams) (BrandPromotion, error)
 	CreateCategoryPromotion(ctx context.Context, arg CreateCategoryPromotionParams) (CategoryPromotion, error)
 	CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error)
+	// ON CONFLICT(user_id) DO UPDATE SET
+	// device_id = EXCLUDED.device_id,
+	// fcm_token = EXCLUDED.fcm_token
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOrderStatus(ctx context.Context, status string) (OrderStatus, error)
 	CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (PaymentMethod, error)
@@ -179,6 +182,8 @@ type Querier interface {
 	GetCompletedDailyOrderTotal(ctx context.Context, adminID int64) (string, error)
 	GetFeaturedProductItem(ctx context.Context, productItemID int64) (FeaturedProductItem, error)
 	GetHomePageTextBanner(ctx context.Context, id int64) (HomePageTextBanner, error)
+	// AND secret_code = $2
+	GetLastUsedResetPassword(ctx context.Context, email string) (ResetPassword, error)
 	GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error)
 	GetNotificationV2(ctx context.Context, userID int64) (Notification, error)
 	GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error)
@@ -201,7 +206,9 @@ type Querier interface {
 	GetProductSize(ctx context.Context, id int64) (ProductSize, error)
 	GetProductsByIDs(ctx context.Context, ids []int64) ([]Product, error)
 	GetPromotion(ctx context.Context, id int64) (Promotion, error)
+	GetResetPassword(ctx context.Context, id int64) (ResetPassword, error)
 	GetResetPasswordUserIDByID(ctx context.Context, arg GetResetPasswordUserIDByIDParams) (int64, error)
+	GetResetPasswordsByEmail(ctx context.Context, email string) (GetResetPasswordsByEmailRow, error)
 	GetShippingMethod(ctx context.Context, id int64) (ShippingMethod, error)
 	GetShippingMethodByUserID(ctx context.Context, arg GetShippingMethodByUserIDParams) (GetShippingMethodByUserIDRow, error)
 	GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
@@ -420,6 +427,7 @@ type Querier interface {
 	// telephone = COALESCE(sqlc.narg(telephone),telephone),
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (UserSession, error)
 	UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error)

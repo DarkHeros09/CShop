@@ -2,17 +2,14 @@ package api
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/cshop/v3/worker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/guregu/null/v5"
-	"github.com/hibiken/asynq"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -456,11 +453,11 @@ func (server *Server) resetPasswordRequest(ctx *fiber.Ctx) error {
 	} else {
 		secretCode = util.GenerateOTP()
 
-		arg := db.CreateVerifyEmailParams{
-			UserID:     null.IntFromPtr(&user.ID),
+		arg := db.CreateResetPasswordParams{
+			UserID:     user.ID,
 			SecretCode: secretCode,
 		}
-		_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+		_, err := server.store.CreateResetPassword(ctx.Context(), arg)
 		if err != nil {
 			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 			return nil
@@ -515,12 +512,28 @@ func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.UpdateVerifyEmailParams{
-		Email:      req.Email,
+	resetPassword, err := server.store.GetResetPasswordsByEmail(ctx.Context(), req.Email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if resetPassword.IsBlockedUser {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.UpdateResetPasswordParams{
+		ID:         resetPassword.ID,
 		SecretCode: req.OTP,
 	}
 
-	_, err := server.store.UpdateVerifyEmail(ctx.Context(), arg)
+	_, err = server.store.UpdateResetPassword(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -537,7 +550,7 @@ func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Status(fiber.StatusOK)
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 	return nil
 }
 
@@ -556,24 +569,8 @@ func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 	}
 
 	var secretCode string
-	user, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
-			return nil
-		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	if user.IsBlocked {
-		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-		return nil
-	}
-
 	// check if user already exists
-	checkUser, err := server.store.GetVerifyEmailByEmail(ctx.Context(), req.Email)
+	checkUser, err := server.store.GetResetPasswordsByEmail(ctx.Context(), req.Email)
 	if err != nil {
 		if err != pgx.ErrNoRows {
 			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
@@ -581,16 +578,22 @@ func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 		}
 	}
 
+	if checkUser.IsBlockedUser {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	}
+
 	if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
 		secretCode = checkUser.SecretCode
 	} else {
 		secretCode = util.GenerateOTP()
 
-		arg := db.CreateVerifyEmailParams{
+		arg := db.CreateResetPasswordParams{
 			UserID:     checkUser.UserID,
 			SecretCode: secretCode,
 		}
-		_, err := server.store.CreateVerifyEmail(ctx.Context(), arg)
+		_, err := server.store.CreateResetPassword(ctx.Context(), arg)
 		if err != nil {
 			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 			return nil
@@ -598,9 +601,9 @@ func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 	}
 
 	// send email
-	subject := "Verify your email"
+	subject := "Reset Your Password"
 
-	content := `Dear ` + user.Username + `,
+	content := `Dear ` + checkUser.Username + `,
 
 	You have requested to reset your account password. Please use the One-Time Password (OTP) below to complete the password reset process:
 	
@@ -630,22 +633,23 @@ func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 	return nil
 }
 
-//////////////* Reset Password Mobile API //////////////
+//////////////* Reset Password Approved API //////////////
 
-type resetPasswordMobileRequest struct {
+type resetPasswordApprovedRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
+	OTP      string `json:"otp" validate:"required,numeric,len=6"`
 }
 
-func (server *Server) resetPasswordMobile(ctx *fiber.Ctx) error {
-	req := &resetPasswordMobileRequest{}
+func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
+	req := &resetPasswordApprovedRequest{}
 
 	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
 
-	getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+	lastUsedPasswordReset, err := server.store.GetLastUsedResetPassword(ctx.Context(), req.Email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -655,74 +659,100 @@ func (server *Server) resetPasswordMobile(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if getUser.IsBlocked {
-		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-		return nil
-	}
+	if lastUsedPasswordReset.SecretCode == req.OTP {
 
-	hashedPassword, err := util.HashPassword(req.Password)
-	if err != nil {
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	// taskPayload := &worker.PayloadSendResetPassword{
-	// 	Email: getUser.Email,
-	// }
-
-	// opts := []asynq.Option{
-	// 	asynq.MaxRetry(10),
-	// 	asynq.ProcessIn(10 * time.Second),
-	// 	asynq.Queue(worker.QueueCritical),
-	// }
-
-	// err = server.taskDistributor.DistributeTaskSendResetPassword(ctx.Context(), taskPayload, opts...)
-	// if err != nil {
-	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-	// 	return nil
-	// }
-
-	arg := db.UpdateUserParams{
-		ID:       getUser.ID,
-		Password: null.StringFromPtr(&hashedPassword),
-	}
-
-	_, err = server.store.UpdateUser(ctx.Context(), arg)
-	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok {
-			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
-				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
 				return nil
 			}
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+
+		if getUser.IsBlocked {
+			err := errors.New("account unauthorized")
+			ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+			return nil
+		}
+
+		hashedPassword, err := util.HashPassword(req.Password)
+		if err != nil {
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+
+		// taskPayload := &worker.PayloadSendResetPassword{
+		// 	Email: getUser.Email,
+		// }
+
+		// opts := []asynq.Option{
+		// 	asynq.MaxRetry(10),
+		// 	asynq.ProcessIn(10 * time.Second),
+		// 	asynq.Queue(worker.QueueCritical),
+		// }
+
+		// err = server.taskDistributor.DistributeTaskSendResetPassword(ctx.Context(), taskPayload, opts...)
+		// if err != nil {
+		// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		// 	return nil
+		// }
+
+		arg2 := db.UpdateUserParams{
+			ID:       getUser.ID,
+			Password: null.StringFromPtr(&hashedPassword),
+		}
+
+		_, err = server.store.UpdateUser(ctx.Context(), arg2)
+		if err != nil {
+			if pqErr, ok := err.(*pgconn.PgError); ok {
+				switch pqErr.Message {
+				case "foreign_key_violation", "unique_violation":
+					ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+					return nil
+				}
+			}
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+			return nil
+		}
+
+		// //! i think it should be empty response
+		// rsp := newUserResponse(user)
+		// ctx.Status(fiber.StatusOK).JSON(rsp)
+		ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 		return nil
 	}
-
-	// //! i think it should be empty response
-	// rsp := newUserResponse(user)
-	// ctx.Status(fiber.StatusOK).JSON(rsp)
-	ctx.Status(fiber.StatusOK)
+	ctx.Status(fiber.StatusBadRequest)
 	return nil
 }
 
-//////////////* Reset Password API //////////////
-
-type resetPasswordRequest struct {
-	Email string `json:"email" validate:"required,email"`
+// ////////////* Change Password API //////////////
+type changePasswordParamsRequest struct {
+	UserID int64 `params:"id" validate:"required,min=1"`
+}
+type changePasswordJsonRequest struct {
+	OldPassword string `json:"old_password" validate:"required,min=6"`
+	NewPassword string `json:"new_password" validate:"required,min=6"`
 }
 
-func (server *Server) resetPassword(ctx *fiber.Ctx) error {
-	req := &resetPasswordRequest{}
+func (server *Server) changePassword(ctx *fiber.Ctx) error {
+	params := &changePasswordParamsRequest{}
+	req := &changePasswordJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
 
-	getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
+	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
+	if authPayload.UserID != params.UserID {
+		err := errors.New("account deosn't belong to the authenticated user")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	user, err := server.store.GetUser(ctx.Context(), authPayload.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -732,102 +762,32 @@ func (server *Server) resetPassword(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if getUser.IsBlocked {
+	if user.IsBlocked || !user.IsEmailVerified {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
+
 	}
 
-	// newPassword, err := util.GeneratePassword(10, 3, 2, false, false)
-	// if err != nil {
-	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-	// 	return nil
-	// }
-
-	// hashedPassword, err := util.HashPassword(newPassword)
-	// if err != nil {
-	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-	// 	return nil
-	// }
-
-	taskPayload := &worker.PayloadSendResetPassword{
-		Email: getUser.Email,
-	}
-
-	opts := []asynq.Option{
-		asynq.MaxRetry(10),
-		asynq.ProcessIn(10 * time.Second),
-		asynq.Queue(worker.QueueCritical),
-	}
-
-	err = server.taskDistributor.DistributeTaskSendResetPassword(ctx.Context(), taskPayload, opts...)
+	err = util.CheckPassword(req.OldPassword, user.Password)
 	if err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
-	// arg := db.UpdateUserParams{
-	// 	ID:       getUser.ID,
-	// 	Password: null.StringFromPtr(&hashedPassword),
-	// }
-
-	// user, err := server.store.UpdateUser(ctx.Context(), arg)
-	// if err != nil {
-	// 	if pqErr, ok := err.(*pgconn.PgError); ok {
-	// 		switch pqErr.Message {
-	// 		case "foreign_key_violation", "unique_violation":
-	// 			ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-	// 			return nil
-	// 		}
-	// 	}
-	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-	// 	return nil
-	// }
-
-	// //! i think it should be empty response
-	// rsp := newUserResponse(user)
-	// ctx.Status(fiber.StatusOK).JSON(rsp)
-	ctx.Status(fiber.StatusOK)
-	return nil
-}
-
-//////////////* New Password API //////////////
-
-type newPasswordRequest struct {
-	EmailId         string `form:"email_id" validate:"required,numeric,min=1"`
-	SecretCode      string `form:"secret_code" validate:"required"`
-	Password        string `form:"password" validate:"required,min=6,eqfield=ConfirmPassword"`
-	ConfirmPassword string `form:"confirm_password" validate:"required,min=6,eqfield=Password"`
-}
-
-func (server *Server) newPassword(ctx *fiber.Ctx) error {
-	req := &newPasswordRequest{}
-
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
-		// ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-		ctx.Render("success", fiber.Map{})
+	newHashedPassword, err := util.HashPassword(req.NewPassword)
+	if err != nil {
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
-	emailId := ctx.FormValue("email_id")
-	secretCode := ctx.FormValue("secret_code")
-
-	id, err := strconv.Atoi(emailId)
-	if err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+	arg := db.UpdateUserPasswordParams{
+		ID:          authPayload.UserID,
+		Oldpassword: user.Password,
+		Newpassword: newHashedPassword,
 	}
 
-	arg1 := db.GetResetPasswordUserIDByIDParams{
-		ID:         int64(id),
-		SecretCode: secretCode,
-	}
-
-	userId, err := server.store.GetResetPasswordUserIDByID(ctx.Context(), arg1)
-	if err != nil {
-		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-	}
-
-	getUser, err := server.store.GetUser(ctx.Context(), userId)
+	_, err = server.store.UpdateUserPassword(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -837,47 +797,7 @@ func (server *Server) newPassword(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if getUser.IsBlocked {
-		err := errors.New("account unauthorized")
-		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-		return nil
-	}
-
-	hashedPassword, err := util.HashPassword(req.Password)
-	if err != nil {
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	arg := db.UpdateUserParams{
-		ID:       getUser.ID,
-		Password: null.StringFromPtr(&hashedPassword),
-	}
-
-	_, err = server.store.UpdateUser(ctx.Context(), arg)
-	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok {
-			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
-				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-				return nil
-			}
-		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	// //! i think it should be empty response
-	// rsp := newUserResponse(user)
-	// ctx.Status(fiber.StatusOK).JSON(rsp)
-	// ctx.Status(fiber.StatusOK)
-	// content := fmt.Sprintf(`<h1 id class="text-2xl font-bold mb-4">Reset Password Successful</h1>`)
-	// ctx.SendString(`
-	// <div class="h-full text-center flex">
-	// <div id class="font-sans text-2xl font-bold mb-4">Reset Password Successful</div>
-	// </div>
-	// `)
-	ctx.Render("success", fiber.Map{})
+	ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 	return nil
 }
 
@@ -1067,14 +987,14 @@ type loginUserRequest struct {
 	Password string `json:"password" validate:"required,min=6"`
 }
 
-type loginUserResponse struct {
-	UserSessionID         string       `json:"user_session_id"`
-	AccessToken           string       `json:"access_token"`
-	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
-	RefreshToken          string       `json:"refresh_token"`
-	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
-	User                  userResponse `json:"user"`
-}
+// type loginUserResponse struct {
+// 	UserSessionID         string       `json:"user_session_id"`
+// 	AccessToken           string       `json:"access_token"`
+// 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
+// 	RefreshToken          string       `json:"refresh_token"`
+// 	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
+// 	User                  userResponse `json:"user"`
+// }
 
 func newUserLoginResponse(user db.GetUserByEmailRow) userResponse {
 	return userResponse{

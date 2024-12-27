@@ -1899,6 +1899,21 @@ func (mr *MockStoreMockRecorder) GetHomePageTextBanner(arg0, arg1 any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHomePageTextBanner", reflect.TypeOf((*MockStore)(nil).GetHomePageTextBanner), arg0, arg1)
 }
 
+// GetLastUsedResetPassword mocks base method.
+func (m *MockStore) GetLastUsedResetPassword(arg0 context.Context, arg1 string) (db.ResetPassword, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLastUsedResetPassword", arg0, arg1)
+	ret0, _ := ret[0].(db.ResetPassword)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLastUsedResetPassword indicates an expected call of GetLastUsedResetPassword.
+func (mr *MockStoreMockRecorder) GetLastUsedResetPassword(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastUsedResetPassword", reflect.TypeOf((*MockStore)(nil).GetLastUsedResetPassword), arg0, arg1)
+}
+
 // GetNotification mocks base method.
 func (m *MockStore) GetNotification(arg0 context.Context, arg1 db.GetNotificationParams) (db.Notification, error) {
 	m.ctrl.T.Helper()
@@ -2214,6 +2229,21 @@ func (mr *MockStoreMockRecorder) GetPromotion(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPromotion", reflect.TypeOf((*MockStore)(nil).GetPromotion), arg0, arg1)
 }
 
+// GetResetPassword mocks base method.
+func (m *MockStore) GetResetPassword(arg0 context.Context, arg1 int64) (db.ResetPassword, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResetPassword", arg0, arg1)
+	ret0, _ := ret[0].(db.ResetPassword)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetResetPassword indicates an expected call of GetResetPassword.
+func (mr *MockStoreMockRecorder) GetResetPassword(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResetPassword", reflect.TypeOf((*MockStore)(nil).GetResetPassword), arg0, arg1)
+}
+
 // GetResetPasswordUserIDByID mocks base method.
 func (m *MockStore) GetResetPasswordUserIDByID(arg0 context.Context, arg1 db.GetResetPasswordUserIDByIDParams) (int64, error) {
 	m.ctrl.T.Helper()
@@ -2227,6 +2257,21 @@ func (m *MockStore) GetResetPasswordUserIDByID(arg0 context.Context, arg1 db.Get
 func (mr *MockStoreMockRecorder) GetResetPasswordUserIDByID(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResetPasswordUserIDByID", reflect.TypeOf((*MockStore)(nil).GetResetPasswordUserIDByID), arg0, arg1)
+}
+
+// GetResetPasswordsByEmail mocks base method.
+func (m *MockStore) GetResetPasswordsByEmail(arg0 context.Context, arg1 string) (db.GetResetPasswordsByEmailRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResetPasswordsByEmail", arg0, arg1)
+	ret0, _ := ret[0].(db.GetResetPasswordsByEmailRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetResetPasswordsByEmail indicates an expected call of GetResetPasswordsByEmail.
+func (mr *MockStoreMockRecorder) GetResetPasswordsByEmail(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResetPasswordsByEmail", reflect.TypeOf((*MockStore)(nil).GetResetPasswordsByEmail), arg0, arg1)
 }
 
 // GetShippingMethod mocks base method.
@@ -4162,6 +4207,21 @@ func (m *MockStore) UpdateUserAddress(arg0 context.Context, arg1 db.UpdateUserAd
 func (mr *MockStoreMockRecorder) UpdateUserAddress(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAddress", reflect.TypeOf((*MockStore)(nil).UpdateUserAddress), arg0, arg1)
+}
+
+// UpdateUserPassword mocks base method.
+func (m *MockStore) UpdateUserPassword(arg0 context.Context, arg1 db.UpdateUserPasswordParams) (db.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserPassword", arg0, arg1)
+	ret0, _ := ret[0].(db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserPassword indicates an expected call of UpdateUserPassword.
+func (mr *MockStoreMockRecorder) UpdateUserPassword(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockStore)(nil).UpdateUserPassword), arg0, arg1)
 }
 
 // UpdateUserReview mocks base method.

@@ -211,10 +211,10 @@ type Promotion struct {
 type ResetPassword struct {
 	ID         int64     `json:"id"`
 	UserID     int64     `json:"user_id"`
-	Email      string    `json:"email"`
 	SecretCode string    `json:"secret_code"`
 	IsUsed     bool      `json:"is_used"`
 	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 	ExpiredAt  time.Time `json:"expired_at"`
 }
 

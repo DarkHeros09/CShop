@@ -54,7 +54,6 @@ func (processor *RedisTaskProcessor) ProcessTaskSendResetPassword(
 
 	resetPassword, err := processor.store.CreateResetPassword(ctx, db.CreateResetPasswordParams{
 		UserID:     user.ID,
-		Email:      user.Email,
 		SecretCode: util.RandomString(32),
 	})
 	if err != nil {

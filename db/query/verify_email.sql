@@ -12,7 +12,7 @@ SELECT * FROM "verify_email"
 WHERE id = $1 LIMIT 1;
 
 -- name: GetVerifyEmailByEmail :one
-SELECT u.email, u.is_blocked, u.is_email_verified, 
+SELECT u.email, u.username, u.is_blocked, u.is_email_verified, 
 ve.* FROM "verify_email" AS ve
 JOIN "user" AS u ON u.id = ve.user_id
 WHERE u.email = $1

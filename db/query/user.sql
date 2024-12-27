@@ -70,6 +70,18 @@ updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
+-- name: UpdateUserPassword :one
+UPDATE "user"
+SET 
+password = sqlc.arg(newPassword),
+updated_at = now()
+WHERE id = sqlc.arg(id)
+AND is_email_verified = TRUE
+AND is_blocked = FALSE
+AND password = sqlc.arg(oldPassword)
+AND password != sqlc.arg(newPassword)
+RETURNING *;
+
 -- name: DeleteUser :one
 DELETE FROM "user"
 WHERE id = $1

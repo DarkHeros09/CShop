@@ -914,7 +914,7 @@ func TestResetPasswordRequestAPI(t *testing.T) {
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
 					Times(1).Return(user, nil)
 
-				store.EXPECT().CreateVerifyEmail(gomock.Any(), gomock.Any()).
+				store.EXPECT().CreateResetPassword(gomock.Any(), gomock.Any()).
 					Times(1)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
@@ -991,18 +991,18 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 	t.Parallel()
 	userChan := make(chan db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
-	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+	resetPasswordChan := make(chan db.GetResetPasswordsByEmailRow)
 
 	go func() {
 		user, _ := randomUserLogin(t)
 		userChan <- user
 		// passwordChan <- password
-		verifyEmailChan <- randomVerifyPasswordResetOTP(user)
+		resetPasswordChan <- randomResetPasswordOTP(user)
 	}()
 	user := <-userChan
 	// password := <-passwordChan
-	verifyEmail := <-verifyEmailChan
-	updateVerifyEmail := randomUpdateVerifyPasswordResetOTP(user, verifyEmail)
+	resetPassword := <-resetPasswordChan
+	updateResetPassword := randomUpdateResetPasswordOTP(user, resetPassword)
 	// user, password := randomUserWithCartAndWishList(t)
 
 	testCases := []struct {
@@ -1015,17 +1015,19 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 			name: "OK",
 			body: fiber.Map{
 				"email": user.Email,
-				"otp":   verifyEmail.SecretCode,
+				"otp":   resetPassword.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), user.Email).
+					Times(1).Return(resetPassword, nil)
 
-				arg := db.UpdateVerifyEmailParams{
-					Email:      user.Email,
-					SecretCode: verifyEmail.SecretCode,
+				arg := db.UpdateResetPasswordParams{
+					ID:         resetPassword.ID,
+					SecretCode: resetPassword.SecretCode,
 				}
 
-				store.EXPECT().UpdateVerifyEmail(gomock.Any(), arg).
-					Times(1).Return(updateVerifyEmail, nil)
+				store.EXPECT().UpdateResetPassword(gomock.Any(), arg).
+					Times(1).Return(updateResetPassword, nil)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -1036,16 +1038,16 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 			name: "InternalError",
 			body: fiber.Map{
 				"email": user.Email,
-				"otp":   verifyEmail.SecretCode,
+				"otp":   resetPassword.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				arg := db.UpdateVerifyEmailParams{
-					Email:      user.Email,
-					SecretCode: verifyEmail.SecretCode,
-				}
+				// arg := db.UpdateVerifyEmailParams{
+				// 	Email:      user.Email,
+				// 	SecretCode: resetPassword.SecretCode,
+				// }
 
-				store.EXPECT().UpdateVerifyEmail(gomock.Any(), arg).
-					Times(1).Return(db.UpdateVerifyEmailRow{}, pgx.ErrTxClosed)
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), gomock.Eq(user.Email)).
+					Times(1).Return(db.GetResetPasswordsByEmailRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1055,11 +1057,11 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 			name: "InvalidEmail",
 			body: fiber.Map{
 				"email": "1111",
-				"otp":   verifyEmail.SecretCode,
+				"otp":   resetPassword.SecretCode,
 			},
 
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().UpdateVerifyEmail(gomock.Any(), gomock.Any()).
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -1073,7 +1075,7 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 				"otp":   "12345",
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().UpdateVerifyEmail(gomock.Any(), gomock.Any()).
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -1100,7 +1102,7 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/api/v1/users/verify-otp-mobile"
+			url := "/api/v1/users/verify-password-reset-otp"
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
@@ -1117,17 +1119,17 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 	t.Parallel()
 	userChan := make(chan db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
-	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+	resetPasswordChan := make(chan db.GetResetPasswordsByEmailRow)
 
 	go func() {
 		user, _ := randomUserLogin(t)
 		userChan <- user
 		// passwordChan <- password
-		verifyEmailChan <- randomVerifyPasswordResetOTP(user)
+		resetPasswordChan <- randomResetPasswordOTP(user)
 	}()
 	user := <-userChan
 	// password := <-passwordChan
-	verifyEmail := <-verifyEmailChan
+	resetPassword := <-resetPasswordChan
 	// user, password := randomUserWithCartAndWishList(t)
 
 	testCases := []struct {
@@ -1142,13 +1144,10 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 				"email": user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
-					Times(1).Return(user, nil)
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), user.Email).
+					Times(1).Return(resetPassword, nil)
 
-				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
-					Times(1).Return(verifyEmail, nil)
-
-				store.EXPECT().CreateVerifyEmail(gomock.Any(), gomock.Any()).
+				store.EXPECT().CreateResetPassword(gomock.Any(), gomock.Any()).
 					Times(1)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
@@ -1165,11 +1164,8 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 				"email": user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
-
-				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
-					Times(0)
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), user.Email).
+					Times(1).Return(db.GetResetPasswordsByEmailRow{}, pgx.ErrTxClosed)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -1184,7 +1180,7 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 			},
 
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), user.Email).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -1211,7 +1207,7 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/api/v1/users/resend-otp-mobile"
+			url := "/api/v1/users/resend-password-reset-otp"
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
@@ -1254,22 +1250,11 @@ func EqUpdateUserParamsMatcher(arg db.UpdateUserParams, password string) gomock.
 	return eqUpdateUserParamsMatcher{arg, password}
 }
 
-func TestResetPasswordMobileAPI(t *testing.T) {
+func TestResetPasswordApprovedAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.GetUserByEmailRow)
-	newPasswordChan := make(chan string)
-	// verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
-
-	go func() {
-		user, _ := randomUserLogin(t)
-		userChan <- user
-		newPasswordChan <- "newpassword"
-		// verifyEmailChan <- randomVerifyEmail(user)
-	}()
-	user := <-userChan
-	newPassword := <-newPasswordChan
-	// verifyEmail := <-verifyEmailChan
-	// user, password := randomUserWithCartAndWishList(t)
+	user, _ := randomUserLogin(t)
+	newPassword := "newpassword"
+	passwordReset := randomResetPassword(user)
 
 	testCases := []struct {
 		name          string
@@ -1282,18 +1267,23 @@ func TestResetPasswordMobileAPI(t *testing.T) {
 			body: fiber.Map{
 				"email":    user.Email,
 				"password": newPassword,
+				"otp":      passwordReset.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
-					Times(1).Return(user, nil)
+				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(1).Return(passwordReset, nil)
 
-				arg := db.UpdateUserParams{
-					ID:       user.ID,
-					Password: null.StringFrom(newPassword),
+				if true {
+					store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
+						Times(1).Return(user, nil)
+
+					arg := db.UpdateUserParams{
+						ID:       user.ID,
+						Password: null.StringFrom(newPassword),
+					}
+
+					store.EXPECT().UpdateUser(gomock.Any(), EqUpdateUserParamsMatcher(arg, newPassword)).
+						Times(1)
 				}
-
-				store.EXPECT().UpdateUser(gomock.Any(), EqUpdateUserParamsMatcher(arg, newPassword)).
-					Times(1)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -1305,10 +1295,14 @@ func TestResetPasswordMobileAPI(t *testing.T) {
 			body: fiber.Map{
 				"email":    user.Email,
 				"password": newPassword,
+				"otp":      passwordReset.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(1).Return(db.ResetPassword{}, pgx.ErrTxClosed)
+
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+					Times(0)
+					// .Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
 
 				store.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).
 					Times(0)
@@ -1322,9 +1316,11 @@ func TestResetPasswordMobileAPI(t *testing.T) {
 			body: fiber.Map{
 				"email":    "invalid-user#1",
 				"password": newPassword,
+				"otp":      passwordReset.SecretCode,
 			},
 
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
+				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(0)
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
 					Times(0)
 			},
@@ -1352,7 +1348,7 @@ func TestResetPasswordMobileAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/api/v1/users/reset-password-mobile"
+			url := "/api/v1/users/reset-password-approved"
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
@@ -2374,6 +2370,33 @@ func randomVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow) (user db.GetV
 	}
 	return
 }
+func randomResetPasswordOTP(signUpUser db.GetUserByEmailRow) (user db.GetResetPasswordsByEmailRow) {
+
+	user = db.GetResetPasswordsByEmailRow{
+		ID:              util.RandomMoney(),
+		UserID:          signUpUser.ID,
+		IsUsed:          false,
+		ExpiredAt:       time.Now().Add(-time.Hour),
+		Email:           signUpUser.Email,
+		IsBlockedUser:   signUpUser.IsBlocked,
+		IsEmailVerified: signUpUser.IsEmailVerified,
+		SecretCode:      util.GenerateOTP(),
+	}
+	return
+}
+
+func randomResetPassword(signUpUser db.GetUserByEmailRow) (user db.ResetPassword) {
+
+	user = db.ResetPassword{
+		ID:         util.RandomMoney(),
+		UserID:     signUpUser.ID,
+		IsUsed:     false,
+		ExpiredAt:  time.Now().Add(-time.Hour),
+		SecretCode: util.GenerateOTP(),
+	}
+	return
+}
+
 func randomUpdateVerifyEmail(signUpUser db.SignUpTxResult, verifyEmail db.GetVerifyEmailByEmailRow) (user db.UpdateVerifyEmailRow) {
 
 	user = db.UpdateVerifyEmailRow{
@@ -2397,6 +2420,16 @@ func randomUpdateVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow, verifyE
 		IsEmailVerified: signUpUser.IsEmailVerified,
 		WishListID:      util.RandomMoney(),
 		ShoppingCartID:  util.RandomMoney(),
+	}
+	return
+}
+func randomUpdateResetPasswordOTP(signUpUser db.GetUserByEmailRow, verifyEmail db.GetResetPasswordsByEmailRow) (user db.ResetPassword) {
+
+	user = db.ResetPassword{
+		ID:         verifyEmail.ID,
+		UserID:     verifyEmail.UserID,
+		SecretCode: verifyEmail.SecretCode,
+		IsUsed:     verifyEmail.IsUsed,
 	}
 	return
 }

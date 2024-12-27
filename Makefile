@@ -180,6 +180,14 @@ db_docs:
 db_schema:
 	dbml2sql doc/db.dbml --postgres -o doc/schema.sql
 
+db_new_schema_from_docs:
+	type .\doc\schema.sql > .\db\migration\000001_init_schema.up.sql
+
+db_generate_schema:
+	@make -s db_docs
+	@make -s db_schema
+	@make -s db_new_schema_from_docs
+
 unocss:
 	unocss "./web/views/*.html" -c "./web/uno.config.ts" -o "./web/styles/output.css" -m --watch
 

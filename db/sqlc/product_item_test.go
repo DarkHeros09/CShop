@@ -385,20 +385,38 @@ func TestListProductItems(t *testing.T) {
 func TestListProductItemsByIDs(t *testing.T) {
 	var productsIds []int64
 
+	// Create product items and store their IDs
 	for i := 0; i < 5; i++ {
 		pi := createRandomProductItem(t)
 		productsIds = append(productsIds, pi.ID)
 	}
 
-	productItems, err := testStore.ListProductItemsByIDs(context.Background(), productsIds)
-	require.NoError(t, err)
-	require.NotEmpty(t, productItems)
-
-	for i, productItem := range productItems {
-		require.NotEmpty(t, productItem)
-		require.Equal(t, productItem.ID, productsIds[i])
+	// Ensure the IDs are unique
+	uniqueProductIDs := make(map[int64]bool)
+	for _, id := range productsIds {
+		uniqueProductIDs[id] = true
+	}
+	productsIds = make([]int64, 0, len(uniqueProductIDs))
+	for id := range uniqueProductIDs {
+		productsIds = append(productsIds, id)
 	}
 
+	// Fetch product items by IDs
+	productItems, err := testStore.ListProductItemsByIDs(context.Background(), productsIds)
+	require.NoError(t, err)
+	require.Len(t, productItems, len(productsIds))
+
+	// Verify all returned product items
+	productItemIDs := make(map[int64]bool)
+	for _, productItem := range productItems {
+		require.NotEmpty(t, productItem)
+		productItemIDs[productItem.ID] = true
+	}
+
+	// Ensure all IDs were returned
+	for _, id := range productsIds {
+		require.True(t, productItemIDs[id], "missing product item ID: %d", id)
+	}
 }
 
 func TestListProductItemsV2(t *testing.T) {

@@ -99,22 +99,19 @@ func (server *Server) setupRouter() {
 	// 	log.Fatalf("Please provide valid firebase auth credential json!")
 	// }
 
-	app.Get("/api/v1/reset_password", server.resetPasswordPage)
-
 	//* Users
 	app.Post("/api/v1/users", server.createUser)
 	app.Post("/api/v1/users/login", server.loginUser)
-	app.Post("/api/v1/users/reset-password", server.resetPassword)
-	app.Post("/api/v1/users/new-password", server.newPassword)
 
 	app.Post("/api/v1/users/signup", server.signUp)
 	app.Post("/api/v1/users/verify-otp", server.verifyOTP)
 	app.Post("/api/v1/users/resend-otp", server.resendOTP)
 
+	//* Reset Password
 	app.Post("/api/v1/users/reset-password-request", server.resetPasswordRequest)
-	app.Post("/api/v1/users/verify-otp-mobile", server.verifyResetPasswordOTP)
-	app.Post("/api/v1/users/resend-otp-mobile", server.resendResetPasswordOTP)
-	app.Post("/api/v1/users/reset-password-mobile", server.resetPasswordMobile)
+	app.Post("/api/v1/users/verify-password-reset-otp", server.verifyResetPasswordOTP)
+	app.Post("/api/v1/users/resend-password-reset-otp", server.resendResetPasswordOTP)
+	app.Put("/api/v1/users/reset-password-approved", server.resetPasswordApproved)
 
 	//* Admins
 	app.Post("/api/v1/admins/login", server.loginAdmin) //! For Admin Only
@@ -233,6 +230,7 @@ func (server *Server) setupRouter() {
 
 	adminRouter.Get("/admins/:adminId/users", server.listUsers) //! Admin Only
 	userRouter.Put("/users/:id", server.updateUser)
+	userRouter.Put("/users/:id/change-password", server.changePassword)
 	adminRouter.Delete("/admins/:adminId/users/:id", server.deleteUser) //! Admin Only
 	userRouter.Delete("/users/:id/logout", server.logoutUser)
 

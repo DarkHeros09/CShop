@@ -34,10 +34,14 @@ func main() {
 		WithEnvVariable("PGPORT", "6666").
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithEnvVariable("PGTZ", "Africa/Tripoli").
+		// WithUser("postgres").
 		// removed this line due to breaking change in v.12.0
 		// WithExec([]string{"postgres"}).
 		WithExposedPort(6666).
-		AsService().
+		AsService(dagger.ContainerAsServiceOpts{
+			Args:          []string{"postgres"},
+			UseEntrypoint: true,
+		}).
 		Start(ctx)
 
 	if err != nil {

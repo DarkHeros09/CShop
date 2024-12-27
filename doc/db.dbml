@@ -73,10 +73,11 @@ Ref: VE.user_id > U.id [delete: set null]
 Table reset_passwords as RP {
   id bigserial [pk]
   user_id bigint [ref: > U.id, not null]
-  email varchar [not null]
+  // email varchar [not null]
   secret_code varchar [not null]
   is_used bool [not null, default: false]
   created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   expired_at timestamptz [not null, default: `now() + interval '15 minutes'`]
 }
 

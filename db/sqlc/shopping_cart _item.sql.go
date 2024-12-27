@@ -270,21 +270,21 @@ const listShoppingCartItemsByUserID = `-- name: ListShoppingCartItemsByUserID :m
 SELECT sc.user_id, sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.qty, sci.created_at, sci.updated_at, ps.qty AS size_qty, ps.size_value
 FROM "shopping_cart" AS sc
 LEFT JOIN "shopping_cart_item" AS sci ON sci.shopping_cart_id = sc.id
-LEFT JOIN "product_size" AS ps ON sci.size_id = ps.id
+JOIN "product_size" AS ps ON sci.size_id = ps.id
 WHERE sc.user_id = $1
 `
 
 type ListShoppingCartItemsByUserIDRow struct {
-	UserID         int64       `json:"user_id"`
-	ID             null.Int    `json:"id"`
-	ShoppingCartID null.Int    `json:"shopping_cart_id"`
-	ProductItemID  null.Int    `json:"product_item_id"`
-	SizeID         null.Int    `json:"size_id"`
-	Qty            null.Int    `json:"qty"`
-	CreatedAt      null.Time   `json:"created_at"`
-	UpdatedAt      null.Time   `json:"updated_at"`
-	SizeQty        null.Int    `json:"size_qty"`
-	SizeValue      null.String `json:"size_value"`
+	UserID         int64     `json:"user_id"`
+	ID             null.Int  `json:"id"`
+	ShoppingCartID null.Int  `json:"shopping_cart_id"`
+	ProductItemID  null.Int  `json:"product_item_id"`
+	SizeID         null.Int  `json:"size_id"`
+	Qty            null.Int  `json:"qty"`
+	CreatedAt      null.Time `json:"created_at"`
+	UpdatedAt      null.Time `json:"updated_at"`
+	SizeQty        int32     `json:"size_qty"`
+	SizeValue      string    `json:"size_value"`
 }
 
 func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error) {
