@@ -355,6 +355,17 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	return i, err
 }
 
+const updateUserEmailisVerifiedForTest = `-- name: UpdateUserEmailisVerifiedForTest :exec
+UPDATE "user"
+SET is_email_verified = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) UpdateUserEmailisVerifiedForTest(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, updateUserEmailisVerifiedForTest, id)
+	return err
+}
+
 const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE "user"
 SET 
