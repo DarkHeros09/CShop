@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - Run unit tests
+    types:
+      - completed
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    environment: CShop 
 
     steps:
       # Step 1: Checkout the repository
