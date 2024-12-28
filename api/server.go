@@ -17,7 +17,6 @@ import (
 	"github.com/cshop/v3/worker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
-	"github.com/gofiber/template/html/v2"
 )
 
 type Server struct {
@@ -67,19 +66,19 @@ func NewServer(
 }
 
 func (server *Server) setupRouter() {
-	engine := html.New("./web/views", ".html")
 	app := fiber.New(
 		fiber.Config{
-			Views:       engine,
+			AppName:     "Cshop",
 			JSONEncoder: sonic.ConfigFastest.Marshal,
 			JSONDecoder: sonic.ConfigFastest.Unmarshal,
+			// DisableStartupMessage: true,
 		},
 	)
 
-	app.Static("/static", "./web/styles")
-
 	// app.Use(app.Use(logger.New()))
-
+	// app.Use(logger.New(logger.Config{
+	// 	Format: "${time} | ${status} | ${latency} | ${method} | ${path}\n",
+	// }))
 	app.Use(etag.New(
 		etag.Config{},
 	))

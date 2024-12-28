@@ -82,6 +82,11 @@ AND password = sqlc.arg(oldPassword)
 AND password != sqlc.arg(newPassword)
 RETURNING *;
 
+-- name: UpdateUserEmailisVerifiedForTest :exec
+UPDATE "user"
+SET is_email_verified = TRUE
+WHERE id = sqlc.arg(id);
+
 -- name: DeleteUser :one
 DELETE FROM "user"
 WHERE id = $1

@@ -1243,7 +1243,7 @@ func (e eqUpdateUserParamsMatcher) Matches(x interface{}) bool {
 }
 
 func (e eqUpdateUserParamsMatcher) String() string {
-	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
+	return fmt.Sprintf("matches arg %v and password %v", e.arg.Password.String, e.password)
 }
 
 func EqUpdateUserParamsMatcher(arg db.UpdateUserParams, password string) gomock.Matcher {
@@ -1270,7 +1270,8 @@ func TestResetPasswordApprovedAPI(t *testing.T) {
 				"otp":      passwordReset.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(1).Return(passwordReset, nil)
+
+				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), user.Email).Times(1).Return(passwordReset, nil)
 
 				if true {
 					store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
@@ -1349,7 +1350,7 @@ func TestResetPasswordApprovedAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			url := "/api/v1/users/reset-password-approved"
-			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			request.Header.Set("Content-Type", "application/json")
 

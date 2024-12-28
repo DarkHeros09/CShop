@@ -427,6 +427,7 @@ type Querier interface {
 	// telephone = COALESCE(sqlc.narg(telephone),telephone),
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
+	UpdateUserEmailisVerifiedForTest(ctx context.Context, id int64) error
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (UserSession, error)

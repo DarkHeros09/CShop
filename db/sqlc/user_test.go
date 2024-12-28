@@ -140,6 +140,9 @@ func TestUpdateUsePassword(t *testing.T) {
 	newPassword, err := util.HashPassword(util.RandomString(6))
 	require.NoError(t, err)
 
+	err = testStore.UpdateUserEmailisVerifiedForTest(context.Background(), user1.ID)
+	require.NoError(t, err)
+
 	arg1 := UpdateUserPasswordParams{
 		ID:          user1.ID,
 		Oldpassword: user1.Password,
