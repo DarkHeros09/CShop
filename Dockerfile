@@ -8,7 +8,7 @@ ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN go mod tidy
 RUN go build -ldflags="-s -w" -o main main.go && \
 upx --best --lzma main && \
-wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.3/wait-for && \
+wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.4/wait-for && \
 chmod +x wait-for.sh
 
 # Copy stage
