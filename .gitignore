@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.log
+*.ps1
 
 # Test binary, built with `go test -c`
 *.test
