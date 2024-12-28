@@ -1,8 +1,13 @@
 # Build stage
-FROM golang:1.20-alpine AS builder
+FROM golang:alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go build -tags=go_json,nomsgpack -o main main.go && \
+RUN echo "appuser:x:10001:10001:App User:/:/sbin/nologin" > /etc/minimal-passwd
+RUN apk add upx
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+RUN go mod tidy
+RUN go build -ldflags="-s -w" -o main main.go && \
+upx --best --lzma main && \
 wget -O wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.3/wait-for && \
 chmod +x wait-for.sh
 
@@ -11,12 +16,15 @@ FROM scratch AS copier
 WORKDIR /app
 COPY --from=builder /app/main .
 COPY --from=builder /app/wait-for.sh .
-COPY app.env .
+COPY --from=builder /etc/minimal-passwd /etc/minimal-passwd
+# COPY .env.test .
 
 # Run stage
-FROM alpine:latest
+FROM scratch
 WORKDIR /app
 ENV TZ=Africa/Tripoli
 COPY --from=copier /app .
+COPY --from=copier /etc/minimal-passwd /etc/passwd
+USER appuser
 EXPOSE 8080
 CMD [ "/app/main" ]
