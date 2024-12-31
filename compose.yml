@@ -1,4 +1,6 @@
-version: "3.9"
+x-shared-environment: &shared-environment
+  DB_SOURCE : postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
+
 services:
   postgres:
     image: postgres:alpine
@@ -8,28 +10,39 @@ services:
       POSTGRES_DB: cshop
       TZ: 'Africa/Tripoli'
       PGTZ: 'Africa/Tripoli'
+    ports:
+      - "5432:5432"
 
   migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile_Migrate
+    image: migrate/migrate
     environment:
-      DB_SOURCE: postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
+      <<: *shared-environment
     depends_on:
       - postgres
-    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
-    
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+    entrypoint: [ 
+        "/bin/sh", "-c", "
+        echo '#!/bin/sh' > /app/start.sh && \
+        echo 'set -e' >> /app/start.sh && \
+        echo 'echo \"run db migration\"' >> /app/start.sh && \
+        echo 'migrate -path /app/migration -database \"$$DB_SOURCE\" -verbose up' >> /app/start.sh && \
+        echo 'echo \"start the up migration\"' >> /app/start.sh && \
+        echo 'exec \"$@\"' >> /app/start.sh && \
+        chmod +x /app/start.sh && \
+        wget -O /app/wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.4/wait-for && \
+        chmod +x /app/wait-for.sh && \
+        /app/wait-for.sh postgres:5432 -- /app/start.sh" 
+        ]
+    volumes:
+      - ./db/migration:/app/migration
+
+  go-server:
+    image: mohammednajib/cshop
     depends_on:
       - postgres
       - migrate
+    ports:
+      - "8080:8080"
     environment:
-      # GIN_MODE: release
-      DB_SOURCE: postgresql://postgres:secret@postgres:5432/cshop?sslmode=disable
-    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--"]
+      <<: *shared-environment
+    # entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--"]
     command: ["/app/main"]
