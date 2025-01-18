@@ -3,8 +3,12 @@ FROM golang:alpine AS builder
 WORKDIR /app
 COPY . .
 RUN echo "appuser:x:10001:10001:App User:/:/sbin/nologin" > /etc/minimal-passwd
-RUN apk add upx
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=arm64
+RUN apk add --no-cache upx
+# Accept build arguments for architecture and OS
+ARG GOARCH
+ARG GOOS
+ENV CGO_ENABLED=0
+
 RUN go mod tidy
 RUN go build -ldflags="-s -w" -o main main.go && \
 upx --best --lzma main
