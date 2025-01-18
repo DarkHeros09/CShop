@@ -1,7 +1,9 @@
 package util
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -24,48 +26,110 @@ type Config struct {
 	ImageKitUrlEndPoint    string
 }
 
-// LoadConfig reads configuration from file or environment variable.
-// func LoadConfig(path string) (config Config, err error) {
-// 	viper.AddConfigPath(path)
-// 	viper.SetConfigName(".env")
-// 	viper.SetConfigType("env")
-
-// 	viper.AutomaticEnv()
-
-// 	err = viper.ReadInConfig()
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	err = viper.Unmarshal(&config)
-// 	return
-// }
-
-func LoadVault() (config Config, err error) {
-	accessTokenDurration, err := time.ParseDuration(os.Getenv("ACCESS_TOKEN_DURATION"))
-	if err != nil {
-		return Config{}, err
+func loadEnvVariable(environmentName string) (string, error) {
+	envVariable, ok := os.LookupEnv(environmentName)
+	if ok {
+		return envVariable, nil
 	}
 
-	refreshTokenDuration, err := time.ParseDuration(os.Getenv("REFRESH_TOKEN_DURATION"))
-	if err != nil {
-		return Config{}, err
+	envVariableFile, ok := os.LookupEnv(environmentName + "_FILE")
+	if !ok {
+		return "", fmt.Errorf("%s", "no "+environmentName+" or "+environmentName+"_FILE env var set")
 	}
 
-	return Config{
-		DBDriver:               os.Getenv("DB_DRIVER"),
-		DBSource:               os.Getenv("DB_SOURCE"),
-		ServerAddress:          os.Getenv("SERVER_ADDRESS"),
-		RedisAddress:           os.Getenv("REDIS_ADDRESS"),
-		UserTokenSymmetricKey:  os.Getenv("USER_TOKEN_SYMMETRIC_KEY"),
-		AdminTokenSymmetricKey: os.Getenv("ADMIN_TOKEN_SYMMETRIC_KEY"),
-		EmailSenderName:        os.Getenv("EMAIL_SENDER_NAME"),
-		EmailSenderAddress:     os.Getenv("EMAIL_SENDER_ADDRESS"),
-		EmailSenderPassword:    os.Getenv("EMAIL_SENDER_PASSWORD"),
+	data, err := os.ReadFile(envVariableFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to read from var file: %w", err)
+	}
+
+	return strings.TrimSpace(string(data)), nil
+}
+
+func LoadVault() (config *Config, err error) {
+
+	dbDriver, err := loadEnvVariable("DB_DRIVER")
+	if err != nil {
+		return nil, err
+	}
+
+	dbSource, err := loadEnvVariable("DB_SOURCE")
+	if err != nil {
+		return nil, err
+	}
+
+	serverAddress, err := loadEnvVariable("SERVER_ADDRESS")
+	if err != nil {
+		return nil, err
+	}
+	// redisAddress, err := loadEnvVariable("REDIS_ADDRESS")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	userTokenSymmetricKey, err := loadEnvVariable("USER_TOKEN_SYMMETRIC_KEY")
+	if err != nil {
+		return nil, err
+	}
+	adminTokenSymmetricKey, err := loadEnvVariable("ADMIN_TOKEN_SYMMETRIC_KEY")
+	if err != nil {
+		return nil, err
+	}
+	emailSenderName, err := loadEnvVariable("EMAIL_SENDER_NAME")
+	if err != nil {
+		return nil, err
+	}
+	emailSenderAddress, err := loadEnvVariable("EMAIL_SENDER_ADDRESS")
+	if err != nil {
+		return nil, err
+	}
+	emailSenderPassword, err := loadEnvVariable("EMAIL_SENDER_PASSWORD")
+	if err != nil {
+		return nil, err
+	}
+	imageKitPrivateKey, err := loadEnvVariable("IMAGE_KIT_PRIVATE_KEY")
+	if err != nil {
+		return nil, err
+	}
+	imageKitPublicKey, err := loadEnvVariable("IMAGE_KIT_PUBLIC_KEY")
+	if err != nil {
+		return nil, err
+	}
+	imageKitUrlEndPoint, err := loadEnvVariable("IMAGE_KIT_URL_ENDPOINT")
+	if err != nil {
+		return nil, err
+	}
+	accessTokenDurationValue, err := loadEnvVariable("ACCESS_TOKEN_DURATION")
+	if err != nil {
+		return nil, err
+	}
+	refreshTokenDurationValue, err := loadEnvVariable("REFRESH_TOKEN_DURATION")
+	if err != nil {
+		return nil, err
+	}
+
+	accessTokenDurration, err := time.ParseDuration(accessTokenDurationValue)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshTokenDuration, err := time.ParseDuration(refreshTokenDurationValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		DBDriver:               dbDriver,
+		DBSource:               dbSource,
+		ServerAddress:          serverAddress,
+		RedisAddress:           "",
+		UserTokenSymmetricKey:  userTokenSymmetricKey,
+		AdminTokenSymmetricKey: adminTokenSymmetricKey,
+		EmailSenderName:        emailSenderName,
+		EmailSenderAddress:     emailSenderAddress,
+		EmailSenderPassword:    emailSenderPassword,
 		AccessTokenDuration:    accessTokenDurration,
 		RefreshTokenDuration:   refreshTokenDuration,
-		ImageKitPrivateKey:     os.Getenv("IMAGE_KIT_PRIVATE_KEY"),
-		ImageKitPublicKey:      os.Getenv("IMAGE_KIT_PUBLIC_KEY"),
-		ImageKitUrlEndPoint:    os.Getenv("IMAGE_KIT_URL_ENDPOINT"),
+		ImageKitPrivateKey:     imageKitPrivateKey,
+		ImageKitPublicKey:      imageKitPublicKey,
+		ImageKitUrlEndPoint:    imageKitUrlEndPoint,
 	}, nil
 }

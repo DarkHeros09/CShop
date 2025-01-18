@@ -123,8 +123,8 @@ docker_login:
 	powershell -command '$$env:DOCKER_ACCESS_TOKEN | docker login -u mohammednajib --password-stdin'
 
 dagger_test:
-	docker start redis
-	docker start psql_$(DB_VERSION)-cshop
+	# docker start redis
+	# docker start psql_$(DB_VERSION)-cshop
 	docker login
 	powershell -command "go run ./dagger/dagger_test_workflow.go \
 	| Tee-Object -Variable result;\

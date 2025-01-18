@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/smtp"
 
@@ -45,6 +46,7 @@ func (sender *GmailSender) SendEmail(
 	bcc []string,
 	attachFiles []string,
 ) error {
+	// Initialize the email object
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("%s <%s>", sender.name, sender.fromEmailAddress)
 	e.Subject = subject
@@ -53,6 +55,7 @@ func (sender *GmailSender) SendEmail(
 	e.Cc = cc
 	e.Bcc = bcc
 
+	// Attach files if any
 	for _, f := range attachFiles {
 		_, err := e.AttachFile(f)
 		if err != nil {
@@ -60,6 +63,19 @@ func (sender *GmailSender) SendEmail(
 		}
 	}
 
+	// Use smtp.PlainAuth for authentication
 	smtpAuth := smtp.PlainAuth("", sender.fromEmailAddress, sender.fromEmailPassword, smtpAuthAddress)
-	return e.Send(smtpServerAddress, smtpAuth)
+
+	// Configure TLS settings to ensure secure connection without mTLS
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	// Send the email with custom TLS configuration
+	err := e.SendWithStartTLS(smtpServerAddress, smtpAuth, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
 }

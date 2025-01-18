@@ -68,7 +68,7 @@ func NewServer(
 func (server *Server) setupRouter() {
 	app := fiber.New(
 		fiber.Config{
-			AppName:     "Cshop",
+			AppName:     "CShop",
 			JSONEncoder: sonic.ConfigFastest.Marshal,
 			JSONDecoder: sonic.ConfigFastest.Unmarshal,
 			// DisableStartupMessage: true,
