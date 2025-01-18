@@ -61,7 +61,7 @@ services:
         order: start-first
 
   go-server:
-    image: cshop
+    image: mohammednajib/cshop
     depends_on:
       - postgres
       - migrate
