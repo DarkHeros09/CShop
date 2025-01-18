@@ -68,8 +68,8 @@ func main() {
 
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
-	runTaskProcessor(ctx, waitGroup, config, redisOpt, store)
-	runFiberServer(config, store, fb, taskDistributor, ik, sender)
+	runTaskProcessor(ctx, waitGroup, *config, redisOpt, store)
+	runFiberServer(*config, store, fb, taskDistributor, ik, sender)
 
 	err = waitGroup.Wait()
 	if err != nil {

@@ -1,0 +1,169 @@
+# x-shared-environment: &shared-environment
+#   DB_SOURCE : postgresql://postgres:secret@postgres:6666/cshop?sslmode=disable
+
+volumes:
+  # step-ca-data:
+  #   external: true
+  nginx-data:
+    external: true
+  migration-data:
+    external: true
+
+services:
+  postgres:
+    image: postgres:alpine
+    secrets:
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - POSTGRES_DB
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB: cshop
+      TZ: 'Africa/Tripoli'
+      PGTZ: 'Africa/Tripoli'
+      PGPORT: 6666
+    # ports:
+    #   - "6666:5432"
+    deploy:
+      update_config:
+        order: start-first
+
+  migrate:
+    image: migrate/migrate
+    secrets:
+    - DB_SOURCE
+    # environment:
+    #   <<: *shared-environment
+    depends_on:
+      - postgres
+    entrypoint:
+      - /bin/sh # Use /bin/sh to execute multiple commands
+      - -c
+      - |
+        echo '#!/bin/sh' > /app/start.sh &&
+        echo 'set -e' >> /app/start.sh &&
+        echo 'echo "run db migration"' >> /app/start.sh &&
+        echo 'DB_SOURCE=$$(cat /run/secrets/DB_SOURCE | tr -d "\r\n")' >> /app/start.sh &&
+        echo 'migrate -path /app/migration -database "$$DB_SOURCE" -verbose up' >> /app/start.sh &&
+        echo 'echo "start the up migration"' >> /app/start.sh &&
+        echo 'exec "$$@"' >> /app/start.sh &&
+        chmod +x /app/start.sh &&
+        wget -O /app/wait-for.sh https://github.com/eficode/wait-for/releases/download/v2.2.4/wait-for &&
+        chmod +x /app/wait-for.sh &&
+        /app/wait-for.sh postgres:6666 -- /app/start.sh
+
+    volumes:
+      - migration-data:/app/migration
+
+    deploy:
+      update_config:
+        order: start-first
+
+  go-server:
+    image: cshop
+    depends_on:
+      - postgres
+      - migrate
+    ports:
+      - "8080:8080"
+    secrets:
+    - DB_DRIVER
+    - DB_SOURCE
+    - SERVER_ADDRESS
+    - USER_TOKEN_SYMMETRIC_KEY
+    - ADMIN_TOKEN_SYMMETRIC_KEY
+    - ACCESS_TOKEN_DURATION
+    - REFRESH_TOKEN_DURATION
+    - EMAIL_SENDER_NAME
+    - EMAIL_SENDER_ADDRESS
+    - EMAIL_SENDER_PASSWORD
+    - GOOGLE_SERVICE_ACCOUNT
+    - REDIS_ADDRESS
+    - IMAGE_KIT_PRIVATE_KEY
+    - IMAGE_KIT_PUBLIC_KEY
+    - IMAGE_KIT_URL_ENDPOINT
+    environment:
+      # <<: *shared-environment
+      DB_DRIVER_FILE: /run/secrets/DB_DRIVER
+      DB_SOURCE_FILE: /run/secrets/DB_SOURCE
+      SERVER_ADDRESS_FILE: /run/secrets/SERVER_ADDRESS
+      USER_TOKEN_SYMMETRIC_KEY_FILE: /run/secrets/USER_TOKEN_SYMMETRIC_KEY
+      ADMIN_TOKEN_SYMMETRIC_KEY_FILE: /run/secrets/ADMIN_TOKEN_SYMMETRIC_KEY
+      ACCESS_TOKEN_DURATION_FILE: /run/secrets/ACCESS_TOKEN_DURATION
+      REFRESH_TOKEN_DURATION_FILE: /run/secrets/REFRESH_TOKEN_DURATION
+      EMAIL_SENDER_NAME_FILE: /run/secrets/EMAIL_SENDER_NAME
+      EMAIL_SENDER_ADDRESS_FILE: /run/secrets/EMAIL_SENDER_ADDRESS
+      EMAIL_SENDER_PASSWORD_FILE: /run/secrets/EMAIL_SENDER_PASSWORD
+      GOOGLE_SERVICE_ACCOUNT_FILE: /run/secrets/GOOGLE_SERVICE_ACCOUNT
+      REDIS_ADDRESS_FILE: /run/secrets/REDIS_ADDRESS
+      IMAGE_KIT_PRIVATE_KEY_FILE: /run/secrets/IMAGE_KIT_PRIVATE_KEY
+      IMAGE_KIT_PUBLIC_KEY_FILE: /run/secrets/IMAGE_KIT_PUBLIC_KEY
+      IMAGE_KIT_URL_ENDPOINT_FILE: /run/secrets/IMAGE_KIT_URL_ENDPOINT
+    # entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--"]
+    command: ["/app/main"]
+
+    deploy:
+      update_config:
+        order: start-first
+
+  # step-ca:
+  #   image: smallstep/step-ca
+  #   ports:
+  #     - "8443:8443"  # step-ca certificate issuance port
+  #   volumes:
+  #     - step-ca-data:/home/step
+
+  nginx:
+    image: nginxinc/nginx-unprivileged
+    ports:
+    - target: 443
+      published: 8443
+      protocol: tcp
+      mode: host
+    volumes:
+      - nginx-data:/etc/nginx
+    depends_on:
+      - go-server
+      # - step-ca
+    deploy:
+      update_config:
+        order: start-first
+
+secrets:
+  DB_DRIVER:
+    external: true
+  DB_SOURCE:
+    external: true
+  POSTGRES_USER:
+    external: true
+  POSTGRES_PASSWORD:
+    external: true
+  POSTGRES_DB:
+    external: true
+  SERVER_ADDRESS:
+    external: true
+  USER_TOKEN_SYMMETRIC_KEY:
+    external: true
+  ADMIN_TOKEN_SYMMETRIC_KEY:
+    external: true
+  ACCESS_TOKEN_DURATION:
+    external: true
+  REFRESH_TOKEN_DURATION:
+    external: true
+  EMAIL_SENDER_NAME:
+    external: true
+  EMAIL_SENDER_ADDRESS:
+    external: true
+  EMAIL_SENDER_PASSWORD:
+    external: true
+  GOOGLE_SERVICE_ACCOUNT:
+    external: true
+  REDIS_ADDRESS:
+    external: true
+  IMAGE_KIT_PRIVATE_KEY:
+    external: true
+  IMAGE_KIT_PUBLIC_KEY:
+    external: true
+  IMAGE_KIT_URL_ENDPOINT:
+    external: true
