@@ -2,6 +2,8 @@ package image
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
 
 	"github.com/imagekit-developer/imagekit-go"
 	"github.com/imagekit-developer/imagekit-go/api/media"
@@ -19,6 +21,11 @@ type ImageKit struct {
 
 func NewImageKit(params imagekit.NewParams) ImageKitManagement {
 	ik := imagekit.NewFromParams(params)
+
+	ik.Metadata.Client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{
+		InsecureSkipVerify: true, // Disable TLS verification
+	}}}
+
 	return &ImageKit{
 		ik: ik,
 	}
