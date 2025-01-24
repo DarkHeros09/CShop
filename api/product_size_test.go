@@ -39,15 +39,19 @@ func TestCreateProductSizeAPI(t *testing.T) {
 			name:    "OK",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"size_value": productSize.SizeValue,
+				"size_value":      productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminCreateProductSizeParams{
-					AdminID:   admin.ID,
-					SizeValue: productSize.SizeValue,
+					AdminID:       admin.ID,
+					SizeValue:     productSize.SizeValue,
+					ProductItemID: productSize.ProductItemID,
+					Qty:           productSize.Qty,
 				}
 
 				store.EXPECT().
@@ -67,8 +71,10 @@ func TestCreateProductSizeAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminCreateProductSizeParams{
-					AdminID:   admin.ID,
-					SizeValue: productSize.SizeValue,
+					AdminID:       admin.ID,
+					SizeValue:     productSize.SizeValue,
+					ProductItemID: productSize.ProductItemID,
+					Qty:           productSize.Qty,
 				}
 
 				store.EXPECT().
@@ -87,12 +93,16 @@ func TestCreateProductSizeAPI(t *testing.T) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			body: fiber.Map{
-				"size_value": productSize.SizeValue,
+				"size_value":      productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminCreateProductSizeParams{
-					AdminID:   admin.ID,
-					SizeValue: productSize.SizeValue,
+					AdminID:       admin.ID,
+					SizeValue:     productSize.SizeValue,
+					ProductItemID: productSize.ProductItemID,
+					Qty:           productSize.Qty,
 				}
 
 				store.EXPECT().
@@ -107,7 +117,9 @@ func TestCreateProductSizeAPI(t *testing.T) {
 			name:    "InternalError",
 			AdminID: admin.ID,
 			body: fiber.Map{
-				"size_value": productSize.SizeValue,
+				"size_value":      productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
@@ -265,16 +277,20 @@ func TestUpdateProductSizeAPI(t *testing.T) {
 			productSizeID: productSize.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"size": productSize.SizeValue,
+				"size":            productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminUpdateProductSizeParams{
-					ID:        productSize.ID,
-					AdminID:   admin.ID,
-					SizeValue: null.StringFrom(productSize.SizeValue),
+					ID:            productSize.ID,
+					AdminID:       admin.ID,
+					SizeValue:     null.StringFrom(productSize.SizeValue),
+					ProductItemID: productSize.ProductItemID,
+					Qty:           null.IntFrom(int64(productSize.Qty)),
 				}
 
 				store.EXPECT().
@@ -291,16 +307,20 @@ func TestUpdateProductSizeAPI(t *testing.T) {
 			productSizeID: productSize.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"size": productSize.SizeValue,
+				"size":            productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminUpdateProductSizeParams{
-					ID:        productSize.ID,
-					AdminID:   admin.ID,
-					SizeValue: null.StringFrom(productSize.SizeValue),
+					ID:            productSize.ID,
+					AdminID:       admin.ID,
+					SizeValue:     null.StringFrom(productSize.SizeValue),
+					ProductItemID: productSize.ProductItemID,
+					Qty:           null.IntFrom(int64(productSize.Qty)),
 				}
 
 				store.EXPECT().
@@ -316,15 +336,19 @@ func TestUpdateProductSizeAPI(t *testing.T) {
 			productSizeID: productSize.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"size": productSize.SizeValue,
+				"size":            productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminUpdateProductSizeParams{
-					ID:        productSize.ID,
-					AdminID:   admin.ID,
-					SizeValue: null.StringFrom(productSize.SizeValue),
+					ID:            productSize.ID,
+					AdminID:       admin.ID,
+					SizeValue:     null.StringFrom(productSize.SizeValue),
+					ProductItemID: productSize.ProductItemID,
+					Qty:           null.IntFrom(int64(productSize.Qty)),
 				}
 
 				store.EXPECT().
@@ -340,16 +364,20 @@ func TestUpdateProductSizeAPI(t *testing.T) {
 			productSizeID: productSize.ID,
 			AdminID:       admin.ID,
 			body: fiber.Map{
-				"size": productSize.SizeValue,
+				"size":            productSize.SizeValue,
+				"product_item_id": productSize.ProductItemID,
+				"qty":             productSize.Qty,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.AdminUpdateProductSizeParams{
-					ID:        productSize.ID,
-					AdminID:   admin.ID,
-					SizeValue: null.StringFrom(productSize.SizeValue),
+					ID:            productSize.ID,
+					AdminID:       admin.ID,
+					SizeValue:     null.StringFrom(productSize.SizeValue),
+					ProductItemID: productSize.ProductItemID,
+					Qty:           null.IntFrom(int64(productSize.Qty)),
 				}
 				store.EXPECT().
 					AdminUpdateProductSize(gomock.Any(), gomock.Eq(arg)).
