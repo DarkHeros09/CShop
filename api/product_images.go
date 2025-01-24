@@ -95,7 +95,8 @@ func (server *Server) listproductImages(ctx *fiber.Ctx) error {
 
 	resp, err := server.ik.ListAndSearch(ctx.Context(), media.FilesParam{
 		Path: query.Path,
-		Tags: query.Tag})
+		Tags: query.Tag,
+	})
 
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
