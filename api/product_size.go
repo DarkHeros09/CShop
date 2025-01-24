@@ -17,7 +17,9 @@ type createProductSizeParamsRequest struct {
 }
 
 type createProductSizeJsonRequest struct {
-	SizeValue string `json:"size_value" validate:"required,alphanumunicode"`
+	SizeValue     string `json:"size_value" validate:"required,alphanumunicode"`
+	ProductItemId int64  `json:"product_item_id" validate:"required,min=1"`
+	Qty           int64  `json:"qty" validate:"required,min=1"`
 }
 
 func (server *Server) createProductSize(ctx *fiber.Ctx) error {
@@ -37,8 +39,10 @@ func (server *Server) createProductSize(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.AdminCreateProductSizeParams{
-		AdminID:   authPayload.AdminID,
-		SizeValue: req.SizeValue,
+		AdminID:       authPayload.AdminID,
+		SizeValue:     req.SizeValue,
+		ProductItemID: req.ProductItemId,
+		Qty:           int32(req.Qty),
 	}
 
 	productSize, err := server.store.AdminCreateProductSize(ctx.Context(), arg)
@@ -94,7 +98,9 @@ type updateProductSizeParamsRequest struct {
 }
 
 type updateProductSizeJsonRequest struct {
-	Size *string `json:"size" validate:"omitempty,required,alphaunicode"`
+	Size          *string `json:"size" validate:"omitempty,required,alphaunicode"`
+	Qty           *int64  `json:"qty" validate:"omitempty,required,min=1"`
+	ProductItemID int64   `json:"product_item_id" validate:"required,min=1"`
 }
 
 func (server *Server) updateProductSize(ctx *fiber.Ctx) error {
@@ -114,9 +120,11 @@ func (server *Server) updateProductSize(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.AdminUpdateProductSizeParams{
-		AdminID:   authPayload.AdminID,
-		ID:        params.ID,
-		SizeValue: null.StringFromPtr(req.Size),
+		AdminID:       authPayload.AdminID,
+		ID:            params.ID,
+		SizeValue:     null.StringFromPtr(req.Size),
+		Qty:           null.IntFromPtr(req.Qty),
+		ProductItemID: req.ProductItemID,
 	}
 
 	size, err := server.store.AdminUpdateProductSize(ctx.Context(), arg)
