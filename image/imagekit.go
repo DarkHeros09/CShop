@@ -21,10 +21,16 @@ type ImageKit struct {
 
 func NewImageKit(params imagekit.NewParams) ImageKitManagement {
 	ik := imagekit.NewFromParams(params)
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: transport,
+	}
 
-	ik.Metadata.Client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{
-		InsecureSkipVerify: true, // Disable TLS verification
-	}}}
+	ik.Metadata.Client = client
+	ik.Media.Client = client
+	ik.Uploader.Client = client
 
 	return &ImageKit{
 		ik: ik,
