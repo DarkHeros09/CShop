@@ -106,7 +106,6 @@ init_docker:
 		while (![bool](docker ps 2>NUL)) {}\
 	}"
 
-	@docker start redis
 	@docker start psql_$(DB_VERSION)-cshop
 
 test:

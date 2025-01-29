@@ -11,6 +11,128 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreatePaymentType = `-- name: AdminCreatePaymentType :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
+INSERT INTO "payment_type" (
+  value,
+  is_active
+)
+SELECT $1, $2 FROM t1
+WHERE is_admin=1
+ON CONFLICT(value) DO UPDATE SET value = $1
+RETURNING id, value, is_active
+`
+
+type AdminCreatePaymentTypeParams struct {
+	Value    string `json:"value"`
+	IsActive bool   `json:"is_active"`
+	AdminID  int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreatePaymentType(ctx context.Context, arg AdminCreatePaymentTypeParams) (PaymentType, error) {
+	row := q.db.QueryRow(ctx, adminCreatePaymentType, arg.Value, arg.IsActive, arg.AdminID)
+	var i PaymentType
+	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
+	return i, err
+}
+
+const adminDeletePaymentType = `-- name: AdminDeletePaymentType :exec
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $2
+    AND active = TRUE
+    )
+DELETE FROM "payment_type"
+WHERE "payment_type".id = $1
+AND (SELECT is_admin FROM t1) = 1
+`
+
+type AdminDeletePaymentTypeParams struct {
+	ID      int64 `json:"id"`
+	AdminID int64 `json:"admin_id"`
+}
+
+func (q *Queries) AdminDeletePaymentType(ctx context.Context, arg AdminDeletePaymentTypeParams) error {
+	_, err := q.db.Exec(ctx, adminDeletePaymentType, arg.ID, arg.AdminID)
+	return err
+}
+
+const adminListPaymentTypes = `-- name: AdminListPaymentTypes :many
+
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $1
+    AND active = TRUE
+    )
+SELECT id, value, is_active FROM "payment_type"
+WHERE (SELECT is_admin FROM t1) = 1
+`
+
+// ORDER BY id
+// LIMIT $1
+// OFFSET $2;
+func (q *Queries) AdminListPaymentTypes(ctx context.Context, adminID int64) ([]PaymentType, error) {
+	rows, err := q.db.Query(ctx, adminListPaymentTypes, adminID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PaymentType{}
+	for rows.Next() {
+		var i PaymentType
+		if err := rows.Scan(&i.ID, &i.Value, &i.IsActive); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const adminUpdatePaymentType = `-- name: AdminUpdatePaymentType :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $4
+    AND active = TRUE
+    )
+UPDATE "payment_type"
+SET 
+value = COALESCE($1,value),
+is_active = COALESCE($2,is_active)
+WHERE "payment_type".id = $3
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, value, is_active
+`
+
+type AdminUpdatePaymentTypeParams struct {
+	Value    null.String `json:"value"`
+	IsActive null.Bool   `json:"is_active"`
+	ID       int64       `json:"id"`
+	AdminID  int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdatePaymentType(ctx context.Context, arg AdminUpdatePaymentTypeParams) (PaymentType, error) {
+	row := q.db.QueryRow(ctx, adminUpdatePaymentType,
+		arg.Value,
+		arg.IsActive,
+		arg.ID,
+		arg.AdminID,
+	)
+	var i PaymentType
+	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
+	return i, err
+}
+
 const createPaymentType = `-- name: CreatePaymentType :one
 INSERT INTO "payment_type" (
   value
@@ -75,7 +197,6 @@ func (q *Queries) ListPaymentTypes(ctx context.Context) ([]PaymentType, error) {
 }
 
 const updatePaymentType = `-- name: UpdatePaymentType :one
-
 UPDATE "payment_type"
 SET 
 value = COALESCE($1,value),
@@ -90,9 +211,6 @@ type UpdatePaymentTypeParams struct {
 	ID       int64       `json:"id"`
 }
 
-// ORDER BY id
-// LIMIT $1
-// OFFSET $2;
 func (q *Queries) UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error) {
 	row := q.db.QueryRow(ctx, updatePaymentType, arg.Value, arg.IsActive, arg.ID)
 	var i PaymentType

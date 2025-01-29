@@ -15,6 +15,7 @@ type Querier interface {
 	AdminCreateBrandPromotion(ctx context.Context, arg AdminCreateBrandPromotionParams) (BrandPromotion, error)
 	AdminCreateCategoryPromotion(ctx context.Context, arg AdminCreateCategoryPromotionParams) (CategoryPromotion, error)
 	AdminCreateFeaturedProductItem(ctx context.Context, arg AdminCreateFeaturedProductItemParams) (FeaturedProductItem, error)
+	AdminCreatePaymentType(ctx context.Context, arg AdminCreatePaymentTypeParams) (PaymentType, error)
 	AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error)
 	AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error)
 	AdminCreateProductCategory(ctx context.Context, arg AdminCreateProductCategoryParams) (ProductCategory, error)
@@ -26,6 +27,7 @@ type Querier interface {
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error)
+	AdminDeletePaymentType(ctx context.Context, arg AdminDeletePaymentTypeParams) error
 	AdminDeleteProduct(ctx context.Context, arg AdminDeleteProductParams) error
 	AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error)
 	AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error)
@@ -34,12 +36,17 @@ type Querier interface {
 	// LIMIT $1
 	// OFFSET $2;
 	AdminListOrderStatuses(ctx context.Context, adminID int64) ([]OrderStatus, error)
+	// ORDER BY id
+	// LIMIT $1
+	// OFFSET $2;
+	AdminListPaymentTypes(ctx context.Context, adminID int64) ([]PaymentType, error)
 	AdminListProductPromotions(ctx context.Context, adminID int64) ([]AdminListProductPromotionsRow, error)
 	AdminListShopOrdersNextPage(ctx context.Context, arg AdminListShopOrdersNextPageParams) ([]AdminListShopOrdersNextPageRow, error)
 	AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error)
 	AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error)
 	AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error)
 	AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminUpdateFeaturedProductItemParams) (FeaturedProductItem, error)
+	AdminUpdatePaymentType(ctx context.Context, arg AdminUpdatePaymentTypeParams) (PaymentType, error)
 	// product_image = COALESCE(sqlc.narg(product_image),product_image),
 	AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error)
 	AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error)
@@ -388,9 +395,6 @@ type Querier interface {
 	UpdateNotification(ctx context.Context, arg UpdateNotificationParams) (Notification, error)
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (OrderStatus, error)
 	UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMethodParams) (PaymentMethod, error)
-	// ORDER BY id
-	// LIMIT $1
-	// OFFSET $2;
 	UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error)
 	// )
 	// SELECT *
