@@ -270,6 +270,10 @@ func (server *Server) setupRouter() {
 	userRouter.Put("/users/:id/payment-methods/:paymentId", server.updatePaymentMethod)
 	userRouter.Delete("/users/:id/payment-methods/:paymentId", server.deletePaymentMethod)
 
+	adminRouter.Post("/admins/:adminId/payment-types", server.createPaymentType)               //! Admin Only
+	adminRouter.Get("/admins/:adminId/payment-types", server.adminListPaymentTypes)            //! Admin Only
+	adminRouter.Put("/admins/:adminId/payment-types/:paymentTypeId", server.updatePaymentType) //! Admin Only
+	// adminRouter.Delete("/admins/:adminId/payment-types/:paymentTypeId", server.deletePaymentType) //! Admin Only
 	userRouter.Get("/users/:id/payment-types", server.listPaymentTypes)
 
 	adminRouter.Post("/admins/:adminId/text-banners", server.createHomePageTextBanner)                 //! Admin Only

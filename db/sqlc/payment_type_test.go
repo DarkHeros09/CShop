@@ -26,6 +26,28 @@ func createRandomPaymentType(t *testing.T) PaymentType {
 	return paymentType
 }
 
+func adminCreateRandomPaymentType(t *testing.T) PaymentType {
+	admin := createRandomAdmin(t)
+	var paymentType PaymentType
+	var err error
+	paymentTypes := []string{"نقداً", "إدفع لي", "سداد", "موبي كاش"}
+	for i := 0; i < len(paymentTypes); i++ {
+		randomInt := util.RandomInt(0, int64(len(paymentTypes)-1))
+		arg := AdminCreatePaymentTypeParams{
+			AdminID:  admin.ID,
+			Value:    paymentTypes[randomInt],
+			IsActive: true,
+		}
+		paymentType, err = testStore.AdminCreatePaymentType(context.Background(), arg)
+		require.NoError(t, err)
+		require.NotEmpty(t, paymentType)
+
+		require.Equal(t, paymentTypes[randomInt], paymentType.Value)
+
+	}
+	return paymentType
+}
+
 func createRandomPaymentTypeForUpdateOrDelete(t *testing.T) PaymentType {
 	arg := util.RandomString(5)
 	paymentType, err := testStore.CreatePaymentType(context.Background(), arg)
@@ -39,6 +61,9 @@ func createRandomPaymentTypeForUpdateOrDelete(t *testing.T) PaymentType {
 func TestCreatePaymentType(t *testing.T) {
 	createRandomPaymentType(t)
 }
+func TestAdminCreatePaymentType(t *testing.T) {
+	adminCreateRandomPaymentType(t)
+}
 
 func TestGetPaymentType(t *testing.T) {
 	paymentType1 := createRandomPaymentType(t)
@@ -51,7 +76,7 @@ func TestGetPaymentType(t *testing.T) {
 	require.Equal(t, paymentType1.Value, paymentType2.Value)
 }
 
-func TestUpdatePaymentTypeNameAndCategoryID(t *testing.T) {
+func TestUpdatePaymentType(t *testing.T) {
 	paymentType1 := createRandomPaymentTypeForUpdateOrDelete(t)
 	arg := UpdatePaymentTypeParams{IsActive: null.BoolFrom(false),
 		//last value from paymentType1 otherwise will get duplicate keys becuase of unique constraint
@@ -84,9 +109,33 @@ func TestDisablePaymentType(t *testing.T) {
 
 }
 
-// func TestDeletePaymentType(t *testing.T) {
+func TestAdminUpdatePaymentType(t *testing.T) {
+	admin := createRandomAdmin(t)
+	paymentType1 := createRandomPaymentTypeForUpdateOrDelete(t)
+	arg := AdminUpdatePaymentTypeParams{IsActive: null.BoolFrom(false),
+		AdminID: admin.ID,
+		Value:   null.StringFrom(paymentType1.Value),
+		ID:      paymentType1.ID,
+	}
+
+	paymentType2, err := testStore.AdminUpdatePaymentType(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, paymentType2)
+
+	require.Equal(t, paymentType1.ID, paymentType2.ID)
+	require.Equal(t, paymentType1.Value, paymentType2.Value)
+	require.NotEqual(t, paymentType1.IsActive, paymentType2.IsActive)
+}
+
+// func TestAdminDeletePaymentType(t *testing.T) {
+// 	admin := createRandomAdmin(t)
 // 	paymentType1 := createRandomPaymentType(t)
-// 	err := testStore.DeletePaymentType(context.Background(), paymentType1.ID)
+
+// 	arg := AdminDeletePaymentTypeParams{
+// 		AdminID: admin.ID,
+// 		ID:      paymentType1.ID,
+// 	}
+// 	err := testStore.AdminDeletePaymentType(context.Background(), arg)
 
 // 	require.NoError(t, err)
 
@@ -115,6 +164,28 @@ func TestListPaymentTypes(t *testing.T) {
 
 	for _, PaymentType := range PaymentTypes {
 		require.NotEmpty(t, PaymentType)
+	}
+
+}
+
+func TestAdminListPaymentTypes(t *testing.T) {
+	admin := createRandomAdmin(t)
+	paymentTypes1 := []string{"نقداً", "إدفع لي", "سداد", "موبي كاش"}
+	for i := 0; i < len(paymentTypes1); i++ {
+		adminCreateRandomPaymentType(t)
+	}
+	// arg := ListPaymentTypesParams{
+	// 	Limit:  int32(len(paymentTypes1)),
+	// 	Offset: int32(len(paymentTypes1)),
+	// }
+
+	paymentTypes, err := testStore.AdminListPaymentTypes(context.Background(), admin.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, paymentTypes)
+
+	for _, paymentType := range paymentTypes {
+		require.NotEmpty(t, paymentType)
 	}
 
 }

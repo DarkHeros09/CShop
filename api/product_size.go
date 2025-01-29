@@ -17,7 +17,7 @@ type createProductSizeParamsRequest struct {
 }
 
 type createProductSizeJsonRequest struct {
-	SizeValue     string `json:"size_value" validate:"required,alphanumunicode"`
+	SizeValue     string `json:"size_value" validate:"required"`
 	ProductItemId int64  `json:"product_item_id" validate:"required,min=1"`
 	Qty           int64  `json:"qty" validate:"required,min=1"`
 }

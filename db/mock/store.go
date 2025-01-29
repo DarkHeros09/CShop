@@ -87,6 +87,21 @@ func (mr *MockStoreMockRecorder) AdminCreateFeaturedProductItem(arg0, arg1 any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreateFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).AdminCreateFeaturedProductItem), arg0, arg1)
 }
 
+// AdminCreatePaymentType mocks base method.
+func (m *MockStore) AdminCreatePaymentType(arg0 context.Context, arg1 db.AdminCreatePaymentTypeParams) (db.PaymentType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminCreatePaymentType", arg0, arg1)
+	ret0, _ := ret[0].(db.PaymentType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminCreatePaymentType indicates an expected call of AdminCreatePaymentType.
+func (mr *MockStoreMockRecorder) AdminCreatePaymentType(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreatePaymentType", reflect.TypeOf((*MockStore)(nil).AdminCreatePaymentType), arg0, arg1)
+}
+
 // AdminCreateProduct mocks base method.
 func (m *MockStore) AdminCreateProduct(arg0 context.Context, arg1 db.AdminCreateProductParams) (db.Product, error) {
 	m.ctrl.T.Helper()
@@ -222,6 +237,20 @@ func (mr *MockStoreMockRecorder) AdminCreatePromotion(arg0, arg1 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminCreatePromotion", reflect.TypeOf((*MockStore)(nil).AdminCreatePromotion), arg0, arg1)
 }
 
+// AdminDeletePaymentType mocks base method.
+func (m *MockStore) AdminDeletePaymentType(arg0 context.Context, arg1 db.AdminDeletePaymentTypeParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminDeletePaymentType", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AdminDeletePaymentType indicates an expected call of AdminDeletePaymentType.
+func (mr *MockStoreMockRecorder) AdminDeletePaymentType(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminDeletePaymentType", reflect.TypeOf((*MockStore)(nil).AdminDeletePaymentType), arg0, arg1)
+}
+
 // AdminDeleteProduct mocks base method.
 func (m *MockStore) AdminDeleteProduct(arg0 context.Context, arg1 db.AdminDeleteProductParams) error {
 	m.ctrl.T.Helper()
@@ -294,6 +323,21 @@ func (m *MockStore) AdminListOrderStatuses(arg0 context.Context, arg1 int64) ([]
 func (mr *MockStoreMockRecorder) AdminListOrderStatuses(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminListOrderStatuses", reflect.TypeOf((*MockStore)(nil).AdminListOrderStatuses), arg0, arg1)
+}
+
+// AdminListPaymentTypes mocks base method.
+func (m *MockStore) AdminListPaymentTypes(arg0 context.Context, arg1 int64) ([]db.PaymentType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminListPaymentTypes", arg0, arg1)
+	ret0, _ := ret[0].([]db.PaymentType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminListPaymentTypes indicates an expected call of AdminListPaymentTypes.
+func (mr *MockStoreMockRecorder) AdminListPaymentTypes(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminListPaymentTypes", reflect.TypeOf((*MockStore)(nil).AdminListPaymentTypes), arg0, arg1)
 }
 
 // AdminListProductPromotions mocks base method.
@@ -384,6 +428,21 @@ func (m *MockStore) AdminUpdateFeaturedProductItem(arg0 context.Context, arg1 db
 func (mr *MockStoreMockRecorder) AdminUpdateFeaturedProductItem(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateFeaturedProductItem", reflect.TypeOf((*MockStore)(nil).AdminUpdateFeaturedProductItem), arg0, arg1)
+}
+
+// AdminUpdatePaymentType mocks base method.
+func (m *MockStore) AdminUpdatePaymentType(arg0 context.Context, arg1 db.AdminUpdatePaymentTypeParams) (db.PaymentType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdatePaymentType", arg0, arg1)
+	ret0, _ := ret[0].(db.PaymentType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdatePaymentType indicates an expected call of AdminUpdatePaymentType.
+func (mr *MockStoreMockRecorder) AdminUpdatePaymentType(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdatePaymentType", reflect.TypeOf((*MockStore)(nil).AdminUpdatePaymentType), arg0, arg1)
 }
 
 // AdminUpdateProduct mocks base method.
