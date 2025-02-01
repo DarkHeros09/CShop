@@ -16,7 +16,7 @@ type createProductBrandParamsRequest struct {
 }
 
 type createProductBrandJsonRequest struct {
-	BrandName  string `json:"brand_name" validate:"required,alphanumunicode"`
+	BrandName  string `json:"brand_name" validate:"required,alphanumunicode_space"`
 	BrandImage string `json:"brand_image" validate:"required,http_url"`
 }
 

@@ -103,7 +103,7 @@ type updatePaymentTypeParamsRequest struct {
 }
 
 type updatePaymentTypeJsonRequest struct {
-	Value    *string `json:"value" validate:"omitempty,required,alphanumunicode"`
+	Value    *string `json:"value" validate:"omitempty,required,alphanumunicode_space"`
 	IsActive *bool   `json:"is_active" validate:"omitempty,required,boolean"`
 }
 

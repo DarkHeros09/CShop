@@ -400,7 +400,7 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 
 type searchProductItemsQueryRequest struct {
 	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query string `query:"query" validate:"omitempty,required,alphanumunicode"`
+	Query string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
 }
 
 func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
@@ -453,7 +453,7 @@ type searchProductItemsNextPageQueryRequest struct {
 	ProductItemCursor int64  `query:"product_item_cursor" validate:"required,min=1"`
 	ProductCursor     int64  `query:"product_cursor" validate:"required,min=1"`
 	Limit             int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query             string `query:"query" validate:"omitempty,required,alphanumunicode"`
+	Query             string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
 }
 
 func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {

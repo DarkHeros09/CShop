@@ -17,7 +17,7 @@ type createProductColorParamsRequest struct {
 }
 
 type createProductColorJsonRequest struct {
-	ColorValue string `json:"color_value" validate:"required,alphanumunicode"`
+	ColorValue string `json:"color_value" validate:"required,alphanumunicode_space"`
 }
 
 func (server *Server) createProductColor(ctx *fiber.Ctx) error {

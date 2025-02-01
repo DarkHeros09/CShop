@@ -20,7 +20,7 @@ type createProductParamsRequest struct {
 }
 
 type createProductJsonRequest struct {
-	Name        string `json:"name" validate:"required,alphanumunicode"`
+	Name        string `json:"name" validate:"required,alphanumunicode_space"`
 	CategoryID  int64  `json:"category_id" validate:"required,min=1"`
 	BrandID     int64  `json:"brand_id" validate:"required,min=1"`
 	Description string `json:"description" validate:"required"`
@@ -157,7 +157,7 @@ type updateProductParamsRequest struct {
 }
 
 type updateProductJsonRequest struct {
-	Name        *string `json:"name" validate:"omitempty,required,alphanumunicode"`
+	Name        *string `json:"name" validate:"omitempty,required,alphanumunicode_space"`
 	CategoryID  *int64  `json:"category_id" validate:"omitempty,required,min=1"`
 	BrandID     *int64  `json:"brand_id" validate:"omitempty,required,min=1"`
 	Description *string `json:"description" validate:"omitempty,required"`
@@ -347,7 +347,7 @@ func (server *Server) listProductsNextPage(ctx *fiber.Ctx) error {
 
 type searchProductsQueryRequest struct {
 	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query string `query:"query" validate:"omitempty,required,alphanumunicode"`
+	Query string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
 }
 
 func (server *Server) searchProducts(ctx *fiber.Ctx) error {
@@ -399,7 +399,7 @@ func (server *Server) searchProducts(ctx *fiber.Ctx) error {
 type searchProductsNextPageQueryRequest struct {
 	ProductCursor int64  `query:"product_cursor" validate:"required,min=1"`
 	Limit         int32  `query:"limit" validate:"required,min=5,max=10"`
-	Query         string `query:"query" validate:"omitempty,required,alphanumunicode"`
+	Query         string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
 }
 
 func (server *Server) searchProductsNextPage(ctx *fiber.Ctx) error {
