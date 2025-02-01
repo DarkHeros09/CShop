@@ -28,7 +28,7 @@ type dashboardParamsResquest struct {
 func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
 	params := &dashboardParamsResquest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

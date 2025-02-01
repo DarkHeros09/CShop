@@ -25,7 +25,7 @@ func (server *Server) createUserReview(ctx *fiber.Ctx) error {
 	params := &createUserReviewParamsRequest{}
 	req := &createUserReviewRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -70,7 +70,7 @@ type getUserReviewParamsRequest struct {
 func (server *Server) getUserReview(ctx *fiber.Ctx) error {
 	params := &getUserReviewParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -114,7 +114,7 @@ func (server *Server) listUserReviews(ctx *fiber.Ctx) error {
 	params := &listUserReviewParamsRequest{}
 	query := &listUserReviewsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -159,7 +159,7 @@ func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
 	params := &updateUserReviewParamsRequest{}
 	req := &updateUserReviewJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ type deleteUserReviewParamsRequest struct {
 func (server *Server) deleteUserReview(ctx *fiber.Ctx) error {
 	params := &deleteUserReviewParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

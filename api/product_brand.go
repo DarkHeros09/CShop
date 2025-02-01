@@ -24,7 +24,7 @@ func (server *Server) createProductBrand(ctx *fiber.Ctx) error {
 	params := &createProductBrandParamsRequest{}
 	req := &createProductBrandJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -67,7 +67,7 @@ type getProductBrandParamsRequest struct {
 func (server *Server) getProductBrand(ctx *fiber.Ctx) error {
 	params := &getProductBrandParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -95,7 +95,7 @@ func (server *Server) getProductBrand(ctx *fiber.Ctx) error {
 func (server *Server) listProductBrands(ctx *fiber.Ctx) error {
 	// query := &listProductBrandsQueryRequest{}
 
-	// if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 	// 	return nil
 	// }
@@ -135,7 +135,7 @@ func (server *Server) updateProductBrand(ctx *fiber.Ctx) error {
 	params := &updateProductBrandParamsRequest{}
 	req := &updateProductBrandJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -178,7 +178,7 @@ type deleteProductBrandParamsRequest struct {
 func (server *Server) deleteProductBrand(ctx *fiber.Ctx) error {
 	params := &deleteProductBrandParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

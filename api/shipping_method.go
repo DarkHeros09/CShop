@@ -25,7 +25,7 @@ func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
 	params := &createShippingMethodParamsRequest{}
 	req := &createShippingMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -69,7 +69,7 @@ type getShippingMethodParamsRequest struct {
 func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
 	params := &getShippingMethodParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -115,7 +115,7 @@ func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 	params := &listShippingMethodsParamsRequest{}
 	// query := &listShippingMethodsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -159,7 +159,7 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 	params := &updateShippingMethodParamsRequest{}
 	req := &updateShippingMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ type deleteShippingMethodParamsRequest struct {
 func (server *Server) deleteShippingMethod(ctx *fiber.Ctx) error {
 	params := &deleteShippingMethodParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

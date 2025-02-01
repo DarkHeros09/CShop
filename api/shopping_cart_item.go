@@ -34,7 +34,7 @@ import (
 // 	var shoppingCartItems []db.ShoppingCartItem
 // 	var err1 error
 
-// 	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+// 	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 // 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 // 		return nil
 // 	}
@@ -92,7 +92,7 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 	params := &createShoppingCartItemParamsRequest{}
 	req := &createShoppingCartItemRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -137,7 +137,7 @@ type getShoppingCartItemParamsRequest struct {
 func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
 	params := &getShoppingCartItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -271,7 +271,7 @@ func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsBy
 func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 	params := &listShoppingCartItemsParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -352,7 +352,7 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 	params := &updateShoppingCartItemParamsRequest{}
 	req := &updateShoppingCartItemJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -399,7 +399,7 @@ type deleteShoppingCartItemParamsRequest struct {
 func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
 	params := &deleteShoppingCartItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -447,7 +447,7 @@ type deleteShoppingCartItemAllParamsRequest struct {
 func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
 	params := &deleteShoppingCartItemAllParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -501,7 +501,7 @@ func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
 	params := &finishPurshaseParamsRequest{}
 	req := &finishPurshaseJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

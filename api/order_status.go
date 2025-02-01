@@ -24,7 +24,7 @@ func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
 	params := &createOrderStatusParamsRequest{}
 	req := &createOrderStatusJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -63,7 +63,7 @@ type getOrderStatusParamsRequest struct {
 func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
 	params := &getOrderStatusParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -107,7 +107,7 @@ func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
 	params := &listOrderStatusParamsRequest{}
 	query := &listOrderStatusQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -153,7 +153,7 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 	params := &updateOrderStatusParamsRequest{}
 	req := &updateOrderStatusJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -197,7 +197,7 @@ type deleteOrderStatusParamsRequest struct {
 func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
 	params := &deleteOrderStatusParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -237,7 +237,7 @@ type adminListOrderStatusParamsRequest struct {
 func (server *Server) listOrderStatusesForAdmin(ctx *fiber.Ctx) error {
 	params := &adminListOrderStatusParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

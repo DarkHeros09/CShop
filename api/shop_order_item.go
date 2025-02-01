@@ -20,7 +20,7 @@ type getShopOrderItemParamsRequest struct {
 func (server *Server) getShopOrderItems(ctx *fiber.Ctx) error {
 	params := &getShopOrderItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -65,7 +65,7 @@ func (server *Server) listShopOrderItems(ctx *fiber.Ctx) error {
 	params := &listShopOrderItemsParamsRequest{}
 	query := &listShopOrderItemsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -110,7 +110,7 @@ func (server *Server) getShopOrderItemsForAdmin(ctx *fiber.Ctx) error {
 	params := &adminGetShopOrderItemParamsRequest{}
 	req := &adminGetShopOrderItemJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -151,7 +151,7 @@ type deleteShopOrderItemParamsRequest struct {
 func (server *Server) deleteShopOrderItem(ctx *fiber.Ctx) error {
 	params := &deleteShopOrderItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

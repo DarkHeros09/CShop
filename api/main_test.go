@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	firebase "firebase.google.com/go"
+	firebase "firebase.google.com/go/v4"
 	db "github.com/cshop/v3/db/sqlc"
 	image "github.com/cshop/v3/image"
 	"github.com/cshop/v3/mail"

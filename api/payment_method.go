@@ -25,7 +25,7 @@ func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
 	params := &createPaymentMethodParamsRequest{}
 	req := &createPaymentMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -75,7 +75,7 @@ func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
 	params := &getPaymentMethodParamsRequest{}
 	req := &getPaymentMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -122,7 +122,7 @@ func (server *Server) listPaymentMethods(ctx *fiber.Ctx) error {
 	params := &listPaymentMethodsParamsRequest{}
 	query := &listPaymentMethodsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -166,7 +166,7 @@ func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
 	params := &updatePaymentMethodParamsRequest{}
 	req := &updatePaymentMethodJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -211,7 +211,7 @@ type deletePaymentMethodParamsRequest struct {
 func (server *Server) deletePaymentMethod(ctx *fiber.Ctx) error {
 	params := &deletePaymentMethodParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

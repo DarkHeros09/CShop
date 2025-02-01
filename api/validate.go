@@ -1,14 +1,22 @@
 package api
 
 import (
+	"unicode"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
-func ValidateStruct(s any) error {
-	validate := validator.New()
-	err := validate.Struct(s)
-	return err
+// Custom validation function
+func IsAlphanumUnicodeWithSpace(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	for _, c := range value {
+		// Allow letters, numbers, and spaces
+		if !unicode.IsLetter(c) && !unicode.IsNumber(c) && !unicode.IsSpace(c) {
+			return false
+		}
+	}
+	return true
 }
 
 type Input struct {
@@ -17,14 +25,14 @@ type Input struct {
 	query  any
 }
 
-func parseAndValidate(ctx *fiber.Ctx, input Input) error {
+func (server *Server) parseAndValidate(ctx *fiber.Ctx, input Input) error {
 
 	switch {
 	case input.params != nil && input.req == nil && input.query == nil:
 		if err := ctx.ParamsParser(input.params); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.params); err != nil {
+		if err := server.validate.Struct(input.params); err != nil {
 			return err
 		}
 		return nil
@@ -33,7 +41,7 @@ func parseAndValidate(ctx *fiber.Ctx, input Input) error {
 		if err := ctx.BodyParser(input.req); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.req); err != nil {
+		if err := server.validate.Struct(input.req); err != nil {
 			return err
 		}
 		return nil
@@ -42,7 +50,7 @@ func parseAndValidate(ctx *fiber.Ctx, input Input) error {
 		if err := ctx.QueryParser(input.query); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.query); err != nil {
+		if err := server.validate.Struct(input.query); err != nil {
 			return err
 		}
 		return nil
@@ -51,14 +59,14 @@ func parseAndValidate(ctx *fiber.Ctx, input Input) error {
 		if err := ctx.ParamsParser(input.params); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.params); err != nil {
+		if err := server.validate.Struct(input.params); err != nil {
 			return err
 		}
 
 		if err := ctx.BodyParser(input.req); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.req); err != nil {
+		if err := server.validate.Struct(input.req); err != nil {
 			return err
 		}
 		return nil
@@ -67,14 +75,14 @@ func parseAndValidate(ctx *fiber.Ctx, input Input) error {
 		if err := ctx.ParamsParser(input.params); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.params); err != nil {
+		if err := server.validate.Struct(input.params); err != nil {
 			return err
 		}
 
 		if err := ctx.QueryParser(input.query); err != nil {
 			return err
 		}
-		if err := ValidateStruct(input.query); err != nil {
+		if err := server.validate.Struct(input.query); err != nil {
 			return err
 		}
 		return nil

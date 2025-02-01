@@ -28,7 +28,7 @@ func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
 	params := &createCategoryPromotionParamsRequest{}
 	req := &createCategoryPromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -75,7 +75,7 @@ type getCategoryPromotionParamsRequest struct {
 func (server *Server) getCategoryPromotion(ctx *fiber.Ctx) error {
 	params := &getCategoryPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -108,7 +108,7 @@ type listCategoryPromotionsQueryRequest struct {
 func (server *Server) listCategoryPromotions(ctx *fiber.Ctx) error {
 	query := &listCategoryPromotionsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -160,7 +160,7 @@ type adminListCategoryPromotionParamsRequest struct {
 func (server *Server) listCategoryPromotionsForAdmins(ctx *fiber.Ctx) error {
 	params := &adminListCategoryPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ func (server *Server) updateCategoryPromotion(ctx *fiber.Ctx) error {
 	params := &updateCategoryPromotionParamsRequest{}
 	req := &updateCategoryPromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -251,7 +251,7 @@ type deleteCategoryPromotionParamsRequest struct {
 func (server *Server) deleteCategoryPromotion(ctx *fiber.Ctx) error {
 	params := &deleteCategoryPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

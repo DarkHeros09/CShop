@@ -39,7 +39,7 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 	params := &createProductItemsParamsRequest{}
 	req := &createProductItemsJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -90,7 +90,7 @@ type getProductItemsParamsRequest struct {
 func (server *Server) getProductItem(ctx *fiber.Ctx) error {
 	params := &getProductItemsParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -118,7 +118,7 @@ type listProductItemsQueryRequest struct {
 func (server *Server) listProductItems(ctx *fiber.Ctx) error {
 	query := &listProductItemsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -165,7 +165,7 @@ func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
 	params := &updateProductItemParamsRequest{}
 	req := &updateProductItemJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -214,7 +214,7 @@ type deleteProductItemParamsRequest struct {
 func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 	params := &deleteProductItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -268,7 +268,7 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 	query := &listProductItemsV2QueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -345,7 +345,7 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsNextPageQueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -406,7 +406,7 @@ type searchProductItemsQueryRequest struct {
 func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 	query := &searchProductItemsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -459,7 +459,7 @@ type searchProductItemsNextPageQueryRequest struct {
 func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 	query := &searchProductItemsNextPageQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -515,7 +515,7 @@ func (server *Server) listProductItemsWithPromotions(ctx *fiber.Ctx) error {
 	query := &listProductItemsWithPromotionsQueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -555,7 +555,7 @@ type listProductItemsWithPromotionsNextPageQueryRequest struct {
 func (server *Server) listProductItemsWithPromotionsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsWithPromotionsNextPageQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -601,7 +601,7 @@ func (server *Server) listProductItemsWithBrandPromotions(ctx *fiber.Ctx) error 
 	query := &listProductItemsWithBrandPromotionsQueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -642,7 +642,7 @@ type listProductItemsWithBrandPromotionsNextPageQueryRequest struct {
 func (server *Server) listProductItemsWithBrandPromotionsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsWithBrandPromotionsNextPageQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -689,7 +689,7 @@ func (server *Server) listProductItemsWithCategoryPromotions(ctx *fiber.Ctx) err
 	query := &listProductItemsWithCategoryPromotionsQueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -730,7 +730,7 @@ type listProductItemsWithCategoryPromotionsNextPageQueryRequest struct {
 func (server *Server) listProductItemsWithCategoryPromotionsNextPage(ctx *fiber.Ctx) error {
 	query := &listProductItemsWithCategoryPromotionsNextPageQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -775,7 +775,7 @@ type listProductItemsWithBestSalesQueryRequest struct {
 func (server *Server) listProductItemsWithBestSales(ctx *fiber.Ctx) error {
 	query := &listProductItemsWithBestSalesQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

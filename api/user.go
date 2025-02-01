@@ -69,7 +69,7 @@ type createUserResponse struct {
 func (server *Server) createUser(ctx *fiber.Ctx) error {
 	req := &createUserRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -166,7 +166,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 func (server *Server) signUp(ctx *fiber.Ctx) error {
 	req := &createUserRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -271,7 +271,7 @@ type verifyOTPJsonRequest struct {
 func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
 	req := &verifyOTPJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -364,7 +364,7 @@ type resendOTPJsonRequest struct {
 func (server *Server) resendOTP(ctx *fiber.Ctx) error {
 	req := &resendOTPJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -432,7 +432,7 @@ func (server *Server) resetPasswordRequest(ctx *fiber.Ctx) error {
 	req := &resetPasswordRequestJsonRequest{}
 
 	var secretCode string
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -507,7 +507,7 @@ type verifyResetPasswordOTPJsonRequest struct {
 func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
 	req := &verifyResetPasswordOTPJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -563,7 +563,7 @@ type resendResetPasswordOTPJsonRequest struct {
 func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 	req := &resendResetPasswordOTPJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -644,7 +644,7 @@ type resetPasswordApprovedRequest struct {
 func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
 	req := &resetPasswordApprovedRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -740,7 +740,7 @@ func (server *Server) changePassword(ctx *fiber.Ctx) error {
 	params := &changePasswordParamsRequest{}
 	req := &changePasswordJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -810,7 +810,7 @@ type getUserParamsRequest struct {
 func (server *Server) getUser(ctx *fiber.Ctx) error {
 	params := &getUserParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -858,7 +858,7 @@ func (server *Server) listUsers(ctx *fiber.Ctx) error {
 	params := &listUsersParamsRequest{}
 	query := &listUsersQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -903,7 +903,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 	params := &updateUserParamsRequest{}
 	req := &updateUserJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -949,7 +949,7 @@ type deleteUserParamsRequest struct {
 func (server *Server) deleteUser(ctx *fiber.Ctx) error {
 	params := &deleteUserParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -1012,7 +1012,7 @@ func newUserLoginResponse(user db.GetUserByEmailRow) userResponse {
 func (server *Server) loginUser(ctx *fiber.Ctx) error {
 	req := &loginUserRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -1160,7 +1160,7 @@ func (server *Server) logoutUser(ctx *fiber.Ctx) error {
 	params := &logoutUserParamsRequest{}
 	req := &logoutUserJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
