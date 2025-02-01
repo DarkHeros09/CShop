@@ -24,7 +24,7 @@ func (server *Server) createVariation(ctx *fiber.Ctx) error {
 	params := &createVariationParamsRequest{}
 	req := &createVariationJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -67,7 +67,7 @@ type getVariationParamsRequest struct {
 func (server *Server) getVariation(ctx *fiber.Ctx) error {
 	params := &getVariationParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -96,7 +96,7 @@ type listVariationsQueryRequest struct {
 func (server *Server) listVariations(ctx *fiber.Ctx) error {
 	query := &listVariationsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -136,7 +136,7 @@ func (server *Server) updateVariation(ctx *fiber.Ctx) error {
 	params := &updateVariationParamsRequest{}
 	req := &updateVariationJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -180,7 +180,7 @@ type deleteVariationParamsRequest struct {
 func (server *Server) deleteVariation(ctx *fiber.Ctx) error {
 	params := &deleteVariationParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

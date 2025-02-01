@@ -27,7 +27,7 @@ func (server *Server) createProductImages(ctx *fiber.Ctx) error {
 	params := &createProductImagesParamsRequest{}
 	req := &createProductImagesJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -81,7 +81,7 @@ func (server *Server) listproductImages(ctx *fiber.Ctx) error {
 	params := &listproductImagesParamsResquest{}
 	query := &listproductImagesQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -125,7 +125,7 @@ func (server *Server) listProductImagesV2(ctx *fiber.Ctx) error {
 	query := &listProductImagesV2QueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -160,7 +160,7 @@ func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
 	query := &listProductImagesNextPageQueryRequest{}
 	// var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -211,7 +211,7 @@ func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
 	params := &updateProductImagesParamsRequest{}
 	req := &updateProductImagesJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

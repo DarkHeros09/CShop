@@ -7,7 +7,7 @@ import (
 	"log"
 	"math"
 
-	"firebase.google.com/go/messaging"
+	"firebase.google.com/go/v4/messaging"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +37,7 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	params := &updateShopOrderParamsRequest{}
 	req := &updateShopOrderJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -161,7 +161,7 @@ func (server *Server) listShopOrders(ctx *fiber.Ctx) error {
 	params := &listShopOrdersParamsRequest{}
 	query := &listShopOrdersQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -207,7 +207,7 @@ func (server *Server) listShopOrdersV2(ctx *fiber.Ctx) error {
 	query := &listShopOrdersV2QueryRequest{}
 	var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -260,7 +260,7 @@ func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
 	query := &listShopOrdersNextPageQueryRequest{}
 	var maxPage int64
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -314,7 +314,7 @@ func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
 	params := &adminListShopOrdersV2ParamsRequest{}
 	query := &adminListShopOrdersV2QueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -362,7 +362,7 @@ func (server *Server) listShopOrdersNextPageForAdmin(ctx *fiber.Ctx) error {
 	params := &adminListShopOrdersNextPageParamsRequest{}
 	query := &adminListShopOrdersNextPageQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

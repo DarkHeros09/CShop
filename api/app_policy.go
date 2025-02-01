@@ -24,7 +24,7 @@ func (server *Server) createAppPolicy(ctx *fiber.Ctx) error {
 	params := &createAppPolicyParamsRequest{}
 	req := &createAppPolicyRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -90,7 +90,7 @@ func (server *Server) updateAppPolicy(ctx *fiber.Ctx) error {
 	params := &updateAppPolicyParamsRequest{}
 	req := &updateAppPolicyJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -134,7 +134,7 @@ type deleteAppPolicyParamsRequest struct {
 func (server *Server) deleteAppPolicy(ctx *fiber.Ctx) error {
 	params := &deleteAppPolicyParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

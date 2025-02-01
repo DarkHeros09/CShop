@@ -18,7 +18,7 @@ type createPaymentTypeParamsRequest struct {
 }
 
 type createPaymentTypeJsonRequest struct {
-	Value    string `json:"value" validate:"required,alphanumunicode"`
+	Value    string `json:"value" validate:"required,alphanumunicode_space"`
 	IsActive bool   `json:"is_active" validate:"boolean"`
 }
 
@@ -26,7 +26,7 @@ func (server *Server) createPaymentType(ctx *fiber.Ctx) error {
 	params := &createPaymentTypeParamsRequest{}
 	req := &createPaymentTypeJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -70,7 +70,7 @@ type adminListPaymentTypesParamsRequest struct {
 func (server *Server) adminListPaymentTypes(ctx *fiber.Ctx) error {
 	params := &adminListPaymentTypesParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -111,7 +111,7 @@ func (server *Server) updatePaymentType(ctx *fiber.Ctx) error {
 	params := &updatePaymentTypeParamsRequest{}
 	req := &updatePaymentTypeJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -156,7 +156,7 @@ type deletePaymentTypeParamsRequest struct {
 func (server *Server) deletePaymentType(ctx *fiber.Ctx) error {
 	params := &deletePaymentTypeParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -202,7 +202,7 @@ type listPaymentTypesParamsRequest struct {
 func (server *Server) listPaymentTypes(ctx *fiber.Ctx) error {
 	params := &listPaymentTypesParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

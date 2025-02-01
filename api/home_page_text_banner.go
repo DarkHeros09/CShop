@@ -25,7 +25,7 @@ func (server *Server) createHomePageTextBanner(ctx *fiber.Ctx) error {
 	params := &createHomePageTextBannerParamsRequest{}
 	req := &createHomePageTextBannerJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -69,7 +69,7 @@ type getHomePageTextBannerParamsRequest struct {
 func (server *Server) getHomePageTextBanner(ctx *fiber.Ctx) error {
 	params := &getHomePageTextBannerParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -97,7 +97,7 @@ func (server *Server) getHomePageTextBanner(ctx *fiber.Ctx) error {
 func (server *Server) listHomePageTextBanners(ctx *fiber.Ctx) error {
 	// query := &listHomePageTextBannersQueryRequest{}
 
-	// if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 	// 	return nil
 	// }
@@ -137,7 +137,7 @@ func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
 	params := &updateHomePageTextBannerParamsRequest{}
 	req := &updateHomePageTextBannerJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -182,7 +182,7 @@ type deleteHomePageTextBannerParamsRequest struct {
 func (server *Server) deleteHomePageTextBanner(ctx *fiber.Ctx) error {
 	params := &deleteHomePageTextBannerParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

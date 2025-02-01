@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	firebase "firebase.google.com/go"
+	firebase "firebase.google.com/go/v4"
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	image "github.com/cshop/v3/image"
@@ -15,6 +15,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 )
@@ -22,6 +23,7 @@ import (
 type Server struct {
 	config          util.Config
 	store           db.Store
+	validate        *validator.Validate
 	fb              *firebase.App
 	userTokenMaker  token.Maker
 	adminTokenMaker token.Maker
@@ -49,9 +51,13 @@ func NewServer(
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	validate.RegisterValidation("alphanumunicode_space", IsAlphanumUnicodeWithSpace)
+
 	server := &Server{
 		config:          config,
 		store:           store,
+		validate:        validate,
 		fb:              fb,
 		userTokenMaker:  userTokenMaker,
 		adminTokenMaker: adminTokenMaker,

@@ -24,7 +24,7 @@ func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
 	params := &createVariationOptionParamsRequest{}
 	req := &createVariationOptionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -67,7 +67,7 @@ type getVariationOptionParamsRequest struct {
 func (server *Server) getVariationOption(ctx *fiber.Ctx) error {
 	params := &getVariationOptionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -96,7 +96,7 @@ type listVariationOptionsQueryRequest struct {
 func (server *Server) listVariationOptions(ctx *fiber.Ctx) error {
 	query := &listVariationOptionsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -135,7 +135,7 @@ func (server *Server) updateVariationOption(ctx *fiber.Ctx) error {
 	params := &updateVariationOptionParamsRequest{}
 	req := &updateVariationOptionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -179,7 +179,7 @@ type deleteVariationOptionParamsRequest struct {
 func (server *Server) deleteVariationOption(ctx *fiber.Ctx) error {
 	params := &deleteVariationOptionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

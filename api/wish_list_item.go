@@ -27,7 +27,7 @@ func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
 	params := &createWishListItemParamsRequest{}
 	req := &createWishListItemJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -73,7 +73,7 @@ type getWishListItemParamsRequest struct {
 func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
 	params := &getWishListItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRo
 func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 	params := &listWishListItemsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -277,7 +277,7 @@ func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
 	params := &updateWishListItemParamsRequest{}
 	req := &updateWishListItemJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -323,7 +323,7 @@ type deleteWishListItemParamsRequest struct {
 func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
 	params := &deleteWishListItemParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -370,7 +370,7 @@ type deleteWishListItemAllJsonRequest struct {
 func (server *Server) deleteWishListItemAll(ctx *fiber.Ctx) error {
 	params := &deleteWishListItemAllJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

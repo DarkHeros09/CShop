@@ -28,7 +28,7 @@ func (server *Server) createBrandPromotion(ctx *fiber.Ctx) error {
 	params := &createBrandPromotionParamsRequest{}
 	req := &createBrandPromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -75,7 +75,7 @@ type getBrandPromotionParamsRequest struct {
 func (server *Server) getBrandPromotion(ctx *fiber.Ctx) error {
 	params := &getBrandPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -108,7 +108,7 @@ type listBrandPromotionsQueryRequest struct {
 func (server *Server) listBrandPromotions(ctx *fiber.Ctx) error {
 	query := &listBrandPromotionsQueryRequest{}
 
-	if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -160,7 +160,7 @@ type adminListBrandPromotionParamsRequest struct {
 func (server *Server) listBrandPromotionsForAdmins(ctx *fiber.Ctx) error {
 	params := &adminListBrandPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ func (server *Server) updateBrandPromotion(ctx *fiber.Ctx) error {
 	params := &updateBrandPromotionParamsRequest{}
 	req := &updateBrandPromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -251,7 +251,7 @@ type deleteBrandPromotionParamsRequest struct {
 func (server *Server) deleteBrandPromotion(ctx *fiber.Ctx) error {
 	params := &deleteBrandPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

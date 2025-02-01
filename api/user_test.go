@@ -1002,7 +1002,7 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 	user := <-userChan
 	// password := <-passwordChan
 	resetPassword := <-resetPasswordChan
-	updateResetPassword := randomUpdateResetPasswordOTP(user, resetPassword)
+	updateResetPassword := randomUpdateResetPasswordOTP(resetPassword)
 	// user, password := randomUserWithCartAndWishList(t)
 
 	testCases := []struct {
@@ -2424,7 +2424,7 @@ func randomUpdateVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow, verifyE
 	}
 	return
 }
-func randomUpdateResetPasswordOTP(signUpUser db.GetUserByEmailRow, verifyEmail db.GetResetPasswordsByEmailRow) (user db.ResetPassword) {
+func randomUpdateResetPasswordOTP(verifyEmail db.GetResetPasswordsByEmailRow) (user db.ResetPassword) {
 
 	user = db.ResetPassword{
 		ID:         verifyEmail.ID,

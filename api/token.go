@@ -23,7 +23,7 @@ type renewAccessTokenResponse struct {
 func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	req := &renewAccessTokenRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -105,7 +105,7 @@ type renewRefreshTokenResponse struct {
 func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 	req := &renewRefreshTokenRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -227,7 +227,7 @@ type renewAccessTokenForAdminResponse struct {
 func (server *Server) renewAccessTokenForAdmin(ctx *fiber.Ctx) error {
 	req := &renewAccessTokenForAdminRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -311,7 +311,7 @@ type renewRefreshTokenForAdminResponse struct {
 func (server *Server) renewRefreshTokenForAdmin(ctx *fiber.Ctx) error {
 	req := &renewRefreshTokenForAdminRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

@@ -24,7 +24,7 @@ func (server *Server) createProductColor(ctx *fiber.Ctx) error {
 	params := &createProductColorParamsRequest{}
 	req := &createProductColorJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -91,7 +91,7 @@ func (server *Server) updateProductColor(ctx *fiber.Ctx) error {
 	params := &updateProductColorParamsRequest{}
 	req := &updateProductColorJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

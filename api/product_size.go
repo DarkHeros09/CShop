@@ -26,7 +26,7 @@ func (server *Server) createProductSize(ctx *fiber.Ctx) error {
 	params := &createProductSizeParamsRequest{}
 	req := &createProductSizeJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -71,7 +71,7 @@ type listProductSizesParamsRequest struct {
 func (server *Server) listProductSizes(ctx *fiber.Ctx) error {
 	params := &getProductItemsParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -107,7 +107,7 @@ func (server *Server) updateProductSize(ctx *fiber.Ctx) error {
 	params := &updateProductSizeParamsRequest{}
 	req := &updateProductSizeJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

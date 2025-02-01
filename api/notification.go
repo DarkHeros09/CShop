@@ -25,7 +25,7 @@ func (server *Server) createNotification(ctx *fiber.Ctx) error {
 	params := &createNotificationParamsRequest{}
 	req := &createNotificationRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -69,7 +69,7 @@ type getNotificationParamsRequest struct {
 func (server *Server) getNotification(ctx *fiber.Ctx) error {
 	params := &getNotificationParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -114,7 +114,7 @@ func (server *Server) updateNotification(ctx *fiber.Ctx) error {
 	params := &updateNotificationParamsRequest{}
 	req := &updateNotificationJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -158,7 +158,7 @@ type deleteNotificationParamsRequest struct {
 func (server *Server) deleteNotification(ctx *fiber.Ctx) error {
 	params := &deleteNotificationParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -204,7 +204,7 @@ type deleteNotificationAllParamsRequest struct {
 func (server *Server) deleteNotificationAllByUser(ctx *fiber.Ctx) error {
 	params := &deleteNotificationAllParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

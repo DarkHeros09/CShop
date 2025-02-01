@@ -35,7 +35,7 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 	params := &createPromotionParamsRequest{}
 	req := &createPromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		log.Fatal(err)
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
@@ -94,7 +94,7 @@ type getPromotionParamsRequest struct {
 func (server *Server) getPromotion(ctx *fiber.Ctx) error {
 	params := &getPromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -122,7 +122,7 @@ func (server *Server) getPromotion(ctx *fiber.Ctx) error {
 func (server *Server) listPromotions(ctx *fiber.Ctx) error {
 	// query := &listPromotionsQueryRequest{}
 
-	// if err := parseAndValidate(ctx, Input{query: query}); err != nil {
+	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
 	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 	// 	return nil
 	// }
@@ -174,7 +174,7 @@ func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
 	params := &updatePromotionParamsRequest{}
 	req := &updatePromotionJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -235,7 +235,7 @@ type deletePromotionParamsRequest struct {
 func (server *Server) deletePromotion(ctx *fiber.Ctx) error {
 	params := &deletePromotionParamsRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	firebase "firebase.google.com/go"
+	firebase "firebase.google.com/go/v4"
 	"github.com/cshop/v3/api"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/image"

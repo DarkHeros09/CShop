@@ -49,7 +49,7 @@ type loginAdminResponse struct {
 func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 	req := &loginAdminRequest{}
 
-	if err := parseAndValidate(ctx, Input{req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
@@ -142,7 +142,7 @@ func (server *Server) logoutAdmin(ctx *fiber.Ctx) error {
 	params := &logoutAdminParamsRequest{}
 	req := &logoutAdminJsonRequest{}
 
-	if err := parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}
