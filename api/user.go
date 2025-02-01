@@ -17,8 +17,8 @@ import (
 //////////////* Create API //////////////
 
 type createUserRequest struct {
-	//alphanumunicode
-	Username string `json:"username" validate:"required,alphanumunicode"`
+	//alphanumunicode_space
+	Username string `json:"username" validate:"required,alphanumunicode_space"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
 	// Telephone int32  `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
