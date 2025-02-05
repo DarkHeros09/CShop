@@ -20,8 +20,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
       POSTGRES_DB: cshop
-      TZ: 'Africa/Tripoli'
-      PGTZ: 'Africa/Tripoli'
+      # TZ: 'Africa/Tripoli'
+      # PGTZ: 'Africa/Tripoli'
       PGPORT: 6666
     # ports:
     #   - "6666:5432"

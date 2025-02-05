@@ -19,6 +19,7 @@ import (
 type MockEmailSender struct {
 	ctrl     *gomock.Controller
 	recorder *MockEmailSenderMockRecorder
+	isgomock struct{}
 }
 
 // MockEmailSenderMockRecorder is the mock recorder for MockEmailSender.
@@ -39,15 +40,15 @@ func (m *MockEmailSender) EXPECT() *MockEmailSenderMockRecorder {
 }
 
 // SendEmail mocks base method.
-func (m *MockEmailSender) SendEmail(arg0, arg1 string, arg2, arg3, arg4, arg5 []string) error {
+func (m *MockEmailSender) SendEmail(subject, content string, to, cc, bcc, attachFiles []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendEmail", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "SendEmail", subject, content, to, cc, bcc, attachFiles)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendEmail indicates an expected call of SendEmail.
-func (mr *MockEmailSenderMockRecorder) SendEmail(arg0, arg1, arg2, arg3, arg4, arg5 any) *gomock.Call {
+func (mr *MockEmailSenderMockRecorder) SendEmail(subject, content, to, cc, bcc, attachFiles any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEmail", reflect.TypeOf((*MockEmailSender)(nil).SendEmail), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEmail", reflect.TypeOf((*MockEmailSender)(nil).SendEmail), subject, content, to, cc, bcc, attachFiles)
 }

@@ -22,6 +22,7 @@ import (
 type MockImageKitManagement struct {
 	ctrl     *gomock.Controller
 	recorder *MockImageKitManagementMockRecorder
+	isgomock struct{}
 }
 
 // MockImageKitManagementMockRecorder is the mock recorder for MockImageKitManagement.
@@ -42,31 +43,31 @@ func (m *MockImageKitManagement) EXPECT() *MockImageKitManagementMockRecorder {
 }
 
 // ListAndSearch mocks base method.
-func (m *MockImageKitManagement) ListAndSearch(arg0 context.Context, arg1 media.FilesParam) (*media.FilesResponse, error) {
+func (m *MockImageKitManagement) ListAndSearch(ctx context.Context, params media.FilesParam) (*media.FilesResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAndSearch", arg0, arg1)
+	ret := m.ctrl.Call(m, "ListAndSearch", ctx, params)
 	ret0, _ := ret[0].(*media.FilesResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListAndSearch indicates an expected call of ListAndSearch.
-func (mr *MockImageKitManagementMockRecorder) ListAndSearch(arg0, arg1 any) *gomock.Call {
+func (mr *MockImageKitManagementMockRecorder) ListAndSearch(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAndSearch", reflect.TypeOf((*MockImageKitManagement)(nil).ListAndSearch), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAndSearch", reflect.TypeOf((*MockImageKitManagement)(nil).ListAndSearch), ctx, params)
 }
 
 // UrlGeneration mocks base method.
-func (m *MockImageKitManagement) UrlGeneration(arg0 context.Context, arg1 url.UrlParam) (*string, error) {
+func (m *MockImageKitManagement) UrlGeneration(ctx context.Context, params url.UrlParam) (*string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UrlGeneration", arg0, arg1)
+	ret := m.ctrl.Call(m, "UrlGeneration", ctx, params)
 	ret0, _ := ret[0].(*string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UrlGeneration indicates an expected call of UrlGeneration.
-func (mr *MockImageKitManagementMockRecorder) UrlGeneration(arg0, arg1 any) *gomock.Call {
+func (mr *MockImageKitManagementMockRecorder) UrlGeneration(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UrlGeneration", reflect.TypeOf((*MockImageKitManagement)(nil).UrlGeneration), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UrlGeneration", reflect.TypeOf((*MockImageKitManagement)(nil).UrlGeneration), ctx, params)
 }

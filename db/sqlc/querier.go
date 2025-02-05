@@ -27,6 +27,7 @@ type Querier interface {
 	AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error)
 	AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error)
 	AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error)
+	AdminCreateShippingMethod(ctx context.Context, arg AdminCreateShippingMethodParams) (ShippingMethod, error)
 	AdminDeletePaymentType(ctx context.Context, arg AdminDeletePaymentTypeParams) error
 	AdminDeleteProduct(ctx context.Context, arg AdminDeleteProductParams) error
 	AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error)
