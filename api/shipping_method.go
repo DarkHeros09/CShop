@@ -14,7 +14,7 @@ import (
 //////////////* Create API //////////////
 
 type createShippingMethodParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type createShippingMethodJsonRequest struct {
 	Name  string `json:"name" validate:"required"`
@@ -30,19 +30,20 @@ func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
-	if params.UserID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
 
-	arg := db.CreateShippingMethodParams{
-		Name:  req.Name,
-		Price: req.Price,
+	arg := db.AdminCreateShippingMethodParams{
+		AdminID: authPayload.AdminID,
+		Name:    req.Name,
+		Price:   req.Price,
 	}
 
-	shippingMethod, err := server.store.CreateShippingMethod(ctx.Context(), arg)
+	shippingMethod, err := server.store.AdminCreateShippingMethod(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

@@ -11,6 +11,38 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminCreateShippingMethod = `-- name: AdminCreateShippingMethod :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $3
+    AND active = TRUE
+    )
+INSERT INTO "shipping_method" (
+  name,
+  price
+) 
+SELECT $1, $2 FROM t1
+WHERE is_admin=1
+ON CONFLICT (name) DO UPDATE SET 
+name = EXCLUDED.name,
+price = EXCLUDED.price
+RETURNING id, name, price
+`
+
+type AdminCreateShippingMethodParams struct {
+	Name    string `json:"name"`
+	Price   string `json:"price"`
+	AdminID int64  `json:"admin_id"`
+}
+
+func (q *Queries) AdminCreateShippingMethod(ctx context.Context, arg AdminCreateShippingMethodParams) (ShippingMethod, error) {
+	row := q.db.QueryRow(ctx, adminCreateShippingMethod, arg.Name, arg.Price, arg.AdminID)
+	var i ShippingMethod
+	err := row.Scan(&i.ID, &i.Name, &i.Price)
+	return i, err
+}
+
 const createShippingMethod = `-- name: CreateShippingMethod :one
 INSERT INTO "shipping_method" (
   name,

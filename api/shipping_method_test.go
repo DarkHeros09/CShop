@@ -24,36 +24,37 @@ import (
 )
 
 func TestCreateShippingMethodAPI(t *testing.T) {
-	user, _ := randomSMUser(t)
+	admin, _ := randomShippingMethodSuperAdmin(t)
 	shippingMethod := createRandomShippingMethodForMethod()
 
 	testCases := []struct {
 		name          string
-		UserID        int64
+		AdminID       int64
 		body          fiber.Map
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(rsp *http.Response)
 	}{
 		{
-			name:   "OK",
-			UserID: user.ID,
+			name:    "OK",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"name":  shippingMethod.Name,
 				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateShippingMethodParams{
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
+				arg := db.AdminCreateShippingMethodParams{
+					AdminID: admin.ID,
+					Name:    shippingMethod.Name,
+					Price:   shippingMethod.Price,
 				}
 
 				store.EXPECT().
-					CreateShippingMethod(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateShippingMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(shippingMethod, nil)
 			},
@@ -63,8 +64,8 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "NoAuthorization",
-			UserID: user.ID,
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"name":  shippingMethod.Name,
 				"price": shippingMethod.Price,
@@ -73,7 +74,7 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateShippingMethod(gomock.Any(), gomock.Any()).
+					AdminCreateShippingMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -81,24 +82,25 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InternalError",
-			UserID: user.ID,
+			name:    "InternalError",
+			AdminID: admin.ID,
 			body: fiber.Map{
 				"name":  shippingMethod.Name,
 				"price": shippingMethod.Price,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.CreateShippingMethodParams{
-					Name:  shippingMethod.Name,
-					Price: shippingMethod.Price,
+				arg := db.AdminCreateShippingMethodParams{
+					AdminID: admin.ID,
+					Name:    shippingMethod.Name,
+					Price:   shippingMethod.Price,
 				}
 
 				store.EXPECT().
-					CreateShippingMethod(gomock.Any(), gomock.Eq(arg)).
+					AdminCreateShippingMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(db.ShippingMethod{}, pgx.ErrTxClosed)
 			},
@@ -107,18 +109,18 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			},
 		},
 		{
-			name:   "InvalidUserID",
-			UserID: 0,
+			name:    "InvalidUserID",
+			AdminID: 0,
 			body: fiber.Map{
 				"name":  0,
 				"price": "",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, 0, admin.Username, admin.TypeID, admin.Active, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateShippingMethod(gomock.Any(), gomock.Any()).
+					AdminCreateShippingMethod(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -146,11 +148,11 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/usr/v1/users/%d/shipping-method", tc.UserID)
+			url := fmt.Sprintf("/admin/v1/admins/%d/shipping-method", tc.AdminID)
 			request, err := http.NewRequest(fiber.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request, server.userTokenMaker)
+			tc.setupAuth(t, request, server.adminTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
 			rsp, err := server.router.Test(request)

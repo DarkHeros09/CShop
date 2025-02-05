@@ -29,8 +29,36 @@ func createRandomShippingMethod(t *testing.T) ShippingMethod {
 
 	return shippingMethod
 }
+
+func adminCreateRandomShippingMethod(t *testing.T) ShippingMethod {
+	admin := createRandomAdmin(t)
+	shippingMethods := []string{"توصيل سريع"}
+	price := util.RandomDecimalString(1, 100)
+	var shippingMethod ShippingMethod
+	var err error
+	for i := 0; i < len(shippingMethods); i++ {
+		arg := AdminCreateShippingMethodParams{
+			AdminID: admin.ID,
+			Name:    shippingMethods[i],
+			Price:   price,
+		}
+
+		shippingMethod, err = testStore.AdminCreateShippingMethod(context.Background(), arg)
+		require.NoError(t, err)
+		require.NotEmpty(t, shippingMethod)
+
+		require.Equal(t, arg.Name, shippingMethod.Name)
+		require.Equal(t, arg.Price, shippingMethod.Price)
+	}
+
+	return shippingMethod
+}
 func TestCreateShippingMethod(t *testing.T) {
 	createRandomShippingMethod(t)
+}
+
+func TestAdminCreateShippingMethod(t *testing.T) {
+	adminCreateRandomShippingMethod(t)
 }
 
 func TestGetShippingMethod(t *testing.T) {
