@@ -43,6 +43,41 @@ func (q *Queries) AdminCreateShippingMethod(ctx context.Context, arg AdminCreate
 	return i, err
 }
 
+const adminUpdateShippingMethod = `-- name: AdminUpdateShippingMethod :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = $4
+    AND active = TRUE
+    )
+UPDATE "shipping_method"
+SET 
+name = COALESCE($1,name),
+price = COALESCE($2,price)
+WHERE "shipping_method".id = $3
+AND (SELECT is_admin FROM t1) = 1
+RETURNING id, name, price
+`
+
+type AdminUpdateShippingMethodParams struct {
+	Name    null.String `json:"name"`
+	Price   null.String `json:"price"`
+	ID      int64       `json:"id"`
+	AdminID int64       `json:"admin_id"`
+}
+
+func (q *Queries) AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdateShippingMethodParams) (ShippingMethod, error) {
+	row := q.db.QueryRow(ctx, adminUpdateShippingMethod,
+		arg.Name,
+		arg.Price,
+		arg.ID,
+		arg.AdminID,
+	)
+	var i ShippingMethod
+	err := row.Scan(&i.ID, &i.Name, &i.Price)
+	return i, err
+}
+
 const createShippingMethod = `-- name: CreateShippingMethod :one
 INSERT INTO "shipping_method" (
   name,

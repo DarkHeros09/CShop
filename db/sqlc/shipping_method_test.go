@@ -90,6 +90,25 @@ func TestUpdateShippingMethodNameAndPrice(t *testing.T) {
 	require.Equal(t, shippingMethod1.Name, shippingMethod2.Name)
 }
 
+func TestAdminUpdateShippingMethodNameAndPrice(t *testing.T) {
+	admin := createRandomAdmin(t)
+	shippingMethod1 := createRandomShippingMethod(t)
+	arg := AdminUpdateShippingMethodParams{
+		AdminID: admin.ID,
+		ID:      shippingMethod1.ID,
+		Name:    null.StringFrom(shippingMethod1.Name),
+		Price:   null.StringFrom(util.RandomDecimalString(1, 100)),
+	}
+
+	shippingMethod2, err := testStore.AdminUpdateShippingMethod(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, shippingMethod2)
+
+	require.Equal(t, shippingMethod1.ID, shippingMethod2.ID)
+	require.NotEqual(t, shippingMethod1.Price, shippingMethod2.Price)
+	require.Equal(t, shippingMethod1.Name, shippingMethod2.Name)
+}
+
 // func TestDeleteShippingMethod(t *testing.T) {
 // 	shippingMethod1 := createRandomShippingMethod(t)
 // 	err := testStore.DeleteShippingMethod(context.Background(), shippingMethod1.ID)
