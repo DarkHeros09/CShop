@@ -58,6 +58,7 @@ type Querier interface {
 	AdminUpdateProductPromotion(ctx context.Context, arg AdminUpdateProductPromotionParams) (ProductPromotion, error)
 	AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error)
 	AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (Promotion, error)
+	AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdateShippingMethodParams) (ShippingMethod, error)
 	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)

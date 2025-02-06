@@ -63,6 +63,21 @@ price = COALESCE(sqlc.narg(price),price)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
+-- name: AdminUpdateShippingMethod :one
+With t1 AS (
+SELECT 1 AS is_admin
+    FROM "admin"
+    WHERE "admin".id = sqlc.arg(admin_id)
+    AND active = TRUE
+    )
+UPDATE "shipping_method"
+SET 
+name = COALESCE(sqlc.narg(name),name),
+price = COALESCE(sqlc.narg(price),price)
+WHERE "shipping_method".id = sqlc.arg(id)
+AND (SELECT is_admin FROM t1) = 1
+RETURNING *;
+
 -- name: DeleteShippingMethod :exec
 DELETE FROM "shipping_method"
 WHERE id = $1;

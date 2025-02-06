@@ -145,9 +145,44 @@ func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// //////////////* Admin List API //////////////
+
+type adminListShippingMethodsParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+
+func (server *Server) adminListShippingMethods(ctx *fiber.Ctx) error {
+	params := &adminListShippingMethodsParamsRequest{}
+	// query := &listShippingMethodsQueryRequest{}
+
+	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	shippingMethods, err := server.store.ListShippingMethods(ctx.Context())
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+	ctx.Status(fiber.StatusOK).JSON(shippingMethods)
+	return nil
+}
+
 // //////////////* UPDATE API ///////////////
 type updateShippingMethodParamsRequest struct {
-	UserID           int64 `params:"id" validate:"required,min=1"`
+	AdminID          int64 `params:"adminId" validate:"required,min=1"`
 	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
 }
 
@@ -165,20 +200,21 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	authPayload := ctx.Locals(authorizationUserPayloadKey).(*token.UserPayload)
-	if params.UserID != authPayload.UserID {
-		err := errors.New("account deosn't belong to the authenticated user")
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
 	}
 
-	arg := db.UpdateShippingMethodParams{
-		Name:  null.StringFromPtr(req.Name),
-		Price: null.StringFromPtr(req.Price),
-		ID:    params.ShippingMethodID,
+	arg := db.AdminUpdateShippingMethodParams{
+		AdminID: authPayload.AdminID,
+		ID:      params.ShippingMethodID,
+		Name:    null.StringFromPtr(req.Name),
+		Price:   null.StringFromPtr(req.Price),
 	}
 
-	shippingMethod, err := server.store.UpdateShippingMethod(ctx.Context(), arg)
+	shippingMethod, err := server.store.AdminUpdateShippingMethod(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
