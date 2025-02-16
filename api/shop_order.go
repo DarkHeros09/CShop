@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -77,7 +76,7 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 	ctx.Status(fiber.StatusOK).JSON(shopOrder)
 
 	//? new code fcm
-	contextBG := context.Background()
+	contextBG := ctx.Context()
 
 	// notiArg := db.GetNotificationParams{
 	// 	UserID:   shopOrder.UserID,

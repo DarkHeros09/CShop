@@ -153,7 +153,6 @@ type adminListShippingMethodsParamsRequest struct {
 
 func (server *Server) adminListShippingMethods(ctx *fiber.Ctx) error {
 	params := &adminListShippingMethodsParamsRequest{}
-	// query := &listShippingMethodsQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
