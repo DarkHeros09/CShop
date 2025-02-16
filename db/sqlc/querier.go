@@ -352,7 +352,6 @@ type Querier interface {
 	// ORDER BY id;
 	// pi.product_image,
 	// , pt.value AS payment_type
-	// LEFT JOIN "product_size" AS psize ON psize.id = pi.size_id
 	// LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
 	// LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
 	ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error)
