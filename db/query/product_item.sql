@@ -1219,6 +1219,7 @@ LEFT JOIN (
 ) AS stock ON stock.product_item_id = pi.id
 WHERE 
 pi.active = TRUE AND
-p.active =TRUE
+p.active =TRUE AND
+sd.total_sold > 0
 ORDER BY sd.total_sold DESC, pi.id DESC, p.id DESC
 LIMIT $1;

@@ -900,7 +900,7 @@ func TestGetTotalProductItems(t *testing.T) {
 
 func TestListProductItemsWithBestSales(t *testing.T) {
 	for i := 0; i < 30; i++ {
-		createRandomProductItem(t)
+		createRandomShopOrderItem(t)
 	}
 
 	arg := int32(20)
