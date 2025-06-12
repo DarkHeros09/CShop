@@ -53,6 +53,7 @@ func NewServer(
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	validate.RegisterValidation("alphanumunicode_space", IsAlphanumUnicodeWithSpace)
+	validate.RegisterValidation("custom_phone_number", validatePhoneNumber)
 
 	server := &Server{
 		config:          config,

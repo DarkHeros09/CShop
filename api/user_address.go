@@ -18,7 +18,7 @@ type createUserAddressParamsRequest struct {
 }
 type createUserAddressJsonRequest struct {
 	Name           string   `json:"name" validate:"omitempty,required"`
-	Telephone      int32    `json:"telephone" validate:"required,numeric,min=910000000,max=929999999"`
+	Telephone      string   `json:"telephone" validate:"required,custom_phone_number"`
 	AddressLine    string   `json:"address_line" validate:"omitempty,required"`
 	Region         string   `json:"region" validate:"omitempty,required"`
 	City           string   `json:"city" validate:"omitempty,required"`
@@ -29,7 +29,7 @@ type userAddressResponse struct {
 	UserID         int64  `json:"user_id"`
 	AddressID      int64  `json:"address_id"`
 	DefaultAddress int64  `json:"default_address"`
-	Telephone      int32  `json:"telephone"`
+	Telephone      string `json:"telephone"`
 	Name           string `json:"name"`
 	AddressLine    string `json:"address_line"`
 	Region         string `json:"region"`

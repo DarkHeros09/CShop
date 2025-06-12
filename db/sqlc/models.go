@@ -14,7 +14,7 @@ import (
 type Address struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
-	Telephone   int32     `json:"telephone"`
+	Telephone   string    `json:"telephone"`
 	AddressLine string    `json:"address_line"`
 	Region      string    `json:"region"`
 	City        string    `json:"city"`

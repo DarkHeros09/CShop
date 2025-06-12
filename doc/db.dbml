@@ -111,7 +111,7 @@ Table app_policy as AP {
 Table address as A {
   id bigserial [pk,not null] // auto-increment
   name varchar [not null]
-  telephone int [not null]
+  telephone varchar [not null]
   address_line varchar [not null]
   region varchar [not null]
   city varchar [not null]

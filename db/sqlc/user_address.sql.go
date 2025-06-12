@@ -94,7 +94,7 @@ FROM t1, t2
 
 type CreateUserAddressWithAddressParams struct {
 	Name           string   `json:"name"`
-	Telephone      int32    `json:"telephone"`
+	Telephone      string   `json:"telephone"`
 	AddressLine    string   `json:"address_line"`
 	Region         string   `json:"region"`
 	City           string   `json:"city"`
@@ -107,7 +107,7 @@ type CreateUserAddressWithAddressRow struct {
 	AddressID      int64    `json:"address_id"`
 	DefaultAddress null.Int `json:"default_address"`
 	Name           string   `json:"name"`
-	Telephone      int32    `json:"telephone"`
+	Telephone      string   `json:"telephone"`
 	AddressLine    string   `json:"address_line"`
 	Region         string   `json:"region"`
 	City           string   `json:"city"`
