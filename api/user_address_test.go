@@ -847,7 +847,7 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 func createRandomAddress() (address db.Address) {
 	address = db.Address{
 		ID:          util.RandomMoney(),
-		Telephone:   int32(util.RandomInt(910000000, 929999999)),
+		Telephone:   util.GenerateRandomValidPhoneNumber(),
 		AddressLine: util.RandomUser(),
 		Region:      util.RandomUser(),
 		City:        util.RandomUser(),

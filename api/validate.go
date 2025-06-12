@@ -1,6 +1,7 @@
 package api
 
 import (
+	"regexp"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
@@ -17,6 +18,15 @@ func IsAlphanumUnicodeWithSpace(fl validator.FieldLevel) bool {
 		}
 	}
 	return true
+}
+
+// phoneRegex is a pre-compiled regular expression for phone number validation.
+var phoneRegex = regexp.MustCompile(`^09[1-5]\d{7}$`)
+
+// validatePhoneNumber is a custom validation function for the specific phone number format.
+func validatePhoneNumber(fl validator.FieldLevel) bool {
+	telephone := fl.Field().String()
+	return phoneRegex.MatchString(telephone)
 }
 
 type Input struct {

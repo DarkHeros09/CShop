@@ -26,7 +26,7 @@ RETURNING id, name, telephone, address_line, region, city, created_at, updated_a
 
 type CreateAddressParams struct {
 	Name        string `json:"name"`
-	Telephone   int32  `json:"telephone"`
+	Telephone   string `json:"telephone"`
 	AddressLine string `json:"address_line"`
 	Region      string `json:"region"`
 	City        string `json:"city"`
@@ -200,7 +200,7 @@ RETURNING id, name, telephone, address_line, region, city, created_at, updated_a
 
 type UpdateAddressParams struct {
 	Name        null.String `json:"name"`
-	Telephone   null.Int    `json:"telephone"`
+	Telephone   null.String `json:"telephone"`
 	AddressLine null.String `json:"address_line"`
 	Region      null.String `json:"region"`
 	City        null.String `json:"city"`

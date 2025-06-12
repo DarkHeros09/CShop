@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,22 +21,31 @@ func RandomInt(min, max int64) int64 {
 	return min + rand.Int63n(max-min+1)
 }
 
-func GenerateOTP() string {
+// generateRandomValidPhoneNumber creates a random phone number string that meets the criteria:
+// - 10 digits long
+// - Starts with "09"
+// - Third digit is between 1 and 5 (inclusive)
+// - Remaining 7 digits are any digit from 0-9
+func GenerateRandomValidPhoneNumber() string {
+	var sb strings.Builder
 
-	otpChars := "0123456789"
-	otpCharsLength := len(otpChars)
-	var otp strings.Builder
+	// 1. First two digits are fixed "09"
+	sb.WriteString("09")
 
-	// Pre-allocate space for a 6-character OTP
-	otp.Grow(6)
+	// 2. Third digit is random between 1 and 5 (inclusive)
+	// rand.Intn(max - min) + min generates a number in [min, max-1]
+	// So for [1, 2], it's rand.Intn(5 - 1 + 1) + 1 = rand.Intn(5) + 1
+	// rand.Intn(n) returns a random int in [0, n-1][3, 5]
+	thirdDigit := rand.Intn(5) + 1 // Generates a number from 0-4, then adds 1 to get 1-5 [5]
+	sb.WriteString(strconv.Itoa(thirdDigit))
 
-	// Generate OTP
-	for i := 0; i < 6; i++ {
-		otp.WriteByte(otpChars[rand.Intn(otpCharsLength)])
+	// 3. Remaining 7 digits are random (0-9)
+	for i := 0; i < 7; i++ {
+		digit := rand.Intn(10) // Generates a number from 0-9 [3]
+		sb.WriteString(strconv.Itoa(digit))
 	}
 
-	return otp.String()
-
+	return sb.String()
 }
 
 // Random generate a random decimal between min and max

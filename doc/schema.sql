@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-12-24T10:58:50.510Z
+-- Generated at: 2025-06-12T13:10:02.456Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE "app_policy" (
 CREATE TABLE "address" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL,
-  "telephone" int NOT NULL,
+  "telephone" varchar NOT NULL,
   "address_line" varchar NOT NULL,
   "region" varchar NOT NULL,
   "city" varchar NOT NULL,
