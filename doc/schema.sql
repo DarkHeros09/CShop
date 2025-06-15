@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2025-06-12T13:10:02.456Z
+-- Generated at: 2025-06-14T11:55:51.100Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -41,6 +41,7 @@ CREATE TABLE "user" (
   "is_blocked" boolean NOT NULL DEFAULT false,
   "is_email_verified" boolean NOT NULL DEFAULT false,
   "default_payment" bigint,
+  "default_address_id" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -93,19 +94,12 @@ CREATE TABLE "app_policy" (
 
 CREATE TABLE "address" (
   "id" bigserial PRIMARY KEY NOT NULL,
+  "user_id" bigint NOT NULL,
   "name" varchar NOT NULL,
   "telephone" varchar NOT NULL,
   "address_line" varchar NOT NULL,
   "region" varchar NOT NULL,
   "city" varchar NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
-);
-
-CREATE TABLE "user_address" (
-  "user_id" bigint NOT NULL,
-  "address_id" bigint NOT NULL,
-  "default_address" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );
@@ -305,10 +299,15 @@ CREATE TABLE "shop_order" (
   "order_number" int NOT NULL,
   "user_id" bigint NOT NULL,
   "payment_type_id" bigint NOT NULL,
-  "shipping_address_id" bigint NOT NULL,
+  "shipping_address_id" bigint,
   "order_total" varchar NOT NULL,
   "shipping_method_id" bigint NOT NULL,
   "order_status_id" bigint,
+  "address_name" varchar NOT NULL,
+  "address_telephone" varchar NOT NULL,
+  "address_line" varchar NOT NULL,
+  "address_region" varchar NOT NULL,
+  "address_city" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "completed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
@@ -371,6 +370,8 @@ ALTER TABLE "admin" ADD FOREIGN KEY ("type_id") REFERENCES "admin_type" ("id");
 
 ALTER TABLE "admin_session" ADD FOREIGN KEY ("admin_id") REFERENCES "admin" ("id");
 
+ALTER TABLE "user" ADD FOREIGN KEY ("default_address_id") REFERENCES "address" ("id") ON DELETE SET NULL;
+
 ALTER TABLE "verify_email" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE SET NULL;
 
 ALTER TABLE "reset_passwords" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
@@ -379,9 +380,7 @@ ALTER TABLE "user_session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "notification" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
-ALTER TABLE "user_address" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
-
-ALTER TABLE "user_address" ADD FOREIGN KEY ("address_id") REFERENCES "address" ("id");
+ALTER TABLE "address" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "user_review" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
@@ -442,8 +441,6 @@ ALTER TABLE "variation_option" ADD FOREIGN KEY ("variation_id") REFERENCES "vari
 ALTER TABLE "product_configuration" ADD FOREIGN KEY ("product_item_id") REFERENCES "product_item" ("id");
 
 ALTER TABLE "product_configuration" ADD FOREIGN KEY ("variation_option_id") REFERENCES "variation_option" ("id");
-
-ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_address_id") REFERENCES "address" ("id");
 
 ALTER TABLE "shop_order" ADD FOREIGN KEY ("shipping_method_id") REFERENCES "shipping_method" ("id");
 

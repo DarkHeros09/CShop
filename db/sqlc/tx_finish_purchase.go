@@ -11,8 +11,8 @@ import (
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction
 type FinishedPurchaseTxParams struct {
-	UserID        int64 `json:"user_id"`
-	UserAddressID int64 `json:"user_address_id"`
+	UserID    int64 `json:"user_id"`
+	AddressID int64 `json:"address_id"`
 	// PaymentMethodID  int64  `json:"payment_method_id"`
 	PaymentTypeID    int64  `json:"payment_type_id"`
 	ShoppingCartID   int64  `json:"shopping_cart_id"`
@@ -63,7 +63,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			TrackNumber:       trackNumber,
 			UserID:            arg.UserID,
 			PaymentTypeID:     arg.PaymentTypeID,
-			ShippingAddressID: arg.UserAddressID,
+			ShippingAddressID: null.IntFromPtr(&arg.AddressID),
 			OrderTotal:        arg.OrderTotal,
 			ShippingMethodID:  arg.ShippingMethodID,
 			OrderStatusID:     null.IntFrom(arg.OrderStatusID),

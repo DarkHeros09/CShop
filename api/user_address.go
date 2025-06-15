@@ -17,35 +17,34 @@ type createUserAddressParamsRequest struct {
 	UserID int64 `params:"id" validate:"required,min=1"`
 }
 type createUserAddressJsonRequest struct {
-	Name           string   `json:"name" validate:"omitempty,required"`
-	Telephone      string   `json:"telephone" validate:"required,custom_phone_number"`
-	AddressLine    string   `json:"address_line" validate:"omitempty,required"`
-	Region         string   `json:"region" validate:"omitempty,required"`
-	City           string   `json:"city" validate:"omitempty,required"`
-	DefaultAddress null.Int `json:"default_address" validate:"omitempty,required"`
+	Name        string `json:"name" validate:"required"`
+	Telephone   string `json:"telephone" validate:"required,custom_phone_number"`
+	AddressLine string `json:"address_line" validate:"required"`
+	Region      string `json:"region" validate:"required"`
+	City        string `json:"city" validate:"required"`
 }
 
 type userAddressResponse struct {
-	UserID         int64  `json:"user_id"`
-	AddressID      int64  `json:"address_id"`
-	DefaultAddress int64  `json:"default_address"`
-	Telephone      string `json:"telephone"`
-	Name           string `json:"name"`
-	AddressLine    string `json:"address_line"`
-	Region         string `json:"region"`
-	City           string `json:"city"`
+	ID               int64  `json:"id"`
+	UserID           int64  `json:"user_id"`
+	DefaultAddressID int64  `json:"default_address_id"`
+	Telephone        string `json:"telephone"`
+	Name             string `json:"name"`
+	AddressLine      string `json:"address_line"`
+	Region           string `json:"region"`
+	City             string `json:"city"`
 }
 
-func newUserAddressResponseForCreate(address db.Address, userAddress db.UserAddress) userAddressResponse {
+func newUserAddressResponseForCreate(address db.Address, defualtAddressId int64) userAddressResponse {
 	return userAddressResponse{
-		UserID:         userAddress.UserID,
-		AddressID:      userAddress.AddressID,
-		Telephone:      address.Telephone,
-		Name:           address.Name,
-		AddressLine:    address.AddressLine,
-		Region:         address.Region,
-		City:           address.City,
-		DefaultAddress: userAddress.DefaultAddress.Int64,
+		ID:               address.ID,
+		UserID:           address.UserID,
+		Telephone:        address.Telephone,
+		Name:             address.Name,
+		AddressLine:      address.AddressLine,
+		Region:           address.Region,
+		City:             address.City,
+		DefaultAddressID: defualtAddressId,
 	}
 }
 
@@ -65,7 +64,18 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	user, err := server.store.GetUser(ctx.Context(), authPayload.UserID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
 	arg1 := db.CreateAddressParams{
+		UserID:      user.ID,
 		Name:        req.Name,
 		Telephone:   req.Telephone,
 		AddressLine: req.AddressLine,
@@ -86,42 +96,32 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	defaultAddressLength, err := server.store.CheckUserAddressDefaultAddress(ctx.Context(), params.UserID)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+	var defaultAddressId int64
+
+	if user.DefaultAddressID.Valid {
+		defaultAddressId = user.DefaultAddressID.Int64
+	} else {
+		arg2 := db.UpdateUserParams{
+			DefaultAddressID: null.IntFrom(address.ID),
+		}
+
+		userAddress, err := server.store.UpdateUser(ctx.Context(), arg2)
+		if err != nil {
+			if pqErr, ok := err.(*pgconn.PgError); ok {
+				switch pqErr.Message {
+				case "foreign_key_violation", "unique_violation":
+					ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+					return nil
+				}
+			}
+			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 			return nil
 		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
+
+		defaultAddressId = userAddress.DefaultAddressID.Int64
 	}
 
-	var defaultAddress int64
-
-	if defaultAddressLength == 0 {
-		defaultAddress = address.ID
-	}
-
-	arg2 := db.CreateUserAddressParams{
-		UserID:         params.UserID,
-		AddressID:      address.ID,
-		DefaultAddress: null.IntFromPtr(&defaultAddress),
-	}
-
-	userAddress, err := server.store.CreateUserAddress(ctx.Context(), arg2)
-	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok {
-			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
-				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-				return nil
-			}
-		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	rsp := newUserAddressResponseForCreate(address, userAddress)
+	rsp := newUserAddressResponseForCreate(address, defaultAddressId)
 
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -129,14 +129,14 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 
 //////////////* Get API //////////////
 
-func newUserAddressResponseForGet(address db.GetUserAddressWithAddressRow) userAddressResponse {
+func newUserAddressResponseForGet(address db.GetUserAddressRow) userAddressResponse {
 	return userAddressResponse{
-		UserID:         address.UserID,
-		AddressID:      address.AddressID,
-		DefaultAddress: address.DefaultAddress.Int64,
-		AddressLine:    address.AddressLine,
-		Region:         address.Region,
-		City:           address.City,
+		ID:               address.ID,
+		UserID:           address.UserID,
+		DefaultAddressID: address.DefaultAddressID.Int64,
+		AddressLine:      address.AddressLine,
+		Region:           address.Region,
+		City:             address.City,
 	}
 }
 
@@ -160,11 +160,11 @@ func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg := db.GetUserAddressWithAddressParams{
-		UserID:    authPayload.UserID,
-		AddressID: params.AddressID,
+	arg := db.GetUserAddressParams{
+		UserID: authPayload.UserID,
+		ID:     params.AddressID,
 	}
-	userAddress, err := server.store.GetUserAddressWithAddress(ctx.Context(), arg)
+	userAddress, err := server.store.GetUserAddress(ctx.Context(), arg)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -190,37 +190,6 @@ type listUserAddressesQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-type listUserAddressResponse struct {
-	UserID         int64    `json:"user_id"`
-	AddressID      int64    `json:"address_id"`
-	DefaultAddress null.Int `json:"default_address"`
-	Name           string   `json:"name"`
-	AddressLine    string   `json:"address_line"`
-	Region         string   `json:"region"`
-	City           string   `json:"city"`
-}
-
-func newlistUserAddressResponse(userAddress []db.UserAddress, address []db.Address) []listUserAddressResponse {
-	rsp := make([]listUserAddressResponse, len(userAddress))
-	for i := 0; i < len(userAddress); i++ {
-		for j := 0; j < len(address); j++ {
-			if userAddress[i].AddressID == address[j].ID {
-				rsp[i] = listUserAddressResponse{
-					UserID:         userAddress[i].UserID,
-					AddressID:      userAddress[i].AddressID,
-					DefaultAddress: null.IntFromPtr(&userAddress[i].DefaultAddress.Int64),
-					Name:           address[j].Name,
-					AddressLine:    address[j].AddressLine,
-					Region:         address[j].Region,
-					City:           address[j].City,
-				}
-			}
-		}
-	}
-
-	return rsp
-}
-
 func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 	params := &listUserAddressParamsRequest{}
 	query := &listUserAddressesQueryRequest{}
@@ -237,13 +206,7 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg1 := db.ListUserAddressesParams{
-		UserID: authPayload.UserID,
-		Limit:  query.PageSize,
-		Offset: (query.PageID - 1) * query.PageSize,
-	}
-
-	userAddresses, err := server.store.ListUserAddresses(ctx.Context(), arg1)
+	userAddresses, err := server.store.ListAddressesByUserID(ctx.Context(), authPayload.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
@@ -253,22 +216,8 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	addresssesIds := make([]int64, len(userAddresses))
-	for i := 0; i < len(userAddresses); i++ {
-		addresssesIds[i] = userAddresses[i].AddressID
-	}
-	addresses, err := server.store.ListAddressesByID(ctx.Context(), addresssesIds)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
-			return nil
-		}
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
-
-	rsp := newlistUserAddressResponse(userAddresses, addresses)
-	ctx.Status(fiber.StatusOK).JSON(rsp)
+	// rsp := newlistUserAddressResponse(userAddresses, addresses)
+	ctx.Status(fiber.StatusOK).JSON(userAddresses)
 	return nil
 }
 
@@ -279,20 +228,24 @@ type updateUserAddressParamsRequest struct {
 }
 
 type updateUserAddressJsonRequest struct {
-	AddressLine    *string `json:"address_line" validate:"omitempty,required"`
-	City           *string `json:"city" validate:"omitempty,required"`
-	Region         *string `json:"region" validate:"omitempty,required"`
-	DefaultAddress *int64  `json:"default_address" validate:"omitempty,required,min=1"`
+	Name             *string `json:"name" validate:"omitempty,required"`
+	Telephone        *string `json:"telephone" validate:"omitempty,required"`
+	AddressLine      *string `json:"address_line" validate:"omitempty,required"`
+	City             *string `json:"city" validate:"omitempty,required"`
+	Region           *string `json:"region" validate:"omitempty,required"`
+	DefaultAddressID *int64  `json:"default_address_id" validate:"omitempty,required"`
 }
 
-func newUserAddressResponseForUpdate(address db.Address, userAddress db.UserAddress) userAddressResponse {
+func newUserAddressResponseForUpdate(user db.User, address db.Address) userAddressResponse {
 	return userAddressResponse{
-		UserID:         userAddress.UserID,
-		AddressID:      userAddress.AddressID,
-		DefaultAddress: userAddress.DefaultAddress.Int64,
-		AddressLine:    address.AddressLine,
-		Region:         address.Region,
-		City:           address.City,
+		ID:               address.ID,
+		UserID:           address.UserID,
+		Name:             address.Name,
+		Telephone:        address.Telephone,
+		DefaultAddressID: user.DefaultAddressID.Int64,
+		AddressLine:      address.AddressLine,
+		Region:           address.Region,
+		City:             address.City,
 	}
 }
 
@@ -312,13 +265,12 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	arg1 := db.UpdateUserAddressParams{
-		UserID:         authPayload.UserID,
-		AddressID:      params.AddressID,
-		DefaultAddress: null.IntFromPtr(req.DefaultAddress),
+	arg1 := db.UpdateUserParams{
+		ID:               authPayload.UserID,
+		DefaultAddressID: null.IntFromPtr(req.DefaultAddressID),
 	}
 
-	userAddress, err := server.store.UpdateUserAddress(ctx.Context(), arg1)
+	user, err := server.store.UpdateUser(ctx.Context(), arg1)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
@@ -332,10 +284,13 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 	}
 
 	arg2 := db.UpdateAddressParams{
+		ID:          params.AddressID,
+		UserID:      authPayload.UserID,
+		Name:        null.StringFromPtr(req.Name),
+		Telephone:   null.StringFromPtr(req.Telephone),
 		AddressLine: null.StringFromPtr(req.AddressLine),
 		Region:      null.StringFromPtr(req.Region),
 		City:        null.StringFromPtr(req.City),
-		ID:          userAddress.AddressID,
 	}
 
 	address, err := server.store.UpdateAddress(ctx.Context(), arg2)
@@ -348,7 +303,7 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := newUserAddressResponseForUpdate(address, userAddress)
+	rsp := newUserAddressResponseForUpdate(user, address)
 
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -376,8 +331,8 @@ func (server *Server) deleteUserAddress(ctx *fiber.Ctx) error {
 	}
 
 	arg := db.DeleteUserAddressParams{
-		UserID:    authPayload.UserID,
-		AddressID: params.AddressID,
+		UserID: authPayload.UserID,
+		ID:     params.AddressID,
 	}
 
 	_, err := server.store.DeleteUserAddress(ctx.Context(), arg)

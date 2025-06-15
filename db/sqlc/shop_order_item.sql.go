@@ -205,7 +205,7 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 
 const listShopOrderItemsByUserID = `-- name: ListShopOrderItemsByUserID :many
 
-SELECT so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.created_at, so.updated_at, so.completed_at, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at 
+SELECT so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.address_name, so.address_telephone, so.address_line, so.address_region, so.address_city, so.created_at, so.updated_at, so.completed_at, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at 
 FROM "shop_order" AS so
 LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
 WHERE so.user_id = $3
@@ -226,10 +226,15 @@ type ListShopOrderItemsByUserIDRow struct {
 	OrderNumber         int32       `json:"order_number"`
 	UserID              int64       `json:"user_id"`
 	PaymentTypeID       int64       `json:"payment_type_id"`
-	ShippingAddressID   int64       `json:"shipping_address_id"`
+	ShippingAddressID   null.Int    `json:"shipping_address_id"`
 	OrderTotal          string      `json:"order_total"`
 	ShippingMethodID    int64       `json:"shipping_method_id"`
 	OrderStatusID       null.Int    `json:"order_status_id"`
+	AddressName         string      `json:"address_name"`
+	AddressTelephone    string      `json:"address_telephone"`
+	AddressLine         string      `json:"address_line"`
+	AddressRegion       string      `json:"address_region"`
+	AddressCity         string      `json:"address_city"`
 	CreatedAt           time.Time   `json:"created_at"`
 	UpdatedAt           time.Time   `json:"updated_at"`
 	CompletedAt         time.Time   `json:"completed_at"`
@@ -264,6 +269,11 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 			&i.OrderTotal,
 			&i.ShippingMethodID,
 			&i.OrderStatusID,
+			&i.AddressName,
+			&i.AddressTelephone,
+			&i.AddressLine,
+			&i.AddressRegion,
+			&i.AddressCity,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CompletedAt,

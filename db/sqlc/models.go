@@ -13,6 +13,7 @@ import (
 
 type Address struct {
 	ID          int64     `json:"id"`
+	UserID      int64     `json:"user_id"`
 	Name        string    `json:"name"`
 	Telephone   string    `json:"telephone"`
 	AddressLine string    `json:"address_line"`
@@ -231,10 +232,15 @@ type ShopOrder struct {
 	OrderNumber       int32     `json:"order_number"`
 	UserID            int64     `json:"user_id"`
 	PaymentTypeID     int64     `json:"payment_type_id"`
-	ShippingAddressID int64     `json:"shipping_address_id"`
+	ShippingAddressID null.Int  `json:"shipping_address_id"`
 	OrderTotal        string    `json:"order_total"`
 	ShippingMethodID  int64     `json:"shipping_method_id"`
 	OrderStatusID     null.Int  `json:"order_status_id"`
+	AddressName       string    `json:"address_name"`
+	AddressTelephone  string    `json:"address_telephone"`
+	AddressLine       string    `json:"address_line"`
+	AddressRegion     string    `json:"address_region"`
+	AddressCity       string    `json:"address_city"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 	CompletedAt       time.Time `json:"completed_at"`
@@ -273,23 +279,16 @@ type ShoppingCartItem struct {
 }
 
 type User struct {
-	ID              int64     `json:"id"`
-	Username        string    `json:"username"`
-	Email           string    `json:"email"`
-	Password        string    `json:"password"`
-	IsBlocked       bool      `json:"is_blocked"`
-	IsEmailVerified bool      `json:"is_email_verified"`
-	DefaultPayment  null.Int  `json:"default_payment"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-}
-
-type UserAddress struct {
-	UserID         int64     `json:"user_id"`
-	AddressID      int64     `json:"address_id"`
-	DefaultAddress null.Int  `json:"default_address"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	Password         string    `json:"password"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
+	DefaultPayment   null.Int  `json:"default_payment"`
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type UserReview struct {

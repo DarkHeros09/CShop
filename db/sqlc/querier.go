@@ -59,7 +59,6 @@ type Querier interface {
 	AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error)
 	AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (Promotion, error)
 	AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdateShippingMethodParams) (ShippingMethod, error)
-	CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error)
 	CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error)
 	CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error)
 	CreateAdminSession(ctx context.Context, arg CreateAdminSessionParams) (AdminSession, error)
@@ -94,8 +93,6 @@ type Querier interface {
 	CreateShoppingCart(ctx context.Context, userID int64) (ShoppingCart, error)
 	CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	CreateUserAddress(ctx context.Context, arg CreateUserAddressParams) (UserAddress, error)
-	CreateUserAddressWithAddress(ctx context.Context, arg CreateUserAddressWithAddressParams) (CreateUserAddressWithAddressRow, error)
 	CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error)
 	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error)
 	CreateUserWithCartAndWishList(ctx context.Context, arg CreateUserWithCartAndWishListParams) (CreateUserWithCartAndWishListRow, error)
@@ -136,33 +133,7 @@ type Querier interface {
 	DeleteShoppingCartItem(ctx context.Context, arg DeleteShoppingCartItemParams) error
 	DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]ShoppingCartItem, error)
 	DeleteUser(ctx context.Context, id int64) (User, error)
-	// -- name: UpdateUserAddressWithAddress :one
-	// WITH t1 AS (
-	//     UPDATE "address" as a
-	//     SET
-	//     address_line = COALESCE(sqlc.narg(address_line),address_line),
-	//     region = COALESCE(sqlc.narg(region),region),
-	//     city= COALESCE(sqlc.narg(city),city)
-	//     WHERE id = COALESCE(sqlc.arg(id),id)
-	//     RETURNING a.id, a.address_line, a.region, a.city
-	//    ),
-	//     t2 AS (
-	//     UPDATE "user_address"
-	//     SET
-	//     default_address = COALESCE(sqlc.narg(default_address),default_address)
-	//     WHERE
-	//     user_id = COALESCE(sqlc.arg(user_id),user_id)
-	//     AND address_id = COALESCE(sqlc.arg(address_id),address_id)
-	//     RETURNING user_id, address_id, default_address
-	// 	)
-	// SELECT
-	// user_id,
-	// address_id,
-	// default_address,
-	// address_line,
-	// region,
-	// city From t1,t2;
-	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (UserAddress, error)
+	DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (Address, error)
 	DeleteUserByEmailNotVerified(ctx context.Context, email string) error
 	DeleteUserReview(ctx context.Context, arg DeleteUserReviewParams) (UserReview, error)
 	DeleteVariation(ctx context.Context, id int64) error
@@ -232,8 +203,7 @@ type Querier interface {
 	GetTotalShopOrder(ctx context.Context, adminID int64) (int64, error)
 	GetTotalUsersCount(ctx context.Context, adminID int64) (int64, error)
 	GetUser(ctx context.Context, id int64) (User, error)
-	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (UserAddress, error)
-	GetUserAddressWithAddress(ctx context.Context, arg GetUserAddressWithAddressParams) (GetUserAddressWithAddressRow, error)
+	GetUserAddress(ctx context.Context, arg GetUserAddressParams) (GetUserAddressRow, error)
 	// SELECT * FROM "user"
 	// WHERE email = $1 LIMIT 1;
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
@@ -249,6 +219,7 @@ type Querier interface {
 	GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (WishListItem, error)
 	ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error)
 	ListAddressesByID(ctx context.Context, addressesIds []int64) ([]Address, error)
+	ListAddressesByUserID(ctx context.Context, id int64) ([]ListAddressesByUserIDRow, error)
 	ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error)
 	ListBrandPromotions(ctx context.Context, arg ListBrandPromotionsParams) ([]BrandPromotion, error)
@@ -366,7 +337,6 @@ type Querier interface {
 	ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error)
 	ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error)
 	ListShoppingCarts(ctx context.Context, arg ListShoppingCartsParams) ([]ShoppingCart, error)
-	ListUserAddresses(ctx context.Context, arg ListUserAddressesParams) ([]UserAddress, error)
 	ListUserReviews(ctx context.Context, arg ListUserReviewsParams) ([]UserReview, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	ListVariationOptions(ctx context.Context, arg ListVariationOptionsParams) ([]VariationOption, error)
@@ -431,7 +401,6 @@ type Querier interface {
 	UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (UpdateShoppingCartItemRow, error)
 	// telephone = COALESCE(sqlc.narg(telephone),telephone),
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
-	UpdateUserAddress(ctx context.Context, arg UpdateUserAddressParams) (UserAddress, error)
 	UpdateUserEmailisVerifiedForTest(ctx context.Context, id int64) error
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error)
 	UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error)

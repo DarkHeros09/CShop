@@ -873,8 +873,8 @@ func TestDeleteShoppingCartItemAllByUserAPI(t *testing.T) {
 
 func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 	user, _ := randomSCIUser(t)
-	address := createRandomAddress()
-	userAddress := createRandomUserAddress(user, address)
+	address := createRandomAddress(user)
+	// userAddress := createRandomUserAddress(user, address)
 	shoppingCart := createRandomShoppingCart(user)
 	shippingMethod := createRandomShippingMethod()
 	paymentMethod := createRandomPaymentMethodUA(user)
@@ -897,7 +897,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id": userAddress.AddressID,
+				"user_address_id": address.ID,
 				"payment_type_id": paymentMethod.PaymentTypeID,
 
 				"shipping_method_id": shippingMethod.ID,
@@ -911,7 +911,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 
 				arg := db.FinishedPurchaseTxParams{
 					UserID:           user.ID,
-					UserAddressID:    userAddress.AddressID,
+					AddressID:        address.ID,
 					PaymentTypeID:    paymentMethod.PaymentTypeID,
 					ShoppingCartID:   shoppingCart.ID,
 					ShippingMethodID: shippingMethod.ID,
@@ -934,7 +934,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id": userAddress.AddressID,
+				"user_address_id": address.ID,
 				"payment_type_id": paymentMethod.ID,
 
 				"shipping_method_id": shippingMethod.ID,
@@ -958,7 +958,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			ShoppingCartID: shoppingCart.ID,
 			body: fiber.Map{
 
-				"user_address_id": userAddress.AddressID,
+				"user_address_id": address.ID,
 				"payment_type_id": paymentMethod.PaymentTypeID,
 
 				"shipping_method_id": shippingMethod.ID,
@@ -971,7 +971,7 @@ func TestUpdateFinishPurchaseItemAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.FinishedPurchaseTxParams{
 					UserID:           user.ID,
-					UserAddressID:    userAddress.AddressID,
+					AddressID:        address.ID,
 					PaymentTypeID:    paymentMethod.PaymentTypeID,
 					ShoppingCartID:   shoppingCart.ID,
 					ShippingMethodID: shippingMethod.ID,

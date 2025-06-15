@@ -515,7 +515,7 @@ func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
 
 	arg := db.FinishedPurchaseTxParams{
 		UserID:           authPayload.UserID,
-		UserAddressID:    req.UserAddressID,
+		AddressID:        req.UserAddressID,
 		PaymentTypeID:    req.PaymentTypeID,
 		ShoppingCartID:   params.ShoppingCartID,
 		ShippingMethodID: req.ShippingMethodID,

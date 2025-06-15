@@ -23,7 +23,7 @@ INSERT INTO "user" (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -51,6 +51,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -69,7 +70,7 @@ INSERT INTO "user" (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 ),
 t2 AS(
   INSERT INTO "shopping_cart" (
@@ -84,7 +85,7 @@ t3 AS(
   RETURNING id
 )
 
-SELECT t1.id, t1.username, t1.email, t1.password, t1.is_blocked, t1.is_email_verified, t1.default_payment, t1.created_at, t1.updated_at, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3
+SELECT t1.id, t1.username, t1.email, t1.password, t1.is_blocked, t1.is_email_verified, t1.default_payment, t1.default_address_id, t1.created_at, t1.updated_at, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3
 `
 
 type CreateUserWithCartAndWishListParams struct {
@@ -96,17 +97,18 @@ type CreateUserWithCartAndWishListParams struct {
 }
 
 type CreateUserWithCartAndWishListRow struct {
-	ID              int64     `json:"id"`
-	Username        string    `json:"username"`
-	Email           string    `json:"email"`
-	Password        string    `json:"password"`
-	IsBlocked       bool      `json:"is_blocked"`
-	IsEmailVerified bool      `json:"is_email_verified"`
-	DefaultPayment  null.Int  `json:"default_payment"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	ShoppingCartID  int64     `json:"shopping_cart_id"`
-	WishListID      int64     `json:"wish_list_id"`
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	Password         string    `json:"password"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
+	DefaultPayment   null.Int  `json:"default_payment"`
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	ShoppingCartID   int64     `json:"shopping_cart_id"`
+	WishListID       int64     `json:"wish_list_id"`
 }
 
 func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateUserWithCartAndWishListParams) (CreateUserWithCartAndWishListRow, error) {
@@ -126,6 +128,7 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ShoppingCartID,
@@ -137,7 +140,7 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM "user"
 WHERE id = $1
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
@@ -151,6 +154,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -206,7 +210,7 @@ func (q *Queries) GetTotalUsersCount(ctx context.Context, adminID int64) (int64,
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at FROM "user"
+SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
 WHERE id = $1 LIMIT 1
 `
 
@@ -221,6 +225,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -228,24 +233,25 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT u.id, u.username, u.email, u.password, u.is_blocked, u.is_email_verified, u.default_payment, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+SELECT u.id, u.username, u.email, u.password, u.is_blocked, u.is_email_verified, u.default_payment, u.default_address_id, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
 LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
 LEFT JOIN wish_list AS wl ON wl.user_id = u.id
 WHERE email = $1
 `
 
 type GetUserByEmailRow struct {
-	ID              int64     `json:"id"`
-	Username        string    `json:"username"`
-	Email           string    `json:"email"`
-	Password        string    `json:"password"`
-	IsBlocked       bool      `json:"is_blocked"`
-	IsEmailVerified bool      `json:"is_email_verified"`
-	DefaultPayment  null.Int  `json:"default_payment"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	ShopCartID      null.Int  `json:"shop_cart_id"`
-	WishListID      null.Int  `json:"wish_list_id"`
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	Password         string    `json:"password"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
+	DefaultPayment   null.Int  `json:"default_payment"`
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	ShopCartID       null.Int  `json:"shop_cart_id"`
+	WishListID       null.Int  `json:"wish_list_id"`
 }
 
 // SELECT * FROM "user"
@@ -261,6 +267,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ShopCartID,
@@ -270,7 +277,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at FROM "user"
+SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -298,6 +305,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.IsBlocked,
 			&i.IsEmailVerified,
 			&i.DefaultPayment,
+			&i.DefaultAddressID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -318,17 +326,19 @@ username = COALESCE($1,username),
 email = COALESCE($2,email),
 password = COALESCE($3,password),
 default_payment = COALESCE($4,default_payment),
+default_address_id = COALESCE($5,default_address_id),
 updated_at = now()
-WHERE id = $5
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at
+WHERE id = $6
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	Username       null.String `json:"username"`
-	Email          null.String `json:"email"`
-	Password       null.String `json:"password"`
-	DefaultPayment null.Int    `json:"default_payment"`
-	ID             int64       `json:"id"`
+	Username         null.String `json:"username"`
+	Email            null.String `json:"email"`
+	Password         null.String `json:"password"`
+	DefaultPayment   null.Int    `json:"default_payment"`
+	DefaultAddressID null.Int    `json:"default_address_id"`
+	ID               int64       `json:"id"`
 }
 
 // telephone = COALESCE(sqlc.narg(telephone),telephone),
@@ -338,6 +348,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Email,
 		arg.Password,
 		arg.DefaultPayment,
+		arg.DefaultAddressID,
 		arg.ID,
 	)
 	var i User
@@ -349,6 +360,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -376,7 +388,7 @@ AND is_email_verified = TRUE
 AND is_blocked = FALSE
 AND password = $3
 AND password != $1
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, created_at, updated_at
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `
 
 type UpdateUserPasswordParams struct {
@@ -396,6 +408,7 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 		&i.IsBlocked,
 		&i.IsEmailVerified,
 		&i.DefaultPayment,
+		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

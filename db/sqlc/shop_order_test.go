@@ -13,17 +13,26 @@ import (
 
 func createRandomShopOrder(t *testing.T) ShopOrder {
 	paymentMethod := createRandomPaymentMethod(t)
-	address := createRandomAddress(t)
+	user, err := testStore.GetUser(context.Background(), paymentMethod.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+
+	address := createRandomAddress(user, t)
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
 		TrackNumber: util.GenerateTrackNumber(),
 		UserID:      paymentMethod.UserID,
 		// PaymentMethodID:   paymentMethod.ID,
-		ShippingAddressID: address.ID,
+		ShippingAddressID: null.IntFrom(address.ID),
 		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
 		OrderStatusID:     null.IntFromPtr(&orderStatus.ID),
+		AddressName:       util.RandomUser(),
+		AddressTelephone:  util.GenerateRandomValidPhoneNumber(),
+		AddressLine:       util.RandomUser(),
+		AddressRegion:     util.RandomUser(),
+		AddressCity:       util.RandomUser(),
 	}
 
 	shopOrder, err := testStore.CreateShopOrder(context.Background(), arg)
@@ -43,14 +52,19 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 	var shopOrder ShopOrder
 	var err error
 	paymentMethod := createRandomPaymentMethod(t)
-	address := createRandomAddress(t)
+
+	user, err := testStore.GetUser(context.Background(), paymentMethod.UserID)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+
+	address := createRandomAddress(user, t)
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
 		TrackNumber: util.GenerateTrackNumber(),
 		UserID:      paymentMethod.UserID, PaymentTypeID: util.RandomMoney(),
 		// PaymentMethodID:   paymentMethod.ID,
-		ShippingAddressID: address.ID,
+		ShippingAddressID: null.IntFrom(address.ID),
 		OrderTotal:        util.RandomDecimalString(1, 100),
 		ShippingMethodID:  shippingMethod.ID,
 		OrderStatusID:     null.IntFromPtr(&orderStatus.ID),
