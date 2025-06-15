@@ -1,5 +1,3 @@
-//go:build exclude
-
 package util
 
 import (
@@ -11,6 +9,8 @@ import (
 
 	"github.com/quagmt/udecimal"
 )
+
+const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func init() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -59,6 +59,17 @@ func RandomDecimal(min, max float64) udecimal.Decimal {
 	rF64 := min + rand.Float64()*(max-min)
 	decimal, _ := udecimal.NewFromFloat64(rF64)
 	return decimal.Abs().RoundBank(2)
+}
+
+func RandomString(n int) string {
+	var sb strings.Builder
+	k := len(alphabet)
+
+	for i := 0; i < n; i++ {
+		c := alphabet[rand.Intn(k)]
+		sb.WriteByte(c)
+	}
+	return sb.String()
 }
 
 // RandomOwner generates a random user name
