@@ -7,14 +7,19 @@ INSERT INTO "shop_order" (
   shipping_address_id,
   order_total,
   shipping_method_id,
-  order_status_id
+  order_status_id,
+  address_name,
+  address_telephone,
+  address_line,
+  address_region,
+  address_city
 ) VALUES (
   $1, 
   (
     SELECT COUNT(*) FROM "shop_order" so
     WHERE so.user_id = $2
      ) + 1, 
-    $2, $3, $4, $5, $6, $7
+    $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 )
 RETURNING *;
 

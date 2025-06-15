@@ -23,8 +23,8 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	// run n concurrent purchases transaction
 	n := 1
 	// Qty := int32(5)
-	var userAddress UserAddress
-	var listUsersAddress []UserAddress
+	var userAddress Address
+	var listUsersAddress []Address
 	var productItem ProductItem
 	// var listProductItem []ProductItem
 	var paymentType PaymentType
@@ -50,7 +50,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	var lock sync.Mutex
 
 	for i := 0; i < n; i++ {
-		userAddress = createRandomUserAddress(t)
+		userAddress = createRandomAddressWithUser(t)
 		listUsersAddress = append(listUsersAddress, userAddress)
 		paymentType = createRandomPaymentType(t)
 		listPaymentType = append(listPaymentType, paymentType)
@@ -117,7 +117,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			lock.Lock()
 			result, err := testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 				UserID:           userAddress.UserID,
-				UserAddressID:    userAddress.AddressID,
+				AddressID:        userAddress.ID,
 				PaymentTypeID:    paymentType.ID,
 				ShoppingCartID:   shoppingCart.ID,
 				ShippingMethodID: shippingMethod.ID,
@@ -148,7 +148,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, finishedShopOrder)
 			require.Equal(t, listUsersAddress[z].UserID, finishedShopOrder.UserID)
-			require.Equal(t, listUsersAddress[z].AddressID, finishedShopOrder.ShippingAddressID)
+			require.Equal(t, listUsersAddress[z].ID, finishedShopOrder.ShippingAddressID.Int64)
 			// require.Equal(t, listPaymentMethod[z].ID, finishedShopOrder.PaymentMethodID)
 			require.Equal(t, listShippingMethod[z].ID, finishedShopOrder.ShippingMethodID)
 			require.Equal(t, listOrderStatus[z].ID, finishedShopOrder.OrderStatusID.Int64)
@@ -204,8 +204,8 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	// run n concurrent purchases transaction
 	n := 1
 	// Qty := int32(5)
-	var userAddress UserAddress
-	var listUsersAddress []UserAddress
+	var userAddress Address
+	var listUsersAddress []Address
 	var productItem ProductItem
 	var listProductItem []ProductItem
 	var paymentType PaymentType
@@ -230,7 +230,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	// results := make(chan FinishedPurchaseTxResult)
 
 	for i := 0; i < n; i++ {
-		userAddress = createRandomUserAddress(t)
+		userAddress = createRandomAddressWithUser(t)
 		listUsersAddress = append(listUsersAddress, userAddress)
 		paymentType = createRandomPaymentType(t)
 		listPaymentType = append(listPaymentType, paymentType)
@@ -296,7 +296,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 		// go func() {
 		result, err := testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 			UserID:           userAddress.UserID,
-			UserAddressID:    userAddress.AddressID,
+			AddressID:        userAddress.ID,
 			PaymentTypeID:    paymentType.ID,
 			ShoppingCartID:   shoppingCart.ID,
 			ShippingMethodID: shippingMethod.ID,
@@ -328,8 +328,8 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	// run n concurrent purchases transaction
 	n := 3
 	// Qty := int32(5)
-	var userAddress UserAddress
-	var listUsersAddress []UserAddress
+	var userAddress Address
+	var listUsersAddress []Address
 	var productItem ProductItem
 	var listProductItem []ProductItem
 	var paymentType PaymentType
@@ -355,7 +355,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	// results := make(chan FinishedPurchaseTxResult)
 
 	for i := 0; i < n; i++ {
-		userAddress = createRandomUserAddress(t)
+		userAddress = createRandomAddressWithUser(t)
 		listUsersAddress = append(listUsersAddress, userAddress)
 		paymentType = createRandomPaymentType(t)
 		listPaymentType = append(listPaymentType, paymentType)
@@ -421,7 +421,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		// go func() {
 		result, err = testStore.FinishedPurchaseTx(context.Background(), FinishedPurchaseTxParams{
 			UserID:           userAddress.UserID,
-			UserAddressID:    userAddress.AddressID,
+			AddressID:        userAddress.ID,
 			PaymentTypeID:    paymentType.ID,
 			ShoppingCartID:   shoppingCart.ID,
 			ShippingMethodID: shippingMethod.ID,

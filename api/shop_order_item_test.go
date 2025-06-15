@@ -639,7 +639,7 @@ func createRandomShopOrder(user db.User) (shopOrder db.ShopOrder) {
 		ID:     util.RandomMoney(),
 		UserID: user.ID,
 		// PaymentMethodID:   util.RandomMoney(),
-		ShippingAddressID: util.RandomMoney(),
+		ShippingAddressID: null.IntFrom(util.RandomMoney()),
 		OrderTotal:        util.RandomDecimalString(1, 1000),
 		ShippingMethodID:  util.RandomMoney(),
 		OrderStatusID:     null.IntFrom(util.RandomMoney()),

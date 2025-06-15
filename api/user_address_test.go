@@ -24,9 +24,15 @@ import (
 )
 
 func TestCreateUserAddessAPI(t *testing.T) {
+	var defaultAddressId int64
 	user, _ := randomUAUser(t)
-	address := createRandomAddress()
-	userAddress := createRandomUserAddress(user, address)
+	address := createRandomAddress(user)
+	if user.DefaultAddressID.Valid {
+		defaultAddressId = user.DefaultAddressID.Int64
+	} else {
+		defaultAddressId = address.ID
+	}
+	userAddress := createRandomUserAddress(user, address, defaultAddressId)
 	// userAddressWithAddress := createRandomUserAddressWithAddress(t, userAddress, address)
 
 	testCases := []struct {
@@ -41,6 +47,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "OK",
 			ID:   user.ID,
 			body: fiber.Map{
+				"name":         address.Name,
 				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
@@ -51,7 +58,14 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Eq(user.ID)).
+					Times(1).
+					Return(user, nil)
+
 				arg1 := db.CreateAddressParams{
+					UserID:      user.ID,
+					Name:        address.Name,
 					Telephone:   address.Telephone,
 					AddressLine: address.AddressLine,
 					Region:      address.Region,
@@ -63,30 +77,23 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					Times(1).
 					Return(address, nil)
 
-				store.EXPECT().
-					CheckUserAddressDefaultAddress(gomock.Any(), gomock.Eq(user.ID)).
-					Times(1)
-
-				arg2 := db.CreateUserAddressParams{
-					UserID:         user.ID,
-					AddressID:      address.ID,
-					DefaultAddress: null.IntFrom(address.ID),
+				if !user.DefaultAddressID.Valid {
+					store.EXPECT().
+						UpdateUser(gomock.Any(), gomock.Any()).
+						Times(1)
 				}
 
-				store.EXPECT().
-					CreateUserAddress(gomock.Any(), gomock.Eq(arg2)).
-					Times(1).
-					Return(userAddress, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchUserAddressForCreate(t, rsp.Body, address, userAddress)
+				requireBodyMatchUserAddressForCreate(t, rsp.Body, userAddress)
 			},
 		},
 		{
 			name: "NoAuthorization",
 			ID:   user.ID,
 			body: fiber.Map{
+				"name":         address.Name,
 				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
@@ -96,10 +103,11 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateAddress(gomock.Any(), gomock.Any()).
+					GetUser(gomock.Any(), gomock.Any()).
 					Times(0)
+
 				store.EXPECT().
-					CreateUserAddress(gomock.Any(), gomock.Any()).
+					CreateAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -110,6 +118,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			name: "InternalError",
 			ID:   user.ID,
 			body: fiber.Map{
+				"name":         address.Name,
 				"telephone":    address.Telephone,
 				"address_line": address.AddressLine,
 				"region":       address.Region,
@@ -119,7 +128,15 @@ func TestCreateUserAddessAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, pgx.ErrTxClosed)
+
 				arg1 := db.CreateAddressParams{
+					UserID:      user.ID,
+					Name:        address.Name,
 					Telephone:   address.Telephone,
 					AddressLine: address.AddressLine,
 					Region:      address.Region,
@@ -128,12 +145,8 @@ func TestCreateUserAddessAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateAddress(gomock.Any(), gomock.Eq(arg1)).
-					Times(1).
-					Return(db.Address{}, pgx.ErrTxClosed)
-
-				store.EXPECT().
-					CreateUserAddress(gomock.Any(), gomock.Any()).
 					Times(0)
+
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -153,12 +166,13 @@ func TestCreateUserAddessAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					CreateAddress(gomock.Any(), gomock.Any()).
+					GetUser(gomock.Any(), gomock.Any()).
 					Times(0)
 
 				store.EXPECT().
-					CreateUserAddress(gomock.Any(), gomock.Any()).
+					CreateAddress(gomock.Any(), gomock.Any()).
 					Times(0)
+
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
@@ -201,9 +215,9 @@ func TestCreateUserAddessAPI(t *testing.T) {
 
 func TestGetUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress()
-	userAddress := createRandomUserAddress(user, address)
-	userAddressWithAddress := createRandomUserAddressWithAddressForGet(userAddress, address)
+	address := createRandomAddress(user)
+	// userAddress := createRandomUserAddress(user, address)
+	userAddressWithAddress := createRandomUserAddressWithAddressForGet(address)
 
 	testCases := []struct {
 		name          string
@@ -216,17 +230,17 @@ func TestGetUserAddressAPI(t *testing.T) {
 		{
 			name:      "OK",
 			ID:        user.ID,
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetUserAddressParams{
+					UserID: user.ID,
+					ID:     address.ID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(userAddressWithAddress, nil)
 			},
@@ -237,13 +251,13 @@ func TestGetUserAddressAPI(t *testing.T) {
 		},
 		{
 			name:      "NoAuthorization",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					GetUserAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -253,19 +267,19 @@ func TestGetUserAddressAPI(t *testing.T) {
 		{
 			name:      "NotFound",
 			ID:        user.ID,
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetUserAddressParams{
+					UserID: user.ID,
+					ID:     address.ID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrNoRows)
+					Return(db.GetUserAddressRow{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -274,19 +288,19 @@ func TestGetUserAddressAPI(t *testing.T) {
 		{
 			name:      "InternalError",
 			ID:        user.ID,
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStub: func(store *mockdb.MockStore) {
-				arg := db.GetUserAddressWithAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+				arg := db.GetUserAddressParams{
+					UserID: user.ID,
+					ID:     address.ID,
 				}
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Eq(arg)).
+					GetUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetUserAddressWithAddressRow{}, pgx.ErrTxClosed)
+					Return(db.GetUserAddressRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -301,7 +315,7 @@ func TestGetUserAddressAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUserAddressWithAddress(gomock.Any(), gomock.Any()).
+					GetUserAddress(gomock.Any(), gomock.Any()).
 					Times(0)
 
 			},
@@ -348,21 +362,22 @@ func TestGetUserAddressAPI(t *testing.T) {
 func TestListUsersAddressAPI(t *testing.T) {
 	n := 5
 	addresses := make([]db.Address, n)
-	userAddresses := make([]db.UserAddress, n)
+	userAddresses := make([]db.ListAddressesByUserIDRow, n)
 	addressesID := make([]int64, n)
 	user, _ := randomUAUser(t)
-	address1 := createRandomAddress()
-	address2 := createRandomAddress()
-	address3 := createRandomAddress()
-	userAddress1 := createRandomUserAddress(user, address1)
-	userAddress2 := createRandomUserAddress(user, address2)
-	userAddress3 := createRandomUserAddress(user, address3)
+	address1 := createRandomAddress(user)
+	address2 := createRandomAddress(user)
+	address3 := createRandomAddress(user)
+	userAddress1 := createRandomAddressForList(user, address1)
+	userAddress2 := createRandomAddressForList(user, address2)
+	userAddress3 := createRandomAddressForList(user, address3)
+	userAddresses = append(userAddresses, userAddress1[0], userAddress2[0], userAddress3[0])
 
 	addresses = append(addresses, address1, address2, address3)
-	userAddresses = append(userAddresses, userAddress1, userAddress2, userAddress3)
+	// userAddresses = append(userAddresses, userAddress1, userAddress2, userAddress3)
 	addressesID = append(addressesID, address1.ID, address2.ID, address3.ID)
 
-	finalRsp := createFinalRspForListAddress(userAddresses, addresses)
+	// finalRsp := createFinalRspForListAddress(userAddresses, addresses)
 
 	type Query struct {
 		pageID   int
@@ -388,25 +403,16 @@ func TestListUsersAddressAPI(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.ListUserAddressesParams{
-					UserID: user.ID,
-					Limit:  int32(n),
-					Offset: 0,
-				}
 
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Eq(arg)).
+					ListAddressesByUserID(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
 					Return(userAddresses, nil)
 
-				store.EXPECT().
-					ListAddressesByID(gomock.Any(), gomock.Eq(addressesID)).
-					Times(1).
-					Return(addresses, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchListUserAddresses(t, rsp.Body, finalRsp)
+				requireBodyMatchListUserAddresses(t, rsp.Body, addresses)
 			},
 		},
 		{
@@ -421,13 +427,9 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
+					ListAddressesByUserID(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.UserAddress{}, pgx.ErrTxClosed)
-
-				store.EXPECT().
-					ListAddressesByID(gomock.Any(), gomock.Any()).
-					Times(0)
+					Return([]db.ListAddressesByUserIDRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -445,12 +447,9 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
+					ListAddressesByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 
-				store.EXPECT().
-					ListAddressesByID(gomock.Any(), gomock.Any()).
-					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
@@ -468,11 +467,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					ListUserAddresses(gomock.Any(), gomock.Any()).
-					Times(0)
-
-				store.EXPECT().
-					ListAddressesByID(gomock.Any(), gomock.Any()).
+					ListAddressesByUserID(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -518,8 +513,8 @@ func TestListUsersAddressAPI(t *testing.T) {
 
 func TestUpdateUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress()
-	userAddress := createRandomUserAddress(user, address)
+	address := createRandomAddress(user)
+	// userAddress := createRandomUserAddress(user, address)
 
 	testCases := []struct {
 		name          string
@@ -532,35 +527,35 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 	}{
 		{
 			name:      "OK",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 			body: fiber.Map{
-				"default_address": userAddress.DefaultAddress.Int64,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"default_address_id": user.DefaultAddressID.Int64,
+				"address_line":       "new address",
+				"region":             "new region",
+				"city":               "new city",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
-				arg := db.UpdateUserAddressParams{
-					DefaultAddress: null.IntFromPtr(userAddress.DefaultAddress.Ptr()),
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
+				arg := db.UpdateUserParams{
+					ID:               user.ID,
+					DefaultAddressID: user.DefaultAddressID,
 				}
 
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Eq(arg)).
+					UpdateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddress, nil)
+					Return(user, nil)
 
 				arg1 := db.UpdateAddressParams{
+					ID:          address.ID,
+					UserID:      user.ID,
 					AddressLine: null.StringFrom("new address"),
 					Region:      null.StringFrom("new region"),
 					City:        null.StringFrom("new city"),
-					ID:          userAddress.AddressID,
 				}
 
 				store.EXPECT().
@@ -574,20 +569,20 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 		},
 		{
 			name:      "NoAuthorization",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 			body: fiber.Map{
 
-				"default_address": userAddress.DefaultAddress.Int64,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"default_address_id": user.DefaultAddressID.Int64,
+				"address_line":       "new address",
+				"region":             "new region",
+				"city":               "new city",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Any()).
+					UpdateUser(gomock.Any(), gomock.Any()).
 					Times(0)
 
 				store.EXPECT().
@@ -600,35 +595,35 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 		},
 		{
 			name:      "InternalError",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 			body: fiber.Map{
 
-				"default_address": userAddress.DefaultAddress.Int64,
-				"address_line":    "new address",
-				"region":          "new region",
-				"city":            "new city",
+				"default_address_id": user.DefaultAddressID.Int64,
+				"address_line":       "new address",
+				"region":             "new region",
+				"city":               "new city",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateUserAddressParams{
-					DefaultAddress: null.IntFromPtr(userAddress.DefaultAddress.Ptr()),
-					UserID:         userAddress.UserID,
-					AddressID:      userAddress.AddressID,
+				arg := db.UpdateUserParams{
+					ID:               user.ID,
+					DefaultAddressID: user.DefaultAddressID,
 				}
 
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Eq(arg)).
+					UpdateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrTxClosed)
+					Return(db.User{}, pgx.ErrTxClosed)
 
 				arg1 := db.UpdateAddressParams{
+					ID:          address.ID,
+					UserID:      user.ID,
 					AddressLine: null.StringFrom("new address"),
 					Region:      null.StringFrom("new region"),
 					City:        null.StringFrom("new city"),
-					ID:          userAddress.AddressID,
 				}
 
 				store.EXPECT().
@@ -648,7 +643,7 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					UpdateUserAddress(gomock.Any(), gomock.Any()).
+					UpdateUser(gomock.Any(), gomock.Any()).
 					Times(0)
 
 				store.EXPECT().
@@ -696,8 +691,8 @@ func TestUpdateUserAddressAPI(t *testing.T) {
 
 func TestDeleteUserAddressAPI(t *testing.T) {
 	user, _ := randomUAUser(t)
-	address := createRandomAddress()
-	userAddress := createRandomUserAddress(user, address)
+	address := createRandomAddress(user)
+	// userAddress := createRandomUserAddress(user, address)
 
 	testCases := []struct {
 		name          string
@@ -709,7 +704,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 	}{
 		{
 			name:      "OK",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -717,14 +712,14 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+					ID:     address.ID,
+					UserID: user.ID,
 				}
 
 				store.EXPECT().
 					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userAddress, nil)
+					Return(address, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -732,7 +727,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 		},
 		{
 			name:      "NotFound",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -740,13 +735,13 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+					UserID: user.ID,
+					ID:     address.ID,
 				}
 				store.EXPECT().
 					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrNoRows)
+					Return(db.Address{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -754,7 +749,7 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 		},
 		{
 			name:      "InternalError",
-			AddressID: userAddress.AddressID,
+			AddressID: address.ID,
 			ID:        user.ID,
 
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
@@ -762,13 +757,13 @@ func TestDeleteUserAddressAPI(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore) {
 				arg := db.DeleteUserAddressParams{
-					UserID:    userAddress.UserID,
-					AddressID: userAddress.AddressID,
+					ID:     address.ID,
+					UserID: user.ID,
 				}
 				store.EXPECT().
 					DeleteUserAddress(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserAddress{}, pgx.ErrTxClosed)
+					Return(db.Address{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -835,18 +830,21 @@ func randomUAUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		ID:       util.RandomMoney(),
-		Username: util.RandomUser(),
-		Email:    util.RandomEmail(),
-		Password: hashedPassword,
+		ID:               util.RandomMoney(),
+		Username:         util.RandomUser(),
+		Email:            util.RandomEmail(),
+		Password:         hashedPassword,
+		DefaultAddressID: null.IntFrom(util.RandomMoney()),
 		// Telephone: int32(util.RandomInt(910000000, 929999999)),
 	}
 	return
 }
 
-func createRandomAddress() (address db.Address) {
+func createRandomAddress(user db.User) (address db.Address) {
 	address = db.Address{
 		ID:          util.RandomMoney(),
+		UserID:      user.ID,
+		Name:        util.RandomUser(),
 		Telephone:   util.GenerateRandomValidPhoneNumber(),
 		AddressLine: util.RandomUser(),
 		Region:      util.RandomUser(),
@@ -855,19 +853,39 @@ func createRandomAddress() (address db.Address) {
 	return
 }
 
-func createRandomUserAddress(user db.User, address db.Address) (userAddress db.UserAddress) {
-	userAddress = db.UserAddress{
-		DefaultAddress: null.IntFromPtr(&address.ID),
-		UserID:         user.ID,
-		AddressID:      address.ID,
+func createRandomAddressForList(user db.User, address db.Address) (addressList []db.ListAddressesByUserIDRow) {
+	return []db.ListAddressesByUserIDRow{
+		{
+			ID:               address.ID,
+			UserID:           address.UserID,
+			Name:             address.Name,
+			Telephone:        address.Telephone,
+			AddressLine:      address.AddressLine,
+			Region:           address.Region,
+			City:             address.City,
+			DefaultAddressID: user.DefaultAddressID,
+		},
+	}
+}
+
+func createRandomUserAddress(user db.User, address db.Address, defaultAddresId int64) (userAddress userAddressResponse) {
+	userAddress = userAddressResponse{
+		ID:               address.ID,
+		UserID:           user.ID,
+		Name:             address.Name,
+		Telephone:        address.Telephone,
+		AddressLine:      address.AddressLine,
+		Region:           address.Region,
+		City:             address.City,
+		DefaultAddressID: defaultAddresId,
 	}
 	return
 }
 
 // func createRandomUserAddressWithAddress(userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.CreateUserAddressWithAddressRow) {
 // 	userAddressWithAddress = db.CreateUserAddressWithAddressRow{
-// 		UserID:      userAddress.UserID,
-// 		AddressID:   userAddress.AddressID,
+// 		UserID:      user.ID,
+// 		AddressID:   address.ID,
 // 		AddressLine: address.AddressLine,
 // 		Region:      address.Region,
 // 		City:        address.City,
@@ -875,10 +893,10 @@ func createRandomUserAddress(user db.User, address db.Address) (userAddress db.U
 // 	return
 // }
 
-func createRandomUserAddressWithAddressForGet(userAddress db.UserAddress, address db.Address) (userAddressWithAddress db.GetUserAddressWithAddressRow) {
-	userAddressWithAddress = db.GetUserAddressWithAddressRow{
-		UserID:      userAddress.UserID,
-		AddressID:   userAddress.AddressID,
+func createRandomUserAddressWithAddressForGet(address db.Address) (userAddressWithAddress db.GetUserAddressRow) {
+	userAddressWithAddress = db.GetUserAddressRow{
+		UserID:      address.UserID,
+		ID:          address.ID,
 		AddressLine: address.AddressLine,
 		Region:      address.Region,
 		City:        address.City,
@@ -886,35 +904,37 @@ func createRandomUserAddressWithAddressForGet(userAddress db.UserAddress, addres
 	return
 }
 
-func requireBodyMatchUserAddressForCreate(t *testing.T, body io.ReadCloser, address db.Address, userAddress db.UserAddress) {
+func requireBodyMatchUserAddressForCreate(t *testing.T, body io.ReadCloser, address userAddressResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotAddress db.Address
+	var gotAddress userAddressResponse
 	err = json.Unmarshal(data, &gotAddress)
 	require.NoError(t, err)
 
-	var gotUserAddress db.UserAddress
-	err = json.Unmarshal(data, &gotUserAddress)
+	// var gotUserAddress db.UserAddress
+	// err = json.Unmarshal(data, &gotUserAddress)
 
 	require.NoError(t, err)
-	require.Equal(t, userAddress.UserID, gotUserAddress.UserID)
-	require.Equal(t, userAddress.AddressID, gotUserAddress.AddressID)
+	require.Equal(t, address.ID, gotAddress.ID)
+	require.Equal(t, address.UserID, gotAddress.UserID)
+	require.Equal(t, address.Name, gotAddress.Name)
+	require.Equal(t, address.Telephone, gotAddress.Telephone)
 	require.Equal(t, address.AddressLine, gotAddress.AddressLine)
 	require.Equal(t, address.Region, gotAddress.Region)
 	require.Equal(t, address.City, gotAddress.City)
 }
 
-func requireBodyMatchUserAddressForGet(t *testing.T, body io.ReadCloser, userAddress db.GetUserAddressWithAddressRow) {
+func requireBodyMatchUserAddressForGet(t *testing.T, body io.ReadCloser, userAddress db.GetUserAddressRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserAddress db.CreateUserAddressWithAddressRow
+	var gotUserAddress db.GetUserAddressRow
 	err = json.Unmarshal(data, &gotUserAddress)
 
 	require.NoError(t, err)
 	require.Equal(t, userAddress.UserID, gotUserAddress.UserID)
-	require.Equal(t, userAddress.AddressID, gotUserAddress.AddressID)
+	require.Equal(t, userAddress.ID, gotUserAddress.ID)
 	require.Equal(t, userAddress.AddressLine, gotUserAddress.AddressLine)
 	require.Equal(t, userAddress.Region, gotUserAddress.Region)
 	require.Equal(t, userAddress.City, gotUserAddress.City)
@@ -930,26 +950,26 @@ func requireBodyMatchUserAddressForGet(t *testing.T, body io.ReadCloser, userAdd
 // 	require.Equal(t, userAddresses, gotUserAddresses)
 // }
 
-func requireBodyMatchListUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []listUserAddressResponse) {
+func requireBodyMatchListUserAddresses(t *testing.T, body io.ReadCloser, userAddresses []db.Address) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserAddresses []listUserAddressResponse
+	var gotUserAddresses []db.Address
 	err = json.Unmarshal(data, &gotUserAddresses)
 	require.NoError(t, err)
 	require.Equal(t, userAddresses, gotUserAddresses)
 }
 
-func createFinalRspForListAddress(userAddresses []db.UserAddress, addresses []db.Address) (rsp []listUserAddressResponse) {
-	for i := 0; i < len(addresses); i++ {
-		rsp = append(rsp, listUserAddressResponse{
-			UserID:         userAddresses[i].UserID,
-			AddressID:      userAddresses[i].AddressID,
-			DefaultAddress: null.IntFromPtr(&userAddresses[i].DefaultAddress.Int64),
-			AddressLine:    addresses[i].AddressLine,
-			Region:         addresses[i].Region,
-			City:           addresses[i].City,
-		})
-	}
-	return
-}
+// func createFinalRspForListAddress(addresses []db.Address) (rsp []db.Address) {
+// 	for i := 0; i < len(addresses); i++ {
+// 		rsp = append(rsp, listUserAddressResponse{
+// 			UserID:         userAddresses[i].UserID,
+// 			AddressID:      userAddresses[i].AddressID,
+// 			DefaultAddress: null.IntFromPtr(&userAddresses[i].DefaultAddress.Int64),
+// 			AddressLine:    addresses[i].AddressLine,
+// 			Region:         addresses[i].Region,
+// 			City:           addresses[i].City,
+// 		})
+// 	}
+// 	return
+// }

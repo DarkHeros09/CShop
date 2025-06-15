@@ -581,21 +581,6 @@ func (mr *MockStoreMockRecorder) AdminUpdateShippingMethod(ctx, arg any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateShippingMethod", reflect.TypeOf((*MockStore)(nil).AdminUpdateShippingMethod), ctx, arg)
 }
 
-// CheckUserAddressDefaultAddress mocks base method.
-func (m *MockStore) CheckUserAddressDefaultAddress(ctx context.Context, userID int64) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckUserAddressDefaultAddress", ctx, userID)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CheckUserAddressDefaultAddress indicates an expected call of CheckUserAddressDefaultAddress.
-func (mr *MockStoreMockRecorder) CheckUserAddressDefaultAddress(ctx, userID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckUserAddressDefaultAddress", reflect.TypeOf((*MockStore)(nil).CheckUserAddressDefaultAddress), ctx, userID)
-}
-
 // CreateAddress mocks base method.
 func (m *MockStore) CreateAddress(ctx context.Context, arg db.CreateAddressParams) (db.Address, error) {
 	m.ctrl.T.Helper()
@@ -1029,36 +1014,6 @@ func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (db
 func (mr *MockStoreMockRecorder) CreateUser(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStore)(nil).CreateUser), ctx, arg)
-}
-
-// CreateUserAddress mocks base method.
-func (m *MockStore) CreateUserAddress(ctx context.Context, arg db.CreateUserAddressParams) (db.UserAddress, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.UserAddress)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateUserAddress indicates an expected call of CreateUserAddress.
-func (mr *MockStoreMockRecorder) CreateUserAddress(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserAddress", reflect.TypeOf((*MockStore)(nil).CreateUserAddress), ctx, arg)
-}
-
-// CreateUserAddressWithAddress mocks base method.
-func (m *MockStore) CreateUserAddressWithAddress(ctx context.Context, arg db.CreateUserAddressWithAddressParams) (db.CreateUserAddressWithAddressRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserAddressWithAddress", ctx, arg)
-	ret0, _ := ret[0].(db.CreateUserAddressWithAddressRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateUserAddressWithAddress indicates an expected call of CreateUserAddressWithAddress.
-func (mr *MockStoreMockRecorder) CreateUserAddressWithAddress(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserAddressWithAddress", reflect.TypeOf((*MockStore)(nil).CreateUserAddressWithAddress), ctx, arg)
 }
 
 // CreateUserReview mocks base method.
@@ -1650,10 +1605,10 @@ func (mr *MockStoreMockRecorder) DeleteUser(ctx, id any) *gomock.Call {
 }
 
 // DeleteUserAddress mocks base method.
-func (m *MockStore) DeleteUserAddress(ctx context.Context, arg db.DeleteUserAddressParams) (db.UserAddress, error) {
+func (m *MockStore) DeleteUserAddress(ctx context.Context, arg db.DeleteUserAddressParams) (db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.UserAddress)
+	ret0, _ := ret[0].(db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2575,10 +2530,10 @@ func (mr *MockStoreMockRecorder) GetUser(ctx, id any) *gomock.Call {
 }
 
 // GetUserAddress mocks base method.
-func (m *MockStore) GetUserAddress(ctx context.Context, arg db.GetUserAddressParams) (db.UserAddress, error) {
+func (m *MockStore) GetUserAddress(ctx context.Context, arg db.GetUserAddressParams) (db.GetUserAddressRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.UserAddress)
+	ret0, _ := ret[0].(db.GetUserAddressRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2587,21 +2542,6 @@ func (m *MockStore) GetUserAddress(ctx context.Context, arg db.GetUserAddressPar
 func (mr *MockStoreMockRecorder) GetUserAddress(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddress", reflect.TypeOf((*MockStore)(nil).GetUserAddress), ctx, arg)
-}
-
-// GetUserAddressWithAddress mocks base method.
-func (m *MockStore) GetUserAddressWithAddress(ctx context.Context, arg db.GetUserAddressWithAddressParams) (db.GetUserAddressWithAddressRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserAddressWithAddress", ctx, arg)
-	ret0, _ := ret[0].(db.GetUserAddressWithAddressRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserAddressWithAddress indicates an expected call of GetUserAddressWithAddress.
-func (mr *MockStoreMockRecorder) GetUserAddressWithAddress(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserAddressWithAddress", reflect.TypeOf((*MockStore)(nil).GetUserAddressWithAddress), ctx, arg)
 }
 
 // GetUserByEmail mocks base method.
@@ -2797,6 +2737,21 @@ func (m *MockStore) ListAddressesByID(ctx context.Context, addressesIds []int64)
 func (mr *MockStoreMockRecorder) ListAddressesByID(ctx, addressesIds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAddressesByID", reflect.TypeOf((*MockStore)(nil).ListAddressesByID), ctx, addressesIds)
+}
+
+// ListAddressesByUserID mocks base method.
+func (m *MockStore) ListAddressesByUserID(ctx context.Context, id int64) ([]db.ListAddressesByUserIDRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAddressesByUserID", ctx, id)
+	ret0, _ := ret[0].([]db.ListAddressesByUserIDRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAddressesByUserID indicates an expected call of ListAddressesByUserID.
+func (mr *MockStoreMockRecorder) ListAddressesByUserID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAddressesByUserID", reflect.TypeOf((*MockStore)(nil).ListAddressesByUserID), ctx, id)
 }
 
 // ListAdminTypes mocks base method.
@@ -3609,21 +3564,6 @@ func (mr *MockStoreMockRecorder) ListShoppingCarts(ctx, arg any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListShoppingCarts", reflect.TypeOf((*MockStore)(nil).ListShoppingCarts), ctx, arg)
 }
 
-// ListUserAddresses mocks base method.
-func (m *MockStore) ListUserAddresses(ctx context.Context, arg db.ListUserAddressesParams) ([]db.UserAddress, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUserAddresses", ctx, arg)
-	ret0, _ := ret[0].([]db.UserAddress)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListUserAddresses indicates an expected call of ListUserAddresses.
-func (mr *MockStoreMockRecorder) ListUserAddresses(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUserAddresses", reflect.TypeOf((*MockStore)(nil).ListUserAddresses), ctx, arg)
-}
-
 // ListUserReviews mocks base method.
 func (m *MockStore) ListUserReviews(ctx context.Context, arg db.ListUserReviewsParams) ([]db.UserReview, error) {
 	m.ctrl.T.Helper()
@@ -4282,21 +4222,6 @@ func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db
 func (mr *MockStoreMockRecorder) UpdateUser(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockStore)(nil).UpdateUser), ctx, arg)
-}
-
-// UpdateUserAddress mocks base method.
-func (m *MockStore) UpdateUserAddress(ctx context.Context, arg db.UpdateUserAddressParams) (db.UserAddress, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.UserAddress)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserAddress indicates an expected call of UpdateUserAddress.
-func (mr *MockStoreMockRecorder) UpdateUserAddress(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAddress", reflect.TypeOf((*MockStore)(nil).UpdateUserAddress), ctx, arg)
 }
 
 // UpdateUserEmailisVerifiedForTest mocks base method.

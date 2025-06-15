@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	null "github.com/guregu/null/v5"
 )
@@ -14,18 +15,20 @@ import (
 const createAddress = `-- name: CreateAddress :one
 INSERT INTO "address" (
   name,
+  user_id,
   telephone,
   address_line,
   region,
   city
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 )
-RETURNING id, name, telephone, address_line, region, city, created_at, updated_at
+RETURNING id, user_id, name, telephone, address_line, region, city, created_at, updated_at
 `
 
 type CreateAddressParams struct {
 	Name        string `json:"name"`
+	UserID      int64  `json:"user_id"`
 	Telephone   string `json:"telephone"`
 	AddressLine string `json:"address_line"`
 	Region      string `json:"region"`
@@ -35,6 +38,7 @@ type CreateAddressParams struct {
 func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error) {
 	row := q.db.QueryRow(ctx, createAddress,
 		arg.Name,
+		arg.UserID,
 		arg.Telephone,
 		arg.AddressLine,
 		arg.Region,
@@ -43,6 +47,7 @@ func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (A
 	var i Address
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Name,
 		&i.Telephone,
 		&i.AddressLine,
@@ -64,8 +69,37 @@ func (q *Queries) DeleteAddress(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteUserAddress = `-- name: DeleteUserAddress :one
+DELETE FROM "address" AS ad
+WHERE user_id = $1
+AND ad.id = $2
+RETURNING id, user_id, name, telephone, address_line, region, city, created_at, updated_at
+`
+
+type DeleteUserAddressParams struct {
+	UserID int64 `json:"user_id"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (Address, error) {
+	row := q.db.QueryRow(ctx, deleteUserAddress, arg.UserID, arg.ID)
+	var i Address
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Telephone,
+		&i.AddressLine,
+		&i.Region,
+		&i.City,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getAddress = `-- name: GetAddress :one
-SELECT id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
+SELECT id, user_id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
 WHERE id = $1 
 LIMIT 1
 `
@@ -75,6 +109,7 @@ func (q *Queries) GetAddress(ctx context.Context, id int64) (Address, error) {
 	var i Address
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Name,
 		&i.Telephone,
 		&i.AddressLine,
@@ -87,7 +122,7 @@ func (q *Queries) GetAddress(ctx context.Context, id int64) (Address, error) {
 }
 
 const getAddressByCity = `-- name: GetAddressByCity :one
-SELECT id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
+SELECT id, user_id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
 WHERE city = $1 
 LIMIT 1
 `
@@ -97,6 +132,7 @@ func (q *Queries) GetAddressByCity(ctx context.Context, city string) (Address, e
 	var i Address
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Name,
 		&i.Telephone,
 		&i.AddressLine,
@@ -108,8 +144,70 @@ func (q *Queries) GetAddressByCity(ctx context.Context, city string) (Address, e
 	return i, err
 }
 
+const getUserAddress = `-- name: GetUserAddress :one
+SELECT ad.id, user_id, name, telephone, address_line, region, city, ad.created_at, ad.updated_at, u.id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, u.created_at, u.updated_at FROM "address" AS ad
+JOIN "user" AS u ON u.id = ad.user_id
+WHERE user_id = $1
+AND ad.id = $2
+LIMIT 1
+`
+
+type GetUserAddressParams struct {
+	UserID int64 `json:"user_id"`
+	ID     int64 `json:"id"`
+}
+
+type GetUserAddressRow struct {
+	ID               int64     `json:"id"`
+	UserID           int64     `json:"user_id"`
+	Name             string    `json:"name"`
+	Telephone        string    `json:"telephone"`
+	AddressLine      string    `json:"address_line"`
+	Region           string    `json:"region"`
+	City             string    `json:"city"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	ID_2             int64     `json:"id_2"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	Password         string    `json:"password"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
+	DefaultPayment   null.Int  `json:"default_payment"`
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	CreatedAt_2      time.Time `json:"created_at_2"`
+	UpdatedAt_2      time.Time `json:"updated_at_2"`
+}
+
+func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) (GetUserAddressRow, error) {
+	row := q.db.QueryRow(ctx, getUserAddress, arg.UserID, arg.ID)
+	var i GetUserAddressRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Telephone,
+		&i.AddressLine,
+		&i.Region,
+		&i.City,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ID_2,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
+		&i.DefaultPayment,
+		&i.DefaultAddressID,
+		&i.CreatedAt_2,
+		&i.UpdatedAt_2,
+	)
+	return i, err
+}
+
 const listAddressesByCity = `-- name: ListAddressesByCity :many
-SELECT id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
+SELECT id, user_id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
 WHERE city = $1
 ORDER BY id
 LIMIT $2
@@ -133,6 +231,7 @@ func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCi
 		var i Address
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Name,
 			&i.Telephone,
 			&i.AddressLine,
@@ -152,7 +251,7 @@ func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCi
 }
 
 const listAddressesByID = `-- name: ListAddressesByID :many
-SELECT id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
+SELECT id, user_id, name, telephone, address_line, region, city, created_at, updated_at FROM "address"
 WHERE id = ANY($1::bigint[])
 `
 
@@ -167,6 +266,58 @@ func (q *Queries) ListAddressesByID(ctx context.Context, addressesIds []int64) (
 		var i Address
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.Telephone,
+			&i.AddressLine,
+			&i.Region,
+			&i.City,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAddressesByUserID = `-- name: ListAddressesByUserID :many
+SELECT u.default_address_id, ad.id, ad.user_id, ad.name, ad.telephone, ad.address_line, ad.region, ad.city, ad.created_at, ad.updated_at FROM "address" AS ad
+JOIN "user" AS u ON u.id = ad.user_id
+WHERE u.id = $1
+ORDER BY ad.id
+`
+
+type ListAddressesByUserIDRow struct {
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	ID               int64     `json:"id"`
+	UserID           int64     `json:"user_id"`
+	Name             string    `json:"name"`
+	Telephone        string    `json:"telephone"`
+	AddressLine      string    `json:"address_line"`
+	Region           string    `json:"region"`
+	City             string    `json:"city"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+func (q *Queries) ListAddressesByUserID(ctx context.Context, id int64) ([]ListAddressesByUserIDRow, error) {
+	rows, err := q.db.Query(ctx, listAddressesByUserID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAddressesByUserIDRow{}
+	for rows.Next() {
+		var i ListAddressesByUserIDRow
+		if err := rows.Scan(
+			&i.DefaultAddressID,
+			&i.ID,
+			&i.UserID,
 			&i.Name,
 			&i.Telephone,
 			&i.AddressLine,
@@ -195,7 +346,8 @@ region = COALESCE($4,region),
 city = COALESCE($5,city),
 updated_at = now()
 WHERE id = $6
-RETURNING id, name, telephone, address_line, region, city, created_at, updated_at
+AND user_id = $7
+RETURNING id, user_id, name, telephone, address_line, region, city, created_at, updated_at
 `
 
 type UpdateAddressParams struct {
@@ -205,6 +357,7 @@ type UpdateAddressParams struct {
 	Region      null.String `json:"region"`
 	City        null.String `json:"city"`
 	ID          int64       `json:"id"`
+	UserID      int64       `json:"user_id"`
 }
 
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error) {
@@ -215,10 +368,12 @@ func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (A
 		arg.Region,
 		arg.City,
 		arg.ID,
+		arg.UserID,
 	)
 	var i Address
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Name,
 		&i.Telephone,
 		&i.AddressLine,
