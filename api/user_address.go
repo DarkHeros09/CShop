@@ -98,11 +98,11 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 
 	var defaultAddressId int64
 
-	if user.DefaultAddressID.Valid {
+	if user.DefaultAddressID.Valid && user.DefaultAddressID.Int64 != 0 {
 		defaultAddressId = user.DefaultAddressID.Int64
 	} else {
 		arg2 := db.UpdateUserParams{
-			DefaultAddressID: null.IntFrom(address.ID),
+			DefaultAddressID: null.IntFromPtr(&address.ID),
 		}
 
 		userAddress, err := server.store.UpdateUser(ctx.Context(), arg2)
