@@ -97,15 +97,13 @@ dotenv_push:
 	docker run -w "${CURDIR}" -v "${CURDIR}:${CURDIR}" -it dotenv/dotenv-vault push 	
 
 init_docker:
-	@pwsh -noprofile -command "if ([bool]([System.Environment]::OSVersion))\
-	{\
-		docker context use desktop-linux
-		if (![bool](docker ps 2>NUL))\
+	docker context use desktop-linux
+	@pwsh -noprofile -command\
+		"if (![bool](docker ps 2>NUL))\
 		{\
 			Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe' -WindowStyle Hidden\
 		}\
-		while (![bool](docker ps 2>NUL)) {}\
-	}"
+		while (![bool](docker ps 2>NUL)) {}"\
 
 	@docker start psql_$(DB_VERSION)-cshop
 

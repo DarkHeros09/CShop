@@ -77,7 +77,7 @@ func TestCreateUserAddessAPI(t *testing.T) {
 					Times(1).
 					Return(address, nil)
 
-				if !user.DefaultAddressID.Valid {
+				if !user.DefaultAddressID.Valid && user.DefaultAddressID.Int64 == 0 {
 					store.EXPECT().
 						UpdateUser(gomock.Any(), gomock.Any()).
 						Times(1)
