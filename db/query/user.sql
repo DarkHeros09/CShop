@@ -67,7 +67,7 @@ password = COALESCE(sqlc.narg(password),password),
 -- telephone = COALESCE(sqlc.narg(telephone),telephone),
 default_payment = COALESCE(sqlc.narg(default_payment),default_payment),
 default_address_id = COALESCE(sqlc.narg(default_address_id),default_address_id),
-updated_at = now()
+updated_at = NOW()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
