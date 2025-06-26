@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
+	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -119,7 +120,7 @@ func TestGetUserByEmail(t *testing.T) {
 	require.WithinDuration(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
 
-func TestUpdateUsePassword(t *testing.T) {
+func TestUpdateUserPassword(t *testing.T) {
 	t.Parallel()
 	hashedPassword, err := util.HashPassword(util.RandomString(6))
 	require.NoError(t, err)
@@ -166,7 +167,8 @@ func TestUpdateUser(t *testing.T) {
 	user1 := createRandomUser(t)
 
 	arg := UpdateUserParams{
-		ID: user1.ID,
+		ID:       user1.ID,
+		Username: null.StringFrom(util.RandomUser()),
 		// Telephone: null.IntFrom(util.RandomInt(0, 1000000)),
 	}
 
@@ -176,9 +178,10 @@ func TestUpdateUser(t *testing.T) {
 	require.NotEmpty(t, user2)
 
 	require.Equal(t, user1.ID, user2.ID)
+	require.NotEqual(t, user1.Username, user2.Username)
 	require.Equal(t, user1.Email, user2.Email)
 	require.Equal(t, user1.Password, user2.Password)
-	// require.Equal(t, int32(arg.Telephone.Int64), user2.Telephone)
+	require.Equal(t, arg.DefaultAddressID.Int64, user2.DefaultAddressID.Int64)
 	require.Equal(t, user1.IsBlocked, user2.IsBlocked)
 	require.Equal(t, user1.CreatedAt, user2.CreatedAt, time.Second)
 	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)

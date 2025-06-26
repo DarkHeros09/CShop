@@ -102,6 +102,7 @@ func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
 		defaultAddressId = user.DefaultAddressID.Int64
 	} else {
 		arg2 := db.UpdateUserParams{
+			ID:               authPayload.UserID,
 			DefaultAddressID: null.IntFromPtr(&address.ID),
 		}
 
