@@ -97,11 +97,12 @@ type HomePageTextBanner struct {
 }
 
 type Notification struct {
-	UserID    int64       `json:"user_id"`
-	DeviceID  null.String `json:"device_id"`
-	FcmToken  null.String `json:"fcm_token"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	UserID          int64       `json:"user_id"`
+	DeviceID        null.String `json:"device_id"`
+	FcmToken        null.String `json:"fcm_token"`
+	DeliveryUpdates bool        `json:"delivery_updates"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at"`
 }
 
 type OrderStatus struct {

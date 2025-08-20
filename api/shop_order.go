@@ -93,53 +93,54 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	fcmClient, err := server.fb.Messaging(contextBG)
-	if err != nil {
-		log.Printf("error getting Messaging client: %v\n", err)
-		return nil
-	}
+	if notification.DeliveryUpdates && shopOrder.OrderStatusID.Int64 == 2 {
+		fcmClient, err := server.fb.Messaging(contextBG)
+		if err != nil {
+			log.Printf("error getting Messaging client: %v\n", err)
+			return nil
+		}
 
-	// This registration token comes from the client FCM SDKs.
-	// registrationToken := "YOUR_REGISTRATION_TOKEN"
-	registrationToken := notification.FcmToken.String
-	// fmt.Println("Registration token is:", registrationToken)
-	// See documentation on defining a message payload.
-	message := &messaging.Message{
-		Topic: "delivery_status",
-		Data: map[string]string{
-			"page": "orders",
-		},
-		Notification: &messaging.Notification{
-			Title: "📦✨ طلبك جاهز للتوصيل!",
-			Body:  "مرحبًا! 🎉 طلبك أصبح جاهزًا للتوصيل 🚚. سيتم إرساله قريبًا إلى عنوانك 🏠. شكراً لتسوقك معنا! ❤️",
-		},
-		// Android: &messaging.AndroidConfig{
-		// 	Data: map[string]string{
-		// 		"score": "850",
-		// 		"time":  "2:45",
-		// 	},
-		// 	// TTL: &oneHour,
-		// 	Notification: &messaging.AndroidNotification{
-		// 		Icon:  "stock_ticker_update",
-		// 		Color: "#f45342",
-		// 	}},
-		Token: registrationToken,
-	}
+		// This registration token comes from the client FCM SDKs.
+		// registrationToken := "YOUR_REGISTRATION_TOKEN"
+		registrationToken := notification.FcmToken.String
+		// fmt.Println("Registration token is:", registrationToken)
+		// See documentation on defining a message payload.
+		message := &messaging.Message{
+			Data: map[string]string{
+				"page": "orders",
+			},
+			Notification: &messaging.Notification{
+				Title: "📦✨ طلبك جاهز للتوصيل!",
+				Body:  "مرحبًا! 🎉 طلبك أصبح جاهزًا للتوصيل 🚚. سيتم إرساله قريبًا إلى عنوانك 🏠. شكراً لتسوقك معنا! ❤️",
+			},
+			// Android: &messaging.AndroidConfig{
+			// 	Data: map[string]string{
+			// 		"score": "850",
+			// 		"time":  "2:45",
+			// 	},
+			// 	// TTL: &oneHour,
+			// 	Notification: &messaging.AndroidNotification{
+			// 		Icon:  "stock_ticker_update",
+			// 		Color: "#f45342",
+			// 	}},
+			Token: registrationToken,
+		}
 
-	// Send a message to the device corresponding to the provided
-	// registration token.
-	isVerified, err := fcmClient.SendDryRun(contextBG, message)
-	if err != nil {
-		log.Println(err)
-	} else {
-		// Response is a message ID string.
-		fmt.Println("Successfully verified message:", isVerified)
+		// Send a message to the device corresponding to the provided
+		// registration token.
+		// isVerified, err := fcmClient.SendDryRun(contextBG, message)
+		// if err != nil {
+		// 	log.Println(err)
+		// } else {
+		// 	// Response is a message ID string.
+		// 	fmt.Println("Successfully verified message:", isVerified)
 		response, err := fcmClient.Send(contextBG, message)
 		if err != nil {
 			log.Println(err)
 		}
 		// Response is a message ID string.
 		fmt.Println("Successfully sent message:", response)
+		// }
 	}
 	//? end fcm
 

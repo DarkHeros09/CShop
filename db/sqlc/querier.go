@@ -67,9 +67,6 @@ type Querier interface {
 	CreateBrandPromotion(ctx context.Context, arg CreateBrandPromotionParams) (BrandPromotion, error)
 	CreateCategoryPromotion(ctx context.Context, arg CreateCategoryPromotionParams) (CategoryPromotion, error)
 	CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error)
-	// ON CONFLICT(user_id) DO UPDATE SET
-	// device_id = EXCLUDED.device_id,
-	// fcm_token = EXCLUDED.fcm_token
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOrderStatus(ctx context.Context, status string) (OrderStatus, error)
 	CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (PaymentMethod, error)

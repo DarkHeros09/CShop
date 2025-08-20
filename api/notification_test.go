@@ -39,8 +39,9 @@ func TestCreateNotificationAPI(t *testing.T) {
 			name:   "OK",
 			UserID: user.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"device_id":        notification.DeviceID.String,
+				"fcm_token":        notification.FcmToken.String,
+				"delivery_updates": notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -48,9 +49,10 @@ func TestCreateNotificationAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.CreateNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-					FcmToken: notification.FcmToken,
+					UserID:          user.ID,
+					DeviceID:        notification.DeviceID,
+					FcmToken:        notification.FcmToken,
+					DeliveryUpdates: notification.DeliveryUpdates,
 				}
 
 				store.EXPECT().
@@ -67,8 +69,9 @@ func TestCreateNotificationAPI(t *testing.T) {
 			name:   "NoAuthorization",
 			UserID: user.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"device_id":        notification.DeviceID.String,
+				"fcm_token":        notification.FcmToken.String,
+				"delivery_updates": notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -86,8 +89,9 @@ func TestCreateNotificationAPI(t *testing.T) {
 			name:   "InternalError",
 			UserID: user.ID,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"device_id":        notification.DeviceID.String,
+				"fcm_token":        notification.FcmToken.String,
+				"delivery_updates": notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -95,9 +99,10 @@ func TestCreateNotificationAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.CreateNotificationParams{
-					UserID:   user.ID,
-					DeviceID: notification.DeviceID,
-					FcmToken: notification.FcmToken,
+					UserID:          user.ID,
+					DeviceID:        notification.DeviceID,
+					FcmToken:        notification.FcmToken,
+					DeliveryUpdates: notification.DeliveryUpdates,
 				}
 
 				store.EXPECT().
@@ -113,8 +118,9 @@ func TestCreateNotificationAPI(t *testing.T) {
 			name:   "InvalidUserID",
 			UserID: 0,
 			body: fiber.Map{
-				"device_id": notification.DeviceID.String,
-				"fcm_token": notification.FcmToken.String,
+				"device_id":        notification.DeviceID.String,
+				"fcm_token":        notification.FcmToken.String,
+				"delivery_updates": notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, 0, user.Username, time.Minute)
@@ -305,7 +311,8 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			DeviceID: notification.DeviceID.String,
 			UserID:   user.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"fcm_token":        fcmToken,
+				"delivery_updates": !notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
@@ -313,9 +320,10 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.UpdateNotificationParams{
-					DeviceID: notification.DeviceID,
-					UserID:   user.ID,
-					FcmToken: null.StringFrom(fcmToken),
+					DeviceID:        notification.DeviceID,
+					UserID:          user.ID,
+					FcmToken:        null.StringFrom(fcmToken),
+					DeliveryUpdates: null.BoolFrom(!notification.DeliveryUpdates),
 				}
 
 				store.EXPECT().
@@ -332,7 +340,8 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			DeviceID: notification.DeviceID.String,
 			UserID:   user.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"fcm_token":        fcmToken,
+				"delivery_updates": !notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
@@ -350,16 +359,18 @@ func TestUpdateNotificationAPI(t *testing.T) {
 			DeviceID: notification.DeviceID.String,
 			UserID:   user.ID,
 			body: fiber.Map{
-				"fcm_token": fcmToken,
+				"fcm_token":        fcmToken,
+				"delivery_updates": !notification.DeliveryUpdates,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.ID, user.Username, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.UpdateNotificationParams{
-					DeviceID: notification.DeviceID,
-					UserID:   user.ID,
-					FcmToken: null.StringFrom(fcmToken),
+					DeviceID:        notification.DeviceID,
+					UserID:          user.ID,
+					FcmToken:        null.StringFrom(fcmToken),
+					DeliveryUpdates: null.BoolFrom(!notification.DeliveryUpdates),
 				}
 
 				store.EXPECT().
@@ -706,9 +717,10 @@ func randomNotificationUser(t *testing.T) (user db.User, password string) {
 
 func createRandomNotification(user db.User) (Notification db.Notification) {
 	Notification = db.Notification{
-		UserID:   user.ID,
-		DeviceID: null.StringFrom(util.RandomString(10)),
-		FcmToken: null.StringFrom(util.RandomString(10)),
+		UserID:          user.ID,
+		DeviceID:        null.StringFrom(util.RandomString(10)),
+		FcmToken:        null.StringFrom(util.RandomString(10)),
+		DeliveryUpdates: util.RandomBool(),
 	}
 	return
 }

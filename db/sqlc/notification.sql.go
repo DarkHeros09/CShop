@@ -15,29 +15,38 @@ const createNotification = `-- name: CreateNotification :one
 INSERT INTO "notification" (
   user_id,
   device_id,
-fcm_token
+fcm_token,
+delivery_updates
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) 
-RETURNING user_id, device_id, fcm_token, created_at, updated_at
+ON CONFLICT(user_id) DO UPDATE SET 
+device_id = EXCLUDED.device_id,
+fcm_token = EXCLUDED.fcm_token,
+delivery_updates = EXCLUDED.delivery_updates
+RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
 `
 
 type CreateNotificationParams struct {
-	UserID   int64       `json:"user_id"`
-	DeviceID null.String `json:"device_id"`
-	FcmToken null.String `json:"fcm_token"`
+	UserID          int64       `json:"user_id"`
+	DeviceID        null.String `json:"device_id"`
+	FcmToken        null.String `json:"fcm_token"`
+	DeliveryUpdates bool        `json:"delivery_updates"`
 }
 
-// ON CONFLICT(user_id) DO UPDATE SET
-// device_id = EXCLUDED.device_id,
-// fcm_token = EXCLUDED.fcm_token
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
-	row := q.db.QueryRow(ctx, createNotification, arg.UserID, arg.DeviceID, arg.FcmToken)
+	row := q.db.QueryRow(ctx, createNotification,
+		arg.UserID,
+		arg.DeviceID,
+		arg.FcmToken,
+		arg.DeliveryUpdates,
+	)
 	var i Notification
 	err := row.Scan(
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
+		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -48,7 +57,7 @@ const deleteNotification = `-- name: DeleteNotification :one
 DELETE FROM "notification"
 WHERE user_id = $1
 AND device_id = $2
-RETURNING user_id, device_id, fcm_token, created_at, updated_at
+RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
 `
 
 type DeleteNotificationParams struct {
@@ -63,6 +72,7 @@ func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotification
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
+		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -80,7 +90,7 @@ func (q *Queries) DeleteNotificationAllByUser(ctx context.Context, userID int64)
 }
 
 const getNotification = `-- name: GetNotification :one
-SELECT user_id, device_id, fcm_token, created_at, updated_at FROM "notification"
+SELECT user_id, device_id, fcm_token, delivery_updates, created_at, updated_at FROM "notification"
 WHERE user_id = $1
 AND device_id = $2
 `
@@ -97,6 +107,7 @@ func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
+		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -104,7 +115,7 @@ func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams
 }
 
 const getNotificationV2 = `-- name: GetNotificationV2 :one
-SELECT user_id, device_id, fcm_token, created_at, updated_at FROM "notification"
+SELECT user_id, device_id, fcm_token, delivery_updates, created_at, updated_at FROM "notification"
 WHERE user_id = $1
 ORDER BY updated_at DESC, created_at DESC
 LIMIT 1
@@ -117,6 +128,7 @@ func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (Notifica
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
+		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -127,25 +139,33 @@ const updateNotification = `-- name: UpdateNotification :one
 UPDATE "notification"
 SET 
 fcm_token = COALESCE($1,fcm_token),
+delivery_updates  = COALESCE($2,delivery_updates),
 updated_at = now()
-WHERE user_id = $2
-AND device_id = $3
-RETURNING user_id, device_id, fcm_token, created_at, updated_at
+WHERE user_id = $3
+AND device_id = $4
+RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
 `
 
 type UpdateNotificationParams struct {
-	FcmToken null.String `json:"fcm_token"`
-	UserID   int64       `json:"user_id"`
-	DeviceID null.String `json:"device_id"`
+	FcmToken        null.String `json:"fcm_token"`
+	DeliveryUpdates null.Bool   `json:"delivery_updates"`
+	UserID          int64       `json:"user_id"`
+	DeviceID        null.String `json:"device_id"`
 }
 
 func (q *Queries) UpdateNotification(ctx context.Context, arg UpdateNotificationParams) (Notification, error) {
-	row := q.db.QueryRow(ctx, updateNotification, arg.FcmToken, arg.UserID, arg.DeviceID)
+	row := q.db.QueryRow(ctx, updateNotification,
+		arg.FcmToken,
+		arg.DeliveryUpdates,
+		arg.UserID,
+		arg.DeviceID,
+	)
 	var i Notification
 	err := row.Scan(
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
+		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

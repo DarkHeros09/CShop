@@ -327,7 +327,7 @@ email = COALESCE($2,email),
 password = COALESCE($3,password),
 default_payment = COALESCE($4,default_payment),
 default_address_id = COALESCE($5,default_address_id),
-updated_at = now()
+updated_at = NOW()
 WHERE id = $6
 RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `

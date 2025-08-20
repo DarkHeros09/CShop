@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2025-06-22T19:24:31.197Z
+-- Generated at: 2025-08-09T19:29:27.726Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -78,9 +78,10 @@ CREATE TABLE "user_session" (
 );
 
 CREATE TABLE "notification" (
-  "user_id" bigint NOT NULL,
+  "user_id" bigint UNIQUE NOT NULL,
   "device_id" varchar,
   "fcm_token" varchar,
+  "delivery_updates" boolean NOT NULL DEFAULT true,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
 );

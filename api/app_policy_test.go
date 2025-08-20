@@ -198,7 +198,7 @@ func TestGetAppPolicyAPI(t *testing.T) {
 			server := newTestServer(t, store, worker, ik, mailSender)
 			//recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/app-policy")
+			url := "/api/v1/app-policy"
 			request, err := http.NewRequest(fiber.MethodGet, url, nil)
 			require.NoError(t, err)
 
