@@ -183,6 +183,8 @@ db_generate_schema:
 	@make -s db_docs
 	@make -s db_schema
 	@make -s db_new_schema_from_docs
+	@make migrate_down_docker
+	@make migrate_up_docker
 
 unocss:
 	unocss "./web/views/*.html" -c "./web/uno.config.ts" -o "./web/styles/output.css" -m --watch

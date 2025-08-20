@@ -32,6 +32,18 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "token has expired" {
 			err = fmt.Errorf("refresh token has expired")
+
+			userSession, _ := server.store.GetUserSession(ctx.Context(), refreshPayload.ID)
+
+			argUpdate := db.UpdateUserSessionParams{
+				IsBlocked:    null.BoolFrom(true),
+				ID:           userSession.ID,
+				UserID:       userSession.UserID,
+				RefreshToken: userSession.RefreshToken,
+			}
+
+			server.store.UpdateUserSession(ctx.Context(), argUpdate)
+
 		}
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
@@ -65,11 +77,11 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if time.Now().After(userSession.ExpiresAt) {
-		err := fmt.Errorf("expired session")
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
+	// if time.Now().After(userSession.ExpiresAt) {
+	// 	err := fmt.Errorf("expired session")
+	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+	// 	return nil
+	// }
 
 	accessToken, accessPayload, err := server.userTokenMaker.CreateTokenForUser(
 		refreshPayload.UserID,
@@ -114,6 +126,17 @@ func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "token has expired" {
 			err = fmt.Errorf("refresh token has expired")
+
+			userSession, _ := server.store.GetUserSession(ctx.Context(), refreshPayload.ID)
+
+			argUpdate := db.UpdateUserSessionParams{
+				IsBlocked:    null.BoolFrom(true),
+				ID:           userSession.ID,
+				UserID:       userSession.UserID,
+				RefreshToken: userSession.RefreshToken,
+			}
+
+			server.store.UpdateUserSession(ctx.Context(), argUpdate)
 		}
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
@@ -147,11 +170,11 @@ func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	if time.Now().After(userSession.ExpiresAt) {
-		err := fmt.Errorf("expired session")
-		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return nil
-	}
+	// if time.Now().After(userSession.ExpiresAt) {
+	// 	err := fmt.Errorf("expired session")
+	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+	// 	return nil
+	// }
 
 	argUpdate := db.UpdateUserSessionParams{
 		IsBlocked:    null.BoolFrom(true),

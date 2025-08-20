@@ -58,20 +58,17 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 			ctx.Next()
 		}
 
-		if !admin {
-			userPayload, err = tokenMaker.VerifyTokenForUser(accessToken)
-			if err != nil {
-				if err.Error() == "token has expired" {
-					err = fmt.Errorf("access token has expired")
-				}
-				ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
-				return nil
+		userPayload, err = tokenMaker.VerifyTokenForUser(accessToken)
+		if err != nil {
+			if err.Error() == "token has expired" {
+				err = fmt.Errorf("access token has expired")
 			}
-
-			ctx.Locals(authorizationUserPayloadKey, userPayload)
-			ctx.Next()
-
+			ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+			return nil
 		}
+
+		ctx.Locals(authorizationUserPayloadKey, userPayload)
+		ctx.Next()
 
 		return nil
 	}

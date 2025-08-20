@@ -2,13 +2,15 @@
 INSERT INTO "notification" (
   user_id,
   device_id,
-fcm_token
+fcm_token,
+delivery_updates
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) 
--- ON CONFLICT(user_id) DO UPDATE SET 
--- device_id = EXCLUDED.device_id,
--- fcm_token = EXCLUDED.fcm_token
+ON CONFLICT(user_id) DO UPDATE SET 
+device_id = EXCLUDED.device_id,
+fcm_token = EXCLUDED.fcm_token,
+delivery_updates = EXCLUDED.delivery_updates
 RETURNING *;
 
 -- name: GetNotification :one
@@ -26,6 +28,7 @@ LIMIT 1;
 UPDATE "notification"
 SET 
 fcm_token = COALESCE(sqlc.narg(fcm_token),fcm_token),
+delivery_updates  = COALESCE(sqlc.narg(delivery_updates),delivery_updates),
 updated_at = now()
 WHERE user_id = sqlc.arg(user_id)
 AND device_id = sqlc.arg(device_id)
