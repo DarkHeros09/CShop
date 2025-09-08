@@ -401,6 +401,21 @@ func (mr *MockStoreMockRecorder) AdminListShopOrdersV2(ctx, arg any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminListShopOrdersV2", reflect.TypeOf((*MockStore)(nil).AdminListShopOrdersV2), ctx, arg)
 }
 
+// AdminSearchUserByEmail mocks base method.
+func (m *MockStore) AdminSearchUserByEmail(ctx context.Context, email string) ([]db.AdminSearchUserByEmailRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminSearchUserByEmail", ctx, email)
+	ret0, _ := ret[0].([]db.AdminSearchUserByEmailRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminSearchUserByEmail indicates an expected call of AdminSearchUserByEmail.
+func (mr *MockStoreMockRecorder) AdminSearchUserByEmail(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminSearchUserByEmail", reflect.TypeOf((*MockStore)(nil).AdminSearchUserByEmail), ctx, email)
+}
+
 // AdminUpdateBrandPromotion mocks base method.
 func (m *MockStore) AdminUpdateBrandPromotion(ctx context.Context, arg db.AdminUpdateBrandPromotionParams) (db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
@@ -2782,6 +2797,21 @@ func (m *MockStore) ListAdmins(ctx context.Context, arg db.ListAdminsParams) ([]
 func (mr *MockStoreMockRecorder) ListAdmins(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAdmins", reflect.TypeOf((*MockStore)(nil).ListAdmins), ctx, arg)
+}
+
+// ListAllUsers mocks base method.
+func (m *MockStore) ListAllUsers(ctx context.Context, arg db.ListAllUsersParams) ([]db.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllUsers", ctx, arg)
+	ret0, _ := ret[0].([]db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllUsers indicates an expected call of ListAllUsers.
+func (mr *MockStoreMockRecorder) ListAllUsers(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllUsers", reflect.TypeOf((*MockStore)(nil).ListAllUsers), ctx, arg)
 }
 
 // ListBrandPromotions mocks base method.

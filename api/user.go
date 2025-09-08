@@ -843,6 +843,64 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 	return nil
 }
 
+//////////////* Get API For Admin //////////////
+
+func newSearchUserByEmailResponse(searchedUsers []db.AdminSearchUserByEmailRow) []userResponse {
+	rsp := make([]userResponse, len(searchedUsers))
+	for i := 0; i < len(searchedUsers); i++ {
+		rsp = append(rsp, userResponse{
+			UserID:          searchedUsers[i].ID,
+			Username:        searchedUsers[i].Username,
+			Email:           searchedUsers[i].Email,
+			IsBlocked:       searchedUsers[i].IsBlocked,
+			IsEmailVerified: searchedUsers[i].IsEmailVerified,
+			ShoppingCartID:  searchedUsers[i].ShopCartID.Int64,
+			WishListID:      searchedUsers[i].WishListID.Int64,
+		})
+	}
+	return rsp
+}
+
+type searchUserByEmailForAdminParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+}
+type searchUserByEmailForAdminQueryRequest struct {
+	Email string `query:"email" validate:"required,email"`
+}
+
+func (server *Server) searchUserByEmailForAdmin(ctx *fiber.Ctx) error {
+	params := &searchUserByEmailForAdminParamsRequest{}
+	query := &searchUserByEmailForAdminQueryRequest{}
+
+	if err := server.parseAndValidate(ctx, Input{params: params, query: query}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+		return nil
+	}
+
+	pattern := "%" + query.Email + "%"
+
+	searchedUsers, err := server.store.AdminSearchUserByEmail(ctx.Context(), pattern)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newSearchUserByEmailResponse(searchedUsers)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
+}
+
 // //////////////* List API //////////////
 
 type listUsersParamsRequest struct {

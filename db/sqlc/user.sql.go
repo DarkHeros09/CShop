@@ -12,6 +12,61 @@ import (
 	null "github.com/guregu/null/v5"
 )
 
+const adminSearchUserByEmail = `-- name: AdminSearchUserByEmail :many
+SELECT u.id, u.username, u.email, u.password, u.is_blocked, u.is_email_verified, u.default_payment, u.default_address_id, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
+LEFT JOIN wish_list AS wl ON wl.user_id = u.id
+WHERE u.email ILIKE $1
+`
+
+type AdminSearchUserByEmailRow struct {
+	ID               int64     `json:"id"`
+	Username         string    `json:"username"`
+	Email            string    `json:"email"`
+	Password         string    `json:"password"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
+	DefaultPayment   null.Int  `json:"default_payment"`
+	DefaultAddressID null.Int  `json:"default_address_id"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	ShopCartID       null.Int  `json:"shop_cart_id"`
+	WishListID       null.Int  `json:"wish_list_id"`
+}
+
+func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]AdminSearchUserByEmailRow, error) {
+	rows, err := q.db.Query(ctx, adminSearchUserByEmail, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AdminSearchUserByEmailRow{}
+	for rows.Next() {
+		var i AdminSearchUserByEmailRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Email,
+			&i.Password,
+			&i.IsBlocked,
+			&i.IsEmailVerified,
+			&i.DefaultPayment,
+			&i.DefaultAddressID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ShopCartID,
+			&i.WishListID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO "user" (
   username,
@@ -274,6 +329,49 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.WishListID,
 	)
 	return i, err
+}
+
+const listAllUsers = `-- name: ListAllUsers :many
+SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
+ORDER BY id
+LIMIT $1
+OFFSET $2
+`
+
+type ListAllUsersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, listAllUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Email,
+			&i.Password,
+			&i.IsBlocked,
+			&i.IsEmailVerified,
+			&i.DefaultPayment,
+			&i.DefaultAddressID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listUsers = `-- name: ListUsers :many
