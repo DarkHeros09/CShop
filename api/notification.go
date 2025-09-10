@@ -19,7 +19,7 @@ type createNotificationParamsRequest struct {
 type createNotificationRequest struct {
 	DeviceID        string `json:"device_id" validate:"required"`
 	FcmToken        string `json:"fcm_token" validate:"required"`
-	DeliveryUpdates bool   `json:"delivery_updates" validate:"required"`
+	DeliveryUpdates *bool  `json:"delivery_updates" validate:"required,boolean"`
 }
 
 func (server *Server) createNotification(ctx *fiber.Ctx) error {
@@ -42,7 +42,7 @@ func (server *Server) createNotification(ctx *fiber.Ctx) error {
 		UserID:          authPayload.UserID,
 		DeviceID:        null.StringFromPtr(&req.DeviceID),
 		FcmToken:        null.StringFromPtr(&req.FcmToken),
-		DeliveryUpdates: req.DeliveryUpdates,
+		DeliveryUpdates: *req.DeliveryUpdates,
 	}
 
 	notification, err := server.store.CreateNotification(ctx.Context(), arg)
