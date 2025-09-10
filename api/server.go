@@ -234,7 +234,8 @@ func (server *Server) setupRouter() {
 	adminRouter.Put("/admins/:adminId/app-policy/:id", server.updateAppPolicy)    //! Admin Only
 	adminRouter.Delete("/admins/:adminId/app-policy/:id", server.deleteAppPolicy) //! Admin Only
 
-	adminRouter.Get("/admins/:adminId/users", server.listUsers) //! Admin Only
+	adminRouter.Get("/admins/:adminId/users", server.listUsers)                                //! Admin Only
+	adminRouter.Get("/admins/:adminId/search-user-by-email", server.searchUserByEmailForAdmin) //! Admin Only
 	userRouter.Put("/users/:id", server.updateUser)
 	userRouter.Put("/users/:id/change-password", server.changePassword)
 	adminRouter.Delete("/admins/:adminId/users/:id", server.deleteUser) //! Admin Only

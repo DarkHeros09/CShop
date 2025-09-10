@@ -52,7 +52,19 @@ LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
 LEFT JOIN wish_list AS wl ON wl.user_id = u.id
 WHERE email = $1;
 
+-- name: AdminSearchUserByEmail :many
+SELECT u.*, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
+LEFT JOIN wish_list AS wl ON wl.user_id = u.id
+WHERE u.email ILIKE $1;
+
 -- name: ListUsers :many
+SELECT * FROM "user"
+ORDER BY id
+LIMIT $1
+OFFSET $2;
+
+-- name: ListAllUsers :many
 SELECT * FROM "user"
 ORDER BY id
 LIMIT $1

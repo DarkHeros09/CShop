@@ -120,6 +120,15 @@ func TestGetUserByEmail(t *testing.T) {
 	require.WithinDuration(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
 
+func TestAdminSearchUserByEmail(t *testing.T) {
+	t.Parallel()
+	user1 := createRandomUser(t)
+	user2, err := testStore.AdminSearchUserByEmail(context.Background(), user1.Email)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+}
+
 func TestUpdateUserPassword(t *testing.T) {
 	t.Parallel()
 	hashedPassword, err := util.HashPassword(util.RandomString(6))

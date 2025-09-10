@@ -2109,6 +2109,129 @@ func TestListUsersAPI(t *testing.T) {
 	}
 }
 
+func TestAdminSearchUserByEmailAPI(t *testing.T) {
+	searchedUsers := make([]db.AdminSearchUserByEmailRow, 1)
+	user, _ := randomSearchedUser(t)
+	searchedUsers = append(searchedUsers, user)
+	users := newSearchUserByEmailResponse(searchedUsers)
+	admin, _ := randomSuperAdmin(t)
+
+	testCases := []struct {
+		name          string
+		AdminID       int64
+		email         string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, rsp *http.Response)
+	}{
+		{
+			name:    "OK",
+			AdminID: admin.ID,
+			email:   user.Email,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				pattern := "%" + user.Email + "%"
+				store.EXPECT().
+					AdminSearchUserByEmail(gomock.Any(), gomock.Eq(pattern)).
+					Times(1).
+					Return(searchedUsers, nil)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+				requireBodyMatchSearchedUser(t, rsp.Body, users)
+			},
+		},
+		{
+			name:    "Unauthorized",
+			AdminID: admin.ID,
+			email:   user.Email,
+
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, false, time.Minute)
+
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminSearchUserByEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusForbidden, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "No authorization",
+			AdminID: admin.ID,
+			email:   user.Email,
+
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminSearchUserByEmail(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			email:   user.Email,
+
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminSearchUserByEmail(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.AdminSearchUserByEmailRow{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			// //recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/search-user-by-email", tc.AdminID)
+			request, err := http.NewRequest(fiber.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			// Add query parameters to request URL
+			q := request.URL.Query()
+			q.Add("email", tc.email)
+			request.URL.RawQuery = q.Encode()
+
+			request.Header.Set("Content-Type", "application/json")
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+			rsp, err := server.router.Test(request, -1)
+			require.NoError(t, err)
+
+			tc.checkResponse(t, rsp)
+		})
+	}
+}
+
 func TestDeleteUserAPI(t *testing.T) {
 	user, _ := randomUser(t)
 	admin, _ := randomSuperAdmin(t)
@@ -2254,6 +2377,26 @@ func randomUser(t *testing.T) (user db.User, password string) {
 		IsBlocked:      false,
 		Email:          util.RandomEmail(),
 		DefaultPayment: null.IntFrom(util.RandomMoney()),
+	}
+	return
+}
+
+func randomSearchedUser(t *testing.T) (user db.AdminSearchUserByEmailRow, password string) {
+	password = util.RandomString(6)
+	hashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.AdminSearchUserByEmailRow{
+		ID:       util.RandomMoney(),
+		Username: util.RandomUser(),
+		Password: hashedPassword,
+		// Telephone:      int32(util.RandomInt(910000000, 929999999)),
+		IsBlocked:       util.RandomBool(),
+		Email:           util.RandomEmail(),
+		DefaultPayment:  null.IntFrom(util.RandomMoney()),
+		IsEmailVerified: util.RandomBool(),
+		ShopCartID:      null.IntFrom(util.RandomMoney()),
+		WishListID:      null.IntFrom(util.RandomMoney()),
 	}
 	return
 }
@@ -2525,4 +2668,17 @@ func requireBodyMatchUsers(t *testing.T, body io.ReadCloser, users []db.User) {
 	err = json.Unmarshal(data, &gotUsers)
 	require.NoError(t, err)
 	require.Equal(t, users, gotUsers)
+}
+
+func requireBodyMatchSearchedUser(t *testing.T, body io.ReadCloser, users []userResponse) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotUsers []userResponse
+	err = json.Unmarshal(data, &gotUsers)
+	require.NoError(t, err)
+	require.Equal(t, users, gotUsers)
+	// for i, user := range users {
+	// 	require.Equal(t, user, gotUsers[i])
+	// }
 }

@@ -26,7 +26,6 @@ import (
 func TestCreateNotificationAPI(t *testing.T) {
 	user, _ := randomNotificationUser(t)
 	notification := createRandomNotification(user)
-
 	testCases := []struct {
 		name          string
 		body          fiber.Map
@@ -716,13 +715,12 @@ func randomNotificationUser(t *testing.T) (user db.User, password string) {
 }
 
 func createRandomNotification(user db.User) (Notification db.Notification) {
-	Notification = db.Notification{
+	return db.Notification{
 		UserID:          user.ID,
 		DeviceID:        null.StringFrom(util.RandomString(10)),
 		FcmToken:        null.StringFrom(util.RandomString(10)),
 		DeliveryUpdates: util.RandomBool(),
 	}
-	return
 }
 
 func requireBodyMatchNotification(t *testing.T, body io.ReadCloser, notification db.Notification) {
