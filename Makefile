@@ -1,6 +1,6 @@
 DB_HOST ?= localhost
 DB_PORT ?= 6666
-DB_VERSION ?= 17
+DB_VERSION ?= 18
 ENVFILE ?=./.env.test
 
 DB_URL=postgresql://postgres:secret@$(DB_HOST):$(DB_PORT)/cshop?sslmode=disable
