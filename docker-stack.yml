@@ -4,7 +4,9 @@
 volumes:
   # step-ca-data:
   #   external: true
-  nginx-data:
+  # nginx-data:
+  #   external: true
+  haproxy-data:
     external: true
   migration-data:
     external: true
@@ -114,21 +116,41 @@ services:
   #   volumes:
   #     - step-ca-data:/home/step
 
-  nginx:
-    image: nginxinc/nginx-unprivileged
-    ports:
-    - target: 443
-      published: 8443
-      protocol: tcp
-      mode: host
-    volumes:
-      - nginx-data:/etc/nginx
-    depends_on:
-      - go-server
-      # - step-ca
-    deploy:
-      update_config:
-        order: start-first
+  # nginx:
+  #   image: nginxinc/nginx-unprivileged
+  #   ports:
+  #   - target: 443
+  #     published: 8443
+  #     protocol: tcp
+  #     mode: host
+  #   volumes:
+  #     - nginx-data:/etc/nginx
+  #   depends_on:
+  #     - go-server
+  #     # - step-ca
+  #   deploy:
+  #     update_config:
+  #       order: start-first
+
+  haproxy:
+      # Use the official, lightweight HAProxy image
+      image: haproxy:lts-alpine
+      ports:
+      - target: 443
+        published: 8443
+        protocol: tcp
+        mode: host
+      volumes:
+        - haproxy-data:/usr/local/etc/haproxy
+      depends_on:
+        - go-server
+      deploy:
+        # This reserves 2 CPU cores for the container's use
+        resources:
+          reservations:
+            cpus: '2.0'
+        update_config:
+          order: start-first
 
 secrets:
   DB_DRIVER:
