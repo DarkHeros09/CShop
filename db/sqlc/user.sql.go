@@ -13,25 +13,22 @@ import (
 )
 
 const adminSearchUserByEmail = `-- name: AdminSearchUserByEmail :many
-SELECT u.id, u.username, u.email, u.password, u.is_blocked, u.is_email_verified, u.default_payment, u.default_address_id, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+SELECT u.id, u.username, u.email, u.is_blocked, u.is_email_verified, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
 LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
 LEFT JOIN wish_list AS wl ON wl.user_id = u.id
 WHERE u.email ILIKE $1
+OR u.username ILIKE $1
+ORDER BY u.id
 `
 
 type AdminSearchUserByEmailRow struct {
-	ID               int64     `json:"id"`
-	Username         string    `json:"username"`
-	Email            string    `json:"email"`
-	Password         string    `json:"password"`
-	IsBlocked        bool      `json:"is_blocked"`
-	IsEmailVerified  bool      `json:"is_email_verified"`
-	DefaultPayment   null.Int  `json:"default_payment"`
-	DefaultAddressID null.Int  `json:"default_address_id"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	ShopCartID       null.Int  `json:"shop_cart_id"`
-	WishListID       null.Int  `json:"wish_list_id"`
+	ID              int64    `json:"id"`
+	Username        string   `json:"username"`
+	Email           string   `json:"email"`
+	IsBlocked       bool     `json:"is_blocked"`
+	IsEmailVerified bool     `json:"is_email_verified"`
+	ShopCartID      null.Int `json:"shop_cart_id"`
+	WishListID      null.Int `json:"wish_list_id"`
 }
 
 func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]AdminSearchUserByEmailRow, error) {
@@ -47,13 +44,8 @@ func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]A
 			&i.ID,
 			&i.Username,
 			&i.Email,
-			&i.Password,
 			&i.IsBlocked,
 			&i.IsEmailVerified,
-			&i.DefaultPayment,
-			&i.DefaultAddressID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.ShopCartID,
 			&i.WishListID,
 		); err != nil {
@@ -65,6 +57,38 @@ func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]A
 		return nil, err
 	}
 	return items, nil
+}
+
+const adminUpdateUser = `-- name: AdminUpdateUser :one
+UPDATE "user"
+SET 
+is_blocked = COALESCE($1,is_blocked),
+updated_at = NOW()
+WHERE id = $2
+RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+`
+
+type AdminUpdateUserParams struct {
+	IsBlocked null.Bool `json:"is_blocked"`
+	ID        int64     `json:"id"`
+}
+
+func (q *Queries) AdminUpdateUser(ctx context.Context, arg AdminUpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, adminUpdateUser, arg.IsBlocked, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
+		&i.DefaultPayment,
+		&i.DefaultAddressID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const createUser = `-- name: CreateUser :one

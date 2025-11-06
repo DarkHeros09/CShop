@@ -237,6 +237,7 @@ func (server *Server) setupRouter() {
 	adminRouter.Get("/admins/:adminId/users", server.listUsers)                                //! Admin Only
 	adminRouter.Get("/admins/:adminId/search-user-by-email", server.searchUserByEmailForAdmin) //! Admin Only
 	userRouter.Put("/users/:id", server.updateUser)
+	adminRouter.Put("/admins/:adminId/users/:id", server.adminUpdateUser) //! Admin Only
 	userRouter.Put("/users/:id/change-password", server.changePassword)
 	adminRouter.Delete("/admins/:adminId/users/:id", server.deleteUser) //! Admin Only
 	userRouter.Delete("/users/:id/logout", server.logoutUser)

@@ -33,8 +33,13 @@ LEFT JOIN "user" AS usr ON usr.id = so.user_id
 WHERE so.id < $3
 AND (SELECT is_admin FROM t1) = 1
 AND CASE
-WHEN COALESCE($4, '') != ''
-THEN os.status = $4
+WHEN $4::bigint IS NOT NULL
+THEN usr.id = $4
+    ELSE 1=1
+END
+AND CASE
+WHEN COALESCE($5::VARCHAR, '') != ''
+THEN os.status = $5
     ELSE 1=1
 END
 ORDER BY so.id DESC
@@ -48,7 +53,8 @@ type AdminListShopOrdersNextPageParams struct {
 	Limit       int32       `json:"limit"`
 	AdminID     int64       `json:"admin_id"`
 	ShopOrderID int64       `json:"shop_order_id"`
-	OrderStatus interface{} `json:"order_status"`
+	UserID      null.Int    `json:"user_id"`
+	OrderStatus null.String `json:"order_status"`
 }
 
 type AdminListShopOrdersNextPageRow struct {
@@ -81,6 +87,7 @@ func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminList
 		arg.Limit,
 		arg.AdminID,
 		arg.ShopOrderID,
+		arg.UserID,
 		arg.OrderStatus,
 	)
 	if err != nil {
@@ -143,8 +150,13 @@ LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 LEFT JOIN "user" AS usr ON usr.id = so.user_id
 WHERE (SELECT is_admin FROM t1) = 1
 AND CASE
-WHEN COALESCE($3, '') != ''
-THEN os.status = $3
+WHEN $3::bigint IS NOT NULL
+THEN usr.id = $3
+    ELSE 1=1
+END
+AND CASE
+WHEN COALESCE($4::VARCHAR, '') != ''
+THEN os.status = $4
     ELSE 1=1
 END
 ORDER BY so.id DESC
@@ -158,7 +170,8 @@ LIMIT $1
 type AdminListShopOrdersV2Params struct {
 	Limit       int32       `json:"limit"`
 	AdminID     int64       `json:"admin_id"`
-	OrderStatus interface{} `json:"order_status"`
+	UserID      null.Int    `json:"user_id"`
+	OrderStatus null.String `json:"order_status"`
 }
 
 type AdminListShopOrdersV2Row struct {
@@ -187,7 +200,12 @@ type AdminListShopOrdersV2Row struct {
 }
 
 func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error) {
-	rows, err := q.db.Query(ctx, adminListShopOrdersV2, arg.Limit, arg.AdminID, arg.OrderStatus)
+	rows, err := q.db.Query(ctx, adminListShopOrdersV2,
+		arg.Limit,
+		arg.AdminID,
+		arg.UserID,
+		arg.OrderStatus,
+	)
 	if err != nil {
 		return nil, err
 	}

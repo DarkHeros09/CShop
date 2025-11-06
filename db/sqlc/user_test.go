@@ -196,6 +196,29 @@ func TestUpdateUser(t *testing.T) {
 	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
 }
 
+func TestAdminUpdateUser(t *testing.T) {
+	t.Parallel()
+	user1 := createRandomUser(t)
+
+	arg := AdminUpdateUserParams{
+		ID:        user1.ID,
+		IsBlocked: null.BoolFrom(!user1.IsBlocked),
+	}
+
+	user2, err := testStore.AdminUpdateUser(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+
+	require.Equal(t, user1.ID, user2.ID)
+	require.Equal(t, user1.Username, user2.Username)
+	require.Equal(t, user1.Email, user2.Email)
+	require.Equal(t, user1.Password, user2.Password)
+	require.NotEqual(t, user1.IsBlocked, user2.IsBlocked)
+	require.Equal(t, user1.CreatedAt, user2.CreatedAt, time.Second)
+	require.NotEqual(t, user1.UpdatedAt, user2.UpdatedAt, time.Second)
+}
+
 func TestDeleteUser(t *testing.T) {
 	user1 := createRandomUser(t)
 

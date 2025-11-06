@@ -308,6 +308,7 @@ type adminListShopOrdersV2ParamsRequest struct {
 type adminListShopOrdersV2QueryRequest struct {
 	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+	UserID      null.Int64  `query:"user_id" validate:"omitempty,required"`
 }
 
 func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
@@ -330,6 +331,7 @@ func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
 		AdminID:     authPayload.AdminID,
 		Limit:       query.Limit,
 		OrderStatus: query.OrderStatus,
+		UserID:      query.UserID,
 	}
 	shopOrders, err := server.store.AdminListShopOrdersV2(ctx.Context(), arg)
 	if err != nil {
