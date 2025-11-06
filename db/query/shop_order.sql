@@ -172,7 +172,12 @@ LEFT JOIN "order_status" AS os ON os.id = so.order_status_id
 LEFT JOIN "user" AS usr ON usr.id = so.user_id
 WHERE (SELECT is_admin FROM t1) = 1
 AND CASE
-WHEN COALESCE(sqlc.narg(order_status), '') != ''
+WHEN sqlc.narg(user_id)::bigint IS NOT NULL
+THEN usr.id = sqlc.narg(user_id)
+    ELSE 1=1
+END
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status)::VARCHAR, '') != ''
 THEN os.status = sqlc.narg(order_status)
     ELSE 1=1
 END
@@ -204,7 +209,12 @@ LEFT JOIN "user" AS usr ON usr.id = so.user_id
 WHERE so.id < sqlc.arg(shop_order_id)
 AND (SELECT is_admin FROM t1) = 1
 AND CASE
-WHEN COALESCE(sqlc.narg(order_status), '') != ''
+WHEN sqlc.narg(user_id)::bigint IS NOT NULL
+THEN usr.id = sqlc.narg(user_id)
+    ELSE 1=1
+END
+AND CASE
+WHEN COALESCE(sqlc.narg(order_status)::VARCHAR, '') != ''
 THEN os.status = sqlc.narg(order_status)
     ELSE 1=1
 END

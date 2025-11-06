@@ -1929,6 +1929,140 @@ func TestUpdateUserAPI(t *testing.T) {
 	}
 }
 
+func TestAdminUpdateUserAPI(t *testing.T) {
+	user, _ := randomUser(t)
+	admin, _ := randomSuperAdmin(t)
+
+	testCases := []struct {
+		name          string
+		AdminID       int64
+		UserID        int64
+		body          fiber.Map
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, rsp *http.Response)
+	}{
+		{
+			name:    "OK",
+			AdminID: admin.ID,
+			UserID:  user.ID,
+			body: fiber.Map{
+				"is_blocked": !user.IsBlocked,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateUserParams{
+					ID: user.ID,
+					// // Telephone:      null.IntFrom(int64(user.Telephone)),
+					IsBlocked: null.BoolFrom(!user.IsBlocked),
+				}
+
+				store.EXPECT().
+					AdminUpdateUser(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(user, nil)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusOK, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "NoAuthorization",
+			AdminID: admin.ID,
+			UserID:  user.ID,
+			body: fiber.Map{
+				"is_blocked": !user.IsBlocked,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminUpdateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InternalError",
+			AdminID: admin.ID,
+			UserID:  user.ID,
+			body: fiber.Map{
+				"is_blocked": !user.IsBlocked,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.AdminUpdateUserParams{
+					ID: user.ID,
+					// // Telephone:      null.IntFrom(int64(user.Telephone)),
+					IsBlocked: null.BoolFrom(!user.IsBlocked),
+				}
+				store.EXPECT().
+					AdminUpdateUser(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(db.User{}, pgx.ErrTxClosed)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+			},
+		},
+		{
+			name:    "InvalidID",
+			AdminID: 0,
+			UserID:  0,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorizationForAdmin(t, request, tokenMaker, authorizationTypeBearer, admin.ID, admin.Username, admin.TypeID, admin.Active, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					AdminUpdateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, rsp *http.Response) {
+				require.Equal(t, http.StatusBadRequest, rsp.StatusCode)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+			worker := mockwk.NewMockTaskDistributor(ctrl)
+			ik := mockik.NewMockImageKitManagement(ctrl)
+			mailSender := mockemail.NewMockEmailSender(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, worker, ik, mailSender)
+			// //recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/admin/v1/admins/%d/users/%d", tc.AdminID, tc.UserID)
+			request, err := http.NewRequest(fiber.MethodPut, url, bytes.NewReader(data))
+			require.NoError(t, err)
+			request.Header.Set("Content-Type", "application/json")
+
+			tc.setupAuth(t, request, server.adminTokenMaker)
+
+			rsp, err := server.router.Test(request, -1)
+			require.NoError(t, err)
+
+			tc.checkResponse(t, rsp)
+		})
+	}
+}
+
 func TestListUsersAPI(t *testing.T) {
 	n := 5
 	users := make([]db.User, n)
@@ -2383,17 +2517,17 @@ func randomUser(t *testing.T) (user db.User, password string) {
 
 func randomSearchedUser(t *testing.T) (user db.AdminSearchUserByEmailRow, password string) {
 	password = util.RandomString(6)
-	hashedPassword, err := util.HashPassword(password)
-	require.NoError(t, err)
+	// hashedPassword, err := util.HashPassword(password)
+	// require.NoError(t, err)
 
 	user = db.AdminSearchUserByEmailRow{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
-		Password: hashedPassword,
+		// Password: hashedPassword,
 		// Telephone:      int32(util.RandomInt(910000000, 929999999)),
-		IsBlocked:       util.RandomBool(),
-		Email:           util.RandomEmail(),
-		DefaultPayment:  null.IntFrom(util.RandomMoney()),
+		IsBlocked: util.RandomBool(),
+		Email:     util.RandomEmail(),
+		// DefaultPayment:  null.IntFrom(util.RandomMoney()),
 		IsEmailVerified: util.RandomBool(),
 		ShopCartID:      null.IntFrom(util.RandomMoney()),
 		WishListID:      null.IntFrom(util.RandomMoney()),

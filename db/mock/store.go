@@ -596,6 +596,21 @@ func (mr *MockStoreMockRecorder) AdminUpdateShippingMethod(ctx, arg any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateShippingMethod", reflect.TypeOf((*MockStore)(nil).AdminUpdateShippingMethod), ctx, arg)
 }
 
+// AdminUpdateUser mocks base method.
+func (m *MockStore) AdminUpdateUser(ctx context.Context, arg db.AdminUpdateUserParams) (db.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminUpdateUser", ctx, arg)
+	ret0, _ := ret[0].(db.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminUpdateUser indicates an expected call of AdminUpdateUser.
+func (mr *MockStoreMockRecorder) AdminUpdateUser(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminUpdateUser", reflect.TypeOf((*MockStore)(nil).AdminUpdateUser), ctx, arg)
+}
+
 // CreateAddress mocks base method.
 func (m *MockStore) CreateAddress(ctx context.Context, arg db.CreateAddressParams) (db.Address, error) {
 	m.ctrl.T.Helper()

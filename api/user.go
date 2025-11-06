@@ -848,7 +848,7 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 func newSearchUserByEmailResponse(searchedUsers []db.AdminSearchUserByEmailRow) []userResponse {
 	rsp := make([]userResponse, len(searchedUsers))
 	for i := 0; i < len(searchedUsers); i++ {
-		rsp = append(rsp, userResponse{
+		rsp[i] = userResponse{
 			UserID:          searchedUsers[i].ID,
 			Username:        searchedUsers[i].Username,
 			Email:           searchedUsers[i].Email,
@@ -856,7 +856,7 @@ func newSearchUserByEmailResponse(searchedUsers []db.AdminSearchUserByEmailRow) 
 			IsEmailVerified: searchedUsers[i].IsEmailVerified,
 			ShoppingCartID:  searchedUsers[i].ShopCartID.Int64,
 			WishListID:      searchedUsers[i].WishListID.Int64,
-		})
+		}
 	}
 	return rsp
 }
@@ -865,7 +865,7 @@ type searchUserByEmailForAdminParamsRequest struct {
 	AdminID int64 `params:"adminId" validate:"required,min=1"`
 }
 type searchUserByEmailForAdminQueryRequest struct {
-	Email string `query:"email" validate:"required,email"`
+	Email string `query:"email" validate:"required"`
 }
 
 func (server *Server) searchUserByEmailForAdmin(ctx *fiber.Ctx) error {
@@ -980,6 +980,56 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 	}
 
 	user, err := server.store.UpdateUser(ctx.Context(), arg)
+	if err != nil {
+		if pqErr, ok := err.(*pgconn.PgError); ok {
+			switch pqErr.Message {
+			case "foreign_key_violation", "unique_violation":
+				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
+				return nil
+			}
+		}
+		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	rsp := newUserResponse(user)
+	ctx.Status(fiber.StatusOK).JSON(rsp)
+	return nil
+}
+
+// //////////////* Admin Update User API //////////////
+
+type adminUpdateUserParamsRequest struct {
+	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	UserID  int64 `params:"id" validate:"required,min=1"`
+}
+type adminUpdateUserJsonRequest struct {
+	IsBlocked *bool `json:"is_blocked" validate:"omitempty,required,boolean"`
+}
+
+func (server *Server) adminUpdateUser(ctx *fiber.Ctx) error {
+	params := &adminUpdateUserParamsRequest{}
+	req := &adminUpdateUserJsonRequest{}
+
+	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
+		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
+		return nil
+	}
+
+	authPayload := ctx.Locals(authorizationAdminPayloadKey).(*token.AdminPayload)
+	if authPayload.AdminID != params.AdminID || authPayload.TypeID != 1 || !authPayload.Active {
+		err := errors.New("account unauthorized")
+		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
+		return nil
+	}
+
+	arg := db.AdminUpdateUserParams{
+		ID: params.UserID,
+		// Telephone:      null.IntFromPtr(req.Telephone),
+		IsBlocked: null.BoolFromPtr(req.IsBlocked),
+	}
+
+	user, err := server.store.AdminUpdateUser(ctx.Context(), arg)
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {

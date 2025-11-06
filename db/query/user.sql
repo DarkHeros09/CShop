@@ -53,10 +53,12 @@ LEFT JOIN wish_list AS wl ON wl.user_id = u.id
 WHERE email = $1;
 
 -- name: AdminSearchUserByEmail :many
-SELECT u.*, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+SELECT u.id, u.username, u.email, u.is_blocked, u.is_email_verified, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
 LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
 LEFT JOIN wish_list AS wl ON wl.user_id = u.id
-WHERE u.email ILIKE $1;
+WHERE u.email ILIKE $1
+OR u.username ILIKE $1
+ORDER BY u.id;
 
 -- name: ListUsers :many
 SELECT * FROM "user"
@@ -130,3 +132,11 @@ SELECT 1 AS is_admin
     )
 SELECT COUNT(id) FROM "user"
 WHERE EXISTS(SELECT is_admin FROM t1);
+
+-- name: AdminUpdateUser :one
+UPDATE "user"
+SET 
+is_blocked = COALESCE(sqlc.narg(is_blocked),is_blocked),
+updated_at = NOW()
+WHERE id = sqlc.arg(id)
+RETURNING *;
