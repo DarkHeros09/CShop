@@ -40,7 +40,7 @@ type AdminCreateFeaturedProductItemParams struct {
 	AdminID       int64     `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateFeaturedProductItem(ctx context.Context, arg AdminCreateFeaturedProductItemParams) (FeaturedProductItem, error) {
+func (q *Queries) AdminCreateFeaturedProductItem(ctx context.Context, arg AdminCreateFeaturedProductItemParams) (*FeaturedProductItem, error) {
 	row := q.db.QueryRow(ctx, adminCreateFeaturedProductItem,
 		arg.ProductItemID,
 		arg.Active,
@@ -58,7 +58,7 @@ func (q *Queries) AdminCreateFeaturedProductItem(ctx context.Context, arg AdminC
 		&i.EndDate,
 		&i.Priority,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminListFeaturedProductItems = `-- name: AdminListFeaturedProductItems :many
@@ -97,13 +97,13 @@ type AdminListFeaturedProductItemsRow struct {
 	Description   null.String `json:"description"`
 }
 
-func (q *Queries) AdminListFeaturedProductItems(ctx context.Context, adminID int64) ([]AdminListFeaturedProductItemsRow, error) {
+func (q *Queries) AdminListFeaturedProductItems(ctx context.Context, adminID int64) ([]*AdminListFeaturedProductItemsRow, error) {
 	rows, err := q.db.Query(ctx, adminListFeaturedProductItems, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListFeaturedProductItemsRow{}
+	items := []*AdminListFeaturedProductItemsRow{}
 	for rows.Next() {
 		var i AdminListFeaturedProductItemsRow
 		if err := rows.Scan(
@@ -127,7 +127,7 @@ func (q *Queries) AdminListFeaturedProductItems(ctx context.Context, adminID int
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -162,7 +162,7 @@ type AdminUpdateFeaturedProductItemParams struct {
 	AdminID       int64     `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminUpdateFeaturedProductItemParams) (FeaturedProductItem, error) {
+func (q *Queries) AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminUpdateFeaturedProductItemParams) (*FeaturedProductItem, error) {
 	row := q.db.QueryRow(ctx, adminUpdateFeaturedProductItem,
 		arg.Active,
 		arg.StartDate,
@@ -180,7 +180,7 @@ func (q *Queries) AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminU
 		&i.EndDate,
 		&i.Priority,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteFeaturedProductItem = `-- name: DeleteFeaturedProductItem :exec
@@ -212,7 +212,7 @@ WHERE product_item_id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetFeaturedProductItem(ctx context.Context, productItemID int64) (FeaturedProductItem, error) {
+func (q *Queries) GetFeaturedProductItem(ctx context.Context, productItemID int64) (*FeaturedProductItem, error) {
 	row := q.db.QueryRow(ctx, getFeaturedProductItem, productItemID)
 	var i FeaturedProductItem
 	err := row.Scan(
@@ -223,7 +223,7 @@ func (q *Queries) GetFeaturedProductItem(ctx context.Context, productItemID int6
 		&i.EndDate,
 		&i.Priority,
 	)
-	return i, err
+	return &i, err
 }
 
 const listFeaturedProductItems = `-- name: ListFeaturedProductItems :many
@@ -238,13 +238,13 @@ type ListFeaturedProductItemsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListFeaturedProductItems(ctx context.Context, arg ListFeaturedProductItemsParams) ([]FeaturedProductItem, error) {
+func (q *Queries) ListFeaturedProductItems(ctx context.Context, arg ListFeaturedProductItemsParams) ([]*FeaturedProductItem, error) {
 	rows, err := q.db.Query(ctx, listFeaturedProductItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []FeaturedProductItem{}
+	items := []*FeaturedProductItem{}
 	for rows.Next() {
 		var i FeaturedProductItem
 		if err := rows.Scan(
@@ -257,7 +257,7 @@ func (q *Queries) ListFeaturedProductItems(ctx context.Context, arg ListFeatured
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

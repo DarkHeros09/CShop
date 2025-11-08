@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -89,7 +90,7 @@ func TestCreateOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					CreateOrderStatus(gomock.Any(), gomock.Eq(orderStatus.Status)).
 					Times(1).
-					Return(db.OrderStatus{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -212,7 +213,7 @@ func TestGetOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					GetOrderStatus(gomock.Any(), gomock.Eq(orderStatus.ID)).
 					Times(1).
-					Return(db.OrderStatus{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -233,7 +234,7 @@ func TestGetOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					GetOrderStatus(gomock.Any(), gomock.Eq(orderStatus.ID)).
 					Times(1).
-					Return(db.OrderStatus{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -293,13 +294,12 @@ func TestGetOrderStatusAPI(t *testing.T) {
 
 func TestListOrderStatusAPI(t *testing.T) {
 	n := 5
-	orderStatuses := make([]db.ListOrderStatusesByUserIDRow, n)
+	orderStatuses := make([]*db.ListOrderStatusesByUserIDRow, n)
 	user, _ := randomOSUser(t)
-	orderStatus1 := createRandomOrderStatusForList(user)
-	orderStatus2 := createRandomOrderStatusForList(user)
-	orderStatus3 := createRandomOrderStatusForList(user)
 
-	orderStatuses = append(orderStatuses, orderStatus1, orderStatus2, orderStatus3)
+	for i := 0; i < len(orderStatuses); i++ {
+		orderStatuses[i] = createRandomOrderStatusForList(user)
+	}
 
 	type Query struct {
 		pageID   int
@@ -355,7 +355,7 @@ func TestListOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					ListOrderStatusesByUserID(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListOrderStatusesByUserIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -422,8 +422,8 @@ func TestListOrderStatusAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -438,13 +438,11 @@ func TestListOrderStatusAPI(t *testing.T) {
 
 func TestAdminListOrderStatusAPI(t *testing.T) {
 	n := 3
-	orderStatuses := make([]db.OrderStatus, n)
+	orderStatuses := make([]*db.OrderStatus, n)
 	admin, _ := randomOrderStatusSuperAdmin(t)
-	orderStatus1 := createRandomOrderStatus()
-	orderStatus2 := createRandomOrderStatus()
-	orderStatus3 := createRandomOrderStatus()
-
-	orderStatuses = append(orderStatuses, orderStatus1, orderStatus2, orderStatus3)
+	for i := 0; i < len(orderStatuses); i++ {
+		orderStatuses[i] = createRandomOrderStatus()
+	}
 
 	testCases := []struct {
 		name          string
@@ -480,7 +478,7 @@ func TestAdminListOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					AdminListOrderStatuses(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.OrderStatus{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -608,7 +606,7 @@ func TestUpdateOrderStatusAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateOrderStatus(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.OrderStatus{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -794,12 +792,12 @@ func TestDeleteOrderStatusAPI(t *testing.T) {
 
 }
 
-func randomOSUser(t *testing.T) (user db.User, password string) {
+func randomOSUser(t *testing.T) (user *db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.User{
+	user = &db.User{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -809,12 +807,12 @@ func randomOSUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func randomOrderStatusSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomOrderStatusSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -825,16 +823,16 @@ func randomOrderStatusSuperAdmin(t *testing.T) (admin db.Admin, password string)
 	return
 }
 
-func createRandomOrderStatusForStatus() (orderStatus db.OrderStatus) {
-	orderStatus = db.OrderStatus{
+func createRandomOrderStatusForStatus() (orderStatus *db.OrderStatus) {
+	orderStatus = &db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
 	}
 	return
 }
 
-func createRandomOrderStatusForGet() (orderStatus db.OrderStatus) {
-	orderStatus = db.OrderStatus{
+func createRandomOrderStatusForGet() (orderStatus *db.OrderStatus) {
+	orderStatus = &db.OrderStatus{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
 		// UserID: null.IntFrom(user.ID),
@@ -842,8 +840,8 @@ func createRandomOrderStatusForGet() (orderStatus db.OrderStatus) {
 	return
 }
 
-func createRandomOrderStatusForList(user db.User) (orderStatus db.ListOrderStatusesByUserIDRow) {
-	orderStatus = db.ListOrderStatusesByUserIDRow{
+func createRandomOrderStatusForList(user *db.User) (orderStatus *db.ListOrderStatusesByUserIDRow) {
+	orderStatus = &db.ListOrderStatusesByUserIDRow{
 		ID:     util.RandomMoney(),
 		Status: util.RandomUser(),
 		UserID: null.IntFrom(user.ID),
@@ -851,11 +849,11 @@ func createRandomOrderStatusForList(user db.User) (orderStatus db.ListOrderStatu
 	return
 }
 
-func requireBodyMatchOrderStatus(t *testing.T, body io.ReadCloser, orderStatus db.OrderStatus) {
+func requireBodyMatchOrderStatus(t *testing.T, body io.ReadCloser, orderStatus *db.OrderStatus) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotOrderStatus db.OrderStatus
+	var gotOrderStatus *db.OrderStatus
 	err = json.Unmarshal(data, &gotOrderStatus)
 
 	require.NoError(t, err)
@@ -863,11 +861,11 @@ func requireBodyMatchOrderStatus(t *testing.T, body io.ReadCloser, orderStatus d
 	require.Equal(t, orderStatus.Status, gotOrderStatus.Status)
 }
 
-func requireBodyMatchOrderStatusForGet(t *testing.T, body io.ReadCloser, orderStatus db.OrderStatus) {
+func requireBodyMatchOrderStatusForGet(t *testing.T, body io.ReadCloser, orderStatus *db.OrderStatus) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotOrderStatus db.OrderStatus
+	var gotOrderStatus *db.OrderStatus
 	err = json.Unmarshal(data, &gotOrderStatus)
 
 	require.NoError(t, err)
@@ -876,11 +874,11 @@ func requireBodyMatchOrderStatusForGet(t *testing.T, body io.ReadCloser, orderSt
 	// require.Equal(t, orderStatus.UserID.Int64, gotOrderStatus.UserID.Int64)
 }
 
-func requireBodyMatchOrderStatuses(t *testing.T, body io.ReadCloser, orderStatuses []db.ListOrderStatusesByUserIDRow) {
+func requireBodyMatchOrderStatuses(t *testing.T, body io.ReadCloser, orderStatuses []*db.ListOrderStatusesByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotOrderStatuses []db.ListOrderStatusesByUserIDRow
+	var gotOrderStatuses []*db.ListOrderStatusesByUserIDRow
 	err = json.Unmarshal(data, &gotOrderStatuses)
 	require.NoError(t, err)
 	for i := range gotOrderStatuses {
@@ -890,11 +888,11 @@ func requireBodyMatchOrderStatuses(t *testing.T, body io.ReadCloser, orderStatus
 	}
 }
 
-func requireBodyMatchOrderStatusesForAdmin(t *testing.T, body io.ReadCloser, orderStatuses []db.OrderStatus) {
+func requireBodyMatchOrderStatusesForAdmin(t *testing.T, body io.ReadCloser, orderStatuses []*db.OrderStatus) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotOrderStatuses []db.OrderStatus
+	var gotOrderStatuses []*db.OrderStatus
 	err = json.Unmarshal(data, &gotOrderStatuses)
 	require.NoError(t, err)
 	for i := range gotOrderStatuses {

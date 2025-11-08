@@ -12,7 +12,7 @@ import (
 func createRandomProductBrand(t *testing.T) ProductBrand {
 	t.Helper()
 	// arg := util.RandomString(5)
-	var productBrand ProductBrand
+	var productBrand *ProductBrand
 	var err error
 	productBrands := []string{"mango", "ted_baker", "zara", "shein", "LC"}
 	brandsLogo := []string{
@@ -36,7 +36,7 @@ func createRandomProductBrand(t *testing.T) ProductBrand {
 		require.Equal(t, productBrands[randomInt], productBrand.BrandName)
 
 	}
-	return productBrand
+	return *productBrand
 }
 
 func createRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
@@ -68,7 +68,7 @@ func createRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
 	require.Equal(t, brandName, productBrand.BrandName)
 	require.NotEmpty(t, productBrand.ID)
 
-	return productBrand
+	return *productBrand
 }
 
 func adminCreateRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
@@ -102,7 +102,7 @@ func adminCreateRandomProductBrandForUpdateOrDelete(t *testing.T) ProductBrand {
 	require.Equal(t, brandName, productBrand.BrandName)
 	require.NotEmpty(t, productBrand.ID)
 
-	return productBrand
+	return *productBrand
 }
 
 func TestCreateProductBrand(t *testing.T) {

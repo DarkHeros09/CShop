@@ -27,7 +27,7 @@ type CreateVerifyEmailParams struct {
 	SecretCode string   `json:"secret_code"`
 }
 
-func (q *Queries) CreateVerifyEmail(ctx context.Context, arg CreateVerifyEmailParams) (VerifyEmail, error) {
+func (q *Queries) CreateVerifyEmail(ctx context.Context, arg CreateVerifyEmailParams) (*VerifyEmail, error) {
 	row := q.db.QueryRow(ctx, createVerifyEmail, arg.UserID, arg.SecretCode)
 	var i VerifyEmail
 	err := row.Scan(
@@ -38,7 +38,7 @@ func (q *Queries) CreateVerifyEmail(ctx context.Context, arg CreateVerifyEmailPa
 		&i.CreatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getVerifyEmail = `-- name: GetVerifyEmail :one
@@ -46,7 +46,7 @@ SELECT id, user_id, secret_code, is_used, created_at, expired_at FROM "verify_em
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetVerifyEmail(ctx context.Context, id int64) (VerifyEmail, error) {
+func (q *Queries) GetVerifyEmail(ctx context.Context, id int64) (*VerifyEmail, error) {
 	row := q.db.QueryRow(ctx, getVerifyEmail, id)
 	var i VerifyEmail
 	err := row.Scan(
@@ -57,7 +57,7 @@ func (q *Queries) GetVerifyEmail(ctx context.Context, id int64) (VerifyEmail, er
 		&i.CreatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getVerifyEmailByEmail = `-- name: GetVerifyEmailByEmail :one
@@ -82,7 +82,7 @@ type GetVerifyEmailByEmailRow struct {
 	ExpiredAt       time.Time `json:"expired_at"`
 }
 
-func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (GetVerifyEmailByEmailRow, error) {
+func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (*GetVerifyEmailByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getVerifyEmailByEmail, email)
 	var i GetVerifyEmailByEmailRow
 	err := row.Scan(
@@ -97,7 +97,7 @@ func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (GetV
 		&i.CreatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateVerifyEmail = `-- name: UpdateVerifyEmail :one
@@ -154,7 +154,7 @@ type UpdateVerifyEmailRow struct {
 	WishListID      int64     `json:"wish_list_id"`
 }
 
-func (q *Queries) UpdateVerifyEmail(ctx context.Context, arg UpdateVerifyEmailParams) (UpdateVerifyEmailRow, error) {
+func (q *Queries) UpdateVerifyEmail(ctx context.Context, arg UpdateVerifyEmailParams) (*UpdateVerifyEmailRow, error) {
 	row := q.db.QueryRow(ctx, updateVerifyEmail, arg.Email, arg.SecretCode)
 	var i UpdateVerifyEmailRow
 	err := row.Scan(
@@ -169,5 +169,5 @@ func (q *Queries) UpdateVerifyEmail(ctx context.Context, arg UpdateVerifyEmailPa
 		&i.ShoppingCartID,
 		&i.WishListID,
 	)
-	return i, err
+	return &i, err
 }

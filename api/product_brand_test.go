@@ -53,7 +53,7 @@ func TestGetProductBrandAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductBrand(gomock.Any(), gomock.Eq(productBrand.ID)).
 					Times(1).
-					Return(db.ProductBrand{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -66,7 +66,7 @@ func TestGetProductBrandAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductBrand(gomock.Any(), gomock.Eq(productBrand.ID)).
 					Times(1).
-					Return(db.ProductBrand{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -216,7 +216,7 @@ func TestCreateProductBrandAPI(t *testing.T) {
 				store.EXPECT().
 					CreateProductBrand(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductBrand{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -277,7 +277,7 @@ func TestCreateProductBrandAPI(t *testing.T) {
 
 func TestListProductBrandsAPI(t *testing.T) {
 	n := 5
-	productBrands := make([]db.ProductBrand, n)
+	productBrands := make([]*db.ProductBrand, n)
 	for i := 0; i < n; i++ {
 		productBrands[i] = randomProductBrand()
 	}
@@ -320,7 +320,7 @@ func TestListProductBrandsAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductBrands(gomock.Any()).
 					Times(1).
-					Return([]db.ProductBrand{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -379,8 +379,8 @@ func TestListProductBrandsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -495,7 +495,7 @@ func TestUpdateProductBrandAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateProductBrand(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductBrand{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -726,29 +726,29 @@ func randomPBrandSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func randomProductBrand() db.ProductBrand {
-	return db.ProductBrand{
+func randomProductBrand() *db.ProductBrand {
+	return &db.ProductBrand{
 		ID:         util.RandomInt(1, 1000),
 		BrandName:  util.RandomUser(),
 		BrandImage: util.RandomURL(),
 	}
 }
 
-func requireBodyMatchProductBrand(t *testing.T, body io.ReadCloser, productBrand db.ProductBrand) {
+func requireBodyMatchProductBrand(t *testing.T, body io.ReadCloser, productBrand *db.ProductBrand) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductBrand db.ProductBrand
+	var gotProductBrand *db.ProductBrand
 	err = json.Unmarshal(data, &gotProductBrand)
 	require.NoError(t, err)
 	require.Equal(t, productBrand, gotProductBrand)
 }
 
-func requireBodyMatchProductBrands(t *testing.T, body io.ReadCloser, productBrands []db.ProductBrand) {
+func requireBodyMatchProductBrands(t *testing.T, body io.ReadCloser, productBrands []*db.ProductBrand) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductBrands []db.ProductBrand
+	var gotProductBrands []*db.ProductBrand
 	err = json.Unmarshal(data, &gotProductBrands)
 	require.NoError(t, err)
 	require.Equal(t, productBrands, gotProductBrands)

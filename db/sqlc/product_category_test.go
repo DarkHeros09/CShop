@@ -12,7 +12,7 @@ import (
 
 func createRandomProductCategory(t *testing.T) ProductCategory {
 	// arg := util.RandomString(5)
-	var productCategory ProductCategory
+	var productCategory *ProductCategory
 	var err error
 	productCategories := []string{"أحذية", "حقائب", "إكسسوارات", "حجاب", "عبايات", "قمصان", "تنانير", "بناطيل", "الأطقم", "الفساتين"}
 	for i := 0; i < len(productCategories); i++ {
@@ -29,7 +29,7 @@ func createRandomProductCategory(t *testing.T) ProductCategory {
 		require.Equal(t, productCategories[randomInt], productCategory.CategoryName)
 
 	}
-	return productCategory
+	return *productCategory
 }
 
 func createRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCategory {
@@ -58,7 +58,7 @@ func createRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCategory 
 	require.Equal(t, arg.CategoryName, productCategory.CategoryName)
 	require.NotEmpty(t, productCategory.ID)
 
-	return productCategory
+	return *productCategory
 }
 
 func createRandomProductCategoryParent(t *testing.T) ProductCategory {
@@ -81,7 +81,7 @@ func createRandomProductCategoryParent(t *testing.T) ProductCategory {
 	require.Equal(t, arg.CategoryName, productCategory.CategoryName)
 	require.NotEmpty(t, productCategory.ID)
 
-	return productCategory
+	return *productCategory
 }
 
 func adminCreateRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCategory {
@@ -112,7 +112,7 @@ func adminCreateRandomProductCategoryForUpdateOrDelete(t *testing.T) ProductCate
 	require.Equal(t, arg.CategoryName, productCategory.CategoryName)
 	require.NotEmpty(t, productCategory.ID)
 
-	return productCategory
+	return *productCategory
 }
 
 func TestCreateProductCategory(t *testing.T) {

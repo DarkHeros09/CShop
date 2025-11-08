@@ -35,7 +35,7 @@ type CreateAddressParams struct {
 	City        string `json:"city"`
 }
 
-func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (Address, error) {
+func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (*Address, error) {
 	row := q.db.QueryRow(ctx, createAddress,
 		arg.Name,
 		arg.UserID,
@@ -56,7 +56,7 @@ func (q *Queries) CreateAddress(ctx context.Context, arg CreateAddressParams) (A
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteAddress = `-- name: DeleteAddress :exec
@@ -81,7 +81,7 @@ type DeleteUserAddressParams struct {
 	ID     int64 `json:"id"`
 }
 
-func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (Address, error) {
+func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressParams) (*Address, error) {
 	row := q.db.QueryRow(ctx, deleteUserAddress, arg.UserID, arg.ID)
 	var i Address
 	err := row.Scan(
@@ -95,7 +95,7 @@ func (q *Queries) DeleteUserAddress(ctx context.Context, arg DeleteUserAddressPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAddress = `-- name: GetAddress :one
@@ -104,7 +104,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetAddress(ctx context.Context, id int64) (Address, error) {
+func (q *Queries) GetAddress(ctx context.Context, id int64) (*Address, error) {
 	row := q.db.QueryRow(ctx, getAddress, id)
 	var i Address
 	err := row.Scan(
@@ -118,7 +118,7 @@ func (q *Queries) GetAddress(ctx context.Context, id int64) (Address, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAddressByCity = `-- name: GetAddressByCity :one
@@ -127,7 +127,7 @@ WHERE city = $1
 LIMIT 1
 `
 
-func (q *Queries) GetAddressByCity(ctx context.Context, city string) (Address, error) {
+func (q *Queries) GetAddressByCity(ctx context.Context, city string) (*Address, error) {
 	row := q.db.QueryRow(ctx, getAddressByCity, city)
 	var i Address
 	err := row.Scan(
@@ -141,7 +141,7 @@ func (q *Queries) GetAddressByCity(ctx context.Context, city string) (Address, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getUserAddress = `-- name: GetUserAddress :one
@@ -179,7 +179,7 @@ type GetUserAddressRow struct {
 	UpdatedAt_2      time.Time `json:"updated_at_2"`
 }
 
-func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) (GetUserAddressRow, error) {
+func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) (*GetUserAddressRow, error) {
 	row := q.db.QueryRow(ctx, getUserAddress, arg.UserID, arg.ID)
 	var i GetUserAddressRow
 	err := row.Scan(
@@ -203,7 +203,7 @@ func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) 
 		&i.CreatedAt_2,
 		&i.UpdatedAt_2,
 	)
-	return i, err
+	return &i, err
 }
 
 const listAddressesByCity = `-- name: ListAddressesByCity :many
@@ -220,13 +220,13 @@ type ListAddressesByCityParams struct {
 	Offset int32  `json:"offset"`
 }
 
-func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]Address, error) {
+func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCityParams) ([]*Address, error) {
 	rows, err := q.db.Query(ctx, listAddressesByCity, arg.City, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Address{}
+	items := []*Address{}
 	for rows.Next() {
 		var i Address
 		if err := rows.Scan(
@@ -242,7 +242,7 @@ func (q *Queries) ListAddressesByCity(ctx context.Context, arg ListAddressesByCi
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -255,13 +255,13 @@ SELECT id, user_id, name, telephone, address_line, region, city, created_at, upd
 WHERE id = ANY($1::bigint[])
 `
 
-func (q *Queries) ListAddressesByID(ctx context.Context, addressesIds []int64) ([]Address, error) {
+func (q *Queries) ListAddressesByID(ctx context.Context, addressesIds []int64) ([]*Address, error) {
 	rows, err := q.db.Query(ctx, listAddressesByID, addressesIds)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Address{}
+	items := []*Address{}
 	for rows.Next() {
 		var i Address
 		if err := rows.Scan(
@@ -277,7 +277,7 @@ func (q *Queries) ListAddressesByID(ctx context.Context, addressesIds []int64) (
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -305,13 +305,13 @@ type ListAddressesByUserIDRow struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
-func (q *Queries) ListAddressesByUserID(ctx context.Context, id int64) ([]ListAddressesByUserIDRow, error) {
+func (q *Queries) ListAddressesByUserID(ctx context.Context, id int64) ([]*ListAddressesByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listAddressesByUserID, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListAddressesByUserIDRow{}
+	items := []*ListAddressesByUserIDRow{}
 	for rows.Next() {
 		var i ListAddressesByUserIDRow
 		if err := rows.Scan(
@@ -328,7 +328,7 @@ func (q *Queries) ListAddressesByUserID(ctx context.Context, id int64) ([]ListAd
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -360,7 +360,7 @@ type UpdateAddressParams struct {
 	UserID      int64       `json:"user_id"`
 }
 
-func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (Address, error) {
+func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (*Address, error) {
 	row := q.db.QueryRow(ctx, updateAddress,
 		arg.Name,
 		arg.Telephone,
@@ -382,5 +382,5 @@ func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) (A
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

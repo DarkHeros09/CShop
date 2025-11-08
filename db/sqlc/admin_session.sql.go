@@ -38,7 +38,7 @@ type CreateAdminSessionParams struct {
 	ExpiresAt    time.Time `json:"expires_at"`
 }
 
-func (q *Queries) CreateAdminSession(ctx context.Context, arg CreateAdminSessionParams) (AdminSession, error) {
+func (q *Queries) CreateAdminSession(ctx context.Context, arg CreateAdminSessionParams) (*AdminSession, error) {
 	row := q.db.QueryRow(ctx, createAdminSession,
 		arg.ID,
 		arg.AdminID,
@@ -60,7 +60,7 @@ func (q *Queries) CreateAdminSession(ctx context.Context, arg CreateAdminSession
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAdminSession = `-- name: GetAdminSession :one
@@ -68,7 +68,7 @@ SELECT id, admin_id, refresh_token, admin_agent, client_ip, is_blocked, created_
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAdminSession(ctx context.Context, id uuid.UUID) (AdminSession, error) {
+func (q *Queries) GetAdminSession(ctx context.Context, id uuid.UUID) (*AdminSession, error) {
 	row := q.db.QueryRow(ctx, getAdminSession, id)
 	var i AdminSession
 	err := row.Scan(
@@ -82,7 +82,7 @@ func (q *Queries) GetAdminSession(ctx context.Context, id uuid.UUID) (AdminSessi
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateAdminSession = `-- name: UpdateAdminSession :one
@@ -103,7 +103,7 @@ type UpdateAdminSessionParams struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
-func (q *Queries) UpdateAdminSession(ctx context.Context, arg UpdateAdminSessionParams) (AdminSession, error) {
+func (q *Queries) UpdateAdminSession(ctx context.Context, arg UpdateAdminSessionParams) (*AdminSession, error) {
 	row := q.db.QueryRow(ctx, updateAdminSession,
 		arg.IsBlocked,
 		arg.ID,
@@ -122,5 +122,5 @@ func (q *Queries) UpdateAdminSession(ctx context.Context, arg UpdateAdminSession
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }

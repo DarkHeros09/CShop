@@ -31,13 +31,13 @@ type AdminSearchUserByEmailRow struct {
 	WishListID      null.Int `json:"wish_list_id"`
 }
 
-func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]AdminSearchUserByEmailRow, error) {
+func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]*AdminSearchUserByEmailRow, error) {
 	rows, err := q.db.Query(ctx, adminSearchUserByEmail, email)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminSearchUserByEmailRow{}
+	items := []*AdminSearchUserByEmailRow{}
 	for rows.Next() {
 		var i AdminSearchUserByEmailRow
 		if err := rows.Scan(
@@ -51,7 +51,7 @@ func (q *Queries) AdminSearchUserByEmail(ctx context.Context, email string) ([]A
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ type AdminUpdateUserParams struct {
 	ID        int64     `json:"id"`
 }
 
-func (q *Queries) AdminUpdateUser(ctx context.Context, arg AdminUpdateUserParams) (User, error) {
+func (q *Queries) AdminUpdateUser(ctx context.Context, arg AdminUpdateUserParams) (*User, error) {
 	row := q.db.QueryRow(ctx, adminUpdateUser, arg.IsBlocked, arg.ID)
 	var i User
 	err := row.Scan(
@@ -88,7 +88,7 @@ func (q *Queries) AdminUpdateUser(ctx context.Context, arg AdminUpdateUserParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -113,7 +113,7 @@ type CreateUserParams struct {
 	DefaultPayment null.Int `json:"default_payment"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (*User, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.Email,
@@ -134,7 +134,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const createUserWithCartAndWishList = `-- name: CreateUserWithCartAndWishList :one
@@ -190,7 +190,7 @@ type CreateUserWithCartAndWishListRow struct {
 	WishListID       int64     `json:"wish_list_id"`
 }
 
-func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateUserWithCartAndWishListParams) (CreateUserWithCartAndWishListRow, error) {
+func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateUserWithCartAndWishListParams) (*CreateUserWithCartAndWishListRow, error) {
 	row := q.db.QueryRow(ctx, createUserWithCartAndWishList,
 		arg.Username,
 		arg.Email,
@@ -213,7 +213,7 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 		&i.ShoppingCartID,
 		&i.WishListID,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteUser = `-- name: DeleteUser :one
@@ -222,7 +222,7 @@ WHERE id = $1
 RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
+func (q *Queries) DeleteUser(ctx context.Context, id int64) (*User, error) {
 	row := q.db.QueryRow(ctx, deleteUser, id)
 	var i User
 	err := row.Scan(
@@ -237,7 +237,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteUserByEmailNotVerified = `-- name: DeleteUserByEmailNotVerified :exec
@@ -293,7 +293,7 @@ SELECT id, username, email, password, is_blocked, is_email_verified, default_pay
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
+func (q *Queries) GetUser(ctx context.Context, id int64) (*User, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
 	var i User
 	err := row.Scan(
@@ -308,7 +308,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -335,7 +335,7 @@ type GetUserByEmailRow struct {
 
 // SELECT * FROM "user"
 // WHERE email = $1 LIMIT 1;
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (*GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
 	var i GetUserByEmailRow
 	err := row.Scan(
@@ -352,7 +352,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.ShopCartID,
 		&i.WishListID,
 	)
-	return i, err
+	return &i, err
 }
 
 const listAllUsers = `-- name: ListAllUsers :many
@@ -367,13 +367,13 @@ type ListAllUsersParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]User, error) {
+func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]*User, error) {
 	rows, err := q.db.Query(ctx, listAllUsers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []User{}
+	items := []*User{}
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -390,7 +390,7 @@ func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]U
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -410,13 +410,13 @@ type ListUsersParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]*User, error) {
 	rows, err := q.db.Query(ctx, listUsers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []User{}
+	items := []*User{}
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
@@ -433,7 +433,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -464,7 +464,7 @@ type UpdateUserParams struct {
 }
 
 // telephone = COALESCE(sqlc.narg(telephone),telephone),
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (*User, error) {
 	row := q.db.QueryRow(ctx, updateUser,
 		arg.Username,
 		arg.Email,
@@ -486,7 +486,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateUserEmailisVerifiedForTest = `-- name: UpdateUserEmailisVerifiedForTest :exec
@@ -519,7 +519,7 @@ type UpdateUserPasswordParams struct {
 	Oldpassword string `json:"oldpassword"`
 }
 
-func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error) {
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (*User, error) {
 	row := q.db.QueryRow(ctx, updateUserPassword, arg.Newpassword, arg.ID, arg.Oldpassword)
 	var i User
 	err := row.Scan(
@@ -534,5 +534,5 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

@@ -26,7 +26,7 @@ func createRandomHomePageTextBanner(t *testing.T) HomePageTextBanner {
 	require.Equal(t, arg.Name, productImage.Name)
 	require.Equal(t, arg.Description, productImage.Description)
 
-	return productImage
+	return *productImage
 }
 func TestCreateHomePageTextBanner(t *testing.T) {
 	createRandomHomePageTextBanner(t)

@@ -38,7 +38,7 @@ func createRandomUserSession(t *testing.T) UserSession {
 
 	require.NotEmpty(t, userSession.CreatedAt)
 
-	return userSession
+	return *userSession
 }
 
 func TestCreateUserSession(t *testing.T) {

@@ -29,7 +29,7 @@ func createRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 	require.Equal(t, arg.PromotionID, categoryPromotion.PromotionID)
 	require.Equal(t, arg.Active, categoryPromotion.Active)
 
-	return categoryPromotion
+	return *categoryPromotion
 }
 func adminCreateRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 	admin := createRandomAdmin(t)
@@ -51,7 +51,7 @@ func adminCreateRandomCategoryPromotion(t *testing.T) CategoryPromotion {
 	require.Equal(t, arg.PromotionID, categoryPromotion.PromotionID)
 	require.Equal(t, arg.Active, categoryPromotion.Active)
 
-	return categoryPromotion
+	return *categoryPromotion
 }
 func TestCreateCategoryPromotion(t *testing.T) {
 	createRandomCategoryPromotion(t)

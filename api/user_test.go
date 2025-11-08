@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
@@ -70,7 +71,7 @@ func addAccess(
 
 func TestCreateUserAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.CreateUserWithCartAndWishListRow)
+	userChan := make(chan *db.CreateUserWithCartAndWishListRow)
 	passwordChan := make(chan string)
 
 	go func() {
@@ -82,6 +83,7 @@ func TestCreateUserAPI(t *testing.T) {
 	password := <-passwordChan
 	// user, password := randomUserWithCartAndWishList(t)
 	finalRsp := createUserResponse{
+		// UserSessionID: util.RandomString(10),
 		User: newUserResponse(db.User{
 			ID:       user.ID,
 			Username: user.Username,
@@ -120,12 +122,13 @@ func TestCreateUserAPI(t *testing.T) {
 					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
 					Return(user, nil)
+
 				accessToken, accessPayload, err := addAccess(t, tokenMaker, user.ID, user.Username, time.Duration(time.Duration.Minutes(30)))
 				require.NoError(t, err)
 				refreshToken, refreshPayload, err := addAccess(t, tokenMaker, user.ID, user.Username, time.Duration(time.Duration.Hours(720)))
 				require.NoError(t, err)
 
-				userSession := db.UserSession{
+				userSession := &db.UserSession{
 					ID: uuid.New(),
 					// UserID:       user.ID,
 					// RefreshToken: refreshToken,
@@ -157,7 +160,7 @@ func TestCreateUserAPI(t *testing.T) {
 				// 	Times(1)
 
 				store.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).
-					Times(1)
+					Times(1).Return(userSession, nil)
 
 				// store.EXPECT().CreateNotification(gomock.Any(), gomock.Any()).
 				// 	Times(1)
@@ -188,7 +191,7 @@ func TestCreateUserAPI(t *testing.T) {
 				store.EXPECT().
 					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.CreateUserWithCartAndWishListRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -214,10 +217,10 @@ func TestCreateUserAPI(t *testing.T) {
 				store.EXPECT().
 					CreateUserWithCartAndWishList(gomock.Any(), EqCreateUserParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.CreateUserWithCartAndWishListRow{},
+					Return(nil,
 						&pgconn.PgError{
 							Code:    "23505",
-							Message: "unique_violation"},
+							Message: util.UniqueViolation},
 					)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -363,9 +366,9 @@ func EqSignUpTxParamsMatcher(arg db.SignUpTxParams, password string) gomock.Matc
 
 func TestSignUpAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.SignUpTxResult)
+	userChan := make(chan *db.SignUpTxResult)
 	passwordChan := make(chan string)
-	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
 
 	go func() {
 		user, password := randomSignUpV2User()
@@ -439,7 +442,7 @@ func TestSignUpAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
 				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetVerifyEmailByEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 
 				store.EXPECT().DeleteUserByEmailNotVerified(gomock.Any(), user.Email).Times(0)
 
@@ -484,10 +487,10 @@ func TestSignUpAPI(t *testing.T) {
 				store.EXPECT().
 					SignUpTx(gomock.Any(), EqSignUpTxParamsMatcher(arg, password)).
 					Times(1).
-					Return(db.SignUpTxResult{},
+					Return(nil,
 						&pgconn.PgError{
 							Code:    "23505",
-							Message: "unique_violation"},
+							Message: util.UniqueViolation},
 					)
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -601,9 +604,9 @@ func TestSignUpAPI(t *testing.T) {
 }
 func TestVerifyOTPAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.SignUpTxResult)
+	userChan := make(chan *db.SignUpTxResult)
 	passwordChan := make(chan string)
-	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
 
 	go func() {
 		user, password := randomSignUpV2User()
@@ -617,7 +620,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 	updateVerifyEmail := randomUpdateVerifyEmail(user, verifyEmail)
 	// user, password := randomUserWithCartAndWishList(t)
 	finalRsp := createUserResponse{
-		User: newUserWithCartResponse(db.CreateUserWithCartAndWishListRow{
+		User: newUserWithCartResponse(&db.CreateUserWithCartAndWishListRow{
 			ID:       user.ID,
 			Username: user.Username,
 			Email:    user.Email,
@@ -657,7 +660,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 				refreshToken, refreshPayload, err := addAccess(t, tokenMaker, user.ID, user.Username, time.Duration(time.Duration.Hours(720)))
 				require.NoError(t, err)
 
-				userSession := db.UserSession{
+				userSession := &db.UserSession{
 					ID: uuid.New(),
 					// UserID:       user.ID,
 					// RefreshToken: refreshToken,
@@ -673,7 +676,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 					AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 					RefreshToken:          refreshToken,
 					RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-					User: newUserWithCartResponse(db.CreateUserWithCartAndWishListRow{
+					User: newUserWithCartResponse(&db.CreateUserWithCartAndWishListRow{
 						ID:       user.ID,
 						Username: user.Username,
 						Email:    user.Email,
@@ -688,7 +691,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 				}
 
 				store.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).
-					Times(1)
+					Times(1).Return(userSession, nil)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -709,7 +712,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 				}
 
 				store.EXPECT().UpdateVerifyEmail(gomock.Any(), arg).
-					Times(1).Return(db.UpdateVerifyEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -779,9 +782,9 @@ func TestVerifyOTPAPI(t *testing.T) {
 
 func TestResendOTPAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.SignUpTxResult)
+	userChan := make(chan *db.SignUpTxResult)
 	// passwordChan := make(chan string)
-	verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
+	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
 
 	go func() {
 		user, _ := randomSignUpV2User()
@@ -827,7 +830,7 @@ func TestResendOTPAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
 				store.EXPECT().GetVerifyEmailByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetVerifyEmailByEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -884,7 +887,7 @@ func TestResendOTPAPI(t *testing.T) {
 
 func TestResetPasswordRequestAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.GetUserByEmailRow)
+	userChan := make(chan *db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
 	// verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
 
@@ -932,7 +935,7 @@ func TestResetPasswordRequestAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -989,9 +992,9 @@ func TestResetPasswordRequestAPI(t *testing.T) {
 
 func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.GetUserByEmailRow)
+	userChan := make(chan *db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
-	resetPasswordChan := make(chan db.GetResetPasswordsByEmailRow)
+	resetPasswordChan := make(chan *db.GetResetPasswordsByEmailRow)
 
 	go func() {
 		user, _ := randomUserLogin(t)
@@ -1047,7 +1050,7 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 				// }
 
 				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), gomock.Eq(user.Email)).
-					Times(1).Return(db.GetResetPasswordsByEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1117,9 +1120,9 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 
 func TestResendPasswordResetOTPAPI(t *testing.T) {
 	t.Parallel()
-	userChan := make(chan db.GetUserByEmailRow)
+	userChan := make(chan *db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
-	resetPasswordChan := make(chan db.GetResetPasswordsByEmailRow)
+	resetPasswordChan := make(chan *db.GetResetPasswordsByEmailRow)
 
 	go func() {
 		user, _ := randomUserLogin(t)
@@ -1165,7 +1168,7 @@ func TestResendPasswordResetOTPAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
 				store.EXPECT().GetResetPasswordsByEmail(gomock.Any(), user.Email).
-					Times(1).Return(db.GetResetPasswordsByEmailRow{}, pgx.ErrTxClosed)
+					Times(1).Return(nil, pgx.ErrTxClosed)
 
 				sender.EXPECT().SendEmail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -1299,7 +1302,7 @@ func TestResetPasswordApprovedAPI(t *testing.T) {
 				"otp":      passwordReset.SecretCode,
 			},
 			buildStubs: func(store *mockdb.MockStore, sender *mockemail.MockEmailSender, tokenMaker token.Maker) {
-				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(1).Return(db.ResetPassword{}, pgx.ErrTxClosed)
+				store.EXPECT().GetLastUsedResetPassword(gomock.Any(), gomock.Any()).Times(1).Return(nil, pgx.ErrTxClosed)
 
 				store.EXPECT().GetUserByEmail(gomock.Any(), user.Email).
 					Times(0)
@@ -1367,6 +1370,10 @@ func TestLoginUserAPI(t *testing.T) {
 	user, password := randomUserLogin(t)
 	user2, password2 := randomUserLoginNotVerified(t)
 
+	verifyUser := randomVerifyEmailForNotVerifiedUser(user2)
+
+	userSession := randomUserSession(user)
+
 	testCases := []struct {
 		name          string
 		body          fiber.Map
@@ -1391,7 +1398,7 @@ func TestLoginUserAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateUserSession(gomock.Any(), gomock.Any()).
-					Times(1)
+					Times(1).Return(userSession, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -1411,7 +1418,7 @@ func TestLoginUserAPI(t *testing.T) {
 
 				store.EXPECT().
 					GetVerifyEmailByEmail(gomock.Any(), gomock.Eq(user2.Email)).
-					Times(1)
+					Times(1).Return(verifyUser, nil)
 
 				store.EXPECT().CreateVerifyEmail(gomock.Any(), gomock.Any()).Times(1)
 
@@ -1435,7 +1442,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.GetUserByEmailRow{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -1467,7 +1474,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.GetUserByEmailRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1594,7 +1601,7 @@ func TestLogoutUserAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateUserSession(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.UserSession{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1725,7 +1732,7 @@ func TestGetUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(db.User{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -1741,7 +1748,7 @@ func TestGetUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Eq(user.ID)).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1872,7 +1879,7 @@ func TestUpdateUserAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -2005,7 +2012,7 @@ func TestAdminUpdateUserAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -2065,7 +2072,7 @@ func TestAdminUpdateUserAPI(t *testing.T) {
 
 func TestListUsersAPI(t *testing.T) {
 	n := 5
-	users := make([]db.User, n)
+	users := make([]*db.User, n)
 	for i := 0; i < n; i++ {
 		users[i], _ = randomUser(t)
 	}
@@ -2162,7 +2169,7 @@ func TestListUsersAPI(t *testing.T) {
 				store.EXPECT().
 					ListUsers(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.User{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -2230,8 +2237,8 @@ func TestListUsersAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
@@ -2244,9 +2251,9 @@ func TestListUsersAPI(t *testing.T) {
 }
 
 func TestAdminSearchUserByEmailAPI(t *testing.T) {
-	searchedUsers := make([]db.AdminSearchUserByEmailRow, 1)
+	searchedUsers := make([]*db.AdminSearchUserByEmailRow, 1)
 	user, _ := randomSearchedUser(t)
-	searchedUsers = append(searchedUsers, user)
+	searchedUsers[0] = user
 	users := newSearchUserByEmailResponse(searchedUsers)
 	admin, _ := randomSuperAdmin(t)
 
@@ -2323,7 +2330,7 @@ func TestAdminSearchUserByEmailAPI(t *testing.T) {
 				store.EXPECT().
 					AdminSearchUserByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.AdminSearchUserByEmailRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -2421,7 +2428,7 @@ func TestDeleteUserAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -2438,7 +2445,7 @@ func TestDeleteUserAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -2498,12 +2505,12 @@ func TestDeleteUserAPI(t *testing.T) {
 
 }
 
-func randomUser(t *testing.T) (user db.User, password string) {
+func randomUser(t *testing.T) (user *db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.User{
+	user = &db.User{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -2515,12 +2522,12 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func randomSearchedUser(t *testing.T) (user db.AdminSearchUserByEmailRow, password string) {
+func randomSearchedUser(t *testing.T) (user *db.AdminSearchUserByEmailRow, password string) {
 	password = util.RandomString(6)
 	// hashedPassword, err := util.HashPassword(password)
 	// require.NoError(t, err)
 
-	user = db.AdminSearchUserByEmailRow{
+	user = &db.AdminSearchUserByEmailRow{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		// Password: hashedPassword,
@@ -2535,12 +2542,12 @@ func randomSearchedUser(t *testing.T) (user db.AdminSearchUserByEmailRow, passwo
 	return
 }
 
-func randomUserLogin(t *testing.T) (user db.GetUserByEmailRow, password string) {
+func randomUserLogin(t *testing.T) (user *db.GetUserByEmailRow, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.GetUserByEmailRow{
+	user = &db.GetUserByEmailRow{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -2552,12 +2559,12 @@ func randomUserLogin(t *testing.T) (user db.GetUserByEmailRow, password string) 
 	return
 }
 
-func randomUserLoginNotVerified(t *testing.T) (user db.GetUserByEmailRow, password string) {
+func randomUserLoginNotVerified(t *testing.T) (user *db.GetUserByEmailRow, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.GetUserByEmailRow{
+	user = &db.GetUserByEmailRow{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -2569,13 +2576,13 @@ func randomUserLoginNotVerified(t *testing.T) (user db.GetUserByEmailRow, passwo
 	return
 }
 
-func randomUserLogout(t *testing.T) (user db.UserSession, userLog db.GetUserByEmailRow) {
+func randomUserLogout(t *testing.T) (user *db.UserSession, userLog *db.GetUserByEmailRow) {
 	uuid1, err := uuid.NewRandom()
 	require.NoError(t, err)
 
 	userLog, _ = randomUserLogin(t)
 
-	user = db.UserSession{
+	user = &db.UserSession{
 		ID:           uuid1,
 		UserID:       userLog.ID,
 		RefreshToken: util.RandomString(5),
@@ -2586,12 +2593,12 @@ func randomUserLogout(t *testing.T) (user db.UserSession, userLog db.GetUserByEm
 	return
 }
 
-func randomUserWithCartAndWishList(t *testing.T) (user db.CreateUserWithCartAndWishListRow, password string) {
+func randomUserWithCartAndWishList(t *testing.T) (user *db.CreateUserWithCartAndWishListRow, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.CreateUserWithCartAndWishListRow{
+	user = &db.CreateUserWithCartAndWishListRow{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -2602,12 +2609,12 @@ func randomUserWithCartAndWishList(t *testing.T) (user db.CreateUserWithCartAndW
 	return
 }
 
-func randomSignUpV2User() (user db.SignUpTxResult, password string) {
+func randomSignUpV2User() (user *db.SignUpTxResult, password string) {
 	password = util.RandomString(6)
 	// hashedPassword, err := util.HashPassword(password)
 	// require.NoError(t, err)
 
-	user = db.SignUpTxResult{
+	user = &db.SignUpTxResult{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		// Password: hashedPassword,
@@ -2620,9 +2627,24 @@ func randomSignUpV2User() (user db.SignUpTxResult, password string) {
 	}
 	return
 }
-func randomVerifyEmail(signUpUser db.SignUpTxResult) (user db.GetVerifyEmailByEmailRow) {
+func randomVerifyEmailForNotVerifiedUser(signUpUser *db.GetUserByEmailRow) (user *db.GetVerifyEmailByEmailRow) {
 
-	user = db.GetVerifyEmailByEmailRow{
+	user = &db.GetVerifyEmailByEmailRow{
+		ID:              util.RandomMoney(),
+		UserID:          null.IntFrom(signUpUser.ID),
+		IsUsed:          false,
+		ExpiredAt:       time.Now().Add(-time.Hour),
+		Email:           signUpUser.Email,
+		IsBlocked:       signUpUser.IsBlocked,
+		IsEmailVerified: signUpUser.IsEmailVerified,
+		SecretCode:      util.GenerateOTP(),
+	}
+	return
+}
+
+func randomVerifyEmail(signUpUser *db.SignUpTxResult) (user *db.GetVerifyEmailByEmailRow) {
+
+	user = &db.GetVerifyEmailByEmailRow{
 		ID:              util.RandomMoney(),
 		UserID:          null.IntFrom(signUpUser.ID),
 		IsUsed:          false,
@@ -2648,9 +2670,9 @@ func randomVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow) (user db.GetV
 	}
 	return
 }
-func randomResetPasswordOTP(signUpUser db.GetUserByEmailRow) (user db.GetResetPasswordsByEmailRow) {
+func randomResetPasswordOTP(signUpUser *db.GetUserByEmailRow) (user *db.GetResetPasswordsByEmailRow) {
 
-	user = db.GetResetPasswordsByEmailRow{
+	user = &db.GetResetPasswordsByEmailRow{
 		ID:              util.RandomMoney(),
 		UserID:          signUpUser.ID,
 		IsUsed:          false,
@@ -2663,9 +2685,9 @@ func randomResetPasswordOTP(signUpUser db.GetUserByEmailRow) (user db.GetResetPa
 	return
 }
 
-func randomResetPassword(signUpUser db.GetUserByEmailRow) (user db.ResetPassword) {
+func randomResetPassword(signUpUser *db.GetUserByEmailRow) (user *db.ResetPassword) {
 
-	user = db.ResetPassword{
+	user = &db.ResetPassword{
 		ID:         util.RandomMoney(),
 		UserID:     signUpUser.ID,
 		IsUsed:     false,
@@ -2675,9 +2697,9 @@ func randomResetPassword(signUpUser db.GetUserByEmailRow) (user db.ResetPassword
 	return
 }
 
-func randomUpdateVerifyEmail(signUpUser db.SignUpTxResult, verifyEmail db.GetVerifyEmailByEmailRow) (user db.UpdateVerifyEmailRow) {
+func randomUpdateVerifyEmail(signUpUser *db.SignUpTxResult, verifyEmail *db.GetVerifyEmailByEmailRow) (user *db.UpdateVerifyEmailRow) {
 
-	user = db.UpdateVerifyEmailRow{
+	user = &db.UpdateVerifyEmailRow{
 		ID:              verifyEmail.UserID.Int64,
 		Username:        signUpUser.Username,
 		Email:           signUpUser.Email,
@@ -2701,9 +2723,9 @@ func randomUpdateVerifyPasswordResetOTP(signUpUser db.GetUserByEmailRow, verifyE
 	}
 	return
 }
-func randomUpdateResetPasswordOTP(verifyEmail db.GetResetPasswordsByEmailRow) (user db.ResetPassword) {
+func randomUpdateResetPasswordOTP(verifyEmail *db.GetResetPasswordsByEmailRow) (user *db.ResetPassword) {
 
-	user = db.ResetPassword{
+	user = &db.ResetPassword{
 		ID:         verifyEmail.ID,
 		UserID:     verifyEmail.UserID,
 		SecretCode: verifyEmail.SecretCode,
@@ -2728,11 +2750,11 @@ func randomSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func requireBodyMatchUser(t *testing.T, body io.Reader, user db.User) {
+func requireBodyMatchUser(t *testing.T, body io.Reader, user *db.User) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUser db.User
+	var gotUser *db.User
 	err = json.Unmarshal(data, &gotUser)
 
 	require.NoError(t, err)
@@ -2794,25 +2816,37 @@ func requireBodyMatchResendOTP(t *testing.T, body io.Reader, message map[string]
 // 	require.Empty(t, gotUser.Password)
 // }
 
-func requireBodyMatchUsers(t *testing.T, body io.ReadCloser, users []db.User) {
+func requireBodyMatchUsers(t *testing.T, body io.ReadCloser, users []*db.User) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUsers []db.User
+	var gotUsers []*db.User
 	err = json.Unmarshal(data, &gotUsers)
 	require.NoError(t, err)
 	require.Equal(t, users, gotUsers)
 }
 
-func requireBodyMatchSearchedUser(t *testing.T, body io.ReadCloser, users []userResponse) {
+func requireBodyMatchSearchedUser(t *testing.T, body io.ReadCloser, users []*userResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUsers []userResponse
+	var gotUsers []*userResponse
 	err = json.Unmarshal(data, &gotUsers)
 	require.NoError(t, err)
 	require.Equal(t, users, gotUsers)
 	// for i, user := range users {
 	// 	require.Equal(t, user, gotUsers[i])
 	// }
+}
+
+func randomUserSession(admin *db.GetUserByEmailRow) *db.UserSession {
+	uuid1, _ := uuid.NewRandom()
+	return &db.UserSession{
+		ID:           uuid1,
+		UserID:       admin.ID,
+		RefreshToken: util.RandomString(5),
+		UserAgent:    util.RandomString(5),
+		ClientIp:     util.RandomString(5),
+		IsBlocked:    false,
+	}
 }

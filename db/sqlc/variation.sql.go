@@ -26,11 +26,11 @@ type CreateVariationParams struct {
 	Name       string `json:"name"`
 }
 
-func (q *Queries) CreateVariation(ctx context.Context, arg CreateVariationParams) (Variation, error) {
+func (q *Queries) CreateVariation(ctx context.Context, arg CreateVariationParams) (*Variation, error) {
 	row := q.db.QueryRow(ctx, createVariation, arg.CategoryID, arg.Name)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
-	return i, err
+	return &i, err
 }
 
 const deleteVariation = `-- name: DeleteVariation :exec
@@ -48,11 +48,11 @@ SELECT id, category_id, name FROM "variation"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetVariation(ctx context.Context, id int64) (Variation, error) {
+func (q *Queries) GetVariation(ctx context.Context, id int64) (*Variation, error) {
 	row := q.db.QueryRow(ctx, getVariation, id)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
-	return i, err
+	return &i, err
 }
 
 const listVariations = `-- name: ListVariations :many
@@ -67,19 +67,19 @@ type ListVariationsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListVariations(ctx context.Context, arg ListVariationsParams) ([]Variation, error) {
+func (q *Queries) ListVariations(ctx context.Context, arg ListVariationsParams) ([]*Variation, error) {
 	rows, err := q.db.Query(ctx, listVariations, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Variation{}
+	items := []*Variation{}
 	for rows.Next() {
 		var i Variation
 		if err := rows.Scan(&i.ID, &i.CategoryID, &i.Name); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -102,9 +102,9 @@ type UpdateVariationParams struct {
 	ID         int64       `json:"id"`
 }
 
-func (q *Queries) UpdateVariation(ctx context.Context, arg UpdateVariationParams) (Variation, error) {
+func (q *Queries) UpdateVariation(ctx context.Context, arg UpdateVariationParams) (*Variation, error) {
 	row := q.db.QueryRow(ctx, updateVariation, arg.Name, arg.CategoryID, arg.ID)
 	var i Variation
 	err := row.Scan(&i.ID, &i.CategoryID, &i.Name)
-	return i, err
+	return &i, err
 }

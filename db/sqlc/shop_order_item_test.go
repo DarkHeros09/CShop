@@ -33,7 +33,7 @@ func createRandomShopOrderItem(t *testing.T) (ShopOrderItem, ShopOrder) {
 	require.Equal(t, arg.Discount, shopOrderItem.Discount)
 	require.Equal(t, arg.ShippingMethodPrice, shopOrderItem.ShippingMethodPrice)
 
-	return shopOrderItem, shopOrder
+	return *shopOrderItem, shopOrder
 }
 func TestCreateShopOrderItem(t *testing.T) {
 	createRandomShopOrderItem(t)

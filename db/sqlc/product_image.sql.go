@@ -35,7 +35,7 @@ type AdminCreateProductImagesParams struct {
 	AdminID       int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (ProductImage, error) {
+func (q *Queries) AdminCreateProductImages(ctx context.Context, arg AdminCreateProductImagesParams) (*ProductImage, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductImages,
 		arg.ProductImage1,
 		arg.ProductImage2,
@@ -49,7 +49,7 @@ func (q *Queries) AdminCreateProductImages(ctx context.Context, arg AdminCreateP
 		&i.ProductImage2,
 		&i.ProductImage3,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminUpdateProductImage = `-- name: AdminUpdateProductImage :one
@@ -77,7 +77,7 @@ type AdminUpdateProductImageParams struct {
 	AdminID       int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (ProductImage, error) {
+func (q *Queries) AdminUpdateProductImage(ctx context.Context, arg AdminUpdateProductImageParams) (*ProductImage, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductImage,
 		arg.ProductImage1,
 		arg.ProductImage2,
@@ -92,7 +92,7 @@ func (q *Queries) AdminUpdateProductImage(ctx context.Context, arg AdminUpdatePr
 		&i.ProductImage2,
 		&i.ProductImage3,
 	)
-	return i, err
+	return &i, err
 }
 
 const createProductImage = `-- name: CreateProductImage :one
@@ -112,7 +112,7 @@ type CreateProductImageParams struct {
 	ProductImage3 string `json:"product_image_3"`
 }
 
-func (q *Queries) CreateProductImage(ctx context.Context, arg CreateProductImageParams) (ProductImage, error) {
+func (q *Queries) CreateProductImage(ctx context.Context, arg CreateProductImageParams) (*ProductImage, error) {
 	row := q.db.QueryRow(ctx, createProductImage, arg.ProductImage1, arg.ProductImage2, arg.ProductImage3)
 	var i ProductImage
 	err := row.Scan(
@@ -121,7 +121,7 @@ func (q *Queries) CreateProductImage(ctx context.Context, arg CreateProductImage
 		&i.ProductImage2,
 		&i.ProductImage3,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteProductImage = `-- name: DeleteProductImage :exec
@@ -139,7 +139,7 @@ SELECT id, product_image_1, product_image_2, product_image_3 FROM "product_image
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProductImage(ctx context.Context, id int64) (ProductImage, error) {
+func (q *Queries) GetProductImage(ctx context.Context, id int64) (*ProductImage, error) {
 	row := q.db.QueryRow(ctx, getProductImage, id)
 	var i ProductImage
 	err := row.Scan(
@@ -148,7 +148,7 @@ func (q *Queries) GetProductImage(ctx context.Context, id int64) (ProductImage, 
 		&i.ProductImage2,
 		&i.ProductImage3,
 	)
-	return i, err
+	return &i, err
 }
 
 const listProductImagesNextPage = `-- name: ListProductImagesNextPage :many
@@ -179,13 +179,13 @@ type ListProductImagesNextPageRow struct {
 	NextAvailable bool   `json:"next_available"`
 }
 
-func (q *Queries) ListProductImagesNextPage(ctx context.Context, arg ListProductImagesNextPageParams) ([]ListProductImagesNextPageRow, error) {
+func (q *Queries) ListProductImagesNextPage(ctx context.Context, arg ListProductImagesNextPageParams) ([]*ListProductImagesNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductImagesNextPage, arg.Limit, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductImagesNextPageRow{}
+	items := []*ListProductImagesNextPageRow{}
 	for rows.Next() {
 		var i ListProductImagesNextPageRow
 		if err := rows.Scan(
@@ -197,7 +197,7 @@ func (q *Queries) ListProductImagesNextPage(ctx context.Context, arg ListProduct
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -226,13 +226,13 @@ type ListProductImagesV2Row struct {
 	NextAvailable bool   `json:"next_available"`
 }
 
-func (q *Queries) ListProductImagesV2(ctx context.Context, limit int32) ([]ListProductImagesV2Row, error) {
+func (q *Queries) ListProductImagesV2(ctx context.Context, limit int32) ([]*ListProductImagesV2Row, error) {
 	rows, err := q.db.Query(ctx, listProductImagesV2, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductImagesV2Row{}
+	items := []*ListProductImagesV2Row{}
 	for rows.Next() {
 		var i ListProductImagesV2Row
 		if err := rows.Scan(
@@ -244,7 +244,7 @@ func (q *Queries) ListProductImagesV2(ctx context.Context, limit int32) ([]ListP
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -269,7 +269,7 @@ type UpdateProductImageParams struct {
 	ID            int64       `json:"id"`
 }
 
-func (q *Queries) UpdateProductImage(ctx context.Context, arg UpdateProductImageParams) (ProductImage, error) {
+func (q *Queries) UpdateProductImage(ctx context.Context, arg UpdateProductImageParams) (*ProductImage, error) {
 	row := q.db.QueryRow(ctx, updateProductImage,
 		arg.ProductImage1,
 		arg.ProductImage2,
@@ -283,5 +283,5 @@ func (q *Queries) UpdateProductImage(ctx context.Context, arg UpdateProductImage
 		&i.ProductImage2,
 		&i.ProductImage3,
 	)
-	return i, err
+	return &i, err
 }

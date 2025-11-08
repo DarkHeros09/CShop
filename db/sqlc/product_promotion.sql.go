@@ -38,7 +38,7 @@ type AdminCreateProductPromotionParams struct {
 	AdminID               int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (ProductPromotion, error) {
+func (q *Queries) AdminCreateProductPromotion(ctx context.Context, arg AdminCreateProductPromotionParams) (*ProductPromotion, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductPromotion,
 		arg.ProductID,
 		arg.PromotionID,
@@ -53,7 +53,7 @@ func (q *Queries) AdminCreateProductPromotion(ctx context.Context, arg AdminCrea
 		&i.ProductPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminListProductPromotions = `-- name: AdminListProductPromotions :many
@@ -82,13 +82,13 @@ type AdminListProductPromotionsRow struct {
 	Active                bool        `json:"active"`
 }
 
-func (q *Queries) AdminListProductPromotions(ctx context.Context, adminID int64) ([]AdminListProductPromotionsRow, error) {
+func (q *Queries) AdminListProductPromotions(ctx context.Context, adminID int64) ([]*AdminListProductPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, adminListProductPromotions, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListProductPromotionsRow{}
+	items := []*AdminListProductPromotionsRow{}
 	for rows.Next() {
 		var i AdminListProductPromotionsRow
 		if err := rows.Scan(
@@ -101,7 +101,7 @@ func (q *Queries) AdminListProductPromotions(ctx context.Context, adminID int64)
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ type AdminUpdateProductPromotionParams struct {
 	AdminID               int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateProductPromotion(ctx context.Context, arg AdminUpdateProductPromotionParams) (ProductPromotion, error) {
+func (q *Queries) AdminUpdateProductPromotion(ctx context.Context, arg AdminUpdateProductPromotionParams) (*ProductPromotion, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductPromotion,
 		arg.ProductPromotionImage,
 		arg.Active,
@@ -149,7 +149,7 @@ func (q *Queries) AdminUpdateProductPromotion(ctx context.Context, arg AdminUpda
 		&i.ProductPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const createProductPromotion = `-- name: CreateProductPromotion :one
@@ -171,7 +171,7 @@ type CreateProductPromotionParams struct {
 	Active                bool        `json:"active"`
 }
 
-func (q *Queries) CreateProductPromotion(ctx context.Context, arg CreateProductPromotionParams) (ProductPromotion, error) {
+func (q *Queries) CreateProductPromotion(ctx context.Context, arg CreateProductPromotionParams) (*ProductPromotion, error) {
 	row := q.db.QueryRow(ctx, createProductPromotion,
 		arg.ProductID,
 		arg.PromotionID,
@@ -185,7 +185,7 @@ func (q *Queries) CreateProductPromotion(ctx context.Context, arg CreateProductP
 		&i.ProductPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteProductPromotion = `-- name: DeleteProductPromotion :exec
@@ -217,7 +217,7 @@ type GetProductPromotionParams struct {
 	PromotionID int64 `json:"promotion_id"`
 }
 
-func (q *Queries) GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (ProductPromotion, error) {
+func (q *Queries) GetProductPromotion(ctx context.Context, arg GetProductPromotionParams) (*ProductPromotion, error) {
 	row := q.db.QueryRow(ctx, getProductPromotion, arg.ProductID, arg.PromotionID)
 	var i ProductPromotion
 	err := row.Scan(
@@ -226,7 +226,7 @@ func (q *Queries) GetProductPromotion(ctx context.Context, arg GetProductPromoti
 		&i.ProductPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const listProductPromotions = `-- name: ListProductPromotions :many
@@ -241,13 +241,13 @@ type ListProductPromotionsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]ProductPromotion, error) {
+func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductPromotionsParams) ([]*ProductPromotion, error) {
 	rows, err := q.db.Query(ctx, listProductPromotions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductPromotion{}
+	items := []*ProductPromotion{}
 	for rows.Next() {
 		var i ProductPromotion
 		if err := rows.Scan(
@@ -258,7 +258,7 @@ func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductProm
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -307,13 +307,13 @@ type ListProductPromotionsWithImagesRow struct {
 	UpdatedAt_2           time.Time   `json:"updated_at_2"`
 }
 
-func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]ListProductPromotionsWithImagesRow, error) {
+func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]*ListProductPromotionsWithImagesRow, error) {
 	rows, err := q.db.Query(ctx, listProductPromotionsWithImages)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductPromotionsWithImagesRow{}
+	items := []*ListProductPromotionsWithImagesRow{}
 	for rows.Next() {
 		var i ListProductPromotionsWithImagesRow
 		if err := rows.Scan(
@@ -349,7 +349,7 @@ func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]ListPr
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -374,7 +374,7 @@ type UpdateProductPromotionParams struct {
 	PromotionID           int64       `json:"promotion_id"`
 }
 
-func (q *Queries) UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (ProductPromotion, error) {
+func (q *Queries) UpdateProductPromotion(ctx context.Context, arg UpdateProductPromotionParams) (*ProductPromotion, error) {
 	row := q.db.QueryRow(ctx, updateProductPromotion,
 		arg.ProductPromotionImage,
 		arg.Active,
@@ -388,5 +388,5 @@ func (q *Queries) UpdateProductPromotion(ctx context.Context, arg UpdateProductP
 		&i.ProductPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }

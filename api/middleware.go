@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,6 +15,7 @@ const (
 	authorizationTypeBearer      = "bearer"
 	authorizationUserPayloadKey  = "authorization_user_payload"
 	authorizationAdminPayloadKey = "authorization_admin_payload"
+	accessTokenHasExpired        = "access token has expired"
 )
 
 func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
@@ -47,8 +49,8 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 		if admin {
 			adminPayload, err = tokenMaker.VerifyTokenForAdmin(accessToken)
 			if err != nil {
-				if err.Error() == "token has expired" {
-					err = fmt.Errorf("access token has expired")
+				if err.Error() == util.TokenHasExpired {
+					err = errors.New(accessTokenHasExpired)
 				}
 				ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 				return nil
@@ -60,8 +62,8 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 
 		userPayload, err = tokenMaker.VerifyTokenForUser(accessToken)
 		if err != nil {
-			if err.Error() == "token has expired" {
-				err = fmt.Errorf("access token has expired")
+			if err.Error() == util.TokenHasExpired {
+				err = errors.New(accessTokenHasExpired)
 			}
 			ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 			return nil

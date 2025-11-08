@@ -36,7 +36,7 @@ func createRandomAdmin(t *testing.T) Admin {
 	require.NotZero(t, admin.CreatedAt)
 	require.True(t, admin.UpdatedAt.IsZero())
 
-	return admin
+	return *admin
 
 }
 func TestCreateAdmin(t *testing.T) {
@@ -46,6 +46,23 @@ func TestCreateAdmin(t *testing.T) {
 func TestGetAdmin(t *testing.T) {
 	admin1 := createRandomAdmin(t)
 	admin2, err := testStore.GetAdmin(context.Background(), admin1.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, admin2)
+
+	require.Equal(t, admin1.ID, admin2.ID)
+	require.Equal(t, admin1.Username, admin2.Username)
+	require.Equal(t, admin1.Email, admin2.Email)
+	require.Equal(t, admin1.Password, admin2.Password)
+	require.Equal(t, admin1.TypeID, admin2.TypeID)
+	require.True(t, admin2.Active)
+	require.WithinDuration(t, admin1.CreatedAt, admin2.CreatedAt, time.Second)
+	require.WithinDuration(t, admin1.UpdatedAt, admin2.UpdatedAt, time.Second)
+}
+
+func TestGetAdminByEmail(t *testing.T) {
+	admin1 := createRandomAdmin(t)
+	admin2, err := testStore.GetAdminByEmail(context.Background(), admin1.Email)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, admin2)

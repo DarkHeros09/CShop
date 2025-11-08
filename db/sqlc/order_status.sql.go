@@ -27,13 +27,13 @@ WHERE EXISTS (SELECT 1 FROM t1)
 // ORDER BY id
 // LIMIT $1
 // OFFSET $2;
-func (q *Queries) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]OrderStatus, error) {
+func (q *Queries) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]*OrderStatus, error) {
 	rows, err := q.db.Query(ctx, adminListOrderStatuses, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []OrderStatus{}
+	items := []*OrderStatus{}
 	for rows.Next() {
 		var i OrderStatus
 		if err := rows.Scan(
@@ -44,7 +44,7 @@ func (q *Queries) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ ON CONFLICT(status) DO UPDATE SET status = $1
 RETURNING id, status, created_at, updated_at
 `
 
-func (q *Queries) CreateOrderStatus(ctx context.Context, status string) (OrderStatus, error) {
+func (q *Queries) CreateOrderStatus(ctx context.Context, status string) (*OrderStatus, error) {
 	row := q.db.QueryRow(ctx, createOrderStatus, status)
 	var i OrderStatus
 	err := row.Scan(
@@ -71,7 +71,7 @@ func (q *Queries) CreateOrderStatus(ctx context.Context, status string) (OrderSt
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteOrderStatus = `-- name: DeleteOrderStatus :exec
@@ -89,7 +89,7 @@ SELECT id, status, created_at, updated_at FROM "order_status"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetOrderStatus(ctx context.Context, id int64) (OrderStatus, error) {
+func (q *Queries) GetOrderStatus(ctx context.Context, id int64) (*OrderStatus, error) {
 	row := q.db.QueryRow(ctx, getOrderStatus, id)
 	var i OrderStatus
 	err := row.Scan(
@@ -98,7 +98,7 @@ func (q *Queries) GetOrderStatus(ctx context.Context, id int64) (OrderStatus, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getOrderStatusByUserID = `-- name: GetOrderStatusByUserID :one
@@ -123,7 +123,7 @@ type GetOrderStatusByUserIDRow struct {
 	UserID    null.Int  `json:"user_id"`
 }
 
-func (q *Queries) GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatusByUserIDParams) (GetOrderStatusByUserIDRow, error) {
+func (q *Queries) GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatusByUserIDParams) (*GetOrderStatusByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getOrderStatusByUserID, arg.UserID, arg.ID)
 	var i GetOrderStatusByUserIDRow
 	err := row.Scan(
@@ -133,20 +133,20 @@ func (q *Queries) GetOrderStatusByUserID(ctx context.Context, arg GetOrderStatus
 		&i.UpdatedAt,
 		&i.UserID,
 	)
-	return i, err
+	return &i, err
 }
 
 const listOrderStatuses = `-- name: ListOrderStatuses :many
 SELECT id, status, created_at, updated_at FROM "order_status"
 `
 
-func (q *Queries) ListOrderStatuses(ctx context.Context) ([]OrderStatus, error) {
+func (q *Queries) ListOrderStatuses(ctx context.Context) ([]*OrderStatus, error) {
 	rows, err := q.db.Query(ctx, listOrderStatuses)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []OrderStatus{}
+	items := []*OrderStatus{}
 	for rows.Next() {
 		var i OrderStatus
 		if err := rows.Scan(
@@ -157,7 +157,7 @@ func (q *Queries) ListOrderStatuses(ctx context.Context) ([]OrderStatus, error) 
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -189,13 +189,13 @@ type ListOrderStatusesByUserIDRow struct {
 	UserID    null.Int  `json:"user_id"`
 }
 
-func (q *Queries) ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]ListOrderStatusesByUserIDRow, error) {
+func (q *Queries) ListOrderStatusesByUserID(ctx context.Context, arg ListOrderStatusesByUserIDParams) ([]*ListOrderStatusesByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listOrderStatusesByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListOrderStatusesByUserIDRow{}
+	items := []*ListOrderStatusesByUserIDRow{}
 	for rows.Next() {
 		var i ListOrderStatusesByUserIDRow
 		if err := rows.Scan(
@@ -207,7 +207,7 @@ func (q *Queries) ListOrderStatusesByUserID(ctx context.Context, arg ListOrderSt
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -229,7 +229,7 @@ type UpdateOrderStatusParams struct {
 	ID     int64       `json:"id"`
 }
 
-func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (OrderStatus, error) {
+func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (*OrderStatus, error) {
 	row := q.db.QueryRow(ctx, updateOrderStatus, arg.Status, arg.ID)
 	var i OrderStatus
 	err := row.Scan(
@@ -238,5 +238,5 @@ func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

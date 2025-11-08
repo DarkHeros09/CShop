@@ -128,7 +128,7 @@ func TestCreateProductSizeAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateProductSize(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductSize{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -190,7 +190,7 @@ func TestCreateProductSizeAPI(t *testing.T) {
 func TestListProductSizeSizesAPI(t *testing.T) {
 	productItem := randomProductItem()
 	n := 5
-	productSizes := make([]db.ProductSize, n)
+	productSizes := make([]*db.ProductSize, n)
 	for i := 0; i < n; i++ {
 		productSizes[i] = randomProductSizesForList(productItem.ID)
 	}
@@ -223,7 +223,7 @@ func TestListProductSizeSizesAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductSizesByProductItemID(gomock.Any(), productItem.ID).
 					Times(1).
-					Return([]db.ProductSize{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -382,7 +382,7 @@ func TestUpdateProductSizeAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateProductSize(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductSize{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -455,8 +455,8 @@ func randomProductSizeSuperAdmin(t *testing.T) (admin db.Admin, password string)
 	return
 }
 
-func randomProductSizesForList(productItemId int64) db.ProductSize {
-	return db.ProductSize{
+func randomProductSizesForList(productItemId int64) *db.ProductSize {
+	return &db.ProductSize{
 		ID:            util.RandomInt(1, 1000),
 		SizeValue:     util.RandomSize(),
 		ProductItemID: productItemId,
@@ -464,18 +464,18 @@ func randomProductSizesForList(productItemId int64) db.ProductSize {
 	}
 }
 
-func requireBodyMatchProductSizesList(t *testing.T, body io.ReadCloser, productSizes []db.ProductSize) {
+func requireBodyMatchProductSizesList(t *testing.T, body io.ReadCloser, productSizes []*db.ProductSize) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.ProductSize
+	var gotProducts []*db.ProductSize
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, productSizes, gotProducts)
 }
 
-func randomProductSize() db.ProductSize {
-	return db.ProductSize{
+func randomProductSize() *db.ProductSize {
+	return &db.ProductSize{
 		ID:            util.RandomInt(0, 1000),
 		SizeValue:     util.RandomSize(),
 		ProductItemID: util.RandomInt(0, 1000),
@@ -483,8 +483,8 @@ func randomProductSize() db.ProductSize {
 	}
 }
 
-func randomProductSizeWithProductItemID(productItemId int64) db.ProductSize {
-	return db.ProductSize{
+func randomProductSizeWithProductItemID(productItemId int64) *db.ProductSize {
+	return &db.ProductSize{
 		ID:            util.RandomInt(0, 1000),
 		SizeValue:     util.RandomSize(),
 		ProductItemID: productItemId,
@@ -492,11 +492,11 @@ func randomProductSizeWithProductItemID(productItemId int64) db.ProductSize {
 	}
 }
 
-func requireBodyMatchProductSize(t *testing.T, body io.ReadCloser, productSize db.ProductSize) {
+func requireBodyMatchProductSize(t *testing.T, body io.ReadCloser, productSize *db.ProductSize) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductSize db.ProductSize
+	var gotProductSize *db.ProductSize
 	err = json.Unmarshal(data, &gotProductSize)
 	require.NoError(t, err)
 	require.Equal(t, productSize, gotProductSize)

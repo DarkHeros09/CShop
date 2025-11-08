@@ -33,7 +33,7 @@ func createRandomPromotion(t *testing.T) Promotion {
 	require.WithinDuration(t, arg.StartDate, promotion.StartDate, time.Second)
 	require.WithinDuration(t, arg.EndDate, promotion.EndDate, time.Second)
 
-	return promotion
+	return *promotion
 }
 func adminCreateRandomPromotion(t *testing.T) Promotion {
 	admin := createRandomAdmin(t)
@@ -58,7 +58,7 @@ func adminCreateRandomPromotion(t *testing.T) Promotion {
 	require.WithinDuration(t, arg.StartDate, promotion.StartDate, time.Second)
 	require.WithinDuration(t, arg.EndDate, promotion.EndDate, time.Second)
 
-	return promotion
+	return *promotion
 }
 func TestCreatePromotion(t *testing.T) {
 	createRandomPromotion(t)

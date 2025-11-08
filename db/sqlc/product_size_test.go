@@ -23,7 +23,7 @@ func createRandomProductSize(t *testing.T) ProductSize {
 
 	require.Equal(t, arg.SizeValue, productSize.SizeValue)
 
-	return productSize
+	return *productSize
 }
 
 func createRandomProductSizeWithItemID(t *testing.T, itemID int64) ProductSize {
@@ -39,7 +39,7 @@ func createRandomProductSizeWithItemID(t *testing.T, itemID int64) ProductSize {
 
 	require.Equal(t, arg.SizeValue, productSize.SizeValue)
 
-	return productSize
+	return *productSize
 }
 
 func createRandomProductSizeWithQTY(t *testing.T, qty int32) ProductSize {
@@ -55,7 +55,7 @@ func createRandomProductSizeWithQTY(t *testing.T, qty int32) ProductSize {
 
 	require.Equal(t, arg.SizeValue, productSize.SizeValue)
 
-	return productSize
+	return *productSize
 }
 
 func adminCreateRandomProductSize(t *testing.T) ProductSize {
@@ -73,7 +73,7 @@ func adminCreateRandomProductSize(t *testing.T) ProductSize {
 
 	require.Equal(t, arg.SizeValue, productSize.SizeValue)
 
-	return productSize
+	return *productSize
 }
 func TestCreateProductSize(t *testing.T) {
 	createRandomProductSize(t)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -66,7 +67,7 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductConfiguration{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -84,7 +85,7 @@ func TestGetProductConfigurationAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -237,7 +238,7 @@ func TestCreateProductConfigurationAPI(t *testing.T) {
 				store.EXPECT().
 					CreateProductConfiguration(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -303,7 +304,7 @@ func TestListProductConfigurationsAPI(t *testing.T) {
 		pageID   int
 		pageSize int
 	}
-	productConfigurations := make([]db.ProductConfiguration, n)
+	productConfigurations := make([]*db.ProductConfiguration, n)
 	for i := 0; i < n; i++ {
 		productConfigurations[i] = randomProductConfiguration()
 		testCases := []struct {
@@ -347,7 +348,7 @@ func TestListProductConfigurationsAPI(t *testing.T) {
 					store.EXPECT().
 						ListProductConfigurations(gomock.Any(), gomock.Any()).
 						Times(1).
-						Return([]db.ProductConfiguration{}, pgx.ErrTxClosed)
+						Return(nil, pgx.ErrTxClosed)
 				},
 				checkResponse: func(rsp *http.Response) {
 					require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -408,8 +409,8 @@ func TestListProductConfigurationsAPI(t *testing.T) {
 
 				// Add query parameters to request URL
 				q := request.URL.Query()
-				q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-				q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+				q.Add("page_id", strconv.Itoa(tc.query.pageID))
+				q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 				request.URL.RawQuery = q.Encode()
 
 				request.Header.Set("Content-Type", "application/json")
@@ -527,7 +528,7 @@ func TestUpdateProductConfigurationAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateProductConfiguration(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductConfiguration{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -766,12 +767,12 @@ func TestDeleteProductConfigurationAPI(t *testing.T) {
 
 }
 
-func randomProductConfigurationSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomProductConfigurationSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -782,28 +783,28 @@ func randomProductConfigurationSuperAdmin(t *testing.T) (admin db.Admin, passwor
 	return
 }
 
-func randomProductConfiguration() db.ProductConfiguration {
-	return db.ProductConfiguration{
+func randomProductConfiguration() *db.ProductConfiguration {
+	return &db.ProductConfiguration{
 		ProductItemID:     util.RandomMoney(),
 		VariationOptionID: util.RandomMoney(),
 	}
 }
 
-func requireBodyMatchProductConfiguration(t *testing.T, body io.ReadCloser, productConfiguration db.ProductConfiguration) {
+func requireBodyMatchProductConfiguration(t *testing.T, body io.ReadCloser, productConfiguration *db.ProductConfiguration) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductConfiguration db.ProductConfiguration
+	var gotProductConfiguration *db.ProductConfiguration
 	err = json.Unmarshal(data, &gotProductConfiguration)
 	require.NoError(t, err)
 	require.Equal(t, productConfiguration, gotProductConfiguration)
 }
 
-func requireBodyMatchProductConfigurations(t *testing.T, body io.ReadCloser, ProductConfigurations []db.ProductConfiguration) {
+func requireBodyMatchProductConfigurations(t *testing.T, body io.ReadCloser, ProductConfigurations []*db.ProductConfiguration) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductConfigurations []db.ProductConfiguration
+	var gotProductConfigurations []*db.ProductConfiguration
 	err = json.Unmarshal(data, &gotProductConfigurations)
 	require.NoError(t, err)
 	require.Equal(t, ProductConfigurations, gotProductConfigurations)

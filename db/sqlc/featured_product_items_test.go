@@ -31,7 +31,7 @@ func adminCreateRandomFeaturedProductItem(t *testing.T) FeaturedProductItem {
 	require.Equal(t, arg.Priority.Int64, featuredProductItem.Priority.Int64)
 	require.NotEmpty(t, featuredProductItem.ID)
 
-	return featuredProductItem
+	return *featuredProductItem
 }
 func TestCreateFeaturedProductItem(t *testing.T) {
 	adminCreateRandomFeaturedProductItem(t)

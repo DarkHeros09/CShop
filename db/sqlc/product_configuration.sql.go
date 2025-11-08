@@ -26,11 +26,11 @@ type CreateProductConfigurationParams struct {
 	VariationOptionID int64 `json:"variation_option_id"`
 }
 
-func (q *Queries) CreateProductConfiguration(ctx context.Context, arg CreateProductConfigurationParams) (ProductConfiguration, error) {
+func (q *Queries) CreateProductConfiguration(ctx context.Context, arg CreateProductConfigurationParams) (*ProductConfiguration, error) {
 	row := q.db.QueryRow(ctx, createProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
-	return i, err
+	return &i, err
 }
 
 const deleteProductConfiguration = `-- name: DeleteProductConfiguration :exec
@@ -61,11 +61,11 @@ type GetProductConfigurationParams struct {
 	VariationOptionID int64 `json:"variation_option_id"`
 }
 
-func (q *Queries) GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (ProductConfiguration, error) {
+func (q *Queries) GetProductConfiguration(ctx context.Context, arg GetProductConfigurationParams) (*ProductConfiguration, error) {
 	row := q.db.QueryRow(ctx, getProductConfiguration, arg.ProductItemID, arg.VariationOptionID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
-	return i, err
+	return &i, err
 }
 
 const listProductConfigurations = `-- name: ListProductConfigurations :many
@@ -80,19 +80,19 @@ type ListProductConfigurationsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]ProductConfiguration, error) {
+func (q *Queries) ListProductConfigurations(ctx context.Context, arg ListProductConfigurationsParams) ([]*ProductConfiguration, error) {
 	rows, err := q.db.Query(ctx, listProductConfigurations, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductConfiguration{}
+	items := []*ProductConfiguration{}
 	for rows.Next() {
 		var i ProductConfiguration
 		if err := rows.Scan(&i.ProductItemID, &i.VariationOptionID); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -113,9 +113,9 @@ type UpdateProductConfigurationParams struct {
 	ProductItemID     int64    `json:"product_item_id"`
 }
 
-func (q *Queries) UpdateProductConfiguration(ctx context.Context, arg UpdateProductConfigurationParams) (ProductConfiguration, error) {
+func (q *Queries) UpdateProductConfiguration(ctx context.Context, arg UpdateProductConfigurationParams) (*ProductConfiguration, error) {
 	row := q.db.QueryRow(ctx, updateProductConfiguration, arg.VariationOptionID, arg.ProductItemID)
 	var i ProductConfiguration
 	err := row.Scan(&i.ProductItemID, &i.VariationOptionID)
-	return i, err
+	return &i, err
 }

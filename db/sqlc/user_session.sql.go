@@ -38,7 +38,7 @@ type CreateUserSessionParams struct {
 	ExpiresAt    time.Time `json:"expires_at"`
 }
 
-func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (UserSession, error) {
+func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (*UserSession, error) {
 	row := q.db.QueryRow(ctx, createUserSession,
 		arg.ID,
 		arg.UserID,
@@ -60,7 +60,7 @@ func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionPa
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getUserSession = `-- name: GetUserSession :one
@@ -68,7 +68,7 @@ SELECT id, user_id, refresh_token, user_agent, client_ip, is_blocked, created_at
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserSession(ctx context.Context, id uuid.UUID) (UserSession, error) {
+func (q *Queries) GetUserSession(ctx context.Context, id uuid.UUID) (*UserSession, error) {
 	row := q.db.QueryRow(ctx, getUserSession, id)
 	var i UserSession
 	err := row.Scan(
@@ -82,7 +82,7 @@ func (q *Queries) GetUserSession(ctx context.Context, id uuid.UUID) (UserSession
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateUserSession = `-- name: UpdateUserSession :one
@@ -103,7 +103,7 @@ type UpdateUserSessionParams struct {
 	RefreshToken string    `json:"refresh_token"`
 }
 
-func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (UserSession, error) {
+func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) (*UserSession, error) {
 	row := q.db.QueryRow(ctx, updateUserSession,
 		arg.IsBlocked,
 		arg.ID,
@@ -122,5 +122,5 @@ func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionPa
 		&i.UpdatedAt,
 		&i.ExpiresAt,
 	)
-	return i, err
+	return &i, err
 }

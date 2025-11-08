@@ -45,7 +45,7 @@ type AdminCreateProductItemParams struct {
 
 // size_id,
 // qty_in_stock,
-func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (ProductItem, error) {
+func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreateProductItemParams) (*ProductItem, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductItem,
 		arg.ProductID,
 		arg.ImageID,
@@ -67,7 +67,7 @@ func (q *Queries) AdminCreateProductItem(ctx context.Context, arg AdminCreatePro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminUpdateProductItem = `-- name: AdminUpdateProductItem :one
@@ -104,7 +104,7 @@ type AdminUpdateProductItemParams struct {
 
 // qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
 // size_id = COALESCE(sqlc.narg(size_id),size_id),
-func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (ProductItem, error) {
+func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdateProductItemParams) (*ProductItem, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductItem,
 		arg.ProductSku,
 		arg.ImageID,
@@ -127,7 +127,7 @@ func (q *Queries) AdminUpdateProductItem(ctx context.Context, arg AdminUpdatePro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const createProductItem = `-- name: CreateProductItem :one
@@ -156,7 +156,7 @@ type CreateProductItemParams struct {
 
 // size_id,
 // qty_in_stock,
-func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemParams) (ProductItem, error) {
+func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemParams) (*ProductItem, error) {
 	row := q.db.QueryRow(ctx, createProductItem,
 		arg.ProductID,
 		arg.ImageID,
@@ -177,7 +177,7 @@ func (q *Queries) CreateProductItem(ctx context.Context, arg CreateProductItemPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteProductItem = `-- name: DeleteProductItem :exec
@@ -241,7 +241,7 @@ type GetProductItemRow struct {
 	QtyInStock    int64     `json:"qty_in_stock"`
 }
 
-func (q *Queries) GetProductItem(ctx context.Context, productItemID int64) (GetProductItemRow, error) {
+func (q *Queries) GetProductItem(ctx context.Context, productItemID int64) (*GetProductItemRow, error) {
 	row := q.db.QueryRow(ctx, getProductItem, productItemID)
 	var i GetProductItemRow
 	err := row.Scan(
@@ -258,7 +258,7 @@ func (q *Queries) GetProductItem(ctx context.Context, productItemID int64) (GetP
 		&i.TotalStock,
 		&i.QtyInStock,
 	)
-	return i, err
+	return &i, err
 }
 
 const getProductItemForUpdate = `-- name: GetProductItemForUpdate :one
@@ -267,7 +267,7 @@ WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
 
-func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (ProductItem, error) {
+func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (*ProductItem, error) {
 	row := q.db.QueryRow(ctx, getProductItemForUpdate, id)
 	var i ProductItem
 	err := row.Scan(
@@ -281,7 +281,7 @@ func (q *Queries) GetProductItemForUpdate(ctx context.Context, id int64) (Produc
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getProductItemWithPromotions = `-- name: GetProductItemWithPromotions :one
@@ -360,7 +360,7 @@ type GetProductItemWithPromotionsRow struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
-func (q *Queries) GetProductItemWithPromotions(ctx context.Context, id int64) (GetProductItemWithPromotionsRow, error) {
+func (q *Queries) GetProductItemWithPromotions(ctx context.Context, id int64) (*GetProductItemWithPromotionsRow, error) {
 	row := q.db.QueryRow(ctx, getProductItemWithPromotions, id)
 	var i GetProductItemWithPromotionsRow
 	err := row.Scan(
@@ -400,7 +400,7 @@ func (q *Queries) GetProductItemWithPromotions(ctx context.Context, id int64) (G
 		&i.ProductPromoStartDate,
 		&i.ProductPromoEndDate,
 	)
-	return i, err
+	return &i, err
 }
 
 const getTotalProductItems = `-- name: GetTotalProductItems :one
@@ -478,13 +478,13 @@ type ListProductItemsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]ListProductItemsRow, error) {
+func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsParams) ([]*ListProductItemsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsRow{}
+	items := []*ListProductItemsRow{}
 	for rows.Next() {
 		var i ListProductItemsRow
 		if err := rows.Scan(
@@ -515,7 +515,7 @@ func (q *Queries) ListProductItems(ctx context.Context, arg ListProductItemsPara
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -597,13 +597,13 @@ type ListProductItemsByIDsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]ListProductItemsByIDsRow, error) {
+func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]*ListProductItemsByIDsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsByIDs, productsIds)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsByIDsRow{}
+	items := []*ListProductItemsByIDsRow{}
 	for rows.Next() {
 		var i ListProductItemsByIDsRow
 		if err := rows.Scan(
@@ -641,7 +641,7 @@ func (q *Queries) ListProductItemsByIDs(ctx context.Context, productsIds []int64
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -890,7 +890,7 @@ type ListProductItemsNextPageRow struct {
 //
 //	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
 //	THEN fpi.id END DESC,
-func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]ListProductItemsNextPageRow, error) {
+func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductItemsNextPageParams) ([]*ListProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsNextPage,
 		arg.Limit,
 		arg.OrderByNew,
@@ -913,7 +913,7 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsNextPageRow{}
+	items := []*ListProductItemsNextPageRow{}
 	for rows.Next() {
 		var i ListProductItemsNextPageRow
 		if err := rows.Scan(
@@ -966,7 +966,7 @@ func (q *Queries) ListProductItemsNextPage(ctx context.Context, arg ListProductI
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1115,7 +1115,7 @@ type ListProductItemsNextPageOldRow struct {
 // LIMIT 1
 // )
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]ListProductItemsNextPageOldRow, error) {
+func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProductItemsNextPageOldParams) ([]*ListProductItemsNextPageOldRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsNextPageOld,
 		arg.Limit,
 		arg.ID,
@@ -1130,7 +1130,7 @@ func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProdu
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsNextPageOldRow{}
+	items := []*ListProductItemsNextPageOldRow{}
 	for rows.Next() {
 		var i ListProductItemsNextPageOldRow
 		if err := rows.Scan(
@@ -1183,7 +1183,7 @@ func (q *Queries) ListProductItemsNextPageOld(ctx context.Context, arg ListProdu
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1384,7 +1384,7 @@ type ListProductItemsV2Row struct {
 //
 //	WHEN COALESCE(sqlc.narg(order_by_featured), FALSE) = TRUE
 //	THEN fpi.id END DESC,
-func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2Params) ([]ListProductItemsV2Row, error) {
+func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2Params) ([]*ListProductItemsV2Row, error) {
 	rows, err := q.db.Query(ctx, listProductItemsV2,
 		arg.Limit,
 		arg.IsPromoted,
@@ -1403,7 +1403,7 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsV2Row{}
+	items := []*ListProductItemsV2Row{}
 	for rows.Next() {
 		var i ListProductItemsV2Row
 		if err := rows.Scan(
@@ -1456,7 +1456,7 @@ func (q *Queries) ListProductItemsV2(ctx context.Context, arg ListProductItemsV2
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1603,7 +1603,7 @@ type ListProductItemsV2OldRow struct {
 // LIMIT 1
 // )
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItemsV2OldParams) ([]ListProductItemsV2OldRow, error) {
+func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItemsV2OldParams) ([]*ListProductItemsV2OldRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsV2Old,
 		arg.Limit,
 		arg.IsPromoted,
@@ -1617,7 +1617,7 @@ func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItem
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsV2OldRow{}
+	items := []*ListProductItemsV2OldRow{}
 	for rows.Next() {
 		var i ListProductItemsV2OldRow
 		if err := rows.Scan(
@@ -1670,7 +1670,7 @@ func (q *Queries) ListProductItemsV2Old(ctx context.Context, arg ListProductItem
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1780,13 +1780,13 @@ type ListProductItemsWithBestSalesRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]ListProductItemsWithBestSalesRow, error) {
+func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]*ListProductItemsWithBestSalesRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBestSales, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithBestSalesRow{}
+	items := []*ListProductItemsWithBestSalesRow{}
 	for rows.Next() {
 		var i ListProductItemsWithBestSalesRow
 		if err := rows.Scan(
@@ -1839,7 +1839,7 @@ func (q *Queries) ListProductItemsWithBestSales(ctx context.Context, limit int32
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1933,13 +1933,13 @@ type ListProductItemsWithBrandPromotionsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg ListProductItemsWithBrandPromotionsParams) ([]ListProductItemsWithBrandPromotionsRow, error) {
+func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg ListProductItemsWithBrandPromotionsParams) ([]*ListProductItemsWithBrandPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBrandPromotions, arg.Limit, arg.BrandID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithBrandPromotionsRow{}
+	items := []*ListProductItemsWithBrandPromotionsRow{}
 	for rows.Next() {
 		var i ListProductItemsWithBrandPromotionsRow
 		if err := rows.Scan(
@@ -1978,7 +1978,7 @@ func (q *Queries) ListProductItemsWithBrandPromotions(ctx context.Context, arg L
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2076,7 +2076,7 @@ type ListProductItemsWithBrandPromotionsNextPageRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg ListProductItemsWithBrandPromotionsNextPageParams) ([]ListProductItemsWithBrandPromotionsNextPageRow, error) {
+func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg ListProductItemsWithBrandPromotionsNextPageParams) ([]*ListProductItemsWithBrandPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithBrandPromotionsNextPage,
 		arg.Limit,
 		arg.BrandID,
@@ -2087,7 +2087,7 @@ func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Contex
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithBrandPromotionsNextPageRow{}
+	items := []*ListProductItemsWithBrandPromotionsNextPageRow{}
 	for rows.Next() {
 		var i ListProductItemsWithBrandPromotionsNextPageRow
 		if err := rows.Scan(
@@ -2126,7 +2126,7 @@ func (q *Queries) ListProductItemsWithBrandPromotionsNextPage(ctx context.Contex
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2220,13 +2220,13 @@ type ListProductItemsWithCategoryPromotionsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, arg ListProductItemsWithCategoryPromotionsParams) ([]ListProductItemsWithCategoryPromotionsRow, error) {
+func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, arg ListProductItemsWithCategoryPromotionsParams) ([]*ListProductItemsWithCategoryPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithCategoryPromotions, arg.Limit, arg.CategoryID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithCategoryPromotionsRow{}
+	items := []*ListProductItemsWithCategoryPromotionsRow{}
 	for rows.Next() {
 		var i ListProductItemsWithCategoryPromotionsRow
 		if err := rows.Scan(
@@ -2265,7 +2265,7 @@ func (q *Queries) ListProductItemsWithCategoryPromotions(ctx context.Context, ar
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2363,7 +2363,7 @@ type ListProductItemsWithCategoryPromotionsNextPageRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg ListProductItemsWithCategoryPromotionsNextPageParams) ([]ListProductItemsWithCategoryPromotionsNextPageRow, error) {
+func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg ListProductItemsWithCategoryPromotionsNextPageParams) ([]*ListProductItemsWithCategoryPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithCategoryPromotionsNextPage,
 		arg.Limit,
 		arg.CategoryID,
@@ -2374,7 +2374,7 @@ func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Con
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithCategoryPromotionsNextPageRow{}
+	items := []*ListProductItemsWithCategoryPromotionsNextPageRow{}
 	for rows.Next() {
 		var i ListProductItemsWithCategoryPromotionsNextPageRow
 		if err := rows.Scan(
@@ -2413,7 +2413,7 @@ func (q *Queries) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Con
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2507,13 +2507,13 @@ type ListProductItemsWithPromotionsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListProductItemsWithPromotionsParams) ([]ListProductItemsWithPromotionsRow, error) {
+func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListProductItemsWithPromotionsParams) ([]*ListProductItemsWithPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithPromotions, arg.Limit, arg.ProductID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithPromotionsRow{}
+	items := []*ListProductItemsWithPromotionsRow{}
 	for rows.Next() {
 		var i ListProductItemsWithPromotionsRow
 		if err := rows.Scan(
@@ -2552,7 +2552,7 @@ func (q *Queries) ListProductItemsWithPromotions(ctx context.Context, arg ListPr
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2648,13 +2648,13 @@ type ListProductItemsWithPromotionsNextPageRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, arg ListProductItemsWithPromotionsNextPageParams) ([]ListProductItemsWithPromotionsNextPageRow, error) {
+func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, arg ListProductItemsWithPromotionsNextPageParams) ([]*ListProductItemsWithPromotionsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductItemsWithPromotionsNextPage, arg.Limit, arg.ProductID, arg.ProductItemID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductItemsWithPromotionsNextPageRow{}
+	items := []*ListProductItemsWithPromotionsNextPageRow{}
 	for rows.Next() {
 		var i ListProductItemsWithPromotionsNextPageRow
 		if err := rows.Scan(
@@ -2693,7 +2693,7 @@ func (q *Queries) ListProductItemsWithPromotionsNextPage(ctx context.Context, ar
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -2817,13 +2817,13 @@ type SearchProductItemsRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]SearchProductItemsRow, error) {
+func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItemsParams) ([]*SearchProductItemsRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItems, arg.Limit, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsRow{}
+	items := []*SearchProductItemsRow{}
 	for rows.Next() {
 		var i SearchProductItemsRow
 		if err := rows.Scan(
@@ -2876,7 +2876,7 @@ func (q *Queries) SearchProductItems(ctx context.Context, arg SearchProductItems
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -3004,7 +3004,7 @@ type SearchProductItemsNextPageRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]SearchProductItemsNextPageRow, error) {
+func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProductItemsNextPageParams) ([]*SearchProductItemsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPage,
 		arg.Limit,
 		arg.ProductItemID,
@@ -3015,7 +3015,7 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsNextPageRow{}
+	items := []*SearchProductItemsNextPageRow{}
 	for rows.Next() {
 		var i SearchProductItemsNextPageRow
 		if err := rows.Scan(
@@ -3068,7 +3068,7 @@ func (q *Queries) SearchProductItemsNextPage(ctx context.Context, arg SearchProd
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -3184,13 +3184,13 @@ type SearchProductItemsNextPageOldRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]SearchProductItemsNextPageOldRow, error) {
+func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchProductItemsNextPageOldParams) ([]*SearchProductItemsNextPageOldRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsNextPageOld, arg.Limit, arg.ID, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsNextPageOldRow{}
+	items := []*SearchProductItemsNextPageOldRow{}
 	for rows.Next() {
 		var i SearchProductItemsNextPageOldRow
 		if err := rows.Scan(
@@ -3243,7 +3243,7 @@ func (q *Queries) SearchProductItemsNextPageOld(ctx context.Context, arg SearchP
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -3355,13 +3355,13 @@ type SearchProductItemsOldRow struct {
 }
 
 // LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
-func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]SearchProductItemsOldRow, error) {
+func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductItemsOldParams) ([]*SearchProductItemsOldRow, error) {
 	rows, err := q.db.Query(ctx, searchProductItemsOld, arg.Limit, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductItemsOldRow{}
+	items := []*SearchProductItemsOldRow{}
 	for rows.Next() {
 		var i SearchProductItemsOldRow
 		if err := rows.Scan(
@@ -3414,7 +3414,7 @@ func (q *Queries) SearchProductItemsOld(ctx context.Context, arg SearchProductIt
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -3448,7 +3448,7 @@ type UpdateProductItemParams struct {
 
 // qty_in_stock = COALESCE(sqlc.narg(qty_in_stock),qty_in_stock),
 // size_id = COALESCE(sqlc.narg(size_id),size_id),
-func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (ProductItem, error) {
+func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemParams) (*ProductItem, error) {
 	row := q.db.QueryRow(ctx, updateProductItem,
 		arg.ProductSku,
 		arg.ImageID,
@@ -3470,5 +3470,5 @@ func (q *Queries) UpdateProductItem(ctx context.Context, arg UpdateProductItemPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

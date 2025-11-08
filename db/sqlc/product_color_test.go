@@ -18,7 +18,7 @@ func createRandomProductColor(t *testing.T) ProductColor {
 
 	require.Equal(t, arg, productColor.ColorValue)
 
-	return productColor
+	return *productColor
 }
 
 func adminCreateRandomProductColor(t *testing.T) ProductColor {
@@ -33,7 +33,7 @@ func adminCreateRandomProductColor(t *testing.T) ProductColor {
 
 	require.Equal(t, arg.ColorValue, productColor.ColorValue)
 
-	return productColor
+	return *productColor
 }
 func TestCreateProductColor(t *testing.T) {
 	createRandomProductColor(t)

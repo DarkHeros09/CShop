@@ -122,7 +122,7 @@ func TestAdminCreatePaymentTypeAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreatePaymentType(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.PaymentType{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -183,7 +183,7 @@ func TestAdminCreatePaymentTypeAPI(t *testing.T) {
 
 func TestListPaymentTypeAPI(t *testing.T) {
 	n := 5
-	paymentTypes := make([]db.PaymentType, n)
+	paymentTypes := make([]*db.PaymentType, n)
 	user, _ := randomPTUser(t)
 	paymentType1 := createRandomPaymentType()
 	paymentType2 := createRandomPaymentType()
@@ -225,7 +225,7 @@ func TestListPaymentTypeAPI(t *testing.T) {
 				store.EXPECT().
 					ListPaymentTypes(gomock.Any()).
 					Times(1).
-					Return([]db.PaymentType{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -265,7 +265,7 @@ func TestListPaymentTypeAPI(t *testing.T) {
 func TestAdminListPaymentTypeAPI(t *testing.T) {
 	admin, _ := randomPaymentTypeSuperAdmin(t)
 	n := 5
-	paymentTypes := make([]db.PaymentType, n)
+	paymentTypes := make([]*db.PaymentType, n)
 	paymentType1 := createRandomPaymentType()
 	paymentType2 := createRandomPaymentType()
 
@@ -306,7 +306,7 @@ func TestAdminListPaymentTypeAPI(t *testing.T) {
 				store.EXPECT().
 					AdminListPaymentTypes(gomock.Any(), gomock.Eq(admin.ID)).
 					Times(1).
-					Return([]db.PaymentType{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -458,7 +458,7 @@ func TestUpdatePaymentTypeAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdatePaymentType(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentType{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -698,40 +698,40 @@ func randomPTUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func randomPaymentType() db.PaymentType {
-	return db.PaymentType{
+func randomPaymentType() *db.PaymentType {
+	return &db.PaymentType{
 		ID:       util.RandomInt(1, 1000),
 		Value:    util.RandomUser(),
 		IsActive: util.RandomBool(),
 	}
 }
 
-func requireBodyMatchPaymentTypes(t *testing.T, body io.ReadCloser, paymentTypes []db.PaymentType) {
+func requireBodyMatchPaymentTypes(t *testing.T, body io.ReadCloser, paymentTypes []*db.PaymentType) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPaymentTypes []db.PaymentType
+	var gotPaymentTypes []*db.PaymentType
 	err = json.Unmarshal(data, &gotPaymentTypes)
 	require.NoError(t, err)
 	require.Equal(t, paymentTypes, gotPaymentTypes)
 }
 
-func requireBodyMatchPaymentType(t *testing.T, body io.ReadCloser, paymentType db.PaymentType) {
+func requireBodyMatchPaymentType(t *testing.T, body io.ReadCloser, paymentType *db.PaymentType) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPaymentType db.PaymentType
+	var gotPaymentType *db.PaymentType
 	err = json.Unmarshal(data, &gotPaymentType)
 	require.NoError(t, err)
 	require.Equal(t, paymentType, gotPaymentType)
 }
 
-func randomPaymentTypeSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomPaymentTypeSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),

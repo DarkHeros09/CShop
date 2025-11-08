@@ -31,11 +31,11 @@ type AdminCreateProductColorParams struct {
 	AdminID    int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProductColor(ctx context.Context, arg AdminCreateProductColorParams) (ProductColor, error) {
+func (q *Queries) AdminCreateProductColor(ctx context.Context, arg AdminCreateProductColorParams) (*ProductColor, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductColor, arg.ColorValue, arg.AdminID)
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
-	return i, err
+	return &i, err
 }
 
 const adminUpdateProductColor = `-- name: AdminUpdateProductColor :one
@@ -59,11 +59,11 @@ type AdminUpdateProductColorParams struct {
 	AdminID    int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (ProductColor, error) {
+func (q *Queries) AdminUpdateProductColor(ctx context.Context, arg AdminUpdateProductColorParams) (*ProductColor, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductColor, arg.ColorValue, arg.ID, arg.AdminID)
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
-	return i, err
+	return &i, err
 }
 
 const createProductColor = `-- name: CreateProductColor :one
@@ -75,11 +75,11 @@ INSERT INTO "product_color" (
 RETURNING id, color_value
 `
 
-func (q *Queries) CreateProductColor(ctx context.Context, colorValue string) (ProductColor, error) {
+func (q *Queries) CreateProductColor(ctx context.Context, colorValue string) (*ProductColor, error) {
 	row := q.db.QueryRow(ctx, createProductColor, colorValue)
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
-	return i, err
+	return &i, err
 }
 
 const deleteProductColor = `-- name: DeleteProductColor :exec
@@ -97,11 +97,11 @@ SELECT id, color_value FROM "product_color"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProductColor(ctx context.Context, id int64) (ProductColor, error) {
+func (q *Queries) GetProductColor(ctx context.Context, id int64) (*ProductColor, error) {
 	row := q.db.QueryRow(ctx, getProductColor, id)
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
-	return i, err
+	return &i, err
 }
 
 const listProductColors = `-- name: ListProductColors :many
@@ -109,19 +109,19 @@ SELECT id, color_value FROM "product_color"
 ORDER BY id
 `
 
-func (q *Queries) ListProductColors(ctx context.Context) ([]ProductColor, error) {
+func (q *Queries) ListProductColors(ctx context.Context) ([]*ProductColor, error) {
 	rows, err := q.db.Query(ctx, listProductColors)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductColor{}
+	items := []*ProductColor{}
 	for rows.Next() {
 		var i ProductColor
 		if err := rows.Scan(&i.ID, &i.ColorValue); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -142,9 +142,9 @@ type UpdateProductColorParams struct {
 	ID         int64       `json:"id"`
 }
 
-func (q *Queries) UpdateProductColor(ctx context.Context, arg UpdateProductColorParams) (ProductColor, error) {
+func (q *Queries) UpdateProductColor(ctx context.Context, arg UpdateProductColorParams) (*ProductColor, error) {
 	row := q.db.QueryRow(ctx, updateProductColor, arg.ColorValue, arg.ID)
 	var i ProductColor
 	err := row.Scan(&i.ID, &i.ColorValue)
-	return i, err
+	return &i, err
 }

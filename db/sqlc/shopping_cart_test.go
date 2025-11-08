@@ -26,7 +26,7 @@ func createRandomShoppingCart(t *testing.T) ShoppingCart {
 
 	// shoppingCart := <-shoppingCartChan
 
-	return shoppingCart
+	return *shoppingCart
 }
 
 func TestCreateShoppingCart(t *testing.T) {

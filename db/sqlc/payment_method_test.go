@@ -26,7 +26,7 @@ func createRandomPaymentMethod(t *testing.T) PaymentMethod {
 	require.Equal(t, arg.PaymentTypeID, paymentMethod.PaymentTypeID)
 	require.Equal(t, arg.Provider, paymentMethod.Provider)
 
-	return paymentMethod
+	return *paymentMethod
 }
 
 func TestCreatePaymentMethod(t *testing.T) {

@@ -47,7 +47,7 @@ func createRandomAppPolicy(t *testing.T) AppPolicy {
 
 	require.NotEmpty(t, appPolicy.CreatedAt)
 
-	return appPolicy
+	return *appPolicy
 }
 
 func TestCreateAppPolicy(t *testing.T) {
