@@ -29,7 +29,7 @@ func createRandomNotification(t *testing.T) Notification {
 
 	require.NotEmpty(t, notification.CreatedAt)
 
-	return notification
+	return *notification
 }
 
 func TestCreateNotification(t *testing.T) {

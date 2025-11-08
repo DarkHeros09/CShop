@@ -40,7 +40,7 @@ func createRandomUser(t *testing.T) User {
 	require.NotZero(t, user.CreatedAt)
 	require.True(t, user.UpdatedAt.IsZero())
 
-	return user
+	return *user
 
 }
 func TestCreateUser(t *testing.T) {
@@ -226,7 +226,7 @@ func TestDeleteUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
-	require.Equal(t, user1, user2)
+	require.Equal(t, user1, *user2)
 
 	user3, err := testStore.DeleteUser(context.Background(), user1.ID)
 

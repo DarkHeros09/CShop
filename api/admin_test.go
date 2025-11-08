@@ -26,6 +26,7 @@ import (
 func TestLoginAdminAPI(t *testing.T) {
 	t.Parallel()
 	admin, password := randomAdminLogin(t)
+	adminSession := randomAdminSession(admin)
 
 	testCases := []struct {
 		name          string
@@ -47,7 +48,7 @@ func TestLoginAdminAPI(t *testing.T) {
 
 				store.EXPECT().
 					CreateAdminSession(gomock.Any(), gomock.Any()).
-					Times(1)
+					Times(1).Return(adminSession, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -63,7 +64,7 @@ func TestLoginAdminAPI(t *testing.T) {
 				store.EXPECT().
 					GetAdminByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Admin{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -79,10 +80,10 @@ func TestLoginAdminAPI(t *testing.T) {
 				store.EXPECT().
 					GetAdminByEmail(gomock.Any(), gomock.Eq(admin.Email)).
 					Times(1).
-					Return(admin, nil)
+					Return(nil, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
-				require.Equal(t, http.StatusUnauthorized, rsp.StatusCode)
+				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
 			},
 		},
 		{
@@ -95,7 +96,7 @@ func TestLoginAdminAPI(t *testing.T) {
 				store.EXPECT().
 					GetAdminByEmail(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Admin{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -222,7 +223,7 @@ func TestLogoutAdminAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateAdminSession(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.AdminSession{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -283,12 +284,12 @@ func TestLogoutAdminAPI(t *testing.T) {
 	}
 }
 
-func randomAdminLogin(t *testing.T) (user db.Admin, password string) {
+func randomAdminLogin(t *testing.T) (user *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.Admin{
+	user = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -299,13 +300,13 @@ func randomAdminLogin(t *testing.T) (user db.Admin, password string) {
 	return
 }
 
-func randomAdminLogout(t *testing.T) (user db.AdminSession, userLog db.Admin) {
+func randomAdminLogout(t *testing.T) (user *db.AdminSession, userLog *db.Admin) {
 	uuid1, err := uuid.NewRandom()
 	require.NoError(t, err)
 
 	userLog, _ = randomAdminLogin(t)
 
-	user = db.AdminSession{
+	user = &db.AdminSession{
 		ID:           uuid1,
 		AdminID:      userLog.ID,
 		RefreshToken: util.RandomString(5),
@@ -314,4 +315,16 @@ func randomAdminLogout(t *testing.T) (user db.AdminSession, userLog db.Admin) {
 		IsBlocked:    false,
 	}
 	return
+}
+
+func randomAdminSession(admin *db.Admin) *db.AdminSession {
+	uuid1, _ := uuid.NewRandom()
+	return &db.AdminSession{
+		ID:           uuid1,
+		AdminID:      admin.ID,
+		RefreshToken: util.RandomString(5),
+		AdminAgent:   util.RandomString(5),
+		ClientIp:     util.RandomString(5),
+		IsBlocked:    false,
+	}
 }

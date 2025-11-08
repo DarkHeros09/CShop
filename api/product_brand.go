@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -45,7 +46,7 @@ func (server *Server) createProductBrand(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -81,6 +82,12 @@ func (server *Server) getProductBrand(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if productBrand == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(productBrand)
 	return nil
 }
@@ -111,6 +118,11 @@ func (server *Server) listProductBrands(ctx *fiber.Ctx) error {
 			return err
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if productBrands == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -156,7 +168,7 @@ func (server *Server) updateProductBrand(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -194,7 +206,7 @@ func (server *Server) deleteProductBrand(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

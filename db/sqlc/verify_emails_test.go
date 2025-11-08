@@ -28,7 +28,7 @@ func createRandomVerifyEmail(t *testing.T, user User) VerifyEmail {
 
 	require.NotEmpty(t, verifyEmail.CreatedAt)
 
-	return verifyEmail
+	return *verifyEmail
 }
 
 func TestCreateVerifyEmail(t *testing.T) {

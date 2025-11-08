@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ func TestGetVariationOptionAPI(t *testing.T) {
 				store.EXPECT().
 					GetVariationOption(gomock.Any(), gomock.Eq(variationOption.ID)).
 					Times(1).
-					Return(db.VariationOption{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +68,7 @@ func TestGetVariationOptionAPI(t *testing.T) {
 				store.EXPECT().
 					GetVariationOption(gomock.Any(), gomock.Eq(variationOption.ID)).
 					Times(1).
-					Return(db.VariationOption{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -217,7 +218,7 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 				store.EXPECT().
 					CreateVariationOption(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.VariationOption{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -278,7 +279,7 @@ func TestCreateVariationOptionAPI(t *testing.T) {
 
 func TestListVariationOptionsAPI(t *testing.T) {
 	n := 5
-	VariationOptions := make([]db.VariationOption, n)
+	VariationOptions := make([]*db.VariationOption, n)
 	for i := 0; i < n; i++ {
 		VariationOptions[i] = randomVariationOption()
 	}
@@ -326,7 +327,7 @@ func TestListVariationOptionsAPI(t *testing.T) {
 				store.EXPECT().
 					ListVariationOptions(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.VariationOption{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -385,8 +386,8 @@ func TestListVariationOptionsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -509,7 +510,7 @@ func TestUpdateVariationOptionAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateVariationOption(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.VariationOption{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -734,29 +735,29 @@ func randomVariationOptionSuperAdmin(t *testing.T) (admin db.Admin, password str
 	return
 }
 
-func randomVariationOption() db.VariationOption {
-	return db.VariationOption{
+func randomVariationOption() *db.VariationOption {
+	return &db.VariationOption{
 		ID:          util.RandomInt(1, 1000),
 		VariationID: null.IntFrom(util.RandomMoney()),
 		Value:       util.RandomUser(),
 	}
 }
 
-func requireBodyMatchVariationOption(t *testing.T, body io.ReadCloser, VariationOption db.VariationOption) {
+func requireBodyMatchVariationOption(t *testing.T, body io.ReadCloser, VariationOption *db.VariationOption) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotVariationOption db.VariationOption
+	var gotVariationOption *db.VariationOption
 	err = json.Unmarshal(data, &gotVariationOption)
 	require.NoError(t, err)
 	require.Equal(t, VariationOption, gotVariationOption)
 }
 
-func requireBodyMatchVariationOptions(t *testing.T, body io.ReadCloser, variationOptions []db.VariationOption) {
+func requireBodyMatchVariationOptions(t *testing.T, body io.ReadCloser, variationOptions []*db.VariationOption) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotVariationOptions []db.VariationOption
+	var gotVariationOptions []*db.VariationOption
 	err = json.Unmarshal(data, &gotVariationOptions)
 	require.NoError(t, err)
 	require.Equal(t, variationOptions, gotVariationOptions)

@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
@@ -45,7 +46,7 @@ func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -82,6 +83,11 @@ func (server *Server) getVariationOption(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if variationOption == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(variationOption)
 	return nil
 }
@@ -112,6 +118,11 @@ func (server *Server) listVariationOptions(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if variationOptions == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -157,7 +168,7 @@ func (server *Server) updateVariationOption(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -195,7 +206,7 @@ func (server *Server) deleteVariationOption(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

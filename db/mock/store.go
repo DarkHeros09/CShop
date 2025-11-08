@@ -44,10 +44,10 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 }
 
 // AdminCreateBrandPromotion mocks base method.
-func (m *MockStore) AdminCreateBrandPromotion(ctx context.Context, arg db.AdminCreateBrandPromotionParams) (db.BrandPromotion, error) {
+func (m *MockStore) AdminCreateBrandPromotion(ctx context.Context, arg db.AdminCreateBrandPromotionParams) (*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateBrandPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.BrandPromotion)
+	ret0, _ := ret[0].(*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -59,10 +59,10 @@ func (mr *MockStoreMockRecorder) AdminCreateBrandPromotion(ctx, arg any) *gomock
 }
 
 // AdminCreateCategoryPromotion mocks base method.
-func (m *MockStore) AdminCreateCategoryPromotion(ctx context.Context, arg db.AdminCreateCategoryPromotionParams) (db.CategoryPromotion, error) {
+func (m *MockStore) AdminCreateCategoryPromotion(ctx context.Context, arg db.AdminCreateCategoryPromotionParams) (*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateCategoryPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.CategoryPromotion)
+	ret0, _ := ret[0].(*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -74,10 +74,10 @@ func (mr *MockStoreMockRecorder) AdminCreateCategoryPromotion(ctx, arg any) *gom
 }
 
 // AdminCreateFeaturedProductItem mocks base method.
-func (m *MockStore) AdminCreateFeaturedProductItem(ctx context.Context, arg db.AdminCreateFeaturedProductItemParams) (db.FeaturedProductItem, error) {
+func (m *MockStore) AdminCreateFeaturedProductItem(ctx context.Context, arg db.AdminCreateFeaturedProductItemParams) (*db.FeaturedProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateFeaturedProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret0, _ := ret[0].(*db.FeaturedProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -89,10 +89,10 @@ func (mr *MockStoreMockRecorder) AdminCreateFeaturedProductItem(ctx, arg any) *g
 }
 
 // AdminCreatePaymentType mocks base method.
-func (m *MockStore) AdminCreatePaymentType(ctx context.Context, arg db.AdminCreatePaymentTypeParams) (db.PaymentType, error) {
+func (m *MockStore) AdminCreatePaymentType(ctx context.Context, arg db.AdminCreatePaymentTypeParams) (*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreatePaymentType", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentType)
+	ret0, _ := ret[0].(*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -104,10 +104,10 @@ func (mr *MockStoreMockRecorder) AdminCreatePaymentType(ctx, arg any) *gomock.Ca
 }
 
 // AdminCreateProduct mocks base method.
-func (m *MockStore) AdminCreateProduct(ctx context.Context, arg db.AdminCreateProductParams) (db.Product, error) {
+func (m *MockStore) AdminCreateProduct(ctx context.Context, arg db.AdminCreateProductParams) (*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProduct", ctx, arg)
-	ret0, _ := ret[0].(db.Product)
+	ret0, _ := ret[0].(*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -119,10 +119,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProduct(ctx, arg any) *gomock.Call {
 }
 
 // AdminCreateProductBrand mocks base method.
-func (m *MockStore) AdminCreateProductBrand(ctx context.Context, arg db.AdminCreateProductBrandParams) (db.ProductBrand, error) {
+func (m *MockStore) AdminCreateProductBrand(ctx context.Context, arg db.AdminCreateProductBrandParams) (*db.ProductBrand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductBrand", ctx, arg)
-	ret0, _ := ret[0].(db.ProductBrand)
+	ret0, _ := ret[0].(*db.ProductBrand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -134,10 +134,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductBrand(ctx, arg any) *gomock.C
 }
 
 // AdminCreateProductCategory mocks base method.
-func (m *MockStore) AdminCreateProductCategory(ctx context.Context, arg db.AdminCreateProductCategoryParams) (db.ProductCategory, error) {
+func (m *MockStore) AdminCreateProductCategory(ctx context.Context, arg db.AdminCreateProductCategoryParams) (*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductCategory", ctx, arg)
-	ret0, _ := ret[0].(db.ProductCategory)
+	ret0, _ := ret[0].(*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -149,10 +149,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductCategory(ctx, arg any) *gomoc
 }
 
 // AdminCreateProductColor mocks base method.
-func (m *MockStore) AdminCreateProductColor(ctx context.Context, arg db.AdminCreateProductColorParams) (db.ProductColor, error) {
+func (m *MockStore) AdminCreateProductColor(ctx context.Context, arg db.AdminCreateProductColorParams) (*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductColor", ctx, arg)
-	ret0, _ := ret[0].(db.ProductColor)
+	ret0, _ := ret[0].(*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -164,10 +164,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductColor(ctx, arg any) *gomock.C
 }
 
 // AdminCreateProductImages mocks base method.
-func (m *MockStore) AdminCreateProductImages(ctx context.Context, arg db.AdminCreateProductImagesParams) (db.ProductImage, error) {
+func (m *MockStore) AdminCreateProductImages(ctx context.Context, arg db.AdminCreateProductImagesParams) (*db.ProductImage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductImages", ctx, arg)
-	ret0, _ := ret[0].(db.ProductImage)
+	ret0, _ := ret[0].(*db.ProductImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -179,10 +179,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductImages(ctx, arg any) *gomock.
 }
 
 // AdminCreateProductItem mocks base method.
-func (m *MockStore) AdminCreateProductItem(ctx context.Context, arg db.AdminCreateProductItemParams) (db.ProductItem, error) {
+func (m *MockStore) AdminCreateProductItem(ctx context.Context, arg db.AdminCreateProductItemParams) (*db.ProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(*db.ProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -194,10 +194,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductItem(ctx, arg any) *gomock.Ca
 }
 
 // AdminCreateProductPromotion mocks base method.
-func (m *MockStore) AdminCreateProductPromotion(ctx context.Context, arg db.AdminCreateProductPromotionParams) (db.ProductPromotion, error) {
+func (m *MockStore) AdminCreateProductPromotion(ctx context.Context, arg db.AdminCreateProductPromotionParams) (*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.ProductPromotion)
+	ret0, _ := ret[0].(*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -209,10 +209,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductPromotion(ctx, arg any) *gomo
 }
 
 // AdminCreateProductSize mocks base method.
-func (m *MockStore) AdminCreateProductSize(ctx context.Context, arg db.AdminCreateProductSizeParams) (db.ProductSize, error) {
+func (m *MockStore) AdminCreateProductSize(ctx context.Context, arg db.AdminCreateProductSizeParams) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateProductSize", ctx, arg)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -224,10 +224,10 @@ func (mr *MockStoreMockRecorder) AdminCreateProductSize(ctx, arg any) *gomock.Ca
 }
 
 // AdminCreatePromotion mocks base method.
-func (m *MockStore) AdminCreatePromotion(ctx context.Context, arg db.AdminCreatePromotionParams) (db.Promotion, error) {
+func (m *MockStore) AdminCreatePromotion(ctx context.Context, arg db.AdminCreatePromotionParams) (*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreatePromotion", ctx, arg)
-	ret0, _ := ret[0].(db.Promotion)
+	ret0, _ := ret[0].(*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -239,10 +239,10 @@ func (mr *MockStoreMockRecorder) AdminCreatePromotion(ctx, arg any) *gomock.Call
 }
 
 // AdminCreateShippingMethod mocks base method.
-func (m *MockStore) AdminCreateShippingMethod(ctx context.Context, arg db.AdminCreateShippingMethodParams) (db.ShippingMethod, error) {
+func (m *MockStore) AdminCreateShippingMethod(ctx context.Context, arg db.AdminCreateShippingMethodParams) (*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminCreateShippingMethod", ctx, arg)
-	ret0, _ := ret[0].(db.ShippingMethod)
+	ret0, _ := ret[0].(*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -282,10 +282,10 @@ func (mr *MockStoreMockRecorder) AdminDeleteProduct(ctx, arg any) *gomock.Call {
 }
 
 // AdminListBrandPromotions mocks base method.
-func (m *MockStore) AdminListBrandPromotions(ctx context.Context, adminID int64) ([]db.AdminListBrandPromotionsRow, error) {
+func (m *MockStore) AdminListBrandPromotions(ctx context.Context, adminID int64) ([]*db.AdminListBrandPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListBrandPromotions", ctx, adminID)
-	ret0, _ := ret[0].([]db.AdminListBrandPromotionsRow)
+	ret0, _ := ret[0].([]*db.AdminListBrandPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -297,10 +297,10 @@ func (mr *MockStoreMockRecorder) AdminListBrandPromotions(ctx, adminID any) *gom
 }
 
 // AdminListCategoryPromotions mocks base method.
-func (m *MockStore) AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]db.AdminListCategoryPromotionsRow, error) {
+func (m *MockStore) AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]*db.AdminListCategoryPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListCategoryPromotions", ctx, adminID)
-	ret0, _ := ret[0].([]db.AdminListCategoryPromotionsRow)
+	ret0, _ := ret[0].([]*db.AdminListCategoryPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -312,10 +312,10 @@ func (mr *MockStoreMockRecorder) AdminListCategoryPromotions(ctx, adminID any) *
 }
 
 // AdminListFeaturedProductItems mocks base method.
-func (m *MockStore) AdminListFeaturedProductItems(ctx context.Context, adminID int64) ([]db.AdminListFeaturedProductItemsRow, error) {
+func (m *MockStore) AdminListFeaturedProductItems(ctx context.Context, adminID int64) ([]*db.AdminListFeaturedProductItemsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListFeaturedProductItems", ctx, adminID)
-	ret0, _ := ret[0].([]db.AdminListFeaturedProductItemsRow)
+	ret0, _ := ret[0].([]*db.AdminListFeaturedProductItemsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -327,10 +327,10 @@ func (mr *MockStoreMockRecorder) AdminListFeaturedProductItems(ctx, adminID any)
 }
 
 // AdminListOrderStatuses mocks base method.
-func (m *MockStore) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]db.OrderStatus, error) {
+func (m *MockStore) AdminListOrderStatuses(ctx context.Context, adminID int64) ([]*db.OrderStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListOrderStatuses", ctx, adminID)
-	ret0, _ := ret[0].([]db.OrderStatus)
+	ret0, _ := ret[0].([]*db.OrderStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -342,10 +342,10 @@ func (mr *MockStoreMockRecorder) AdminListOrderStatuses(ctx, adminID any) *gomoc
 }
 
 // AdminListPaymentTypes mocks base method.
-func (m *MockStore) AdminListPaymentTypes(ctx context.Context, adminID int64) ([]db.PaymentType, error) {
+func (m *MockStore) AdminListPaymentTypes(ctx context.Context, adminID int64) ([]*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListPaymentTypes", ctx, adminID)
-	ret0, _ := ret[0].([]db.PaymentType)
+	ret0, _ := ret[0].([]*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -357,10 +357,10 @@ func (mr *MockStoreMockRecorder) AdminListPaymentTypes(ctx, adminID any) *gomock
 }
 
 // AdminListProductPromotions mocks base method.
-func (m *MockStore) AdminListProductPromotions(ctx context.Context, adminID int64) ([]db.AdminListProductPromotionsRow, error) {
+func (m *MockStore) AdminListProductPromotions(ctx context.Context, adminID int64) ([]*db.AdminListProductPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListProductPromotions", ctx, adminID)
-	ret0, _ := ret[0].([]db.AdminListProductPromotionsRow)
+	ret0, _ := ret[0].([]*db.AdminListProductPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -372,10 +372,10 @@ func (mr *MockStoreMockRecorder) AdminListProductPromotions(ctx, adminID any) *g
 }
 
 // AdminListShopOrdersNextPage mocks base method.
-func (m *MockStore) AdminListShopOrdersNextPage(ctx context.Context, arg db.AdminListShopOrdersNextPageParams) ([]db.AdminListShopOrdersNextPageRow, error) {
+func (m *MockStore) AdminListShopOrdersNextPage(ctx context.Context, arg db.AdminListShopOrdersNextPageParams) ([]*db.AdminListShopOrdersNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListShopOrdersNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.AdminListShopOrdersNextPageRow)
+	ret0, _ := ret[0].([]*db.AdminListShopOrdersNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -387,10 +387,10 @@ func (mr *MockStoreMockRecorder) AdminListShopOrdersNextPage(ctx, arg any) *gomo
 }
 
 // AdminListShopOrdersV2 mocks base method.
-func (m *MockStore) AdminListShopOrdersV2(ctx context.Context, arg db.AdminListShopOrdersV2Params) ([]db.AdminListShopOrdersV2Row, error) {
+func (m *MockStore) AdminListShopOrdersV2(ctx context.Context, arg db.AdminListShopOrdersV2Params) ([]*db.AdminListShopOrdersV2Row, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminListShopOrdersV2", ctx, arg)
-	ret0, _ := ret[0].([]db.AdminListShopOrdersV2Row)
+	ret0, _ := ret[0].([]*db.AdminListShopOrdersV2Row)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -402,10 +402,10 @@ func (mr *MockStoreMockRecorder) AdminListShopOrdersV2(ctx, arg any) *gomock.Cal
 }
 
 // AdminSearchUserByEmail mocks base method.
-func (m *MockStore) AdminSearchUserByEmail(ctx context.Context, email string) ([]db.AdminSearchUserByEmailRow, error) {
+func (m *MockStore) AdminSearchUserByEmail(ctx context.Context, email string) ([]*db.AdminSearchUserByEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminSearchUserByEmail", ctx, email)
-	ret0, _ := ret[0].([]db.AdminSearchUserByEmailRow)
+	ret0, _ := ret[0].([]*db.AdminSearchUserByEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -417,10 +417,10 @@ func (mr *MockStoreMockRecorder) AdminSearchUserByEmail(ctx, email any) *gomock.
 }
 
 // AdminUpdateBrandPromotion mocks base method.
-func (m *MockStore) AdminUpdateBrandPromotion(ctx context.Context, arg db.AdminUpdateBrandPromotionParams) (db.BrandPromotion, error) {
+func (m *MockStore) AdminUpdateBrandPromotion(ctx context.Context, arg db.AdminUpdateBrandPromotionParams) (*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateBrandPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.BrandPromotion)
+	ret0, _ := ret[0].(*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -432,10 +432,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateBrandPromotion(ctx, arg any) *gomock
 }
 
 // AdminUpdateCategoryPromotion mocks base method.
-func (m *MockStore) AdminUpdateCategoryPromotion(ctx context.Context, arg db.AdminUpdateCategoryPromotionParams) (db.CategoryPromotion, error) {
+func (m *MockStore) AdminUpdateCategoryPromotion(ctx context.Context, arg db.AdminUpdateCategoryPromotionParams) (*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateCategoryPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.CategoryPromotion)
+	ret0, _ := ret[0].(*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -447,10 +447,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateCategoryPromotion(ctx, arg any) *gom
 }
 
 // AdminUpdateFeaturedProductItem mocks base method.
-func (m *MockStore) AdminUpdateFeaturedProductItem(ctx context.Context, arg db.AdminUpdateFeaturedProductItemParams) (db.FeaturedProductItem, error) {
+func (m *MockStore) AdminUpdateFeaturedProductItem(ctx context.Context, arg db.AdminUpdateFeaturedProductItemParams) (*db.FeaturedProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateFeaturedProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret0, _ := ret[0].(*db.FeaturedProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -462,10 +462,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateFeaturedProductItem(ctx, arg any) *g
 }
 
 // AdminUpdatePaymentType mocks base method.
-func (m *MockStore) AdminUpdatePaymentType(ctx context.Context, arg db.AdminUpdatePaymentTypeParams) (db.PaymentType, error) {
+func (m *MockStore) AdminUpdatePaymentType(ctx context.Context, arg db.AdminUpdatePaymentTypeParams) (*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdatePaymentType", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentType)
+	ret0, _ := ret[0].(*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -477,10 +477,10 @@ func (mr *MockStoreMockRecorder) AdminUpdatePaymentType(ctx, arg any) *gomock.Ca
 }
 
 // AdminUpdateProduct mocks base method.
-func (m *MockStore) AdminUpdateProduct(ctx context.Context, arg db.AdminUpdateProductParams) (db.Product, error) {
+func (m *MockStore) AdminUpdateProduct(ctx context.Context, arg db.AdminUpdateProductParams) (*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProduct", ctx, arg)
-	ret0, _ := ret[0].(db.Product)
+	ret0, _ := ret[0].(*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -492,10 +492,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProduct(ctx, arg any) *gomock.Call {
 }
 
 // AdminUpdateProductColor mocks base method.
-func (m *MockStore) AdminUpdateProductColor(ctx context.Context, arg db.AdminUpdateProductColorParams) (db.ProductColor, error) {
+func (m *MockStore) AdminUpdateProductColor(ctx context.Context, arg db.AdminUpdateProductColorParams) (*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProductColor", ctx, arg)
-	ret0, _ := ret[0].(db.ProductColor)
+	ret0, _ := ret[0].(*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -507,10 +507,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProductColor(ctx, arg any) *gomock.C
 }
 
 // AdminUpdateProductImage mocks base method.
-func (m *MockStore) AdminUpdateProductImage(ctx context.Context, arg db.AdminUpdateProductImageParams) (db.ProductImage, error) {
+func (m *MockStore) AdminUpdateProductImage(ctx context.Context, arg db.AdminUpdateProductImageParams) (*db.ProductImage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProductImage", ctx, arg)
-	ret0, _ := ret[0].(db.ProductImage)
+	ret0, _ := ret[0].(*db.ProductImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -522,10 +522,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProductImage(ctx, arg any) *gomock.C
 }
 
 // AdminUpdateProductItem mocks base method.
-func (m *MockStore) AdminUpdateProductItem(ctx context.Context, arg db.AdminUpdateProductItemParams) (db.ProductItem, error) {
+func (m *MockStore) AdminUpdateProductItem(ctx context.Context, arg db.AdminUpdateProductItemParams) (*db.ProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(*db.ProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -537,10 +537,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProductItem(ctx, arg any) *gomock.Ca
 }
 
 // AdminUpdateProductPromotion mocks base method.
-func (m *MockStore) AdminUpdateProductPromotion(ctx context.Context, arg db.AdminUpdateProductPromotionParams) (db.ProductPromotion, error) {
+func (m *MockStore) AdminUpdateProductPromotion(ctx context.Context, arg db.AdminUpdateProductPromotionParams) (*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProductPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.ProductPromotion)
+	ret0, _ := ret[0].(*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -552,10 +552,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProductPromotion(ctx, arg any) *gomo
 }
 
 // AdminUpdateProductSize mocks base method.
-func (m *MockStore) AdminUpdateProductSize(ctx context.Context, arg db.AdminUpdateProductSizeParams) (db.ProductSize, error) {
+func (m *MockStore) AdminUpdateProductSize(ctx context.Context, arg db.AdminUpdateProductSizeParams) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateProductSize", ctx, arg)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -567,10 +567,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateProductSize(ctx, arg any) *gomock.Ca
 }
 
 // AdminUpdatePromotion mocks base method.
-func (m *MockStore) AdminUpdatePromotion(ctx context.Context, arg db.AdminUpdatePromotionParams) (db.Promotion, error) {
+func (m *MockStore) AdminUpdatePromotion(ctx context.Context, arg db.AdminUpdatePromotionParams) (*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdatePromotion", ctx, arg)
-	ret0, _ := ret[0].(db.Promotion)
+	ret0, _ := ret[0].(*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -582,10 +582,10 @@ func (mr *MockStoreMockRecorder) AdminUpdatePromotion(ctx, arg any) *gomock.Call
 }
 
 // AdminUpdateShippingMethod mocks base method.
-func (m *MockStore) AdminUpdateShippingMethod(ctx context.Context, arg db.AdminUpdateShippingMethodParams) (db.ShippingMethod, error) {
+func (m *MockStore) AdminUpdateShippingMethod(ctx context.Context, arg db.AdminUpdateShippingMethodParams) (*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateShippingMethod", ctx, arg)
-	ret0, _ := ret[0].(db.ShippingMethod)
+	ret0, _ := ret[0].(*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -597,10 +597,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateShippingMethod(ctx, arg any) *gomock
 }
 
 // AdminUpdateUser mocks base method.
-func (m *MockStore) AdminUpdateUser(ctx context.Context, arg db.AdminUpdateUserParams) (db.User, error) {
+func (m *MockStore) AdminUpdateUser(ctx context.Context, arg db.AdminUpdateUserParams) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AdminUpdateUser", ctx, arg)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -612,10 +612,10 @@ func (mr *MockStoreMockRecorder) AdminUpdateUser(ctx, arg any) *gomock.Call {
 }
 
 // CreateAddress mocks base method.
-func (m *MockStore) CreateAddress(ctx context.Context, arg db.CreateAddressParams) (db.Address, error) {
+func (m *MockStore) CreateAddress(ctx context.Context, arg db.CreateAddressParams) (*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAddress", ctx, arg)
-	ret0, _ := ret[0].(db.Address)
+	ret0, _ := ret[0].(*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -627,10 +627,10 @@ func (mr *MockStoreMockRecorder) CreateAddress(ctx, arg any) *gomock.Call {
 }
 
 // CreateAdmin mocks base method.
-func (m *MockStore) CreateAdmin(ctx context.Context, arg db.CreateAdminParams) (db.Admin, error) {
+func (m *MockStore) CreateAdmin(ctx context.Context, arg db.CreateAdminParams) (*db.Admin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAdmin", ctx, arg)
-	ret0, _ := ret[0].(db.Admin)
+	ret0, _ := ret[0].(*db.Admin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -642,10 +642,10 @@ func (mr *MockStoreMockRecorder) CreateAdmin(ctx, arg any) *gomock.Call {
 }
 
 // CreateAdminSession mocks base method.
-func (m *MockStore) CreateAdminSession(ctx context.Context, arg db.CreateAdminSessionParams) (db.AdminSession, error) {
+func (m *MockStore) CreateAdminSession(ctx context.Context, arg db.CreateAdminSessionParams) (*db.AdminSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAdminSession", ctx, arg)
-	ret0, _ := ret[0].(db.AdminSession)
+	ret0, _ := ret[0].(*db.AdminSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -657,10 +657,10 @@ func (mr *MockStoreMockRecorder) CreateAdminSession(ctx, arg any) *gomock.Call {
 }
 
 // CreateAdminType mocks base method.
-func (m *MockStore) CreateAdminType(ctx context.Context, adminType string) (db.AdminType, error) {
+func (m *MockStore) CreateAdminType(ctx context.Context, adminType string) (*db.AdminType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAdminType", ctx, adminType)
-	ret0, _ := ret[0].(db.AdminType)
+	ret0, _ := ret[0].(*db.AdminType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -672,10 +672,10 @@ func (mr *MockStoreMockRecorder) CreateAdminType(ctx, adminType any) *gomock.Cal
 }
 
 // CreateAppPolicy mocks base method.
-func (m *MockStore) CreateAppPolicy(ctx context.Context, arg db.CreateAppPolicyParams) (db.AppPolicy, error) {
+func (m *MockStore) CreateAppPolicy(ctx context.Context, arg db.CreateAppPolicyParams) (*db.AppPolicy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAppPolicy", ctx, arg)
-	ret0, _ := ret[0].(db.AppPolicy)
+	ret0, _ := ret[0].(*db.AppPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -687,10 +687,10 @@ func (mr *MockStoreMockRecorder) CreateAppPolicy(ctx, arg any) *gomock.Call {
 }
 
 // CreateBrandPromotion mocks base method.
-func (m *MockStore) CreateBrandPromotion(ctx context.Context, arg db.CreateBrandPromotionParams) (db.BrandPromotion, error) {
+func (m *MockStore) CreateBrandPromotion(ctx context.Context, arg db.CreateBrandPromotionParams) (*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateBrandPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.BrandPromotion)
+	ret0, _ := ret[0].(*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -702,10 +702,10 @@ func (mr *MockStoreMockRecorder) CreateBrandPromotion(ctx, arg any) *gomock.Call
 }
 
 // CreateCategoryPromotion mocks base method.
-func (m *MockStore) CreateCategoryPromotion(ctx context.Context, arg db.CreateCategoryPromotionParams) (db.CategoryPromotion, error) {
+func (m *MockStore) CreateCategoryPromotion(ctx context.Context, arg db.CreateCategoryPromotionParams) (*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCategoryPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.CategoryPromotion)
+	ret0, _ := ret[0].(*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -717,10 +717,10 @@ func (mr *MockStoreMockRecorder) CreateCategoryPromotion(ctx, arg any) *gomock.C
 }
 
 // CreateHomePageTextBanner mocks base method.
-func (m *MockStore) CreateHomePageTextBanner(ctx context.Context, arg db.CreateHomePageTextBannerParams) (db.HomePageTextBanner, error) {
+func (m *MockStore) CreateHomePageTextBanner(ctx context.Context, arg db.CreateHomePageTextBannerParams) (*db.HomePageTextBanner, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateHomePageTextBanner", ctx, arg)
-	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret0, _ := ret[0].(*db.HomePageTextBanner)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -732,10 +732,10 @@ func (mr *MockStoreMockRecorder) CreateHomePageTextBanner(ctx, arg any) *gomock.
 }
 
 // CreateNotification mocks base method.
-func (m *MockStore) CreateNotification(ctx context.Context, arg db.CreateNotificationParams) (db.Notification, error) {
+func (m *MockStore) CreateNotification(ctx context.Context, arg db.CreateNotificationParams) (*db.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNotification", ctx, arg)
-	ret0, _ := ret[0].(db.Notification)
+	ret0, _ := ret[0].(*db.Notification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -747,10 +747,10 @@ func (mr *MockStoreMockRecorder) CreateNotification(ctx, arg any) *gomock.Call {
 }
 
 // CreateOrderStatus mocks base method.
-func (m *MockStore) CreateOrderStatus(ctx context.Context, status string) (db.OrderStatus, error) {
+func (m *MockStore) CreateOrderStatus(ctx context.Context, status string) (*db.OrderStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrderStatus", ctx, status)
-	ret0, _ := ret[0].(db.OrderStatus)
+	ret0, _ := ret[0].(*db.OrderStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -762,10 +762,10 @@ func (mr *MockStoreMockRecorder) CreateOrderStatus(ctx, status any) *gomock.Call
 }
 
 // CreatePaymentMethod mocks base method.
-func (m *MockStore) CreatePaymentMethod(ctx context.Context, arg db.CreatePaymentMethodParams) (db.PaymentMethod, error) {
+func (m *MockStore) CreatePaymentMethod(ctx context.Context, arg db.CreatePaymentMethodParams) (*db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePaymentMethod", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentMethod)
+	ret0, _ := ret[0].(*db.PaymentMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -777,10 +777,10 @@ func (mr *MockStoreMockRecorder) CreatePaymentMethod(ctx, arg any) *gomock.Call 
 }
 
 // CreatePaymentType mocks base method.
-func (m *MockStore) CreatePaymentType(ctx context.Context, value string) (db.PaymentType, error) {
+func (m *MockStore) CreatePaymentType(ctx context.Context, value string) (*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePaymentType", ctx, value)
-	ret0, _ := ret[0].(db.PaymentType)
+	ret0, _ := ret[0].(*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -792,10 +792,10 @@ func (mr *MockStoreMockRecorder) CreatePaymentType(ctx, value any) *gomock.Call 
 }
 
 // CreateProduct mocks base method.
-func (m *MockStore) CreateProduct(ctx context.Context, arg db.CreateProductParams) (db.Product, error) {
+func (m *MockStore) CreateProduct(ctx context.Context, arg db.CreateProductParams) (*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProduct", ctx, arg)
-	ret0, _ := ret[0].(db.Product)
+	ret0, _ := ret[0].(*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -807,10 +807,10 @@ func (mr *MockStoreMockRecorder) CreateProduct(ctx, arg any) *gomock.Call {
 }
 
 // CreateProductBrand mocks base method.
-func (m *MockStore) CreateProductBrand(ctx context.Context, arg db.CreateProductBrandParams) (db.ProductBrand, error) {
+func (m *MockStore) CreateProductBrand(ctx context.Context, arg db.CreateProductBrandParams) (*db.ProductBrand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductBrand", ctx, arg)
-	ret0, _ := ret[0].(db.ProductBrand)
+	ret0, _ := ret[0].(*db.ProductBrand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -822,10 +822,10 @@ func (mr *MockStoreMockRecorder) CreateProductBrand(ctx, arg any) *gomock.Call {
 }
 
 // CreateProductCategory mocks base method.
-func (m *MockStore) CreateProductCategory(ctx context.Context, arg db.CreateProductCategoryParams) (db.ProductCategory, error) {
+func (m *MockStore) CreateProductCategory(ctx context.Context, arg db.CreateProductCategoryParams) (*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductCategory", ctx, arg)
-	ret0, _ := ret[0].(db.ProductCategory)
+	ret0, _ := ret[0].(*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -837,10 +837,10 @@ func (mr *MockStoreMockRecorder) CreateProductCategory(ctx, arg any) *gomock.Cal
 }
 
 // CreateProductColor mocks base method.
-func (m *MockStore) CreateProductColor(ctx context.Context, colorValue string) (db.ProductColor, error) {
+func (m *MockStore) CreateProductColor(ctx context.Context, colorValue string) (*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductColor", ctx, colorValue)
-	ret0, _ := ret[0].(db.ProductColor)
+	ret0, _ := ret[0].(*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -852,10 +852,10 @@ func (mr *MockStoreMockRecorder) CreateProductColor(ctx, colorValue any) *gomock
 }
 
 // CreateProductConfiguration mocks base method.
-func (m *MockStore) CreateProductConfiguration(ctx context.Context, arg db.CreateProductConfigurationParams) (db.ProductConfiguration, error) {
+func (m *MockStore) CreateProductConfiguration(ctx context.Context, arg db.CreateProductConfigurationParams) (*db.ProductConfiguration, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductConfiguration", ctx, arg)
-	ret0, _ := ret[0].(db.ProductConfiguration)
+	ret0, _ := ret[0].(*db.ProductConfiguration)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -867,10 +867,10 @@ func (mr *MockStoreMockRecorder) CreateProductConfiguration(ctx, arg any) *gomoc
 }
 
 // CreateProductImage mocks base method.
-func (m *MockStore) CreateProductImage(ctx context.Context, arg db.CreateProductImageParams) (db.ProductImage, error) {
+func (m *MockStore) CreateProductImage(ctx context.Context, arg db.CreateProductImageParams) (*db.ProductImage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductImage", ctx, arg)
-	ret0, _ := ret[0].(db.ProductImage)
+	ret0, _ := ret[0].(*db.ProductImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -882,10 +882,10 @@ func (mr *MockStoreMockRecorder) CreateProductImage(ctx, arg any) *gomock.Call {
 }
 
 // CreateProductItem mocks base method.
-func (m *MockStore) CreateProductItem(ctx context.Context, arg db.CreateProductItemParams) (db.ProductItem, error) {
+func (m *MockStore) CreateProductItem(ctx context.Context, arg db.CreateProductItemParams) (*db.ProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(*db.ProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -897,10 +897,10 @@ func (mr *MockStoreMockRecorder) CreateProductItem(ctx, arg any) *gomock.Call {
 }
 
 // CreateProductPromotion mocks base method.
-func (m *MockStore) CreateProductPromotion(ctx context.Context, arg db.CreateProductPromotionParams) (db.ProductPromotion, error) {
+func (m *MockStore) CreateProductPromotion(ctx context.Context, arg db.CreateProductPromotionParams) (*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.ProductPromotion)
+	ret0, _ := ret[0].(*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -912,10 +912,10 @@ func (mr *MockStoreMockRecorder) CreateProductPromotion(ctx, arg any) *gomock.Ca
 }
 
 // CreateProductSize mocks base method.
-func (m *MockStore) CreateProductSize(ctx context.Context, arg db.CreateProductSizeParams) (db.ProductSize, error) {
+func (m *MockStore) CreateProductSize(ctx context.Context, arg db.CreateProductSizeParams) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProductSize", ctx, arg)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -927,10 +927,10 @@ func (mr *MockStoreMockRecorder) CreateProductSize(ctx, arg any) *gomock.Call {
 }
 
 // CreatePromotion mocks base method.
-func (m *MockStore) CreatePromotion(ctx context.Context, arg db.CreatePromotionParams) (db.Promotion, error) {
+func (m *MockStore) CreatePromotion(ctx context.Context, arg db.CreatePromotionParams) (*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePromotion", ctx, arg)
-	ret0, _ := ret[0].(db.Promotion)
+	ret0, _ := ret[0].(*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -942,10 +942,10 @@ func (mr *MockStoreMockRecorder) CreatePromotion(ctx, arg any) *gomock.Call {
 }
 
 // CreateResetPassword mocks base method.
-func (m *MockStore) CreateResetPassword(ctx context.Context, arg db.CreateResetPasswordParams) (db.ResetPassword, error) {
+func (m *MockStore) CreateResetPassword(ctx context.Context, arg db.CreateResetPasswordParams) (*db.ResetPassword, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateResetPassword", ctx, arg)
-	ret0, _ := ret[0].(db.ResetPassword)
+	ret0, _ := ret[0].(*db.ResetPassword)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -957,10 +957,10 @@ func (mr *MockStoreMockRecorder) CreateResetPassword(ctx, arg any) *gomock.Call 
 }
 
 // CreateShippingMethod mocks base method.
-func (m *MockStore) CreateShippingMethod(ctx context.Context, arg db.CreateShippingMethodParams) (db.ShippingMethod, error) {
+func (m *MockStore) CreateShippingMethod(ctx context.Context, arg db.CreateShippingMethodParams) (*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShippingMethod", ctx, arg)
-	ret0, _ := ret[0].(db.ShippingMethod)
+	ret0, _ := ret[0].(*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -972,10 +972,10 @@ func (mr *MockStoreMockRecorder) CreateShippingMethod(ctx, arg any) *gomock.Call
 }
 
 // CreateShopOrder mocks base method.
-func (m *MockStore) CreateShopOrder(ctx context.Context, arg db.CreateShopOrderParams) (db.ShopOrder, error) {
+func (m *MockStore) CreateShopOrder(ctx context.Context, arg db.CreateShopOrderParams) (*db.ShopOrder, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShopOrder", ctx, arg)
-	ret0, _ := ret[0].(db.ShopOrder)
+	ret0, _ := ret[0].(*db.ShopOrder)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -987,10 +987,10 @@ func (mr *MockStoreMockRecorder) CreateShopOrder(ctx, arg any) *gomock.Call {
 }
 
 // CreateShopOrderItem mocks base method.
-func (m *MockStore) CreateShopOrderItem(ctx context.Context, arg db.CreateShopOrderItemParams) (db.ShopOrderItem, error) {
+func (m *MockStore) CreateShopOrderItem(ctx context.Context, arg db.CreateShopOrderItemParams) (*db.ShopOrderItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShopOrderItem", ctx, arg)
-	ret0, _ := ret[0].(db.ShopOrderItem)
+	ret0, _ := ret[0].(*db.ShopOrderItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1002,10 +1002,10 @@ func (mr *MockStoreMockRecorder) CreateShopOrderItem(ctx, arg any) *gomock.Call 
 }
 
 // CreateShoppingCart mocks base method.
-func (m *MockStore) CreateShoppingCart(ctx context.Context, userID int64) (db.ShoppingCart, error) {
+func (m *MockStore) CreateShoppingCart(ctx context.Context, userID int64) (*db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShoppingCart", ctx, userID)
-	ret0, _ := ret[0].(db.ShoppingCart)
+	ret0, _ := ret[0].(*db.ShoppingCart)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1017,10 +1017,10 @@ func (mr *MockStoreMockRecorder) CreateShoppingCart(ctx, userID any) *gomock.Cal
 }
 
 // CreateShoppingCartItem mocks base method.
-func (m *MockStore) CreateShoppingCartItem(ctx context.Context, arg db.CreateShoppingCartItemParams) (db.ShoppingCartItem, error) {
+func (m *MockStore) CreateShoppingCartItem(ctx context.Context, arg db.CreateShoppingCartItemParams) (*db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShoppingCartItem", ctx, arg)
-	ret0, _ := ret[0].(db.ShoppingCartItem)
+	ret0, _ := ret[0].(*db.ShoppingCartItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1032,10 +1032,10 @@ func (mr *MockStoreMockRecorder) CreateShoppingCartItem(ctx, arg any) *gomock.Ca
 }
 
 // CreateUser mocks base method.
-func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (db.User, error) {
+func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, arg)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1047,10 +1047,10 @@ func (mr *MockStoreMockRecorder) CreateUser(ctx, arg any) *gomock.Call {
 }
 
 // CreateUserReview mocks base method.
-func (m *MockStore) CreateUserReview(ctx context.Context, arg db.CreateUserReviewParams) (db.UserReview, error) {
+func (m *MockStore) CreateUserReview(ctx context.Context, arg db.CreateUserReviewParams) (*db.UserReview, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUserReview", ctx, arg)
-	ret0, _ := ret[0].(db.UserReview)
+	ret0, _ := ret[0].(*db.UserReview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1062,10 +1062,10 @@ func (mr *MockStoreMockRecorder) CreateUserReview(ctx, arg any) *gomock.Call {
 }
 
 // CreateUserSession mocks base method.
-func (m *MockStore) CreateUserSession(ctx context.Context, arg db.CreateUserSessionParams) (db.UserSession, error) {
+func (m *MockStore) CreateUserSession(ctx context.Context, arg db.CreateUserSessionParams) (*db.UserSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUserSession", ctx, arg)
-	ret0, _ := ret[0].(db.UserSession)
+	ret0, _ := ret[0].(*db.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1077,10 +1077,10 @@ func (mr *MockStoreMockRecorder) CreateUserSession(ctx, arg any) *gomock.Call {
 }
 
 // CreateUserWithCartAndWishList mocks base method.
-func (m *MockStore) CreateUserWithCartAndWishList(ctx context.Context, arg db.CreateUserWithCartAndWishListParams) (db.CreateUserWithCartAndWishListRow, error) {
+func (m *MockStore) CreateUserWithCartAndWishList(ctx context.Context, arg db.CreateUserWithCartAndWishListParams) (*db.CreateUserWithCartAndWishListRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUserWithCartAndWishList", ctx, arg)
-	ret0, _ := ret[0].(db.CreateUserWithCartAndWishListRow)
+	ret0, _ := ret[0].(*db.CreateUserWithCartAndWishListRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1092,10 +1092,10 @@ func (mr *MockStoreMockRecorder) CreateUserWithCartAndWishList(ctx, arg any) *go
 }
 
 // CreateVariation mocks base method.
-func (m *MockStore) CreateVariation(ctx context.Context, arg db.CreateVariationParams) (db.Variation, error) {
+func (m *MockStore) CreateVariation(ctx context.Context, arg db.CreateVariationParams) (*db.Variation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVariation", ctx, arg)
-	ret0, _ := ret[0].(db.Variation)
+	ret0, _ := ret[0].(*db.Variation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1107,10 +1107,10 @@ func (mr *MockStoreMockRecorder) CreateVariation(ctx, arg any) *gomock.Call {
 }
 
 // CreateVariationOption mocks base method.
-func (m *MockStore) CreateVariationOption(ctx context.Context, arg db.CreateVariationOptionParams) (db.VariationOption, error) {
+func (m *MockStore) CreateVariationOption(ctx context.Context, arg db.CreateVariationOptionParams) (*db.VariationOption, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVariationOption", ctx, arg)
-	ret0, _ := ret[0].(db.VariationOption)
+	ret0, _ := ret[0].(*db.VariationOption)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1122,10 +1122,10 @@ func (mr *MockStoreMockRecorder) CreateVariationOption(ctx, arg any) *gomock.Cal
 }
 
 // CreateVerifyEmail mocks base method.
-func (m *MockStore) CreateVerifyEmail(ctx context.Context, arg db.CreateVerifyEmailParams) (db.VerifyEmail, error) {
+func (m *MockStore) CreateVerifyEmail(ctx context.Context, arg db.CreateVerifyEmailParams) (*db.VerifyEmail, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateVerifyEmail", ctx, arg)
-	ret0, _ := ret[0].(db.VerifyEmail)
+	ret0, _ := ret[0].(*db.VerifyEmail)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1137,10 +1137,10 @@ func (mr *MockStoreMockRecorder) CreateVerifyEmail(ctx, arg any) *gomock.Call {
 }
 
 // CreateWishList mocks base method.
-func (m *MockStore) CreateWishList(ctx context.Context, userID int64) (db.WishList, error) {
+func (m *MockStore) CreateWishList(ctx context.Context, userID int64) (*db.WishList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWishList", ctx, userID)
-	ret0, _ := ret[0].(db.WishList)
+	ret0, _ := ret[0].(*db.WishList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1152,10 +1152,10 @@ func (mr *MockStoreMockRecorder) CreateWishList(ctx, userID any) *gomock.Call {
 }
 
 // CreateWishListItem mocks base method.
-func (m *MockStore) CreateWishListItem(ctx context.Context, arg db.CreateWishListItemParams) (db.WishListItem, error) {
+func (m *MockStore) CreateWishListItem(ctx context.Context, arg db.CreateWishListItemParams) (*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWishListItem", ctx, arg)
-	ret0, _ := ret[0].(db.WishListItem)
+	ret0, _ := ret[0].(*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1223,10 +1223,10 @@ func (mr *MockStoreMockRecorder) DeleteAdminTypeByType(ctx, adminType any) *gomo
 }
 
 // DeleteAppPolicy mocks base method.
-func (m *MockStore) DeleteAppPolicy(ctx context.Context, arg db.DeleteAppPolicyParams) (db.AppPolicy, error) {
+func (m *MockStore) DeleteAppPolicy(ctx context.Context, arg db.DeleteAppPolicyParams) (*db.AppPolicy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAppPolicy", ctx, arg)
-	ret0, _ := ret[0].(db.AppPolicy)
+	ret0, _ := ret[0].(*db.AppPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1294,10 +1294,10 @@ func (mr *MockStoreMockRecorder) DeleteHomePageTextBanner(ctx, arg any) *gomock.
 }
 
 // DeleteNotification mocks base method.
-func (m *MockStore) DeleteNotification(ctx context.Context, arg db.DeleteNotificationParams) (db.Notification, error) {
+func (m *MockStore) DeleteNotification(ctx context.Context, arg db.DeleteNotificationParams) (*db.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNotification", ctx, arg)
-	ret0, _ := ret[0].(db.Notification)
+	ret0, _ := ret[0].(*db.Notification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1337,10 +1337,10 @@ func (mr *MockStoreMockRecorder) DeleteOrderStatus(ctx, id any) *gomock.Call {
 }
 
 // DeletePaymentMethod mocks base method.
-func (m *MockStore) DeletePaymentMethod(ctx context.Context, arg db.DeletePaymentMethodParams) (db.PaymentMethod, error) {
+func (m *MockStore) DeletePaymentMethod(ctx context.Context, arg db.DeletePaymentMethodParams) (*db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePaymentMethod", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentMethod)
+	ret0, _ := ret[0].(*db.PaymentMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1548,10 +1548,10 @@ func (mr *MockStoreMockRecorder) DeleteShopOrder(ctx, id any) *gomock.Call {
 }
 
 // DeleteShopOrderItem mocks base method.
-func (m *MockStore) DeleteShopOrderItem(ctx context.Context, arg db.DeleteShopOrderItemParams) (db.ShopOrderItem, error) {
+func (m *MockStore) DeleteShopOrderItem(ctx context.Context, arg db.DeleteShopOrderItemParams) (*db.ShopOrderItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteShopOrderItem", ctx, arg)
-	ret0, _ := ret[0].(db.ShopOrderItem)
+	ret0, _ := ret[0].(*db.ShopOrderItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1605,10 +1605,10 @@ func (mr *MockStoreMockRecorder) DeleteShoppingCartItem(ctx, arg any) *gomock.Ca
 }
 
 // DeleteShoppingCartItemAllByUser mocks base method.
-func (m *MockStore) DeleteShoppingCartItemAllByUser(ctx context.Context, arg db.DeleteShoppingCartItemAllByUserParams) ([]db.ShoppingCartItem, error) {
+func (m *MockStore) DeleteShoppingCartItemAllByUser(ctx context.Context, arg db.DeleteShoppingCartItemAllByUserParams) ([]*db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteShoppingCartItemAllByUser", ctx, arg)
-	ret0, _ := ret[0].([]db.ShoppingCartItem)
+	ret0, _ := ret[0].([]*db.ShoppingCartItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1620,10 +1620,10 @@ func (mr *MockStoreMockRecorder) DeleteShoppingCartItemAllByUser(ctx, arg any) *
 }
 
 // DeleteUser mocks base method.
-func (m *MockStore) DeleteUser(ctx context.Context, id int64) (db.User, error) {
+func (m *MockStore) DeleteUser(ctx context.Context, id int64) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", ctx, id)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1635,10 +1635,10 @@ func (mr *MockStoreMockRecorder) DeleteUser(ctx, id any) *gomock.Call {
 }
 
 // DeleteUserAddress mocks base method.
-func (m *MockStore) DeleteUserAddress(ctx context.Context, arg db.DeleteUserAddressParams) (db.Address, error) {
+func (m *MockStore) DeleteUserAddress(ctx context.Context, arg db.DeleteUserAddressParams) (*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.Address)
+	ret0, _ := ret[0].(*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1664,10 +1664,10 @@ func (mr *MockStoreMockRecorder) DeleteUserByEmailNotVerified(ctx, email any) *g
 }
 
 // DeleteUserReview mocks base method.
-func (m *MockStore) DeleteUserReview(ctx context.Context, arg db.DeleteUserReviewParams) (db.UserReview, error) {
+func (m *MockStore) DeleteUserReview(ctx context.Context, arg db.DeleteUserReviewParams) (*db.UserReview, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUserReview", ctx, arg)
-	ret0, _ := ret[0].(db.UserReview)
+	ret0, _ := ret[0].(*db.UserReview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1735,10 +1735,10 @@ func (mr *MockStoreMockRecorder) DeleteWishListItem(ctx, arg any) *gomock.Call {
 }
 
 // DeleteWishListItemAll mocks base method.
-func (m *MockStore) DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]db.WishListItem, error) {
+func (m *MockStore) DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteWishListItemAll", ctx, wishListID)
-	ret0, _ := ret[0].([]db.WishListItem)
+	ret0, _ := ret[0].([]*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1750,10 +1750,10 @@ func (mr *MockStoreMockRecorder) DeleteWishListItemAll(ctx, wishListID any) *gom
 }
 
 // FinishedPurchaseTx mocks base method.
-func (m *MockStore) FinishedPurchaseTx(ctx context.Context, arg db.FinishedPurchaseTxParams) (db.FinishedPurchaseTxResult, error) {
+func (m *MockStore) FinishedPurchaseTx(ctx context.Context, arg db.FinishedPurchaseTxParams) (*db.FinishedPurchaseTxResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FinishedPurchaseTx", ctx, arg)
-	ret0, _ := ret[0].(db.FinishedPurchaseTxResult)
+	ret0, _ := ret[0].(*db.FinishedPurchaseTxResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1795,10 +1795,10 @@ func (mr *MockStoreMockRecorder) GetActiveUsersCount(ctx, adminID any) *gomock.C
 }
 
 // GetAddress mocks base method.
-func (m *MockStore) GetAddress(ctx context.Context, id int64) (db.Address, error) {
+func (m *MockStore) GetAddress(ctx context.Context, id int64) (*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAddress", ctx, id)
-	ret0, _ := ret[0].(db.Address)
+	ret0, _ := ret[0].(*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1810,10 +1810,10 @@ func (mr *MockStoreMockRecorder) GetAddress(ctx, id any) *gomock.Call {
 }
 
 // GetAddressByCity mocks base method.
-func (m *MockStore) GetAddressByCity(ctx context.Context, city string) (db.Address, error) {
+func (m *MockStore) GetAddressByCity(ctx context.Context, city string) (*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAddressByCity", ctx, city)
-	ret0, _ := ret[0].(db.Address)
+	ret0, _ := ret[0].(*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1825,10 +1825,10 @@ func (mr *MockStoreMockRecorder) GetAddressByCity(ctx, city any) *gomock.Call {
 }
 
 // GetAdmin mocks base method.
-func (m *MockStore) GetAdmin(ctx context.Context, id int64) (db.Admin, error) {
+func (m *MockStore) GetAdmin(ctx context.Context, id int64) (*db.Admin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAdmin", ctx, id)
-	ret0, _ := ret[0].(db.Admin)
+	ret0, _ := ret[0].(*db.Admin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1840,10 +1840,10 @@ func (mr *MockStoreMockRecorder) GetAdmin(ctx, id any) *gomock.Call {
 }
 
 // GetAdminByEmail mocks base method.
-func (m *MockStore) GetAdminByEmail(ctx context.Context, email string) (db.Admin, error) {
+func (m *MockStore) GetAdminByEmail(ctx context.Context, email string) (*db.Admin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAdminByEmail", ctx, email)
-	ret0, _ := ret[0].(db.Admin)
+	ret0, _ := ret[0].(*db.Admin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1855,10 +1855,10 @@ func (mr *MockStoreMockRecorder) GetAdminByEmail(ctx, email any) *gomock.Call {
 }
 
 // GetAdminSession mocks base method.
-func (m *MockStore) GetAdminSession(ctx context.Context, id uuid.UUID) (db.AdminSession, error) {
+func (m *MockStore) GetAdminSession(ctx context.Context, id uuid.UUID) (*db.AdminSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAdminSession", ctx, id)
-	ret0, _ := ret[0].(db.AdminSession)
+	ret0, _ := ret[0].(*db.AdminSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1870,10 +1870,10 @@ func (mr *MockStoreMockRecorder) GetAdminSession(ctx, id any) *gomock.Call {
 }
 
 // GetAdminType mocks base method.
-func (m *MockStore) GetAdminType(ctx context.Context, id int64) (db.AdminType, error) {
+func (m *MockStore) GetAdminType(ctx context.Context, id int64) (*db.AdminType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAdminType", ctx, id)
-	ret0, _ := ret[0].(db.AdminType)
+	ret0, _ := ret[0].(*db.AdminType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1885,10 +1885,10 @@ func (mr *MockStoreMockRecorder) GetAdminType(ctx, id any) *gomock.Call {
 }
 
 // GetAppPolicy mocks base method.
-func (m *MockStore) GetAppPolicy(ctx context.Context) (db.AppPolicy, error) {
+func (m *MockStore) GetAppPolicy(ctx context.Context) (*db.AppPolicy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAppPolicy", ctx)
-	ret0, _ := ret[0].(db.AppPolicy)
+	ret0, _ := ret[0].(*db.AppPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1900,10 +1900,10 @@ func (mr *MockStoreMockRecorder) GetAppPolicy(ctx any) *gomock.Call {
 }
 
 // GetBrandPromotion mocks base method.
-func (m *MockStore) GetBrandPromotion(ctx context.Context, arg db.GetBrandPromotionParams) (db.BrandPromotion, error) {
+func (m *MockStore) GetBrandPromotion(ctx context.Context, arg db.GetBrandPromotionParams) (*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBrandPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.BrandPromotion)
+	ret0, _ := ret[0].(*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1915,10 +1915,10 @@ func (mr *MockStoreMockRecorder) GetBrandPromotion(ctx, arg any) *gomock.Call {
 }
 
 // GetCategoryPromotion mocks base method.
-func (m *MockStore) GetCategoryPromotion(ctx context.Context, arg db.GetCategoryPromotionParams) (db.CategoryPromotion, error) {
+func (m *MockStore) GetCategoryPromotion(ctx context.Context, arg db.GetCategoryPromotionParams) (*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCategoryPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.CategoryPromotion)
+	ret0, _ := ret[0].(*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1945,10 +1945,10 @@ func (mr *MockStoreMockRecorder) GetCompletedDailyOrderTotal(ctx, adminID any) *
 }
 
 // GetFeaturedProductItem mocks base method.
-func (m *MockStore) GetFeaturedProductItem(ctx context.Context, productItemID int64) (db.FeaturedProductItem, error) {
+func (m *MockStore) GetFeaturedProductItem(ctx context.Context, productItemID int64) (*db.FeaturedProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFeaturedProductItem", ctx, productItemID)
-	ret0, _ := ret[0].(db.FeaturedProductItem)
+	ret0, _ := ret[0].(*db.FeaturedProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1960,10 +1960,10 @@ func (mr *MockStoreMockRecorder) GetFeaturedProductItem(ctx, productItemID any) 
 }
 
 // GetHomePageTextBanner mocks base method.
-func (m *MockStore) GetHomePageTextBanner(ctx context.Context, id int64) (db.HomePageTextBanner, error) {
+func (m *MockStore) GetHomePageTextBanner(ctx context.Context, id int64) (*db.HomePageTextBanner, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHomePageTextBanner", ctx, id)
-	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret0, _ := ret[0].(*db.HomePageTextBanner)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1975,10 +1975,10 @@ func (mr *MockStoreMockRecorder) GetHomePageTextBanner(ctx, id any) *gomock.Call
 }
 
 // GetLastUsedResetPassword mocks base method.
-func (m *MockStore) GetLastUsedResetPassword(ctx context.Context, email string) (db.ResetPassword, error) {
+func (m *MockStore) GetLastUsedResetPassword(ctx context.Context, email string) (*db.ResetPassword, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLastUsedResetPassword", ctx, email)
-	ret0, _ := ret[0].(db.ResetPassword)
+	ret0, _ := ret[0].(*db.ResetPassword)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1990,10 +1990,10 @@ func (mr *MockStoreMockRecorder) GetLastUsedResetPassword(ctx, email any) *gomoc
 }
 
 // GetNotification mocks base method.
-func (m *MockStore) GetNotification(ctx context.Context, arg db.GetNotificationParams) (db.Notification, error) {
+func (m *MockStore) GetNotification(ctx context.Context, arg db.GetNotificationParams) (*db.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotification", ctx, arg)
-	ret0, _ := ret[0].(db.Notification)
+	ret0, _ := ret[0].(*db.Notification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2005,10 +2005,10 @@ func (mr *MockStoreMockRecorder) GetNotification(ctx, arg any) *gomock.Call {
 }
 
 // GetNotificationV2 mocks base method.
-func (m *MockStore) GetNotificationV2(ctx context.Context, userID int64) (db.Notification, error) {
+func (m *MockStore) GetNotificationV2(ctx context.Context, userID int64) (*db.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotificationV2", ctx, userID)
-	ret0, _ := ret[0].(db.Notification)
+	ret0, _ := ret[0].(*db.Notification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2020,10 +2020,10 @@ func (mr *MockStoreMockRecorder) GetNotificationV2(ctx, userID any) *gomock.Call
 }
 
 // GetOrderStatus mocks base method.
-func (m *MockStore) GetOrderStatus(ctx context.Context, id int64) (db.OrderStatus, error) {
+func (m *MockStore) GetOrderStatus(ctx context.Context, id int64) (*db.OrderStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrderStatus", ctx, id)
-	ret0, _ := ret[0].(db.OrderStatus)
+	ret0, _ := ret[0].(*db.OrderStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2035,10 +2035,10 @@ func (mr *MockStoreMockRecorder) GetOrderStatus(ctx, id any) *gomock.Call {
 }
 
 // GetOrderStatusByUserID mocks base method.
-func (m *MockStore) GetOrderStatusByUserID(ctx context.Context, arg db.GetOrderStatusByUserIDParams) (db.GetOrderStatusByUserIDRow, error) {
+func (m *MockStore) GetOrderStatusByUserID(ctx context.Context, arg db.GetOrderStatusByUserIDParams) (*db.GetOrderStatusByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrderStatusByUserID", ctx, arg)
-	ret0, _ := ret[0].(db.GetOrderStatusByUserIDRow)
+	ret0, _ := ret[0].(*db.GetOrderStatusByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2050,10 +2050,10 @@ func (mr *MockStoreMockRecorder) GetOrderStatusByUserID(ctx, arg any) *gomock.Ca
 }
 
 // GetPaymentMethod mocks base method.
-func (m *MockStore) GetPaymentMethod(ctx context.Context, arg db.GetPaymentMethodParams) (db.PaymentMethod, error) {
+func (m *MockStore) GetPaymentMethod(ctx context.Context, arg db.GetPaymentMethodParams) (*db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaymentMethod", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentMethod)
+	ret0, _ := ret[0].(*db.PaymentMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2065,10 +2065,10 @@ func (mr *MockStoreMockRecorder) GetPaymentMethod(ctx, arg any) *gomock.Call {
 }
 
 // GetPaymentType mocks base method.
-func (m *MockStore) GetPaymentType(ctx context.Context, id int64) (db.PaymentType, error) {
+func (m *MockStore) GetPaymentType(ctx context.Context, id int64) (*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPaymentType", ctx, id)
-	ret0, _ := ret[0].(db.PaymentType)
+	ret0, _ := ret[0].(*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2080,10 +2080,10 @@ func (mr *MockStoreMockRecorder) GetPaymentType(ctx, id any) *gomock.Call {
 }
 
 // GetProduct mocks base method.
-func (m *MockStore) GetProduct(ctx context.Context, id int64) (db.Product, error) {
+func (m *MockStore) GetProduct(ctx context.Context, id int64) (*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProduct", ctx, id)
-	ret0, _ := ret[0].(db.Product)
+	ret0, _ := ret[0].(*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2095,10 +2095,10 @@ func (mr *MockStoreMockRecorder) GetProduct(ctx, id any) *gomock.Call {
 }
 
 // GetProductBrand mocks base method.
-func (m *MockStore) GetProductBrand(ctx context.Context, id int64) (db.ProductBrand, error) {
+func (m *MockStore) GetProductBrand(ctx context.Context, id int64) (*db.ProductBrand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductBrand", ctx, id)
-	ret0, _ := ret[0].(db.ProductBrand)
+	ret0, _ := ret[0].(*db.ProductBrand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2110,10 +2110,10 @@ func (mr *MockStoreMockRecorder) GetProductBrand(ctx, id any) *gomock.Call {
 }
 
 // GetProductCategory mocks base method.
-func (m *MockStore) GetProductCategory(ctx context.Context, id int64) (db.ProductCategory, error) {
+func (m *MockStore) GetProductCategory(ctx context.Context, id int64) (*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductCategory", ctx, id)
-	ret0, _ := ret[0].(db.ProductCategory)
+	ret0, _ := ret[0].(*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2125,10 +2125,10 @@ func (mr *MockStoreMockRecorder) GetProductCategory(ctx, id any) *gomock.Call {
 }
 
 // GetProductCategoryByParent mocks base method.
-func (m *MockStore) GetProductCategoryByParent(ctx context.Context, arg db.GetProductCategoryByParentParams) (db.ProductCategory, error) {
+func (m *MockStore) GetProductCategoryByParent(ctx context.Context, arg db.GetProductCategoryByParentParams) (*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductCategoryByParent", ctx, arg)
-	ret0, _ := ret[0].(db.ProductCategory)
+	ret0, _ := ret[0].(*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2140,10 +2140,10 @@ func (mr *MockStoreMockRecorder) GetProductCategoryByParent(ctx, arg any) *gomoc
 }
 
 // GetProductColor mocks base method.
-func (m *MockStore) GetProductColor(ctx context.Context, id int64) (db.ProductColor, error) {
+func (m *MockStore) GetProductColor(ctx context.Context, id int64) (*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductColor", ctx, id)
-	ret0, _ := ret[0].(db.ProductColor)
+	ret0, _ := ret[0].(*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2155,10 +2155,10 @@ func (mr *MockStoreMockRecorder) GetProductColor(ctx, id any) *gomock.Call {
 }
 
 // GetProductConfiguration mocks base method.
-func (m *MockStore) GetProductConfiguration(ctx context.Context, arg db.GetProductConfigurationParams) (db.ProductConfiguration, error) {
+func (m *MockStore) GetProductConfiguration(ctx context.Context, arg db.GetProductConfigurationParams) (*db.ProductConfiguration, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductConfiguration", ctx, arg)
-	ret0, _ := ret[0].(db.ProductConfiguration)
+	ret0, _ := ret[0].(*db.ProductConfiguration)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2170,10 +2170,10 @@ func (mr *MockStoreMockRecorder) GetProductConfiguration(ctx, arg any) *gomock.C
 }
 
 // GetProductImage mocks base method.
-func (m *MockStore) GetProductImage(ctx context.Context, id int64) (db.ProductImage, error) {
+func (m *MockStore) GetProductImage(ctx context.Context, id int64) (*db.ProductImage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductImage", ctx, id)
-	ret0, _ := ret[0].(db.ProductImage)
+	ret0, _ := ret[0].(*db.ProductImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2185,10 +2185,10 @@ func (mr *MockStoreMockRecorder) GetProductImage(ctx, id any) *gomock.Call {
 }
 
 // GetProductItem mocks base method.
-func (m *MockStore) GetProductItem(ctx context.Context, productItemID int64) (db.GetProductItemRow, error) {
+func (m *MockStore) GetProductItem(ctx context.Context, productItemID int64) (*db.GetProductItemRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductItem", ctx, productItemID)
-	ret0, _ := ret[0].(db.GetProductItemRow)
+	ret0, _ := ret[0].(*db.GetProductItemRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2200,10 +2200,10 @@ func (mr *MockStoreMockRecorder) GetProductItem(ctx, productItemID any) *gomock.
 }
 
 // GetProductItemForUpdate mocks base method.
-func (m *MockStore) GetProductItemForUpdate(ctx context.Context, id int64) (db.ProductItem, error) {
+func (m *MockStore) GetProductItemForUpdate(ctx context.Context, id int64) (*db.ProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductItemForUpdate", ctx, id)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(*db.ProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2215,10 +2215,10 @@ func (mr *MockStoreMockRecorder) GetProductItemForUpdate(ctx, id any) *gomock.Ca
 }
 
 // GetProductItemSizeForUpdate mocks base method.
-func (m *MockStore) GetProductItemSizeForUpdate(ctx context.Context, id int64) (db.ProductSize, error) {
+func (m *MockStore) GetProductItemSizeForUpdate(ctx context.Context, id int64) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductItemSizeForUpdate", ctx, id)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2230,10 +2230,10 @@ func (mr *MockStoreMockRecorder) GetProductItemSizeForUpdate(ctx, id any) *gomoc
 }
 
 // GetProductItemWithPromotions mocks base method.
-func (m *MockStore) GetProductItemWithPromotions(ctx context.Context, id int64) (db.GetProductItemWithPromotionsRow, error) {
+func (m *MockStore) GetProductItemWithPromotions(ctx context.Context, id int64) (*db.GetProductItemWithPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductItemWithPromotions", ctx, id)
-	ret0, _ := ret[0].(db.GetProductItemWithPromotionsRow)
+	ret0, _ := ret[0].(*db.GetProductItemWithPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2245,10 +2245,10 @@ func (mr *MockStoreMockRecorder) GetProductItemWithPromotions(ctx, id any) *gomo
 }
 
 // GetProductPromotion mocks base method.
-func (m *MockStore) GetProductPromotion(ctx context.Context, arg db.GetProductPromotionParams) (db.ProductPromotion, error) {
+func (m *MockStore) GetProductPromotion(ctx context.Context, arg db.GetProductPromotionParams) (*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.ProductPromotion)
+	ret0, _ := ret[0].(*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2260,10 +2260,10 @@ func (mr *MockStoreMockRecorder) GetProductPromotion(ctx, arg any) *gomock.Call 
 }
 
 // GetProductSize mocks base method.
-func (m *MockStore) GetProductSize(ctx context.Context, id int64) (db.ProductSize, error) {
+func (m *MockStore) GetProductSize(ctx context.Context, id int64) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductSize", ctx, id)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2275,10 +2275,10 @@ func (mr *MockStoreMockRecorder) GetProductSize(ctx, id any) *gomock.Call {
 }
 
 // GetProductsByIDs mocks base method.
-func (m *MockStore) GetProductsByIDs(ctx context.Context, ids []int64) ([]db.Product, error) {
+func (m *MockStore) GetProductsByIDs(ctx context.Context, ids []int64) ([]*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByIDs", ctx, ids)
-	ret0, _ := ret[0].([]db.Product)
+	ret0, _ := ret[0].([]*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2290,10 +2290,10 @@ func (mr *MockStoreMockRecorder) GetProductsByIDs(ctx, ids any) *gomock.Call {
 }
 
 // GetPromotion mocks base method.
-func (m *MockStore) GetPromotion(ctx context.Context, id int64) (db.Promotion, error) {
+func (m *MockStore) GetPromotion(ctx context.Context, id int64) (*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPromotion", ctx, id)
-	ret0, _ := ret[0].(db.Promotion)
+	ret0, _ := ret[0].(*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2305,10 +2305,10 @@ func (mr *MockStoreMockRecorder) GetPromotion(ctx, id any) *gomock.Call {
 }
 
 // GetResetPassword mocks base method.
-func (m *MockStore) GetResetPassword(ctx context.Context, id int64) (db.ResetPassword, error) {
+func (m *MockStore) GetResetPassword(ctx context.Context, id int64) (*db.ResetPassword, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResetPassword", ctx, id)
-	ret0, _ := ret[0].(db.ResetPassword)
+	ret0, _ := ret[0].(*db.ResetPassword)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2335,10 +2335,10 @@ func (mr *MockStoreMockRecorder) GetResetPasswordUserIDByID(ctx, arg any) *gomoc
 }
 
 // GetResetPasswordsByEmail mocks base method.
-func (m *MockStore) GetResetPasswordsByEmail(ctx context.Context, email string) (db.GetResetPasswordsByEmailRow, error) {
+func (m *MockStore) GetResetPasswordsByEmail(ctx context.Context, email string) (*db.GetResetPasswordsByEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResetPasswordsByEmail", ctx, email)
-	ret0, _ := ret[0].(db.GetResetPasswordsByEmailRow)
+	ret0, _ := ret[0].(*db.GetResetPasswordsByEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2350,10 +2350,10 @@ func (mr *MockStoreMockRecorder) GetResetPasswordsByEmail(ctx, email any) *gomoc
 }
 
 // GetShippingMethod mocks base method.
-func (m *MockStore) GetShippingMethod(ctx context.Context, id int64) (db.ShippingMethod, error) {
+func (m *MockStore) GetShippingMethod(ctx context.Context, id int64) (*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShippingMethod", ctx, id)
-	ret0, _ := ret[0].(db.ShippingMethod)
+	ret0, _ := ret[0].(*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2365,10 +2365,10 @@ func (mr *MockStoreMockRecorder) GetShippingMethod(ctx, id any) *gomock.Call {
 }
 
 // GetShippingMethodByUserID mocks base method.
-func (m *MockStore) GetShippingMethodByUserID(ctx context.Context, arg db.GetShippingMethodByUserIDParams) (db.GetShippingMethodByUserIDRow, error) {
+func (m *MockStore) GetShippingMethodByUserID(ctx context.Context, arg db.GetShippingMethodByUserIDParams) (*db.GetShippingMethodByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShippingMethodByUserID", ctx, arg)
-	ret0, _ := ret[0].(db.GetShippingMethodByUserIDRow)
+	ret0, _ := ret[0].(*db.GetShippingMethodByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2380,10 +2380,10 @@ func (mr *MockStoreMockRecorder) GetShippingMethodByUserID(ctx, arg any) *gomock
 }
 
 // GetShopOrder mocks base method.
-func (m *MockStore) GetShopOrder(ctx context.Context, id int64) (db.ShopOrder, error) {
+func (m *MockStore) GetShopOrder(ctx context.Context, id int64) (*db.ShopOrder, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShopOrder", ctx, id)
-	ret0, _ := ret[0].(db.ShopOrder)
+	ret0, _ := ret[0].(*db.ShopOrder)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2395,10 +2395,10 @@ func (mr *MockStoreMockRecorder) GetShopOrder(ctx, id any) *gomock.Call {
 }
 
 // GetShopOrderItem mocks base method.
-func (m *MockStore) GetShopOrderItem(ctx context.Context, id int64) (db.ShopOrderItem, error) {
+func (m *MockStore) GetShopOrderItem(ctx context.Context, id int64) (*db.ShopOrderItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShopOrderItem", ctx, id)
-	ret0, _ := ret[0].(db.ShopOrderItem)
+	ret0, _ := ret[0].(*db.ShopOrderItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2410,10 +2410,10 @@ func (mr *MockStoreMockRecorder) GetShopOrderItem(ctx, id any) *gomock.Call {
 }
 
 // GetShopOrderItemByUserIDOrderID mocks base method.
-func (m *MockStore) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg db.GetShopOrderItemByUserIDOrderIDParams) (db.GetShopOrderItemByUserIDOrderIDRow, error) {
+func (m *MockStore) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg db.GetShopOrderItemByUserIDOrderIDParams) (*db.GetShopOrderItemByUserIDOrderIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShopOrderItemByUserIDOrderID", ctx, arg)
-	ret0, _ := ret[0].(db.GetShopOrderItemByUserIDOrderIDRow)
+	ret0, _ := ret[0].(*db.GetShopOrderItemByUserIDOrderIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2440,10 +2440,10 @@ func (mr *MockStoreMockRecorder) GetShopOrdersCountByStatusId(ctx, arg any) *gom
 }
 
 // GetShoppingCart mocks base method.
-func (m *MockStore) GetShoppingCart(ctx context.Context, id int64) (db.ShoppingCart, error) {
+func (m *MockStore) GetShoppingCart(ctx context.Context, id int64) (*db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShoppingCart", ctx, id)
-	ret0, _ := ret[0].(db.ShoppingCart)
+	ret0, _ := ret[0].(*db.ShoppingCart)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2455,10 +2455,10 @@ func (mr *MockStoreMockRecorder) GetShoppingCart(ctx, id any) *gomock.Call {
 }
 
 // GetShoppingCartByUserIDCartID mocks base method.
-func (m *MockStore) GetShoppingCartByUserIDCartID(ctx context.Context, arg db.GetShoppingCartByUserIDCartIDParams) (db.ShoppingCart, error) {
+func (m *MockStore) GetShoppingCartByUserIDCartID(ctx context.Context, arg db.GetShoppingCartByUserIDCartIDParams) (*db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShoppingCartByUserIDCartID", ctx, arg)
-	ret0, _ := ret[0].(db.ShoppingCart)
+	ret0, _ := ret[0].(*db.ShoppingCart)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2470,10 +2470,10 @@ func (mr *MockStoreMockRecorder) GetShoppingCartByUserIDCartID(ctx, arg any) *go
 }
 
 // GetShoppingCartItem mocks base method.
-func (m *MockStore) GetShoppingCartItem(ctx context.Context, id int64) (db.ShoppingCartItem, error) {
+func (m *MockStore) GetShoppingCartItem(ctx context.Context, id int64) (*db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShoppingCartItem", ctx, id)
-	ret0, _ := ret[0].(db.ShoppingCartItem)
+	ret0, _ := ret[0].(*db.ShoppingCartItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2485,10 +2485,10 @@ func (mr *MockStoreMockRecorder) GetShoppingCartItem(ctx, id any) *gomock.Call {
 }
 
 // GetShoppingCartItemByUserIDCartID mocks base method.
-func (m *MockStore) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg db.GetShoppingCartItemByUserIDCartIDParams) ([]db.GetShoppingCartItemByUserIDCartIDRow, error) {
+func (m *MockStore) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg db.GetShoppingCartItemByUserIDCartIDParams) ([]*db.GetShoppingCartItemByUserIDCartIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetShoppingCartItemByUserIDCartID", ctx, arg)
-	ret0, _ := ret[0].([]db.GetShoppingCartItemByUserIDCartIDRow)
+	ret0, _ := ret[0].([]*db.GetShoppingCartItemByUserIDCartIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2545,10 +2545,10 @@ func (mr *MockStoreMockRecorder) GetTotalUsersCount(ctx, adminID any) *gomock.Ca
 }
 
 // GetUser mocks base method.
-func (m *MockStore) GetUser(ctx context.Context, id int64) (db.User, error) {
+func (m *MockStore) GetUser(ctx context.Context, id int64) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUser", ctx, id)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2560,10 +2560,10 @@ func (mr *MockStoreMockRecorder) GetUser(ctx, id any) *gomock.Call {
 }
 
 // GetUserAddress mocks base method.
-func (m *MockStore) GetUserAddress(ctx context.Context, arg db.GetUserAddressParams) (db.GetUserAddressRow, error) {
+func (m *MockStore) GetUserAddress(ctx context.Context, arg db.GetUserAddressParams) (*db.GetUserAddressRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserAddress", ctx, arg)
-	ret0, _ := ret[0].(db.GetUserAddressRow)
+	ret0, _ := ret[0].(*db.GetUserAddressRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2575,10 +2575,10 @@ func (mr *MockStoreMockRecorder) GetUserAddress(ctx, arg any) *gomock.Call {
 }
 
 // GetUserByEmail mocks base method.
-func (m *MockStore) GetUserByEmail(ctx context.Context, email string) (db.GetUserByEmailRow, error) {
+func (m *MockStore) GetUserByEmail(ctx context.Context, email string) (*db.GetUserByEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByEmail", ctx, email)
-	ret0, _ := ret[0].(db.GetUserByEmailRow)
+	ret0, _ := ret[0].(*db.GetUserByEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2590,10 +2590,10 @@ func (mr *MockStoreMockRecorder) GetUserByEmail(ctx, email any) *gomock.Call {
 }
 
 // GetUserReview mocks base method.
-func (m *MockStore) GetUserReview(ctx context.Context, arg db.GetUserReviewParams) (db.UserReview, error) {
+func (m *MockStore) GetUserReview(ctx context.Context, arg db.GetUserReviewParams) (*db.UserReview, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserReview", ctx, arg)
-	ret0, _ := ret[0].(db.UserReview)
+	ret0, _ := ret[0].(*db.UserReview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2605,10 +2605,10 @@ func (mr *MockStoreMockRecorder) GetUserReview(ctx, arg any) *gomock.Call {
 }
 
 // GetUserSession mocks base method.
-func (m *MockStore) GetUserSession(ctx context.Context, id uuid.UUID) (db.UserSession, error) {
+func (m *MockStore) GetUserSession(ctx context.Context, id uuid.UUID) (*db.UserSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserSession", ctx, id)
-	ret0, _ := ret[0].(db.UserSession)
+	ret0, _ := ret[0].(*db.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2620,10 +2620,10 @@ func (mr *MockStoreMockRecorder) GetUserSession(ctx, id any) *gomock.Call {
 }
 
 // GetVariation mocks base method.
-func (m *MockStore) GetVariation(ctx context.Context, id int64) (db.Variation, error) {
+func (m *MockStore) GetVariation(ctx context.Context, id int64) (*db.Variation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVariation", ctx, id)
-	ret0, _ := ret[0].(db.Variation)
+	ret0, _ := ret[0].(*db.Variation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2635,10 +2635,10 @@ func (mr *MockStoreMockRecorder) GetVariation(ctx, id any) *gomock.Call {
 }
 
 // GetVariationOption mocks base method.
-func (m *MockStore) GetVariationOption(ctx context.Context, id int64) (db.VariationOption, error) {
+func (m *MockStore) GetVariationOption(ctx context.Context, id int64) (*db.VariationOption, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVariationOption", ctx, id)
-	ret0, _ := ret[0].(db.VariationOption)
+	ret0, _ := ret[0].(*db.VariationOption)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2650,10 +2650,10 @@ func (mr *MockStoreMockRecorder) GetVariationOption(ctx, id any) *gomock.Call {
 }
 
 // GetVerifyEmail mocks base method.
-func (m *MockStore) GetVerifyEmail(ctx context.Context, id int64) (db.VerifyEmail, error) {
+func (m *MockStore) GetVerifyEmail(ctx context.Context, id int64) (*db.VerifyEmail, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVerifyEmail", ctx, id)
-	ret0, _ := ret[0].(db.VerifyEmail)
+	ret0, _ := ret[0].(*db.VerifyEmail)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2665,10 +2665,10 @@ func (mr *MockStoreMockRecorder) GetVerifyEmail(ctx, id any) *gomock.Call {
 }
 
 // GetVerifyEmailByEmail mocks base method.
-func (m *MockStore) GetVerifyEmailByEmail(ctx context.Context, email string) (db.GetVerifyEmailByEmailRow, error) {
+func (m *MockStore) GetVerifyEmailByEmail(ctx context.Context, email string) (*db.GetVerifyEmailByEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVerifyEmailByEmail", ctx, email)
-	ret0, _ := ret[0].(db.GetVerifyEmailByEmailRow)
+	ret0, _ := ret[0].(*db.GetVerifyEmailByEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2680,10 +2680,10 @@ func (mr *MockStoreMockRecorder) GetVerifyEmailByEmail(ctx, email any) *gomock.C
 }
 
 // GetWishList mocks base method.
-func (m *MockStore) GetWishList(ctx context.Context, id int64) (db.WishList, error) {
+func (m *MockStore) GetWishList(ctx context.Context, id int64) (*db.WishList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWishList", ctx, id)
-	ret0, _ := ret[0].(db.WishList)
+	ret0, _ := ret[0].(*db.WishList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2695,10 +2695,10 @@ func (mr *MockStoreMockRecorder) GetWishList(ctx, id any) *gomock.Call {
 }
 
 // GetWishListByUserID mocks base method.
-func (m *MockStore) GetWishListByUserID(ctx context.Context, userID int64) (db.WishList, error) {
+func (m *MockStore) GetWishListByUserID(ctx context.Context, userID int64) (*db.WishList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWishListByUserID", ctx, userID)
-	ret0, _ := ret[0].(db.WishList)
+	ret0, _ := ret[0].(*db.WishList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2710,10 +2710,10 @@ func (mr *MockStoreMockRecorder) GetWishListByUserID(ctx, userID any) *gomock.Ca
 }
 
 // GetWishListItem mocks base method.
-func (m *MockStore) GetWishListItem(ctx context.Context, id int64) (db.WishListItem, error) {
+func (m *MockStore) GetWishListItem(ctx context.Context, id int64) (*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWishListItem", ctx, id)
-	ret0, _ := ret[0].(db.WishListItem)
+	ret0, _ := ret[0].(*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2725,10 +2725,10 @@ func (mr *MockStoreMockRecorder) GetWishListItem(ctx, id any) *gomock.Call {
 }
 
 // GetWishListItemByUserIDCartID mocks base method.
-func (m *MockStore) GetWishListItemByUserIDCartID(ctx context.Context, arg db.GetWishListItemByUserIDCartIDParams) (db.WishListItem, error) {
+func (m *MockStore) GetWishListItemByUserIDCartID(ctx context.Context, arg db.GetWishListItemByUserIDCartIDParams) (*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWishListItemByUserIDCartID", ctx, arg)
-	ret0, _ := ret[0].(db.WishListItem)
+	ret0, _ := ret[0].(*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2740,10 +2740,10 @@ func (mr *MockStoreMockRecorder) GetWishListItemByUserIDCartID(ctx, arg any) *go
 }
 
 // ListAddressesByCity mocks base method.
-func (m *MockStore) ListAddressesByCity(ctx context.Context, arg db.ListAddressesByCityParams) ([]db.Address, error) {
+func (m *MockStore) ListAddressesByCity(ctx context.Context, arg db.ListAddressesByCityParams) ([]*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAddressesByCity", ctx, arg)
-	ret0, _ := ret[0].([]db.Address)
+	ret0, _ := ret[0].([]*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2755,10 +2755,10 @@ func (mr *MockStoreMockRecorder) ListAddressesByCity(ctx, arg any) *gomock.Call 
 }
 
 // ListAddressesByID mocks base method.
-func (m *MockStore) ListAddressesByID(ctx context.Context, addressesIds []int64) ([]db.Address, error) {
+func (m *MockStore) ListAddressesByID(ctx context.Context, addressesIds []int64) ([]*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAddressesByID", ctx, addressesIds)
-	ret0, _ := ret[0].([]db.Address)
+	ret0, _ := ret[0].([]*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2770,10 +2770,10 @@ func (mr *MockStoreMockRecorder) ListAddressesByID(ctx, addressesIds any) *gomoc
 }
 
 // ListAddressesByUserID mocks base method.
-func (m *MockStore) ListAddressesByUserID(ctx context.Context, id int64) ([]db.ListAddressesByUserIDRow, error) {
+func (m *MockStore) ListAddressesByUserID(ctx context.Context, id int64) ([]*db.ListAddressesByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAddressesByUserID", ctx, id)
-	ret0, _ := ret[0].([]db.ListAddressesByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListAddressesByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2785,10 +2785,10 @@ func (mr *MockStoreMockRecorder) ListAddressesByUserID(ctx, id any) *gomock.Call
 }
 
 // ListAdminTypes mocks base method.
-func (m *MockStore) ListAdminTypes(ctx context.Context, arg db.ListAdminTypesParams) ([]db.AdminType, error) {
+func (m *MockStore) ListAdminTypes(ctx context.Context, arg db.ListAdminTypesParams) ([]*db.AdminType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAdminTypes", ctx, arg)
-	ret0, _ := ret[0].([]db.AdminType)
+	ret0, _ := ret[0].([]*db.AdminType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2800,10 +2800,10 @@ func (mr *MockStoreMockRecorder) ListAdminTypes(ctx, arg any) *gomock.Call {
 }
 
 // ListAdmins mocks base method.
-func (m *MockStore) ListAdmins(ctx context.Context, arg db.ListAdminsParams) ([]db.Admin, error) {
+func (m *MockStore) ListAdmins(ctx context.Context, arg db.ListAdminsParams) ([]*db.Admin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAdmins", ctx, arg)
-	ret0, _ := ret[0].([]db.Admin)
+	ret0, _ := ret[0].([]*db.Admin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2815,10 +2815,10 @@ func (mr *MockStoreMockRecorder) ListAdmins(ctx, arg any) *gomock.Call {
 }
 
 // ListAllUsers mocks base method.
-func (m *MockStore) ListAllUsers(ctx context.Context, arg db.ListAllUsersParams) ([]db.User, error) {
+func (m *MockStore) ListAllUsers(ctx context.Context, arg db.ListAllUsersParams) ([]*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAllUsers", ctx, arg)
-	ret0, _ := ret[0].([]db.User)
+	ret0, _ := ret[0].([]*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2830,10 +2830,10 @@ func (mr *MockStoreMockRecorder) ListAllUsers(ctx, arg any) *gomock.Call {
 }
 
 // ListBrandPromotions mocks base method.
-func (m *MockStore) ListBrandPromotions(ctx context.Context, arg db.ListBrandPromotionsParams) ([]db.BrandPromotion, error) {
+func (m *MockStore) ListBrandPromotions(ctx context.Context, arg db.ListBrandPromotionsParams) ([]*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListBrandPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.BrandPromotion)
+	ret0, _ := ret[0].([]*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2845,10 +2845,10 @@ func (mr *MockStoreMockRecorder) ListBrandPromotions(ctx, arg any) *gomock.Call 
 }
 
 // ListBrandPromotionsWithImages mocks base method.
-func (m *MockStore) ListBrandPromotionsWithImages(ctx context.Context) ([]db.ListBrandPromotionsWithImagesRow, error) {
+func (m *MockStore) ListBrandPromotionsWithImages(ctx context.Context) ([]*db.ListBrandPromotionsWithImagesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListBrandPromotionsWithImages", ctx)
-	ret0, _ := ret[0].([]db.ListBrandPromotionsWithImagesRow)
+	ret0, _ := ret[0].([]*db.ListBrandPromotionsWithImagesRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2860,10 +2860,10 @@ func (mr *MockStoreMockRecorder) ListBrandPromotionsWithImages(ctx any) *gomock.
 }
 
 // ListCategoryPromotions mocks base method.
-func (m *MockStore) ListCategoryPromotions(ctx context.Context, arg db.ListCategoryPromotionsParams) ([]db.CategoryPromotion, error) {
+func (m *MockStore) ListCategoryPromotions(ctx context.Context, arg db.ListCategoryPromotionsParams) ([]*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListCategoryPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.CategoryPromotion)
+	ret0, _ := ret[0].([]*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2875,10 +2875,10 @@ func (mr *MockStoreMockRecorder) ListCategoryPromotions(ctx, arg any) *gomock.Ca
 }
 
 // ListCategoryPromotionsWithImages mocks base method.
-func (m *MockStore) ListCategoryPromotionsWithImages(ctx context.Context) ([]db.ListCategoryPromotionsWithImagesRow, error) {
+func (m *MockStore) ListCategoryPromotionsWithImages(ctx context.Context) ([]*db.ListCategoryPromotionsWithImagesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListCategoryPromotionsWithImages", ctx)
-	ret0, _ := ret[0].([]db.ListCategoryPromotionsWithImagesRow)
+	ret0, _ := ret[0].([]*db.ListCategoryPromotionsWithImagesRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2890,10 +2890,10 @@ func (mr *MockStoreMockRecorder) ListCategoryPromotionsWithImages(ctx any) *gomo
 }
 
 // ListFeaturedProductItems mocks base method.
-func (m *MockStore) ListFeaturedProductItems(ctx context.Context, arg db.ListFeaturedProductItemsParams) ([]db.FeaturedProductItem, error) {
+func (m *MockStore) ListFeaturedProductItems(ctx context.Context, arg db.ListFeaturedProductItemsParams) ([]*db.FeaturedProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListFeaturedProductItems", ctx, arg)
-	ret0, _ := ret[0].([]db.FeaturedProductItem)
+	ret0, _ := ret[0].([]*db.FeaturedProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2905,10 +2905,10 @@ func (mr *MockStoreMockRecorder) ListFeaturedProductItems(ctx, arg any) *gomock.
 }
 
 // ListHomePageTextBanners mocks base method.
-func (m *MockStore) ListHomePageTextBanners(ctx context.Context) ([]db.HomePageTextBanner, error) {
+func (m *MockStore) ListHomePageTextBanners(ctx context.Context) ([]*db.HomePageTextBanner, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListHomePageTextBanners", ctx)
-	ret0, _ := ret[0].([]db.HomePageTextBanner)
+	ret0, _ := ret[0].([]*db.HomePageTextBanner)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2920,10 +2920,10 @@ func (mr *MockStoreMockRecorder) ListHomePageTextBanners(ctx any) *gomock.Call {
 }
 
 // ListOrderStatuses mocks base method.
-func (m *MockStore) ListOrderStatuses(ctx context.Context) ([]db.OrderStatus, error) {
+func (m *MockStore) ListOrderStatuses(ctx context.Context) ([]*db.OrderStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListOrderStatuses", ctx)
-	ret0, _ := ret[0].([]db.OrderStatus)
+	ret0, _ := ret[0].([]*db.OrderStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2935,10 +2935,10 @@ func (mr *MockStoreMockRecorder) ListOrderStatuses(ctx any) *gomock.Call {
 }
 
 // ListOrderStatusesByUserID mocks base method.
-func (m *MockStore) ListOrderStatusesByUserID(ctx context.Context, arg db.ListOrderStatusesByUserIDParams) ([]db.ListOrderStatusesByUserIDRow, error) {
+func (m *MockStore) ListOrderStatusesByUserID(ctx context.Context, arg db.ListOrderStatusesByUserIDParams) ([]*db.ListOrderStatusesByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListOrderStatusesByUserID", ctx, arg)
-	ret0, _ := ret[0].([]db.ListOrderStatusesByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListOrderStatusesByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2950,10 +2950,10 @@ func (mr *MockStoreMockRecorder) ListOrderStatusesByUserID(ctx, arg any) *gomock
 }
 
 // ListPaymentMethods mocks base method.
-func (m *MockStore) ListPaymentMethods(ctx context.Context, arg db.ListPaymentMethodsParams) ([]db.PaymentMethod, error) {
+func (m *MockStore) ListPaymentMethods(ctx context.Context, arg db.ListPaymentMethodsParams) ([]*db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListPaymentMethods", ctx, arg)
-	ret0, _ := ret[0].([]db.PaymentMethod)
+	ret0, _ := ret[0].([]*db.PaymentMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2965,10 +2965,10 @@ func (mr *MockStoreMockRecorder) ListPaymentMethods(ctx, arg any) *gomock.Call {
 }
 
 // ListPaymentTypes mocks base method.
-func (m *MockStore) ListPaymentTypes(ctx context.Context) ([]db.PaymentType, error) {
+func (m *MockStore) ListPaymentTypes(ctx context.Context) ([]*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListPaymentTypes", ctx)
-	ret0, _ := ret[0].([]db.PaymentType)
+	ret0, _ := ret[0].([]*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2980,10 +2980,10 @@ func (mr *MockStoreMockRecorder) ListPaymentTypes(ctx any) *gomock.Call {
 }
 
 // ListProductBrands mocks base method.
-func (m *MockStore) ListProductBrands(ctx context.Context) ([]db.ProductBrand, error) {
+func (m *MockStore) ListProductBrands(ctx context.Context) ([]*db.ProductBrand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductBrands", ctx)
-	ret0, _ := ret[0].([]db.ProductBrand)
+	ret0, _ := ret[0].([]*db.ProductBrand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -2995,10 +2995,10 @@ func (mr *MockStoreMockRecorder) ListProductBrands(ctx any) *gomock.Call {
 }
 
 // ListProductCategories mocks base method.
-func (m *MockStore) ListProductCategories(ctx context.Context) ([]db.ProductCategory, error) {
+func (m *MockStore) ListProductCategories(ctx context.Context) ([]*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductCategories", ctx)
-	ret0, _ := ret[0].([]db.ProductCategory)
+	ret0, _ := ret[0].([]*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3010,10 +3010,10 @@ func (mr *MockStoreMockRecorder) ListProductCategories(ctx any) *gomock.Call {
 }
 
 // ListProductCategoriesByParent mocks base method.
-func (m *MockStore) ListProductCategoriesByParent(ctx context.Context, parentCategoryID null.Int) ([]db.ProductCategory, error) {
+func (m *MockStore) ListProductCategoriesByParent(ctx context.Context, parentCategoryID null.Int) ([]*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductCategoriesByParent", ctx, parentCategoryID)
-	ret0, _ := ret[0].([]db.ProductCategory)
+	ret0, _ := ret[0].([]*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3025,10 +3025,10 @@ func (mr *MockStoreMockRecorder) ListProductCategoriesByParent(ctx, parentCatego
 }
 
 // ListProductColors mocks base method.
-func (m *MockStore) ListProductColors(ctx context.Context) ([]db.ProductColor, error) {
+func (m *MockStore) ListProductColors(ctx context.Context) ([]*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductColors", ctx)
-	ret0, _ := ret[0].([]db.ProductColor)
+	ret0, _ := ret[0].([]*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3040,10 +3040,10 @@ func (mr *MockStoreMockRecorder) ListProductColors(ctx any) *gomock.Call {
 }
 
 // ListProductConfigurations mocks base method.
-func (m *MockStore) ListProductConfigurations(ctx context.Context, arg db.ListProductConfigurationsParams) ([]db.ProductConfiguration, error) {
+func (m *MockStore) ListProductConfigurations(ctx context.Context, arg db.ListProductConfigurationsParams) ([]*db.ProductConfiguration, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductConfigurations", ctx, arg)
-	ret0, _ := ret[0].([]db.ProductConfiguration)
+	ret0, _ := ret[0].([]*db.ProductConfiguration)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3055,10 +3055,10 @@ func (mr *MockStoreMockRecorder) ListProductConfigurations(ctx, arg any) *gomock
 }
 
 // ListProductImagesNextPage mocks base method.
-func (m *MockStore) ListProductImagesNextPage(ctx context.Context, arg db.ListProductImagesNextPageParams) ([]db.ListProductImagesNextPageRow, error) {
+func (m *MockStore) ListProductImagesNextPage(ctx context.Context, arg db.ListProductImagesNextPageParams) ([]*db.ListProductImagesNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductImagesNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductImagesNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductImagesNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3070,10 +3070,10 @@ func (mr *MockStoreMockRecorder) ListProductImagesNextPage(ctx, arg any) *gomock
 }
 
 // ListProductImagesV2 mocks base method.
-func (m *MockStore) ListProductImagesV2(ctx context.Context, limit int32) ([]db.ListProductImagesV2Row, error) {
+func (m *MockStore) ListProductImagesV2(ctx context.Context, limit int32) ([]*db.ListProductImagesV2Row, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductImagesV2", ctx, limit)
-	ret0, _ := ret[0].([]db.ListProductImagesV2Row)
+	ret0, _ := ret[0].([]*db.ListProductImagesV2Row)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3085,10 +3085,10 @@ func (mr *MockStoreMockRecorder) ListProductImagesV2(ctx, limit any) *gomock.Cal
 }
 
 // ListProductItems mocks base method.
-func (m *MockStore) ListProductItems(ctx context.Context, arg db.ListProductItemsParams) ([]db.ListProductItemsRow, error) {
+func (m *MockStore) ListProductItems(ctx context.Context, arg db.ListProductItemsParams) ([]*db.ListProductItemsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItems", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3100,10 +3100,10 @@ func (mr *MockStoreMockRecorder) ListProductItems(ctx, arg any) *gomock.Call {
 }
 
 // ListProductItemsByIDs mocks base method.
-func (m *MockStore) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]db.ListProductItemsByIDsRow, error) {
+func (m *MockStore) ListProductItemsByIDs(ctx context.Context, productsIds []int64) ([]*db.ListProductItemsByIDsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsByIDs", ctx, productsIds)
-	ret0, _ := ret[0].([]db.ListProductItemsByIDsRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsByIDsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3115,10 +3115,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsByIDs(ctx, productsIds any) *go
 }
 
 // ListProductItemsNextPage mocks base method.
-func (m *MockStore) ListProductItemsNextPage(ctx context.Context, arg db.ListProductItemsNextPageParams) ([]db.ListProductItemsNextPageRow, error) {
+func (m *MockStore) ListProductItemsNextPage(ctx context.Context, arg db.ListProductItemsNextPageParams) ([]*db.ListProductItemsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3130,10 +3130,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsNextPage(ctx, arg any) *gomock.
 }
 
 // ListProductItemsNextPageOld mocks base method.
-func (m *MockStore) ListProductItemsNextPageOld(ctx context.Context, arg db.ListProductItemsNextPageOldParams) ([]db.ListProductItemsNextPageOldRow, error) {
+func (m *MockStore) ListProductItemsNextPageOld(ctx context.Context, arg db.ListProductItemsNextPageOldParams) ([]*db.ListProductItemsNextPageOldRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsNextPageOld", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsNextPageOldRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsNextPageOldRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3145,10 +3145,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsNextPageOld(ctx, arg any) *gomo
 }
 
 // ListProductItemsV2 mocks base method.
-func (m *MockStore) ListProductItemsV2(ctx context.Context, arg db.ListProductItemsV2Params) ([]db.ListProductItemsV2Row, error) {
+func (m *MockStore) ListProductItemsV2(ctx context.Context, arg db.ListProductItemsV2Params) ([]*db.ListProductItemsV2Row, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsV2", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsV2Row)
+	ret0, _ := ret[0].([]*db.ListProductItemsV2Row)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3160,10 +3160,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsV2(ctx, arg any) *gomock.Call {
 }
 
 // ListProductItemsV2Old mocks base method.
-func (m *MockStore) ListProductItemsV2Old(ctx context.Context, arg db.ListProductItemsV2OldParams) ([]db.ListProductItemsV2OldRow, error) {
+func (m *MockStore) ListProductItemsV2Old(ctx context.Context, arg db.ListProductItemsV2OldParams) ([]*db.ListProductItemsV2OldRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsV2Old", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsV2OldRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsV2OldRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3175,10 +3175,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsV2Old(ctx, arg any) *gomock.Cal
 }
 
 // ListProductItemsWithBestSales mocks base method.
-func (m *MockStore) ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]db.ListProductItemsWithBestSalesRow, error) {
+func (m *MockStore) ListProductItemsWithBestSales(ctx context.Context, limit int32) ([]*db.ListProductItemsWithBestSalesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithBestSales", ctx, limit)
-	ret0, _ := ret[0].([]db.ListProductItemsWithBestSalesRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithBestSalesRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3190,10 +3190,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithBestSales(ctx, limit any) *
 }
 
 // ListProductItemsWithBrandPromotions mocks base method.
-func (m *MockStore) ListProductItemsWithBrandPromotions(ctx context.Context, arg db.ListProductItemsWithBrandPromotionsParams) ([]db.ListProductItemsWithBrandPromotionsRow, error) {
+func (m *MockStore) ListProductItemsWithBrandPromotions(ctx context.Context, arg db.ListProductItemsWithBrandPromotionsParams) ([]*db.ListProductItemsWithBrandPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithBrandPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithBrandPromotionsRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithBrandPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3205,10 +3205,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithBrandPromotions(ctx, arg an
 }
 
 // ListProductItemsWithBrandPromotionsNextPage mocks base method.
-func (m *MockStore) ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithBrandPromotionsNextPageParams) ([]db.ListProductItemsWithBrandPromotionsNextPageRow, error) {
+func (m *MockStore) ListProductItemsWithBrandPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithBrandPromotionsNextPageParams) ([]*db.ListProductItemsWithBrandPromotionsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithBrandPromotionsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithBrandPromotionsNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithBrandPromotionsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3220,10 +3220,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithBrandPromotionsNextPage(ctx
 }
 
 // ListProductItemsWithCategoryPromotions mocks base method.
-func (m *MockStore) ListProductItemsWithCategoryPromotions(ctx context.Context, arg db.ListProductItemsWithCategoryPromotionsParams) ([]db.ListProductItemsWithCategoryPromotionsRow, error) {
+func (m *MockStore) ListProductItemsWithCategoryPromotions(ctx context.Context, arg db.ListProductItemsWithCategoryPromotionsParams) ([]*db.ListProductItemsWithCategoryPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithCategoryPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithCategoryPromotionsRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithCategoryPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3235,10 +3235,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithCategoryPromotions(ctx, arg
 }
 
 // ListProductItemsWithCategoryPromotionsNextPage mocks base method.
-func (m *MockStore) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithCategoryPromotionsNextPageParams) ([]db.ListProductItemsWithCategoryPromotionsNextPageRow, error) {
+func (m *MockStore) ListProductItemsWithCategoryPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithCategoryPromotionsNextPageParams) ([]*db.ListProductItemsWithCategoryPromotionsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithCategoryPromotionsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithCategoryPromotionsNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithCategoryPromotionsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3250,10 +3250,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithCategoryPromotionsNextPage(
 }
 
 // ListProductItemsWithPromotions mocks base method.
-func (m *MockStore) ListProductItemsWithPromotions(ctx context.Context, arg db.ListProductItemsWithPromotionsParams) ([]db.ListProductItemsWithPromotionsRow, error) {
+func (m *MockStore) ListProductItemsWithPromotions(ctx context.Context, arg db.ListProductItemsWithPromotionsParams) ([]*db.ListProductItemsWithPromotionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithPromotionsRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithPromotionsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3265,10 +3265,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithPromotions(ctx, arg any) *g
 }
 
 // ListProductItemsWithPromotionsNextPage mocks base method.
-func (m *MockStore) ListProductItemsWithPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithPromotionsNextPageParams) ([]db.ListProductItemsWithPromotionsNextPageRow, error) {
+func (m *MockStore) ListProductItemsWithPromotionsNextPage(ctx context.Context, arg db.ListProductItemsWithPromotionsNextPageParams) ([]*db.ListProductItemsWithPromotionsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductItemsWithPromotionsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductItemsWithPromotionsNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductItemsWithPromotionsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3280,10 +3280,10 @@ func (mr *MockStoreMockRecorder) ListProductItemsWithPromotionsNextPage(ctx, arg
 }
 
 // ListProductPromotions mocks base method.
-func (m *MockStore) ListProductPromotions(ctx context.Context, arg db.ListProductPromotionsParams) ([]db.ProductPromotion, error) {
+func (m *MockStore) ListProductPromotions(ctx context.Context, arg db.ListProductPromotionsParams) ([]*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductPromotions", ctx, arg)
-	ret0, _ := ret[0].([]db.ProductPromotion)
+	ret0, _ := ret[0].([]*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3295,10 +3295,10 @@ func (mr *MockStoreMockRecorder) ListProductPromotions(ctx, arg any) *gomock.Cal
 }
 
 // ListProductPromotionsWithImages mocks base method.
-func (m *MockStore) ListProductPromotionsWithImages(ctx context.Context) ([]db.ListProductPromotionsWithImagesRow, error) {
+func (m *MockStore) ListProductPromotionsWithImages(ctx context.Context) ([]*db.ListProductPromotionsWithImagesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductPromotionsWithImages", ctx)
-	ret0, _ := ret[0].([]db.ListProductPromotionsWithImagesRow)
+	ret0, _ := ret[0].([]*db.ListProductPromotionsWithImagesRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3310,10 +3310,10 @@ func (mr *MockStoreMockRecorder) ListProductPromotionsWithImages(ctx any) *gomoc
 }
 
 // ListProductSizes mocks base method.
-func (m *MockStore) ListProductSizes(ctx context.Context) ([]db.ProductSize, error) {
+func (m *MockStore) ListProductSizes(ctx context.Context) ([]*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductSizes", ctx)
-	ret0, _ := ret[0].([]db.ProductSize)
+	ret0, _ := ret[0].([]*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3325,10 +3325,10 @@ func (mr *MockStoreMockRecorder) ListProductSizes(ctx any) *gomock.Call {
 }
 
 // ListProductSizesByIDs mocks base method.
-func (m *MockStore) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]db.ProductSize, error) {
+func (m *MockStore) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductSizesByIDs", ctx, sizesIds)
-	ret0, _ := ret[0].([]db.ProductSize)
+	ret0, _ := ret[0].([]*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3340,10 +3340,10 @@ func (mr *MockStoreMockRecorder) ListProductSizesByIDs(ctx, sizesIds any) *gomoc
 }
 
 // ListProductSizesByProductItemID mocks base method.
-func (m *MockStore) ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]db.ProductSize, error) {
+func (m *MockStore) ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductSizesByProductItemID", ctx, productItemID)
-	ret0, _ := ret[0].([]db.ProductSize)
+	ret0, _ := ret[0].([]*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3355,10 +3355,10 @@ func (mr *MockStoreMockRecorder) ListProductSizesByProductItemID(ctx, productIte
 }
 
 // ListProducts mocks base method.
-func (m *MockStore) ListProducts(ctx context.Context, arg db.ListProductsParams) ([]db.ListProductsRow, error) {
+func (m *MockStore) ListProducts(ctx context.Context, arg db.ListProductsParams) ([]*db.ListProductsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProducts", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductsRow)
+	ret0, _ := ret[0].([]*db.ListProductsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3370,10 +3370,10 @@ func (mr *MockStoreMockRecorder) ListProducts(ctx, arg any) *gomock.Call {
 }
 
 // ListProductsNextPage mocks base method.
-func (m *MockStore) ListProductsNextPage(ctx context.Context, arg db.ListProductsNextPageParams) ([]db.ListProductsNextPageRow, error) {
+func (m *MockStore) ListProductsNextPage(ctx context.Context, arg db.ListProductsNextPageParams) ([]*db.ListProductsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListProductsNextPageRow)
+	ret0, _ := ret[0].([]*db.ListProductsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3385,10 +3385,10 @@ func (mr *MockStoreMockRecorder) ListProductsNextPage(ctx, arg any) *gomock.Call
 }
 
 // ListProductsV2 mocks base method.
-func (m *MockStore) ListProductsV2(ctx context.Context, limit int32) ([]db.ListProductsV2Row, error) {
+func (m *MockStore) ListProductsV2(ctx context.Context, limit int32) ([]*db.ListProductsV2Row, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsV2", ctx, limit)
-	ret0, _ := ret[0].([]db.ListProductsV2Row)
+	ret0, _ := ret[0].([]*db.ListProductsV2Row)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3400,10 +3400,10 @@ func (mr *MockStoreMockRecorder) ListProductsV2(ctx, limit any) *gomock.Call {
 }
 
 // ListPromotions mocks base method.
-func (m *MockStore) ListPromotions(ctx context.Context) ([]db.Promotion, error) {
+func (m *MockStore) ListPromotions(ctx context.Context) ([]*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListPromotions", ctx)
-	ret0, _ := ret[0].([]db.Promotion)
+	ret0, _ := ret[0].([]*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3415,10 +3415,10 @@ func (mr *MockStoreMockRecorder) ListPromotions(ctx any) *gomock.Call {
 }
 
 // ListShippingMethods mocks base method.
-func (m *MockStore) ListShippingMethods(ctx context.Context) ([]db.ShippingMethod, error) {
+func (m *MockStore) ListShippingMethods(ctx context.Context) ([]*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShippingMethods", ctx)
-	ret0, _ := ret[0].([]db.ShippingMethod)
+	ret0, _ := ret[0].([]*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3430,10 +3430,10 @@ func (mr *MockStoreMockRecorder) ListShippingMethods(ctx any) *gomock.Call {
 }
 
 // ListShippingMethodsByUserID mocks base method.
-func (m *MockStore) ListShippingMethodsByUserID(ctx context.Context, arg db.ListShippingMethodsByUserIDParams) ([]db.ListShippingMethodsByUserIDRow, error) {
+func (m *MockStore) ListShippingMethodsByUserID(ctx context.Context, arg db.ListShippingMethodsByUserIDParams) ([]*db.ListShippingMethodsByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShippingMethodsByUserID", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShippingMethodsByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListShippingMethodsByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3445,10 +3445,10 @@ func (mr *MockStoreMockRecorder) ListShippingMethodsByUserID(ctx, arg any) *gomo
 }
 
 // ListShopOrderItems mocks base method.
-func (m *MockStore) ListShopOrderItems(ctx context.Context, arg db.ListShopOrderItemsParams) ([]db.ShopOrderItem, error) {
+func (m *MockStore) ListShopOrderItems(ctx context.Context, arg db.ListShopOrderItemsParams) ([]*db.ShopOrderItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrderItems", ctx, arg)
-	ret0, _ := ret[0].([]db.ShopOrderItem)
+	ret0, _ := ret[0].([]*db.ShopOrderItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3460,10 +3460,10 @@ func (mr *MockStoreMockRecorder) ListShopOrderItems(ctx, arg any) *gomock.Call {
 }
 
 // ListShopOrderItemsByUserID mocks base method.
-func (m *MockStore) ListShopOrderItemsByUserID(ctx context.Context, arg db.ListShopOrderItemsByUserIDParams) ([]db.ListShopOrderItemsByUserIDRow, error) {
+func (m *MockStore) ListShopOrderItemsByUserID(ctx context.Context, arg db.ListShopOrderItemsByUserIDParams) ([]*db.ListShopOrderItemsByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrderItemsByUserID", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShopOrderItemsByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListShopOrderItemsByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3475,10 +3475,10 @@ func (mr *MockStoreMockRecorder) ListShopOrderItemsByUserID(ctx, arg any) *gomoc
 }
 
 // ListShopOrderItemsByUserIDOrderID mocks base method.
-func (m *MockStore) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg db.ListShopOrderItemsByUserIDOrderIDParams) ([]db.ListShopOrderItemsByUserIDOrderIDRow, error) {
+func (m *MockStore) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg db.ListShopOrderItemsByUserIDOrderIDParams) ([]*db.ListShopOrderItemsByUserIDOrderIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrderItemsByUserIDOrderID", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShopOrderItemsByUserIDOrderIDRow)
+	ret0, _ := ret[0].([]*db.ListShopOrderItemsByUserIDOrderIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3490,10 +3490,10 @@ func (mr *MockStoreMockRecorder) ListShopOrderItemsByUserIDOrderID(ctx, arg any)
 }
 
 // ListShopOrders mocks base method.
-func (m *MockStore) ListShopOrders(ctx context.Context, arg db.ListShopOrdersParams) ([]db.ShopOrder, error) {
+func (m *MockStore) ListShopOrders(ctx context.Context, arg db.ListShopOrdersParams) ([]*db.ShopOrder, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrders", ctx, arg)
-	ret0, _ := ret[0].([]db.ShopOrder)
+	ret0, _ := ret[0].([]*db.ShopOrder)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3505,10 +3505,10 @@ func (mr *MockStoreMockRecorder) ListShopOrders(ctx, arg any) *gomock.Call {
 }
 
 // ListShopOrdersByUserID mocks base method.
-func (m *MockStore) ListShopOrdersByUserID(ctx context.Context, arg db.ListShopOrdersByUserIDParams) ([]db.ListShopOrdersByUserIDRow, error) {
+func (m *MockStore) ListShopOrdersByUserID(ctx context.Context, arg db.ListShopOrdersByUserIDParams) ([]*db.ListShopOrdersByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrdersByUserID", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShopOrdersByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListShopOrdersByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3520,10 +3520,10 @@ func (mr *MockStoreMockRecorder) ListShopOrdersByUserID(ctx, arg any) *gomock.Ca
 }
 
 // ListShopOrdersByUserIDNextPage mocks base method.
-func (m *MockStore) ListShopOrdersByUserIDNextPage(ctx context.Context, arg db.ListShopOrdersByUserIDNextPageParams) ([]db.ListShopOrdersByUserIDNextPageRow, error) {
+func (m *MockStore) ListShopOrdersByUserIDNextPage(ctx context.Context, arg db.ListShopOrdersByUserIDNextPageParams) ([]*db.ListShopOrdersByUserIDNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrdersByUserIDNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShopOrdersByUserIDNextPageRow)
+	ret0, _ := ret[0].([]*db.ListShopOrdersByUserIDNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3535,10 +3535,10 @@ func (mr *MockStoreMockRecorder) ListShopOrdersByUserIDNextPage(ctx, arg any) *g
 }
 
 // ListShopOrdersByUserIDV2 mocks base method.
-func (m *MockStore) ListShopOrdersByUserIDV2(ctx context.Context, arg db.ListShopOrdersByUserIDV2Params) ([]db.ListShopOrdersByUserIDV2Row, error) {
+func (m *MockStore) ListShopOrdersByUserIDV2(ctx context.Context, arg db.ListShopOrdersByUserIDV2Params) ([]*db.ListShopOrdersByUserIDV2Row, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShopOrdersByUserIDV2", ctx, arg)
-	ret0, _ := ret[0].([]db.ListShopOrdersByUserIDV2Row)
+	ret0, _ := ret[0].([]*db.ListShopOrdersByUserIDV2Row)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3550,10 +3550,10 @@ func (mr *MockStoreMockRecorder) ListShopOrdersByUserIDV2(ctx, arg any) *gomock.
 }
 
 // ListShoppingCartItems mocks base method.
-func (m *MockStore) ListShoppingCartItems(ctx context.Context, arg db.ListShoppingCartItemsParams) ([]db.ShoppingCartItem, error) {
+func (m *MockStore) ListShoppingCartItems(ctx context.Context, arg db.ListShoppingCartItemsParams) ([]*db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShoppingCartItems", ctx, arg)
-	ret0, _ := ret[0].([]db.ShoppingCartItem)
+	ret0, _ := ret[0].([]*db.ShoppingCartItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3565,10 +3565,10 @@ func (mr *MockStoreMockRecorder) ListShoppingCartItems(ctx, arg any) *gomock.Cal
 }
 
 // ListShoppingCartItemsByCartID mocks base method.
-func (m *MockStore) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]db.ShoppingCartItem, error) {
+func (m *MockStore) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]*db.ShoppingCartItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShoppingCartItemsByCartID", ctx, shoppingCartID)
-	ret0, _ := ret[0].([]db.ShoppingCartItem)
+	ret0, _ := ret[0].([]*db.ShoppingCartItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3580,10 +3580,10 @@ func (mr *MockStoreMockRecorder) ListShoppingCartItemsByCartID(ctx, shoppingCart
 }
 
 // ListShoppingCartItemsByUserID mocks base method.
-func (m *MockStore) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]db.ListShoppingCartItemsByUserIDRow, error) {
+func (m *MockStore) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]*db.ListShoppingCartItemsByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShoppingCartItemsByUserID", ctx, userID)
-	ret0, _ := ret[0].([]db.ListShoppingCartItemsByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListShoppingCartItemsByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3595,10 +3595,10 @@ func (mr *MockStoreMockRecorder) ListShoppingCartItemsByUserID(ctx, userID any) 
 }
 
 // ListShoppingCarts mocks base method.
-func (m *MockStore) ListShoppingCarts(ctx context.Context, arg db.ListShoppingCartsParams) ([]db.ShoppingCart, error) {
+func (m *MockStore) ListShoppingCarts(ctx context.Context, arg db.ListShoppingCartsParams) ([]*db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListShoppingCarts", ctx, arg)
-	ret0, _ := ret[0].([]db.ShoppingCart)
+	ret0, _ := ret[0].([]*db.ShoppingCart)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3610,10 +3610,10 @@ func (mr *MockStoreMockRecorder) ListShoppingCarts(ctx, arg any) *gomock.Call {
 }
 
 // ListUserReviews mocks base method.
-func (m *MockStore) ListUserReviews(ctx context.Context, arg db.ListUserReviewsParams) ([]db.UserReview, error) {
+func (m *MockStore) ListUserReviews(ctx context.Context, arg db.ListUserReviewsParams) ([]*db.UserReview, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListUserReviews", ctx, arg)
-	ret0, _ := ret[0].([]db.UserReview)
+	ret0, _ := ret[0].([]*db.UserReview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3625,10 +3625,10 @@ func (mr *MockStoreMockRecorder) ListUserReviews(ctx, arg any) *gomock.Call {
 }
 
 // ListUsers mocks base method.
-func (m *MockStore) ListUsers(ctx context.Context, arg db.ListUsersParams) ([]db.User, error) {
+func (m *MockStore) ListUsers(ctx context.Context, arg db.ListUsersParams) ([]*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListUsers", ctx, arg)
-	ret0, _ := ret[0].([]db.User)
+	ret0, _ := ret[0].([]*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3640,10 +3640,10 @@ func (mr *MockStoreMockRecorder) ListUsers(ctx, arg any) *gomock.Call {
 }
 
 // ListVariationOptions mocks base method.
-func (m *MockStore) ListVariationOptions(ctx context.Context, arg db.ListVariationOptionsParams) ([]db.VariationOption, error) {
+func (m *MockStore) ListVariationOptions(ctx context.Context, arg db.ListVariationOptionsParams) ([]*db.VariationOption, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListVariationOptions", ctx, arg)
-	ret0, _ := ret[0].([]db.VariationOption)
+	ret0, _ := ret[0].([]*db.VariationOption)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3655,10 +3655,10 @@ func (mr *MockStoreMockRecorder) ListVariationOptions(ctx, arg any) *gomock.Call
 }
 
 // ListVariations mocks base method.
-func (m *MockStore) ListVariations(ctx context.Context, arg db.ListVariationsParams) ([]db.Variation, error) {
+func (m *MockStore) ListVariations(ctx context.Context, arg db.ListVariationsParams) ([]*db.Variation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListVariations", ctx, arg)
-	ret0, _ := ret[0].([]db.Variation)
+	ret0, _ := ret[0].([]*db.Variation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3670,10 +3670,10 @@ func (mr *MockStoreMockRecorder) ListVariations(ctx, arg any) *gomock.Call {
 }
 
 // ListWishListItems mocks base method.
-func (m *MockStore) ListWishListItems(ctx context.Context, arg db.ListWishListItemsParams) ([]db.WishListItem, error) {
+func (m *MockStore) ListWishListItems(ctx context.Context, arg db.ListWishListItemsParams) ([]*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWishListItems", ctx, arg)
-	ret0, _ := ret[0].([]db.WishListItem)
+	ret0, _ := ret[0].([]*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3685,10 +3685,10 @@ func (mr *MockStoreMockRecorder) ListWishListItems(ctx, arg any) *gomock.Call {
 }
 
 // ListWishListItemsByCartID mocks base method.
-func (m *MockStore) ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]db.WishListItem, error) {
+func (m *MockStore) ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWishListItemsByCartID", ctx, wishListID)
-	ret0, _ := ret[0].([]db.WishListItem)
+	ret0, _ := ret[0].([]*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3700,10 +3700,10 @@ func (mr *MockStoreMockRecorder) ListWishListItemsByCartID(ctx, wishListID any) 
 }
 
 // ListWishListItemsByUserID mocks base method.
-func (m *MockStore) ListWishListItemsByUserID(ctx context.Context, userID int64) ([]db.ListWishListItemsByUserIDRow, error) {
+func (m *MockStore) ListWishListItemsByUserID(ctx context.Context, userID int64) ([]*db.ListWishListItemsByUserIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWishListItemsByUserID", ctx, userID)
-	ret0, _ := ret[0].([]db.ListWishListItemsByUserIDRow)
+	ret0, _ := ret[0].([]*db.ListWishListItemsByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3715,10 +3715,10 @@ func (mr *MockStoreMockRecorder) ListWishListItemsByUserID(ctx, userID any) *gom
 }
 
 // ListWishLists mocks base method.
-func (m *MockStore) ListWishLists(ctx context.Context, arg db.ListWishListsParams) ([]db.WishList, error) {
+func (m *MockStore) ListWishLists(ctx context.Context, arg db.ListWishListsParams) ([]*db.WishList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWishLists", ctx, arg)
-	ret0, _ := ret[0].([]db.WishList)
+	ret0, _ := ret[0].([]*db.WishList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3730,10 +3730,10 @@ func (mr *MockStoreMockRecorder) ListWishLists(ctx, arg any) *gomock.Call {
 }
 
 // SearchProductItems mocks base method.
-func (m *MockStore) SearchProductItems(ctx context.Context, arg db.SearchProductItemsParams) ([]db.SearchProductItemsRow, error) {
+func (m *MockStore) SearchProductItems(ctx context.Context, arg db.SearchProductItemsParams) ([]*db.SearchProductItemsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProductItems", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductItemsRow)
+	ret0, _ := ret[0].([]*db.SearchProductItemsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3745,10 +3745,10 @@ func (mr *MockStoreMockRecorder) SearchProductItems(ctx, arg any) *gomock.Call {
 }
 
 // SearchProductItemsNextPage mocks base method.
-func (m *MockStore) SearchProductItemsNextPage(ctx context.Context, arg db.SearchProductItemsNextPageParams) ([]db.SearchProductItemsNextPageRow, error) {
+func (m *MockStore) SearchProductItemsNextPage(ctx context.Context, arg db.SearchProductItemsNextPageParams) ([]*db.SearchProductItemsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProductItemsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductItemsNextPageRow)
+	ret0, _ := ret[0].([]*db.SearchProductItemsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3760,10 +3760,10 @@ func (mr *MockStoreMockRecorder) SearchProductItemsNextPage(ctx, arg any) *gomoc
 }
 
 // SearchProductItemsNextPageOld mocks base method.
-func (m *MockStore) SearchProductItemsNextPageOld(ctx context.Context, arg db.SearchProductItemsNextPageOldParams) ([]db.SearchProductItemsNextPageOldRow, error) {
+func (m *MockStore) SearchProductItemsNextPageOld(ctx context.Context, arg db.SearchProductItemsNextPageOldParams) ([]*db.SearchProductItemsNextPageOldRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProductItemsNextPageOld", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductItemsNextPageOldRow)
+	ret0, _ := ret[0].([]*db.SearchProductItemsNextPageOldRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3775,10 +3775,10 @@ func (mr *MockStoreMockRecorder) SearchProductItemsNextPageOld(ctx, arg any) *go
 }
 
 // SearchProductItemsOld mocks base method.
-func (m *MockStore) SearchProductItemsOld(ctx context.Context, arg db.SearchProductItemsOldParams) ([]db.SearchProductItemsOldRow, error) {
+func (m *MockStore) SearchProductItemsOld(ctx context.Context, arg db.SearchProductItemsOldParams) ([]*db.SearchProductItemsOldRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProductItemsOld", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductItemsOldRow)
+	ret0, _ := ret[0].([]*db.SearchProductItemsOldRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3790,10 +3790,10 @@ func (mr *MockStoreMockRecorder) SearchProductItemsOld(ctx, arg any) *gomock.Cal
 }
 
 // SearchProducts mocks base method.
-func (m *MockStore) SearchProducts(ctx context.Context, arg db.SearchProductsParams) ([]db.SearchProductsRow, error) {
+func (m *MockStore) SearchProducts(ctx context.Context, arg db.SearchProductsParams) ([]*db.SearchProductsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProducts", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductsRow)
+	ret0, _ := ret[0].([]*db.SearchProductsRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3805,10 +3805,10 @@ func (mr *MockStoreMockRecorder) SearchProducts(ctx, arg any) *gomock.Call {
 }
 
 // SearchProductsNextPage mocks base method.
-func (m *MockStore) SearchProductsNextPage(ctx context.Context, arg db.SearchProductsNextPageParams) ([]db.SearchProductsNextPageRow, error) {
+func (m *MockStore) SearchProductsNextPage(ctx context.Context, arg db.SearchProductsNextPageParams) ([]*db.SearchProductsNextPageRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchProductsNextPage", ctx, arg)
-	ret0, _ := ret[0].([]db.SearchProductsNextPageRow)
+	ret0, _ := ret[0].([]*db.SearchProductsNextPageRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3820,10 +3820,10 @@ func (mr *MockStoreMockRecorder) SearchProductsNextPage(ctx, arg any) *gomock.Ca
 }
 
 // SignUpTx mocks base method.
-func (m *MockStore) SignUpTx(ctx context.Context, arg db.SignUpTxParams) (db.SignUpTxResult, error) {
+func (m *MockStore) SignUpTx(ctx context.Context, arg db.SignUpTxParams) (*db.SignUpTxResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignUpTx", ctx, arg)
-	ret0, _ := ret[0].(db.SignUpTxResult)
+	ret0, _ := ret[0].(*db.SignUpTxResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3835,10 +3835,10 @@ func (mr *MockStoreMockRecorder) SignUpTx(ctx, arg any) *gomock.Call {
 }
 
 // UpdateAddress mocks base method.
-func (m *MockStore) UpdateAddress(ctx context.Context, arg db.UpdateAddressParams) (db.Address, error) {
+func (m *MockStore) UpdateAddress(ctx context.Context, arg db.UpdateAddressParams) (*db.Address, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAddress", ctx, arg)
-	ret0, _ := ret[0].(db.Address)
+	ret0, _ := ret[0].(*db.Address)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3850,10 +3850,10 @@ func (mr *MockStoreMockRecorder) UpdateAddress(ctx, arg any) *gomock.Call {
 }
 
 // UpdateAdmin mocks base method.
-func (m *MockStore) UpdateAdmin(ctx context.Context, arg db.UpdateAdminParams) (db.Admin, error) {
+func (m *MockStore) UpdateAdmin(ctx context.Context, arg db.UpdateAdminParams) (*db.Admin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAdmin", ctx, arg)
-	ret0, _ := ret[0].(db.Admin)
+	ret0, _ := ret[0].(*db.Admin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3865,10 +3865,10 @@ func (mr *MockStoreMockRecorder) UpdateAdmin(ctx, arg any) *gomock.Call {
 }
 
 // UpdateAdminSession mocks base method.
-func (m *MockStore) UpdateAdminSession(ctx context.Context, arg db.UpdateAdminSessionParams) (db.AdminSession, error) {
+func (m *MockStore) UpdateAdminSession(ctx context.Context, arg db.UpdateAdminSessionParams) (*db.AdminSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAdminSession", ctx, arg)
-	ret0, _ := ret[0].(db.AdminSession)
+	ret0, _ := ret[0].(*db.AdminSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3880,10 +3880,10 @@ func (mr *MockStoreMockRecorder) UpdateAdminSession(ctx, arg any) *gomock.Call {
 }
 
 // UpdateAdminType mocks base method.
-func (m *MockStore) UpdateAdminType(ctx context.Context, arg db.UpdateAdminTypeParams) (db.AdminType, error) {
+func (m *MockStore) UpdateAdminType(ctx context.Context, arg db.UpdateAdminTypeParams) (*db.AdminType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAdminType", ctx, arg)
-	ret0, _ := ret[0].(db.AdminType)
+	ret0, _ := ret[0].(*db.AdminType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3895,10 +3895,10 @@ func (mr *MockStoreMockRecorder) UpdateAdminType(ctx, arg any) *gomock.Call {
 }
 
 // UpdateAppPolicy mocks base method.
-func (m *MockStore) UpdateAppPolicy(ctx context.Context, arg db.UpdateAppPolicyParams) (db.AppPolicy, error) {
+func (m *MockStore) UpdateAppPolicy(ctx context.Context, arg db.UpdateAppPolicyParams) (*db.AppPolicy, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAppPolicy", ctx, arg)
-	ret0, _ := ret[0].(db.AppPolicy)
+	ret0, _ := ret[0].(*db.AppPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3910,10 +3910,10 @@ func (mr *MockStoreMockRecorder) UpdateAppPolicy(ctx, arg any) *gomock.Call {
 }
 
 // UpdateBrandPromotion mocks base method.
-func (m *MockStore) UpdateBrandPromotion(ctx context.Context, arg db.UpdateBrandPromotionParams) (db.BrandPromotion, error) {
+func (m *MockStore) UpdateBrandPromotion(ctx context.Context, arg db.UpdateBrandPromotionParams) (*db.BrandPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBrandPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.BrandPromotion)
+	ret0, _ := ret[0].(*db.BrandPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3925,10 +3925,10 @@ func (mr *MockStoreMockRecorder) UpdateBrandPromotion(ctx, arg any) *gomock.Call
 }
 
 // UpdateCategoryPromotion mocks base method.
-func (m *MockStore) UpdateCategoryPromotion(ctx context.Context, arg db.UpdateCategoryPromotionParams) (db.CategoryPromotion, error) {
+func (m *MockStore) UpdateCategoryPromotion(ctx context.Context, arg db.UpdateCategoryPromotionParams) (*db.CategoryPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCategoryPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.CategoryPromotion)
+	ret0, _ := ret[0].(*db.CategoryPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3940,10 +3940,10 @@ func (mr *MockStoreMockRecorder) UpdateCategoryPromotion(ctx, arg any) *gomock.C
 }
 
 // UpdateHomePageTextBanner mocks base method.
-func (m *MockStore) UpdateHomePageTextBanner(ctx context.Context, arg db.UpdateHomePageTextBannerParams) (db.HomePageTextBanner, error) {
+func (m *MockStore) UpdateHomePageTextBanner(ctx context.Context, arg db.UpdateHomePageTextBannerParams) (*db.HomePageTextBanner, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateHomePageTextBanner", ctx, arg)
-	ret0, _ := ret[0].(db.HomePageTextBanner)
+	ret0, _ := ret[0].(*db.HomePageTextBanner)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3955,10 +3955,10 @@ func (mr *MockStoreMockRecorder) UpdateHomePageTextBanner(ctx, arg any) *gomock.
 }
 
 // UpdateNotification mocks base method.
-func (m *MockStore) UpdateNotification(ctx context.Context, arg db.UpdateNotificationParams) (db.Notification, error) {
+func (m *MockStore) UpdateNotification(ctx context.Context, arg db.UpdateNotificationParams) (*db.Notification, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateNotification", ctx, arg)
-	ret0, _ := ret[0].(db.Notification)
+	ret0, _ := ret[0].(*db.Notification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3970,10 +3970,10 @@ func (mr *MockStoreMockRecorder) UpdateNotification(ctx, arg any) *gomock.Call {
 }
 
 // UpdateOrderStatus mocks base method.
-func (m *MockStore) UpdateOrderStatus(ctx context.Context, arg db.UpdateOrderStatusParams) (db.OrderStatus, error) {
+func (m *MockStore) UpdateOrderStatus(ctx context.Context, arg db.UpdateOrderStatusParams) (*db.OrderStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateOrderStatus", ctx, arg)
-	ret0, _ := ret[0].(db.OrderStatus)
+	ret0, _ := ret[0].(*db.OrderStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -3985,10 +3985,10 @@ func (mr *MockStoreMockRecorder) UpdateOrderStatus(ctx, arg any) *gomock.Call {
 }
 
 // UpdatePaymentMethod mocks base method.
-func (m *MockStore) UpdatePaymentMethod(ctx context.Context, arg db.UpdatePaymentMethodParams) (db.PaymentMethod, error) {
+func (m *MockStore) UpdatePaymentMethod(ctx context.Context, arg db.UpdatePaymentMethodParams) (*db.PaymentMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePaymentMethod", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentMethod)
+	ret0, _ := ret[0].(*db.PaymentMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4000,10 +4000,10 @@ func (mr *MockStoreMockRecorder) UpdatePaymentMethod(ctx, arg any) *gomock.Call 
 }
 
 // UpdatePaymentType mocks base method.
-func (m *MockStore) UpdatePaymentType(ctx context.Context, arg db.UpdatePaymentTypeParams) (db.PaymentType, error) {
+func (m *MockStore) UpdatePaymentType(ctx context.Context, arg db.UpdatePaymentTypeParams) (*db.PaymentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePaymentType", ctx, arg)
-	ret0, _ := ret[0].(db.PaymentType)
+	ret0, _ := ret[0].(*db.PaymentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4015,10 +4015,10 @@ func (mr *MockStoreMockRecorder) UpdatePaymentType(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProduct mocks base method.
-func (m *MockStore) UpdateProduct(ctx context.Context, arg db.UpdateProductParams) (db.Product, error) {
+func (m *MockStore) UpdateProduct(ctx context.Context, arg db.UpdateProductParams) (*db.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProduct", ctx, arg)
-	ret0, _ := ret[0].(db.Product)
+	ret0, _ := ret[0].(*db.Product)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4030,10 +4030,10 @@ func (mr *MockStoreMockRecorder) UpdateProduct(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProductBrand mocks base method.
-func (m *MockStore) UpdateProductBrand(ctx context.Context, arg db.UpdateProductBrandParams) (db.ProductBrand, error) {
+func (m *MockStore) UpdateProductBrand(ctx context.Context, arg db.UpdateProductBrandParams) (*db.ProductBrand, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductBrand", ctx, arg)
-	ret0, _ := ret[0].(db.ProductBrand)
+	ret0, _ := ret[0].(*db.ProductBrand)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4045,10 +4045,10 @@ func (mr *MockStoreMockRecorder) UpdateProductBrand(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProductCategory mocks base method.
-func (m *MockStore) UpdateProductCategory(ctx context.Context, arg db.UpdateProductCategoryParams) (db.ProductCategory, error) {
+func (m *MockStore) UpdateProductCategory(ctx context.Context, arg db.UpdateProductCategoryParams) (*db.ProductCategory, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductCategory", ctx, arg)
-	ret0, _ := ret[0].(db.ProductCategory)
+	ret0, _ := ret[0].(*db.ProductCategory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4060,10 +4060,10 @@ func (mr *MockStoreMockRecorder) UpdateProductCategory(ctx, arg any) *gomock.Cal
 }
 
 // UpdateProductColor mocks base method.
-func (m *MockStore) UpdateProductColor(ctx context.Context, arg db.UpdateProductColorParams) (db.ProductColor, error) {
+func (m *MockStore) UpdateProductColor(ctx context.Context, arg db.UpdateProductColorParams) (*db.ProductColor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductColor", ctx, arg)
-	ret0, _ := ret[0].(db.ProductColor)
+	ret0, _ := ret[0].(*db.ProductColor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4075,10 +4075,10 @@ func (mr *MockStoreMockRecorder) UpdateProductColor(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProductConfiguration mocks base method.
-func (m *MockStore) UpdateProductConfiguration(ctx context.Context, arg db.UpdateProductConfigurationParams) (db.ProductConfiguration, error) {
+func (m *MockStore) UpdateProductConfiguration(ctx context.Context, arg db.UpdateProductConfigurationParams) (*db.ProductConfiguration, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductConfiguration", ctx, arg)
-	ret0, _ := ret[0].(db.ProductConfiguration)
+	ret0, _ := ret[0].(*db.ProductConfiguration)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4090,10 +4090,10 @@ func (mr *MockStoreMockRecorder) UpdateProductConfiguration(ctx, arg any) *gomoc
 }
 
 // UpdateProductImage mocks base method.
-func (m *MockStore) UpdateProductImage(ctx context.Context, arg db.UpdateProductImageParams) (db.ProductImage, error) {
+func (m *MockStore) UpdateProductImage(ctx context.Context, arg db.UpdateProductImageParams) (*db.ProductImage, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductImage", ctx, arg)
-	ret0, _ := ret[0].(db.ProductImage)
+	ret0, _ := ret[0].(*db.ProductImage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4105,10 +4105,10 @@ func (mr *MockStoreMockRecorder) UpdateProductImage(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProductItem mocks base method.
-func (m *MockStore) UpdateProductItem(ctx context.Context, arg db.UpdateProductItemParams) (db.ProductItem, error) {
+func (m *MockStore) UpdateProductItem(ctx context.Context, arg db.UpdateProductItemParams) (*db.ProductItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductItem", ctx, arg)
-	ret0, _ := ret[0].(db.ProductItem)
+	ret0, _ := ret[0].(*db.ProductItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4120,10 +4120,10 @@ func (mr *MockStoreMockRecorder) UpdateProductItem(ctx, arg any) *gomock.Call {
 }
 
 // UpdateProductPromotion mocks base method.
-func (m *MockStore) UpdateProductPromotion(ctx context.Context, arg db.UpdateProductPromotionParams) (db.ProductPromotion, error) {
+func (m *MockStore) UpdateProductPromotion(ctx context.Context, arg db.UpdateProductPromotionParams) (*db.ProductPromotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductPromotion", ctx, arg)
-	ret0, _ := ret[0].(db.ProductPromotion)
+	ret0, _ := ret[0].(*db.ProductPromotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4135,10 +4135,10 @@ func (mr *MockStoreMockRecorder) UpdateProductPromotion(ctx, arg any) *gomock.Ca
 }
 
 // UpdateProductSize mocks base method.
-func (m *MockStore) UpdateProductSize(ctx context.Context, arg db.UpdateProductSizeParams) (db.ProductSize, error) {
+func (m *MockStore) UpdateProductSize(ctx context.Context, arg db.UpdateProductSizeParams) (*db.ProductSize, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateProductSize", ctx, arg)
-	ret0, _ := ret[0].(db.ProductSize)
+	ret0, _ := ret[0].(*db.ProductSize)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4150,10 +4150,10 @@ func (mr *MockStoreMockRecorder) UpdateProductSize(ctx, arg any) *gomock.Call {
 }
 
 // UpdatePromotion mocks base method.
-func (m *MockStore) UpdatePromotion(ctx context.Context, arg db.UpdatePromotionParams) (db.Promotion, error) {
+func (m *MockStore) UpdatePromotion(ctx context.Context, arg db.UpdatePromotionParams) (*db.Promotion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePromotion", ctx, arg)
-	ret0, _ := ret[0].(db.Promotion)
+	ret0, _ := ret[0].(*db.Promotion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4165,10 +4165,10 @@ func (mr *MockStoreMockRecorder) UpdatePromotion(ctx, arg any) *gomock.Call {
 }
 
 // UpdateResetPassword mocks base method.
-func (m *MockStore) UpdateResetPassword(ctx context.Context, arg db.UpdateResetPasswordParams) (db.ResetPassword, error) {
+func (m *MockStore) UpdateResetPassword(ctx context.Context, arg db.UpdateResetPasswordParams) (*db.ResetPassword, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateResetPassword", ctx, arg)
-	ret0, _ := ret[0].(db.ResetPassword)
+	ret0, _ := ret[0].(*db.ResetPassword)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4180,10 +4180,10 @@ func (mr *MockStoreMockRecorder) UpdateResetPassword(ctx, arg any) *gomock.Call 
 }
 
 // UpdateShippingMethod mocks base method.
-func (m *MockStore) UpdateShippingMethod(ctx context.Context, arg db.UpdateShippingMethodParams) (db.ShippingMethod, error) {
+func (m *MockStore) UpdateShippingMethod(ctx context.Context, arg db.UpdateShippingMethodParams) (*db.ShippingMethod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateShippingMethod", ctx, arg)
-	ret0, _ := ret[0].(db.ShippingMethod)
+	ret0, _ := ret[0].(*db.ShippingMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4195,10 +4195,10 @@ func (mr *MockStoreMockRecorder) UpdateShippingMethod(ctx, arg any) *gomock.Call
 }
 
 // UpdateShopOrder mocks base method.
-func (m *MockStore) UpdateShopOrder(ctx context.Context, arg db.UpdateShopOrderParams) (db.ShopOrder, error) {
+func (m *MockStore) UpdateShopOrder(ctx context.Context, arg db.UpdateShopOrderParams) (*db.ShopOrder, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateShopOrder", ctx, arg)
-	ret0, _ := ret[0].(db.ShopOrder)
+	ret0, _ := ret[0].(*db.ShopOrder)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4210,10 +4210,10 @@ func (mr *MockStoreMockRecorder) UpdateShopOrder(ctx, arg any) *gomock.Call {
 }
 
 // UpdateShopOrderItem mocks base method.
-func (m *MockStore) UpdateShopOrderItem(ctx context.Context, arg db.UpdateShopOrderItemParams) (db.ShopOrderItem, error) {
+func (m *MockStore) UpdateShopOrderItem(ctx context.Context, arg db.UpdateShopOrderItemParams) (*db.ShopOrderItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateShopOrderItem", ctx, arg)
-	ret0, _ := ret[0].(db.ShopOrderItem)
+	ret0, _ := ret[0].(*db.ShopOrderItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4225,10 +4225,10 @@ func (mr *MockStoreMockRecorder) UpdateShopOrderItem(ctx, arg any) *gomock.Call 
 }
 
 // UpdateShoppingCart mocks base method.
-func (m *MockStore) UpdateShoppingCart(ctx context.Context, arg db.UpdateShoppingCartParams) (db.ShoppingCart, error) {
+func (m *MockStore) UpdateShoppingCart(ctx context.Context, arg db.UpdateShoppingCartParams) (*db.ShoppingCart, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateShoppingCart", ctx, arg)
-	ret0, _ := ret[0].(db.ShoppingCart)
+	ret0, _ := ret[0].(*db.ShoppingCart)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4240,10 +4240,10 @@ func (mr *MockStoreMockRecorder) UpdateShoppingCart(ctx, arg any) *gomock.Call {
 }
 
 // UpdateShoppingCartItem mocks base method.
-func (m *MockStore) UpdateShoppingCartItem(ctx context.Context, arg db.UpdateShoppingCartItemParams) (db.UpdateShoppingCartItemRow, error) {
+func (m *MockStore) UpdateShoppingCartItem(ctx context.Context, arg db.UpdateShoppingCartItemParams) (*db.UpdateShoppingCartItemRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateShoppingCartItem", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateShoppingCartItemRow)
+	ret0, _ := ret[0].(*db.UpdateShoppingCartItemRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4255,10 +4255,10 @@ func (mr *MockStoreMockRecorder) UpdateShoppingCartItem(ctx, arg any) *gomock.Ca
 }
 
 // UpdateUser mocks base method.
-func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.User, error) {
+func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUser", ctx, arg)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4284,10 +4284,10 @@ func (mr *MockStoreMockRecorder) UpdateUserEmailisVerifiedForTest(ctx, id any) *
 }
 
 // UpdateUserPassword mocks base method.
-func (m *MockStore) UpdateUserPassword(ctx context.Context, arg db.UpdateUserPasswordParams) (db.User, error) {
+func (m *MockStore) UpdateUserPassword(ctx context.Context, arg db.UpdateUserPasswordParams) (*db.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserPassword", ctx, arg)
-	ret0, _ := ret[0].(db.User)
+	ret0, _ := ret[0].(*db.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4299,10 +4299,10 @@ func (mr *MockStoreMockRecorder) UpdateUserPassword(ctx, arg any) *gomock.Call {
 }
 
 // UpdateUserReview mocks base method.
-func (m *MockStore) UpdateUserReview(ctx context.Context, arg db.UpdateUserReviewParams) (db.UserReview, error) {
+func (m *MockStore) UpdateUserReview(ctx context.Context, arg db.UpdateUserReviewParams) (*db.UserReview, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserReview", ctx, arg)
-	ret0, _ := ret[0].(db.UserReview)
+	ret0, _ := ret[0].(*db.UserReview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4314,10 +4314,10 @@ func (mr *MockStoreMockRecorder) UpdateUserReview(ctx, arg any) *gomock.Call {
 }
 
 // UpdateUserSession mocks base method.
-func (m *MockStore) UpdateUserSession(ctx context.Context, arg db.UpdateUserSessionParams) (db.UserSession, error) {
+func (m *MockStore) UpdateUserSession(ctx context.Context, arg db.UpdateUserSessionParams) (*db.UserSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserSession", ctx, arg)
-	ret0, _ := ret[0].(db.UserSession)
+	ret0, _ := ret[0].(*db.UserSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4329,10 +4329,10 @@ func (mr *MockStoreMockRecorder) UpdateUserSession(ctx, arg any) *gomock.Call {
 }
 
 // UpdateVariation mocks base method.
-func (m *MockStore) UpdateVariation(ctx context.Context, arg db.UpdateVariationParams) (db.Variation, error) {
+func (m *MockStore) UpdateVariation(ctx context.Context, arg db.UpdateVariationParams) (*db.Variation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVariation", ctx, arg)
-	ret0, _ := ret[0].(db.Variation)
+	ret0, _ := ret[0].(*db.Variation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4344,10 +4344,10 @@ func (mr *MockStoreMockRecorder) UpdateVariation(ctx, arg any) *gomock.Call {
 }
 
 // UpdateVariationOption mocks base method.
-func (m *MockStore) UpdateVariationOption(ctx context.Context, arg db.UpdateVariationOptionParams) (db.VariationOption, error) {
+func (m *MockStore) UpdateVariationOption(ctx context.Context, arg db.UpdateVariationOptionParams) (*db.VariationOption, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVariationOption", ctx, arg)
-	ret0, _ := ret[0].(db.VariationOption)
+	ret0, _ := ret[0].(*db.VariationOption)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4359,10 +4359,10 @@ func (mr *MockStoreMockRecorder) UpdateVariationOption(ctx, arg any) *gomock.Cal
 }
 
 // UpdateVerifyEmail mocks base method.
-func (m *MockStore) UpdateVerifyEmail(ctx context.Context, arg db.UpdateVerifyEmailParams) (db.UpdateVerifyEmailRow, error) {
+func (m *MockStore) UpdateVerifyEmail(ctx context.Context, arg db.UpdateVerifyEmailParams) (*db.UpdateVerifyEmailRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVerifyEmail", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateVerifyEmailRow)
+	ret0, _ := ret[0].(*db.UpdateVerifyEmailRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4374,10 +4374,10 @@ func (mr *MockStoreMockRecorder) UpdateVerifyEmail(ctx, arg any) *gomock.Call {
 }
 
 // UpdateWishList mocks base method.
-func (m *MockStore) UpdateWishList(ctx context.Context, arg db.UpdateWishListParams) (db.WishList, error) {
+func (m *MockStore) UpdateWishList(ctx context.Context, arg db.UpdateWishListParams) (*db.WishList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateWishList", ctx, arg)
-	ret0, _ := ret[0].(db.WishList)
+	ret0, _ := ret[0].(*db.WishList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -4389,10 +4389,10 @@ func (mr *MockStoreMockRecorder) UpdateWishList(ctx, arg any) *gomock.Call {
 }
 
 // UpdateWishListItem mocks base method.
-func (m *MockStore) UpdateWishListItem(ctx context.Context, arg db.UpdateWishListItemParams) (db.WishListItem, error) {
+func (m *MockStore) UpdateWishListItem(ctx context.Context, arg db.UpdateWishListItemParams) (*db.WishListItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateWishListItem", ctx, arg)
-	ret0, _ := ret[0].(db.WishListItem)
+	ret0, _ := ret[0].(*db.WishListItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

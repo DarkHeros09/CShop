@@ -4,13 +4,14 @@ import (
 	"errors"
 	"time"
 
+	"github.com/cshop/v3/util"
 	"github.com/google/uuid"
 )
 
 var (
 	ErrInvalidToken = errors.New("token is invalid")
 
-	ErrExpiredToken = errors.New("token has expired")
+	ErrExpiredToken = errors.New(util.TokenHasExpired)
 )
 
 // Payload contains the user payload data of the token

@@ -16,7 +16,7 @@ INSERT INTO "admin_type" (
 RETURNING id, admin_type, created_at, updated_at
 `
 
-func (q *Queries) CreateAdminType(ctx context.Context, adminType string) (AdminType, error) {
+func (q *Queries) CreateAdminType(ctx context.Context, adminType string) (*AdminType, error) {
 	row := q.db.QueryRow(ctx, createAdminType, adminType)
 	var i AdminType
 	err := row.Scan(
@@ -25,7 +25,7 @@ func (q *Queries) CreateAdminType(ctx context.Context, adminType string) (AdminT
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteAdminTypeByID = `-- name: DeleteAdminTypeByID :exec
@@ -53,7 +53,7 @@ SELECT id, admin_type, created_at, updated_at FROM "admin_type"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAdminType(ctx context.Context, id int64) (AdminType, error) {
+func (q *Queries) GetAdminType(ctx context.Context, id int64) (*AdminType, error) {
 	row := q.db.QueryRow(ctx, getAdminType, id)
 	var i AdminType
 	err := row.Scan(
@@ -62,7 +62,7 @@ func (q *Queries) GetAdminType(ctx context.Context, id int64) (AdminType, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const listAdminTypes = `-- name: ListAdminTypes :many
@@ -77,13 +77,13 @@ type ListAdminTypesParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]AdminType, error) {
+func (q *Queries) ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) ([]*AdminType, error) {
 	rows, err := q.db.Query(ctx, listAdminTypes, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminType{}
+	items := []*AdminType{}
 	for rows.Next() {
 		var i AdminType
 		if err := rows.Scan(
@@ -94,7 +94,7 @@ func (q *Queries) ListAdminTypes(ctx context.Context, arg ListAdminTypesParams) 
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ type UpdateAdminTypeParams struct {
 	AdminType string `json:"admin_type"`
 }
 
-func (q *Queries) UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (AdminType, error) {
+func (q *Queries) UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams) (*AdminType, error) {
 	row := q.db.QueryRow(ctx, updateAdminType, arg.ID, arg.AdminType)
 	var i AdminType
 	err := row.Scan(
@@ -124,5 +124,5 @@ func (q *Queries) UpdateAdminType(ctx context.Context, arg UpdateAdminTypeParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

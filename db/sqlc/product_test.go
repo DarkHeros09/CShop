@@ -36,7 +36,7 @@ func createRandomProduct(t *testing.T) Product {
 	require.True(t, product.UpdatedAt.IsZero())
 	require.True(t, product.Active)
 
-	return product
+	return *product
 }
 
 func adminCreateRandomProduct(t *testing.T) Product {
@@ -66,7 +66,7 @@ func adminCreateRandomProduct(t *testing.T) Product {
 	require.True(t, product.UpdatedAt.IsZero())
 	require.True(t, product.Active)
 
-	return product
+	return *product
 }
 func TestCreateProduct(t *testing.T) {
 	createRandomProduct(t)
@@ -288,11 +288,6 @@ func TestListProductsV2(t *testing.T) {
 func TestSearchProducts(t *testing.T) {
 
 	product := createRandomProduct(t)
-
-	product, err := testStore.GetProduct(context.Background(), product.ID)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, product)
 
 	arg1 := SearchProductsParams{
 		Limit: 10,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -66,7 +67,7 @@ func TestGetBrandPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -84,7 +85,7 @@ func TestGetBrandPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -256,7 +257,7 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateBrandPromotion(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -320,7 +321,7 @@ func TestCreateBrandPromotionAPI(t *testing.T) {
 
 func TestListBrandPromotionsAPI(t *testing.T) {
 	n := 5
-	brandPromotions := make([]db.BrandPromotion, n)
+	brandPromotions := make([]*db.BrandPromotion, n)
 	for i := 0; i < n; i++ {
 		brandPromotions[i] = randomBrandPromotion()
 	}
@@ -368,7 +369,7 @@ func TestListBrandPromotionsAPI(t *testing.T) {
 				store.EXPECT().
 					ListBrandPromotions(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -427,8 +428,8 @@ func TestListBrandPromotionsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -556,7 +557,7 @@ func TestAdminUpdateBrandPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateBrandPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.BrandPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -620,7 +621,7 @@ func TestAdminUpdateBrandPromotionAPI(t *testing.T) {
 func TestAdminListBrandPromotionsAPI(t *testing.T) {
 	admin, _ := randomBrandPromotionSuperAdmin(t)
 	n := 5
-	brandPromotions := make([]db.AdminListBrandPromotionsRow, n)
+	brandPromotions := make([]*db.AdminListBrandPromotionsRow, n)
 	for i := 0; i < n; i++ {
 		brandPromotions[i] = randomBrandPromotionForAdmin()
 	}
@@ -687,7 +688,7 @@ func TestAdminListBrandPromotionsAPI(t *testing.T) {
 				store.EXPECT().
 					AdminListBrandPromotions(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.AdminListBrandPromotionsRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -917,12 +918,12 @@ func TestDeleteBrandPromotionAPI(t *testing.T) {
 
 }
 
-func randomBrandPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomBrandPromotionSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -933,8 +934,8 @@ func randomBrandPromotionSuperAdmin(t *testing.T) (admin db.Admin, password stri
 	return
 }
 
-func randomBrandPromotion() db.BrandPromotion {
-	return db.BrandPromotion{
+func randomBrandPromotion() *db.BrandPromotion {
+	return &db.BrandPromotion{
 		BrandID:             util.RandomMoney(),
 		PromotionID:         util.RandomMoney(),
 		Active:              util.RandomBool(),
@@ -942,8 +943,8 @@ func randomBrandPromotion() db.BrandPromotion {
 	}
 }
 
-func randomBrandPromotionForAdmin() db.AdminListBrandPromotionsRow {
-	return db.AdminListBrandPromotionsRow{
+func randomBrandPromotionForAdmin() *db.AdminListBrandPromotionsRow {
+	return &db.AdminListBrandPromotionsRow{
 		BrandID:             util.RandomMoney(),
 		BrandName:           null.StringFrom(util.RandomUser()),
 		PromotionID:         util.RandomMoney(),
@@ -953,21 +954,21 @@ func randomBrandPromotionForAdmin() db.AdminListBrandPromotionsRow {
 	}
 }
 
-func requireBodyMatchBrandPromotion(t *testing.T, body io.ReadCloser, brandPromotion db.BrandPromotion) {
+func requireBodyMatchBrandPromotion(t *testing.T, body io.ReadCloser, brandPromotion *db.BrandPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotBrandPromotion db.BrandPromotion
+	var gotBrandPromotion *db.BrandPromotion
 	err = json.Unmarshal(data, &gotBrandPromotion)
 	require.NoError(t, err)
 	require.Equal(t, brandPromotion, gotBrandPromotion)
 }
 
-func requireBodyMatchBrandPromotions(t *testing.T, body io.ReadCloser, BrandPromotions []db.BrandPromotion) {
+func requireBodyMatchBrandPromotions(t *testing.T, body io.ReadCloser, BrandPromotions []*db.BrandPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotBrandPromotions []db.BrandPromotion
+	var gotBrandPromotions []*db.BrandPromotion
 	err = json.Unmarshal(data, &gotBrandPromotions)
 	require.NoError(t, err)
 	require.Equal(t, BrandPromotions, gotBrandPromotions)

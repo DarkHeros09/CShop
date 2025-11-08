@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ func TestGetVariationAPI(t *testing.T) {
 				store.EXPECT().
 					GetVariation(gomock.Any(), gomock.Eq(variation.ID)).
 					Times(1).
-					Return(db.Variation{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +68,7 @@ func TestGetVariationAPI(t *testing.T) {
 				store.EXPECT().
 					GetVariation(gomock.Any(), gomock.Eq(variation.ID)).
 					Times(1).
-					Return(db.Variation{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -222,7 +223,7 @@ func TestCreateVariationAPI(t *testing.T) {
 				store.EXPECT().
 					CreateVariation(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Variation{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -284,7 +285,7 @@ func TestCreateVariationAPI(t *testing.T) {
 
 func TestListVariationsAPI(t *testing.T) {
 	n := 5
-	Variations := make([]db.Variation, n)
+	Variations := make([]*db.Variation, n)
 	for i := 0; i < n; i++ {
 		Variations[i] = randomVariation()
 	}
@@ -332,7 +333,7 @@ func TestListVariationsAPI(t *testing.T) {
 				store.EXPECT().
 					ListVariations(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.Variation{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -391,8 +392,8 @@ func TestListVariationsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -515,7 +516,7 @@ func TestUpdateVariationAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateVariation(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Variation{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -744,29 +745,29 @@ func randomVariationSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func randomVariation() db.Variation {
-	return db.Variation{
+func randomVariation() *db.Variation {
+	return &db.Variation{
 		ID:         util.RandomInt(1, 1000),
 		CategoryID: util.RandomMoney(),
 		Name:       util.RandomUser(),
 	}
 }
 
-func requireBodyMatchVariation(t *testing.T, body io.ReadCloser, Variation db.Variation) {
+func requireBodyMatchVariation(t *testing.T, body io.ReadCloser, Variation *db.Variation) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotVariation db.Variation
+	var gotVariation *db.Variation
 	err = json.Unmarshal(data, &gotVariation)
 	require.NoError(t, err)
 	require.Equal(t, Variation, gotVariation)
 }
 
-func requireBodyMatchVariations(t *testing.T, body io.ReadCloser, variations []db.Variation) {
+func requireBodyMatchVariations(t *testing.T, body io.ReadCloser, variations []*db.Variation) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotVariations []db.Variation
+	var gotVariations []*db.Variation
 	err = json.Unmarshal(data, &gotVariations)
 	require.NoError(t, err)
 	require.Equal(t, variations, gotVariations)

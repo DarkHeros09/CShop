@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ import (
 func TestGetShopOrderItemAPI(t *testing.T) {
 	user, _ := randomSOIUser(t)
 	shopOrder := createRandomShopOrder(user)
-	var shopOrderItemsList []db.ListShopOrderItemsByUserIDOrderIDRow
+	var shopOrderItemsList []*db.ListShopOrderItemsByUserIDOrderIDRow
 	for i := 0; i < 5; i++ {
 		shopOrderItems := createRandomShopOrderItem()
 		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
@@ -97,7 +98,7 @@ func TestGetShopOrderItemAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return([]db.ListShopOrderItemsByUserIDOrderIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -156,7 +157,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 	shopOrder := createRandomShopOrder(user)
 
 	n := 5
-	shopOrderItems := make([]db.ListShopOrderItemsByUserIDRow, n)
+	shopOrderItems := make([]*db.ListShopOrderItemsByUserIDRow, n)
 	for i := 0; i < n; i++ {
 		shopOrderItems[i] = createRandomListShopOrderItem(shopOrder)
 	}
@@ -242,7 +243,7 @@ func TestListShopOrderItemAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrderItemsByUserID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return([]db.ListShopOrderItemsByUserIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -291,8 +292,8 @@ func TestListShopOrderItemAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -309,7 +310,7 @@ func TestAdminGetShopOrderItemAPI(t *testing.T) {
 	admin, _ := randomShopOrderItemSuperAdmin(t)
 	user, _ := randomSOIUser(t)
 	shopOrder := createRandomShopOrder(user)
-	var shopOrderItemsList []db.ListShopOrderItemsByUserIDOrderIDRow
+	var shopOrderItemsList []*db.ListShopOrderItemsByUserIDOrderIDRow
 	for i := 0; i < 5; i++ {
 		shopOrderItems := createRandomShopOrderItem()
 		shopOrderItemsList = append(shopOrderItemsList, shopOrderItems)
@@ -390,7 +391,7 @@ func TestAdminGetShopOrderItemAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrderItemsByUserIDOrderID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return([]db.ListShopOrderItemsByUserIDOrderIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -634,8 +635,8 @@ func randomSOIUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomShopOrder(user db.User) (shopOrder db.ShopOrder) {
-	shopOrder = db.ShopOrder{
+func createRandomShopOrder(user db.User) (shopOrder *db.ShopOrder) {
+	shopOrder = &db.ShopOrder{
 		ID:     util.RandomMoney(),
 		UserID: user.ID,
 		// PaymentMethodID:   util.RandomMoney(),
@@ -663,8 +664,8 @@ func randomShopOrderItemSuperAdmin(t *testing.T) (admin db.Admin, password strin
 	return
 }
 
-func createRandomShopOrderItem() (shopOrderItems db.ListShopOrderItemsByUserIDOrderIDRow) {
-	shopOrderItems = db.ListShopOrderItemsByUserIDOrderIDRow{
+func createRandomShopOrderItem() (shopOrderItems *db.ListShopOrderItemsByUserIDOrderIDRow) {
+	shopOrderItems = &db.ListShopOrderItemsByUserIDOrderIDRow{
 		Status:        null.StringFrom(util.RandomUser()),
 		ID:            util.RandomMoney(),
 		ProductItemID: util.RandomMoney(),
@@ -694,8 +695,8 @@ func createRandomShopOrderItem() (shopOrderItems db.ListShopOrderItemsByUserIDOr
 // 	return
 // }
 
-func createRandomListShopOrderItem(shopOrder db.ShopOrder) (ShopOrderItem db.ListShopOrderItemsByUserIDRow) {
-	ShopOrderItem = db.ListShopOrderItemsByUserIDRow{
+func createRandomListShopOrderItem(shopOrder *db.ShopOrder) (ShopOrderItem *db.ListShopOrderItemsByUserIDRow) {
+	ShopOrderItem = &db.ListShopOrderItemsByUserIDRow{
 		UserID:        shopOrder.UserID,
 		ID:            util.RandomMoney(),
 		ProductItemID: null.IntFrom(util.RandomMoney()),
@@ -706,11 +707,11 @@ func createRandomListShopOrderItem(shopOrder db.ShopOrder) (ShopOrderItem db.Lis
 	return
 }
 
-func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shopOrderItem []db.ListShopOrderItemsByUserIDOrderIDRow) {
+func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shopOrderItem []*db.ListShopOrderItemsByUserIDOrderIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrderItem []db.ListShopOrderItemsByUserIDOrderIDRow
+	var gotShopOrderItem []*db.ListShopOrderItemsByUserIDOrderIDRow
 	err = json.Unmarshal(data, &gotShopOrderItem)
 
 	require.NoError(t, err)
@@ -725,11 +726,11 @@ func requireBodyMatchShopOrderItemForList(t *testing.T, body io.ReadCloser, shop
 	// require.Equal(t, ShopOrderItem.UserID, gotShopOrderItem.UserID)
 }
 
-func requireBodyMatchListShopOrderItem(t *testing.T, body io.ReadCloser, shopOrderItem []db.ListShopOrderItemsByUserIDRow) {
+func requireBodyMatchListShopOrderItem(t *testing.T, body io.ReadCloser, shopOrderItem []*db.ListShopOrderItemsByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrderItem []db.ListShopOrderItemsByUserIDRow
+	var gotShopOrderItem []*db.ListShopOrderItemsByUserIDRow
 	err = json.Unmarshal(data, &gotShopOrderItem)
 
 	require.NoError(t, err)

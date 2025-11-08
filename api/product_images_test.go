@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -128,7 +129,7 @@ func TestCreateProductImagesAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateProductImages(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductImage{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -191,7 +192,7 @@ func TestCreateProductImagesAPI(t *testing.T) {
 
 func TestListProductImagesV2API(t *testing.T) {
 	n := 10
-	images := make([]db.ListProductImagesV2Row, n)
+	images := make([]*db.ListProductImagesV2Row, n)
 	for i := 0; i < n; i++ {
 		images[i] = randomListProductImagesV2()
 	}
@@ -231,7 +232,7 @@ func TestListProductImagesV2API(t *testing.T) {
 				store.EXPECT().
 					ListProductImagesV2(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListProductImagesV2Row{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -274,7 +275,7 @@ func TestListProductImagesV2API(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -288,8 +289,8 @@ func TestListProductImagesV2API(t *testing.T) {
 
 func TestListProductImagesNextPageAPI(t *testing.T) {
 	n := 10
-	images1 := make([]db.ListProductImagesNextPageRow, n)
-	images2 := make([]db.ListProductImagesNextPageRow, n)
+	images1 := make([]*db.ListProductImagesNextPageRow, n)
+	images2 := make([]*db.ListProductImagesNextPageRow, n)
 	for i := 0; i < n; i++ {
 		images1[i] = randomRestProductImagesList()
 	}
@@ -342,7 +343,7 @@ func TestListProductImagesNextPageAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductImagesNextPage(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListProductImagesNextPageRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -386,8 +387,8 @@ func TestListProductImagesNextPageAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
+			q.Add("product_cursor", strconv.Itoa(tc.query.ProductCursor))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -522,7 +523,7 @@ func TestUpdateProductImageAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateProductImage(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductImage{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -595,8 +596,8 @@ func randomProductImageSuperAdmin(t *testing.T) (admin db.Admin, password string
 	return
 }
 
-func randomProductImage() db.ProductImage {
-	return db.ProductImage{
+func randomProductImage() *db.ProductImage {
+	return &db.ProductImage{
 		ID:            util.RandomInt(1, 10000),
 		ProductImage1: util.RandomURL(),
 		ProductImage2: util.RandomURL(),
@@ -604,38 +605,38 @@ func randomProductImage() db.ProductImage {
 	}
 }
 
-func requireBodyMatchProductImage(t *testing.T, body io.ReadCloser, productImage db.ProductImage) {
+func requireBodyMatchProductImage(t *testing.T, body io.ReadCloser, productImage *db.ProductImage) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductImage db.ProductImage
+	var gotProductImage *db.ProductImage
 	err = json.Unmarshal(data, &gotProductImage)
 	require.NoError(t, err)
 	require.Equal(t, productImage, gotProductImage)
 }
 
-func requireBodyMatchListProductImagesV2(t *testing.T, body io.ReadCloser, productImages []db.ListProductImagesV2Row) {
+func requireBodyMatchListProductImagesV2(t *testing.T, body io.ReadCloser, productImages []*db.ListProductImagesV2Row) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductImages []db.ListProductImagesV2Row
+	var gotProductImages []*db.ListProductImagesV2Row
 	err = json.Unmarshal(data, &gotProductImages)
 	require.NoError(t, err)
 	require.Equal(t, productImages, gotProductImages)
 }
 
-func requireBodyMatchListProductImagesNextPage(t *testing.T, body io.ReadCloser, productImages []db.ListProductImagesNextPageRow) {
+func requireBodyMatchListProductImagesNextPage(t *testing.T, body io.ReadCloser, productImages []*db.ListProductImagesNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductImages []db.ListProductImagesNextPageRow
+	var gotProductImages []*db.ListProductImagesNextPageRow
 	err = json.Unmarshal(data, &gotProductImages)
 	require.NoError(t, err)
 	require.Equal(t, productImages, gotProductImages)
 }
 
-func randomListProductImagesV2() db.ListProductImagesV2Row {
-	return db.ListProductImagesV2Row{
+func randomListProductImagesV2() *db.ListProductImagesV2Row {
+	return &db.ListProductImagesV2Row{
 		ID:            util.RandomInt(1, 1000),
 		ProductImage1: util.RandomURL(),
 		ProductImage2: util.RandomURL(),
@@ -643,8 +644,8 @@ func randomListProductImagesV2() db.ListProductImagesV2Row {
 	}
 }
 
-func randomRestProductImagesList() db.ListProductImagesNextPageRow {
-	return db.ListProductImagesNextPageRow{
+func randomRestProductImagesList() *db.ListProductImagesNextPageRow {
+	return &db.ListProductImagesNextPageRow{
 		ID:            util.RandomInt(1, 1000),
 		ProductImage1: util.RandomURL(),
 		ProductImage2: util.RandomURL(),

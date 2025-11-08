@@ -64,6 +64,11 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if admin == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if !admin.Active {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
@@ -121,7 +126,7 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		Admin:                 newAdminResponse(admin),
+		Admin:                 newAdminResponse(*admin),
 	}
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -170,7 +175,7 @@ func (server *Server) logoutAdmin(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

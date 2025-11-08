@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/cshop/v3/util"
@@ -16,7 +16,7 @@ func createRandomAddress(user User, t *testing.T) Address {
 	arg := CreateAddressParams{
 		Name:        util.RandomString(5),
 		UserID:      user.ID,
-		Telephone:   fmt.Sprintf("%d", util.RandomInt(910000000, 929999999)),
+		Telephone:   strconv.FormatInt(util.RandomInt(910000000, 929999999), 10),
 		AddressLine: util.RandomString(5),
 		Region:      util.RandomString(5),
 		City:        util.RandomString(5),
@@ -31,7 +31,7 @@ func createRandomAddress(user User, t *testing.T) Address {
 	require.Equal(t, arg.Region, address.Region)
 	require.Equal(t, arg.City, address.City)
 
-	return address
+	return *address
 }
 
 func TestCreateAddress(t *testing.T) {
@@ -45,7 +45,7 @@ func createRandomAddressWithUser(t *testing.T) Address {
 	arg := CreateAddressParams{
 		Name:        util.RandomString(5),
 		UserID:      user.ID,
-		Telephone:   fmt.Sprintf("%d", util.RandomInt(910000000, 929999999)),
+		Telephone:   strconv.FormatInt(util.RandomInt(910000000, 929999999), 10),
 		AddressLine: util.RandomString(5),
 		Region:      util.RandomString(5),
 		City:        util.RandomString(5),
@@ -60,7 +60,7 @@ func createRandomAddressWithUser(t *testing.T) Address {
 	require.Equal(t, arg.Region, address.Region)
 	require.Equal(t, arg.City, address.City)
 
-	return address
+	return *address
 }
 
 func TestCreateAddressWithUser(t *testing.T) {

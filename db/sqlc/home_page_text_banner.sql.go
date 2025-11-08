@@ -38,7 +38,7 @@ type CreateHomePageTextBannerParams struct {
 	AdminID     int64  `json:"admin_id"`
 }
 
-func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (HomePageTextBanner, error) {
+func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePageTextBannerParams) (*HomePageTextBanner, error) {
 	row := q.db.QueryRow(ctx, createHomePageTextBanner,
 		arg.Name,
 		arg.Description,
@@ -54,7 +54,7 @@ func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteHomePageTextBanner = `-- name: DeleteHomePageTextBanner :exec
@@ -84,7 +84,7 @@ SELECT id, name, description, active, created_at, updated_at FROM "home_page_tex
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetHomePageTextBanner(ctx context.Context, id int64) (HomePageTextBanner, error) {
+func (q *Queries) GetHomePageTextBanner(ctx context.Context, id int64) (*HomePageTextBanner, error) {
 	row := q.db.QueryRow(ctx, getHomePageTextBanner, id)
 	var i HomePageTextBanner
 	err := row.Scan(
@@ -95,7 +95,7 @@ func (q *Queries) GetHomePageTextBanner(ctx context.Context, id int64) (HomePage
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const listHomePageTextBanners = `-- name: ListHomePageTextBanners :many
@@ -105,13 +105,13 @@ ORDER BY created_at DESC, updated_at DESC
 LIMIT 5
 `
 
-func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBanner, error) {
+func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]*HomePageTextBanner, error) {
 	rows, err := q.db.Query(ctx, listHomePageTextBanners)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []HomePageTextBanner{}
+	items := []*HomePageTextBanner{}
 	for rows.Next() {
 		var i HomePageTextBanner
 		if err := rows.Scan(
@@ -124,7 +124,7 @@ func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]HomePageTextBa
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -157,7 +157,7 @@ type UpdateHomePageTextBannerParams struct {
 	AdminID     int64       `json:"admin_id"`
 }
 
-func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePageTextBannerParams) (HomePageTextBanner, error) {
+func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePageTextBannerParams) (*HomePageTextBanner, error) {
 	row := q.db.QueryRow(ctx, updateHomePageTextBanner,
 		arg.Name,
 		arg.Description,
@@ -174,5 +174,5 @@ func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

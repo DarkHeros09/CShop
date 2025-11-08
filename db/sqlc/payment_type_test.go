@@ -11,7 +11,7 @@ import (
 
 func createRandomPaymentType(t *testing.T) PaymentType {
 	// arg := util.RandomString(5)
-	var paymentType PaymentType
+	var paymentType *PaymentType
 	var err error
 	paymentTypes := []string{"نقداً", "إدفع لي", "سداد", "موبي كاش"}
 	for i := 0; i < len(paymentTypes); i++ {
@@ -23,12 +23,12 @@ func createRandomPaymentType(t *testing.T) PaymentType {
 		require.Equal(t, paymentTypes[randomInt], paymentType.Value)
 
 	}
-	return paymentType
+	return *paymentType
 }
 
 func adminCreateRandomPaymentType(t *testing.T) PaymentType {
 	admin := createRandomAdmin(t)
-	var paymentType PaymentType
+	var paymentType *PaymentType
 	var err error
 	paymentTypes := []string{"نقداً", "إدفع لي", "سداد", "موبي كاش"}
 	for i := 0; i < len(paymentTypes); i++ {
@@ -45,7 +45,7 @@ func adminCreateRandomPaymentType(t *testing.T) PaymentType {
 		require.Equal(t, paymentTypes[randomInt], paymentType.Value)
 
 	}
-	return paymentType
+	return *paymentType
 }
 
 func createRandomPaymentTypeForUpdateOrDelete(t *testing.T) PaymentType {
@@ -56,7 +56,7 @@ func createRandomPaymentTypeForUpdateOrDelete(t *testing.T) PaymentType {
 
 	require.Equal(t, arg, paymentType.Value)
 
-	return paymentType
+	return *paymentType
 }
 func TestCreatePaymentType(t *testing.T) {
 	createRandomPaymentType(t)

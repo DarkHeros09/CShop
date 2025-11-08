@@ -28,7 +28,7 @@ type CreatePaymentMethodParams struct {
 	Provider      string `json:"provider"`
 }
 
-func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (PaymentMethod, error) {
+func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMethodParams) (*PaymentMethod, error) {
 	row := q.db.QueryRow(ctx, createPaymentMethod, arg.UserID, arg.PaymentTypeID, arg.Provider)
 	var i PaymentMethod
 	err := row.Scan(
@@ -38,7 +38,7 @@ func (q *Queries) CreatePaymentMethod(ctx context.Context, arg CreatePaymentMeth
 		&i.Provider,
 		&i.IsDefault,
 	)
-	return i, err
+	return &i, err
 }
 
 const deletePaymentMethod = `-- name: DeletePaymentMethod :one
@@ -53,7 +53,7 @@ type DeletePaymentMethodParams struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) DeletePaymentMethod(ctx context.Context, arg DeletePaymentMethodParams) (PaymentMethod, error) {
+func (q *Queries) DeletePaymentMethod(ctx context.Context, arg DeletePaymentMethodParams) (*PaymentMethod, error) {
 	row := q.db.QueryRow(ctx, deletePaymentMethod, arg.ID, arg.UserID)
 	var i PaymentMethod
 	err := row.Scan(
@@ -63,7 +63,7 @@ func (q *Queries) DeletePaymentMethod(ctx context.Context, arg DeletePaymentMeth
 		&i.Provider,
 		&i.IsDefault,
 	)
-	return i, err
+	return &i, err
 }
 
 const getPaymentMethod = `-- name: GetPaymentMethod :one
@@ -79,7 +79,7 @@ type GetPaymentMethodParams struct {
 }
 
 // id = $1
-func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (PaymentMethod, error) {
+func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodParams) (*PaymentMethod, error) {
 	row := q.db.QueryRow(ctx, getPaymentMethod, arg.UserID, arg.PaymentTypeID)
 	var i PaymentMethod
 	err := row.Scan(
@@ -89,7 +89,7 @@ func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodPara
 		&i.Provider,
 		&i.IsDefault,
 	)
-	return i, err
+	return &i, err
 }
 
 const listPaymentMethods = `-- name: ListPaymentMethods :many
@@ -106,13 +106,13 @@ type ListPaymentMethodsParams struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]PaymentMethod, error) {
+func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethodsParams) ([]*PaymentMethod, error) {
 	rows, err := q.db.Query(ctx, listPaymentMethods, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []PaymentMethod{}
+	items := []*PaymentMethod{}
 	for rows.Next() {
 		var i PaymentMethod
 		if err := rows.Scan(
@@ -124,7 +124,7 @@ func (q *Queries) ListPaymentMethods(ctx context.Context, arg ListPaymentMethods
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ type UpdatePaymentMethodParams struct {
 	ID            int64       `json:"id"`
 }
 
-func (q *Queries) UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMethodParams) (PaymentMethod, error) {
+func (q *Queries) UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMethodParams) (*PaymentMethod, error) {
 	row := q.db.QueryRow(ctx, updatePaymentMethod,
 		arg.UserID,
 		arg.PaymentTypeID,
@@ -164,5 +164,5 @@ func (q *Queries) UpdatePaymentMethod(ctx context.Context, arg UpdatePaymentMeth
 		&i.Provider,
 		&i.IsDefault,
 	)
-	return i, err
+	return &i, err
 }

@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
@@ -64,7 +65,7 @@ import (
 // 	if err1 != nil {
 // 		if pqErr, ok := err1.(*pgconn.PgError); ok {
 // 			switch pqErr.Message {
-// 			case "foreign_key_violation", "unique_violation":
+// 			case util.ForeignKeyViolation, util.UniqueViolation:
 // 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err1))
 // 				return nil
 // 			}
@@ -115,7 +116,7 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -161,6 +162,11 @@ func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if shoppingCartItem == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -215,13 +221,13 @@ type listShoppingCartItemsResponse struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
-func newlistShoppingCartItemsResponse(shopCartItems []db.ListShoppingCartItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productsSizes []db.ProductSize) []listShoppingCartItemsResponse {
-	rsp := make([]listShoppingCartItemsResponse, len(productItems))
+func newlistShoppingCartItemsResponse(shopCartItems []*db.ListShoppingCartItemsByUserIDRow, productItems []*db.ListProductItemsByIDsRow, productsSizes []*db.ProductSize) []*listShoppingCartItemsResponse {
+	rsp := make([]*listShoppingCartItemsResponse, len(productItems))
 	for i := 0; i < len(productItems); i++ {
 		for j := 0; j < len(shopCartItems); j++ {
 			for k := 0; k < len(productsSizes); k++ {
 				if productItems[i].ID == shopCartItems[j].ProductItemID.Int64 && productItems[i].ID == productsSizes[k].ProductItemID {
-					rsp[i] = listShoppingCartItemsResponse{
+					rsp[i] = &listShoppingCartItemsResponse{
 						ID:             shopCartItems[j].ID,
 						ShoppingCartID: shopCartItems[j].ShoppingCartID,
 						CreatedAt:      shopCartItems[j].CreatedAt,
@@ -292,6 +298,11 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if shoppingCartItems == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	productsItemsIds := make([]int64, len(shoppingCartItems))
 	for i := 0; i < len(shoppingCartItems); i++ {
 		productsItemsIds[i] = shoppingCartItems[i].ProductItemID.Int64
@@ -307,6 +318,11 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if productItems == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	productsSizesIds := make([]int64, len(shoppingCartItems))
 	for i := 0; i < len(shoppingCartItems); i++ {
 		productsSizesIds[i] = shoppingCartItems[i].SizeID.Int64
@@ -319,6 +335,11 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if productsSizes == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -376,7 +397,7 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -421,7 +442,7 @@ func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -468,7 +489,7 @@ func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -527,7 +548,7 @@ func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
