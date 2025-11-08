@@ -35,7 +35,7 @@ type CreateShopOrderItemParams struct {
 	ShippingMethodPrice string `json:"shipping_method_price"`
 }
 
-func (q *Queries) CreateShopOrderItem(ctx context.Context, arg CreateShopOrderItemParams) (ShopOrderItem, error) {
+func (q *Queries) CreateShopOrderItem(ctx context.Context, arg CreateShopOrderItemParams) (*ShopOrderItem, error) {
 	row := q.db.QueryRow(ctx, createShopOrderItem,
 		arg.ProductItemID,
 		arg.OrderID,
@@ -56,7 +56,7 @@ func (q *Queries) CreateShopOrderItem(ctx context.Context, arg CreateShopOrderIt
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteShopOrderItem = `-- name: DeleteShopOrderItem :one
@@ -77,7 +77,7 @@ type DeleteShopOrderItemParams struct {
 	AdminID int64 `json:"admin_id"`
 }
 
-func (q *Queries) DeleteShopOrderItem(ctx context.Context, arg DeleteShopOrderItemParams) (ShopOrderItem, error) {
+func (q *Queries) DeleteShopOrderItem(ctx context.Context, arg DeleteShopOrderItemParams) (*ShopOrderItem, error) {
 	row := q.db.QueryRow(ctx, deleteShopOrderItem, arg.ID, arg.AdminID)
 	var i ShopOrderItem
 	err := row.Scan(
@@ -91,7 +91,7 @@ func (q *Queries) DeleteShopOrderItem(ctx context.Context, arg DeleteShopOrderIt
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getShopOrderItem = `-- name: GetShopOrderItem :one
@@ -99,7 +99,7 @@ SELECT id, product_item_id, order_id, quantity, price, discount, shipping_method
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetShopOrderItem(ctx context.Context, id int64) (ShopOrderItem, error) {
+func (q *Queries) GetShopOrderItem(ctx context.Context, id int64) (*ShopOrderItem, error) {
 	row := q.db.QueryRow(ctx, getShopOrderItem, id)
 	var i ShopOrderItem
 	err := row.Scan(
@@ -113,7 +113,7 @@ func (q *Queries) GetShopOrderItem(ctx context.Context, id int64) (ShopOrderItem
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getShopOrderItemByUserIDOrderID = `-- name: GetShopOrderItemByUserIDOrderID :one
@@ -143,7 +143,7 @@ type GetShopOrderItemByUserIDOrderIDRow struct {
 	UserID              null.Int  `json:"user_id"`
 }
 
-func (q *Queries) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg GetShopOrderItemByUserIDOrderIDParams) (GetShopOrderItemByUserIDOrderIDRow, error) {
+func (q *Queries) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg GetShopOrderItemByUserIDOrderIDParams) (*GetShopOrderItemByUserIDOrderIDRow, error) {
 	row := q.db.QueryRow(ctx, getShopOrderItemByUserIDOrderID, arg.UserID, arg.OrderID)
 	var i GetShopOrderItemByUserIDOrderIDRow
 	err := row.Scan(
@@ -158,7 +158,7 @@ func (q *Queries) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg GetSh
 		&i.UpdatedAt,
 		&i.UserID,
 	)
-	return i, err
+	return &i, err
 }
 
 const listShopOrderItems = `-- name: ListShopOrderItems :many
@@ -173,13 +173,13 @@ type ListShopOrderItemsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItemsParams) ([]ShopOrderItem, error) {
+func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItemsParams) ([]*ShopOrderItem, error) {
 	rows, err := q.db.Query(ctx, listShopOrderItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShopOrderItem{}
+	items := []*ShopOrderItem{}
 	for rows.Next() {
 		var i ShopOrderItem
 		if err := rows.Scan(
@@ -195,7 +195,7 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -250,13 +250,13 @@ type ListShopOrderItemsByUserIDRow struct {
 }
 
 // ORDER BY soi.id;
-func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]ListShopOrderItemsByUserIDRow, error) {
+func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOrderItemsByUserIDParams) ([]*ListShopOrderItemsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listShopOrderItemsByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShopOrderItemsByUserIDRow{}
+	items := []*ListShopOrderItemsByUserIDRow{}
 	for rows.Next() {
 		var i ListShopOrderItemsByUserIDRow
 		if err := rows.Scan(
@@ -289,7 +289,7 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -355,13 +355,13 @@ type ListShopOrderItemsByUserIDOrderIDRow struct {
 // , pt.value AS payment_type
 // LEFT JOIN "payment_method" AS pm ON pm.id = so.payment_method_id
 // LEFT JOIN "shipping_method" AS sm ON sm.id = so.shipping_method_id
-func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]ListShopOrderItemsByUserIDOrderIDRow, error) {
+func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg ListShopOrderItemsByUserIDOrderIDParams) ([]*ListShopOrderItemsByUserIDOrderIDRow, error) {
 	rows, err := q.db.Query(ctx, listShopOrderItemsByUserIDOrderID, arg.UserID, arg.OrderID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShopOrderItemsByUserIDOrderIDRow{}
+	items := []*ListShopOrderItemsByUserIDOrderIDRow{}
 	for rows.Next() {
 		var i ListShopOrderItemsByUserIDOrderIDRow
 		if err := rows.Scan(
@@ -391,7 +391,7 @@ func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg Lis
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -428,7 +428,7 @@ type UpdateShopOrderItemParams struct {
 // SELECT * FROM "shop_order_item"
 // WHERE order_id = $1
 // ORDER BY id;
-func (q *Queries) UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderItemParams) (ShopOrderItem, error) {
+func (q *Queries) UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderItemParams) (*ShopOrderItem, error) {
 	row := q.db.QueryRow(ctx, updateShopOrderItem,
 		arg.Quantity,
 		arg.Price,
@@ -450,5 +450,5 @@ func (q *Queries) UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderIt
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

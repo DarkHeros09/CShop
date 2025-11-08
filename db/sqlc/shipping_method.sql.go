@@ -36,11 +36,11 @@ type AdminCreateShippingMethodParams struct {
 	AdminID int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateShippingMethod(ctx context.Context, arg AdminCreateShippingMethodParams) (ShippingMethod, error) {
+func (q *Queries) AdminCreateShippingMethod(ctx context.Context, arg AdminCreateShippingMethodParams) (*ShippingMethod, error) {
 	row := q.db.QueryRow(ctx, adminCreateShippingMethod, arg.Name, arg.Price, arg.AdminID)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
-	return i, err
+	return &i, err
 }
 
 const adminUpdateShippingMethod = `-- name: AdminUpdateShippingMethod :one
@@ -66,7 +66,7 @@ type AdminUpdateShippingMethodParams struct {
 	AdminID int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdateShippingMethodParams) (ShippingMethod, error) {
+func (q *Queries) AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdateShippingMethodParams) (*ShippingMethod, error) {
 	row := q.db.QueryRow(ctx, adminUpdateShippingMethod,
 		arg.Name,
 		arg.Price,
@@ -75,7 +75,7 @@ func (q *Queries) AdminUpdateShippingMethod(ctx context.Context, arg AdminUpdate
 	)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
-	return i, err
+	return &i, err
 }
 
 const createShippingMethod = `-- name: CreateShippingMethod :one
@@ -96,11 +96,11 @@ type CreateShippingMethodParams struct {
 	Price string `json:"price"`
 }
 
-func (q *Queries) CreateShippingMethod(ctx context.Context, arg CreateShippingMethodParams) (ShippingMethod, error) {
+func (q *Queries) CreateShippingMethod(ctx context.Context, arg CreateShippingMethodParams) (*ShippingMethod, error) {
 	row := q.db.QueryRow(ctx, createShippingMethod, arg.Name, arg.Price)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
-	return i, err
+	return &i, err
 }
 
 const deleteShippingMethod = `-- name: DeleteShippingMethod :exec
@@ -118,11 +118,11 @@ SELECT id, name, price FROM "shipping_method"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetShippingMethod(ctx context.Context, id int64) (ShippingMethod, error) {
+func (q *Queries) GetShippingMethod(ctx context.Context, id int64) (*ShippingMethod, error) {
 	row := q.db.QueryRow(ctx, getShippingMethod, id)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
-	return i, err
+	return &i, err
 }
 
 const getShippingMethodByUserID = `-- name: GetShippingMethodByUserID :one
@@ -146,7 +146,7 @@ type GetShippingMethodByUserIDRow struct {
 	UserID null.Int `json:"user_id"`
 }
 
-func (q *Queries) GetShippingMethodByUserID(ctx context.Context, arg GetShippingMethodByUserIDParams) (GetShippingMethodByUserIDRow, error) {
+func (q *Queries) GetShippingMethodByUserID(ctx context.Context, arg GetShippingMethodByUserIDParams) (*GetShippingMethodByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getShippingMethodByUserID, arg.UserID, arg.ID)
 	var i GetShippingMethodByUserIDRow
 	err := row.Scan(
@@ -155,26 +155,26 @@ func (q *Queries) GetShippingMethodByUserID(ctx context.Context, arg GetShipping
 		&i.Price,
 		&i.UserID,
 	)
-	return i, err
+	return &i, err
 }
 
 const listShippingMethods = `-- name: ListShippingMethods :many
 SELECT id, name, price FROM "shipping_method"
 `
 
-func (q *Queries) ListShippingMethods(ctx context.Context) ([]ShippingMethod, error) {
+func (q *Queries) ListShippingMethods(ctx context.Context) ([]*ShippingMethod, error) {
 	rows, err := q.db.Query(ctx, listShippingMethods)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShippingMethod{}
+	items := []*ShippingMethod{}
 	for rows.Next() {
 		var i ShippingMethod
 		if err := rows.Scan(&i.ID, &i.Name, &i.Price); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -209,13 +209,13 @@ type ListShippingMethodsByUserIDRow struct {
 // ORDER BY id
 // LIMIT $1
 // OFFSET $2;
-func (q *Queries) ListShippingMethodsByUserID(ctx context.Context, arg ListShippingMethodsByUserIDParams) ([]ListShippingMethodsByUserIDRow, error) {
+func (q *Queries) ListShippingMethodsByUserID(ctx context.Context, arg ListShippingMethodsByUserIDParams) ([]*ListShippingMethodsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listShippingMethodsByUserID, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShippingMethodsByUserIDRow{}
+	items := []*ListShippingMethodsByUserIDRow{}
 	for rows.Next() {
 		var i ListShippingMethodsByUserIDRow
 		if err := rows.Scan(
@@ -226,7 +226,7 @@ func (q *Queries) ListShippingMethodsByUserID(ctx context.Context, arg ListShipp
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -249,9 +249,9 @@ type UpdateShippingMethodParams struct {
 	ID    int64       `json:"id"`
 }
 
-func (q *Queries) UpdateShippingMethod(ctx context.Context, arg UpdateShippingMethodParams) (ShippingMethod, error) {
+func (q *Queries) UpdateShippingMethod(ctx context.Context, arg UpdateShippingMethodParams) (*ShippingMethod, error) {
 	row := q.db.QueryRow(ctx, updateShippingMethod, arg.Name, arg.Price, arg.ID)
 	var i ShippingMethod
 	err := row.Scan(&i.ID, &i.Name, &i.Price)
-	return i, err
+	return &i, err
 }

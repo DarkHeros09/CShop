@@ -40,7 +40,7 @@ type AdminCreateProductParams struct {
 	AdminID     int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (Product, error) {
+func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProductParams) (*Product, error) {
 	row := q.db.QueryRow(ctx, adminCreateProduct,
 		arg.CategoryID,
 		arg.BrandID,
@@ -61,7 +61,7 @@ func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProduct
 		&i.UpdatedAt,
 		&i.Search,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminDeleteProduct = `-- name: AdminDeleteProduct :exec
@@ -117,7 +117,7 @@ type AdminUpdateProductParams struct {
 }
 
 // product_image = COALESCE(sqlc.narg(product_image),product_image),
-func (q *Queries) AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (Product, error) {
+func (q *Queries) AdminUpdateProduct(ctx context.Context, arg AdminUpdateProductParams) (*Product, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProduct,
 		arg.CategoryID,
 		arg.BrandID,
@@ -139,7 +139,7 @@ func (q *Queries) AdminUpdateProduct(ctx context.Context, arg AdminUpdateProduct
 		&i.UpdatedAt,
 		&i.Search,
 	)
-	return i, err
+	return &i, err
 }
 
 const createProduct = `-- name: CreateProduct :one
@@ -164,7 +164,7 @@ type CreateProductParams struct {
 	Active      bool   `json:"active"`
 }
 
-func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (*Product, error) {
 	row := q.db.QueryRow(ctx, createProduct,
 		arg.CategoryID,
 		arg.BrandID,
@@ -184,7 +184,7 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.UpdatedAt,
 		&i.Search,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteProduct = `-- name: DeleteProduct :exec
@@ -202,7 +202,7 @@ SELECT id, category_id, brand_id, name, description, active, created_at, updated
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
+func (q *Queries) GetProduct(ctx context.Context, id int64) (*Product, error) {
 	row := q.db.QueryRow(ctx, getProduct, id)
 	var i Product
 	err := row.Scan(
@@ -216,7 +216,7 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.UpdatedAt,
 		&i.Search,
 	)
-	return i, err
+	return &i, err
 }
 
 const getProductsByIDs = `-- name: GetProductsByIDs :many
@@ -224,13 +224,13 @@ SELECT id, category_id, brand_id, name, description, active, created_at, updated
 WHERE id = ANY($1::bigint[])
 `
 
-func (q *Queries) GetProductsByIDs(ctx context.Context, ids []int64) ([]Product, error) {
+func (q *Queries) GetProductsByIDs(ctx context.Context, ids []int64) ([]*Product, error) {
 	rows, err := q.db.Query(ctx, getProductsByIDs, ids)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Product{}
+	items := []*Product{}
 	for rows.Next() {
 		var i Product
 		if err := rows.Scan(
@@ -246,7 +246,7 @@ func (q *Queries) GetProductsByIDs(ctx context.Context, ids []int64) ([]Product,
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -288,13 +288,13 @@ type ListProductsRow struct {
 //
 // ),
 // list_products AS (
-func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
+func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]*ListProductsRow, error) {
 	rows, err := q.db.Query(ctx, listProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductsRow{}
+	items := []*ListProductsRow{}
 	for rows.Next() {
 		var i ListProductsRow
 		if err := rows.Scan(
@@ -311,7 +311,7 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]L
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -351,13 +351,13 @@ type ListProductsNextPageRow struct {
 	NextAvailable bool      `json:"next_available"`
 }
 
-func (q *Queries) ListProductsNextPage(ctx context.Context, arg ListProductsNextPageParams) ([]ListProductsNextPageRow, error) {
+func (q *Queries) ListProductsNextPage(ctx context.Context, arg ListProductsNextPageParams) ([]*ListProductsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listProductsNextPage, arg.Limit, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductsNextPageRow{}
+	items := []*ListProductsNextPageRow{}
 	for rows.Next() {
 		var i ListProductsNextPageRow
 		if err := rows.Scan(
@@ -373,7 +373,7 @@ func (q *Queries) ListProductsNextPage(ctx context.Context, arg ListProductsNext
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -406,13 +406,13 @@ type ListProductsV2Row struct {
 	NextAvailable bool      `json:"next_available"`
 }
 
-func (q *Queries) ListProductsV2(ctx context.Context, limit int32) ([]ListProductsV2Row, error) {
+func (q *Queries) ListProductsV2(ctx context.Context, limit int32) ([]*ListProductsV2Row, error) {
 	rows, err := q.db.Query(ctx, listProductsV2, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListProductsV2Row{}
+	items := []*ListProductsV2Row{}
 	for rows.Next() {
 		var i ListProductsV2Row
 		if err := rows.Scan(
@@ -428,7 +428,7 @@ func (q *Queries) ListProductsV2(ctx context.Context, limit int32) ([]ListProduc
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -479,13 +479,13 @@ type SearchProductsRow struct {
 	NextAvailable bool      `json:"next_available"`
 }
 
-func (q *Queries) SearchProducts(ctx context.Context, arg SearchProductsParams) ([]SearchProductsRow, error) {
+func (q *Queries) SearchProducts(ctx context.Context, arg SearchProductsParams) ([]*SearchProductsRow, error) {
 	rows, err := q.db.Query(ctx, searchProducts, arg.Limit, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductsRow{}
+	items := []*SearchProductsRow{}
 	for rows.Next() {
 		var i SearchProductsRow
 		if err := rows.Scan(
@@ -501,7 +501,7 @@ func (q *Queries) SearchProducts(ctx context.Context, arg SearchProductsParams) 
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -555,13 +555,13 @@ type SearchProductsNextPageRow struct {
 	NextAvailable bool      `json:"next_available"`
 }
 
-func (q *Queries) SearchProductsNextPage(ctx context.Context, arg SearchProductsNextPageParams) ([]SearchProductsNextPageRow, error) {
+func (q *Queries) SearchProductsNextPage(ctx context.Context, arg SearchProductsNextPageParams) ([]*SearchProductsNextPageRow, error) {
 	rows, err := q.db.Query(ctx, searchProductsNextPage, arg.Limit, arg.ProductID, arg.Query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []SearchProductsNextPageRow{}
+	items := []*SearchProductsNextPageRow{}
 	for rows.Next() {
 		var i SearchProductsNextPageRow
 		if err := rows.Scan(
@@ -577,7 +577,7 @@ func (q *Queries) SearchProductsNextPage(ctx context.Context, arg SearchProducts
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -612,7 +612,7 @@ type UpdateProductParams struct {
 // SELECT *
 // FROM list_products, total_records;
 // product_image = COALESCE(sqlc.narg(product_image),product_image),
-func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (*Product, error) {
 	row := q.db.QueryRow(ctx, updateProduct,
 		arg.CategoryID,
 		arg.BrandID,
@@ -633,5 +633,5 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.UpdatedAt,
 		&i.Search,
 	)
-	return i, err
+	return &i, err
 }

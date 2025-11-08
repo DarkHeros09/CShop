@@ -13,7 +13,7 @@ import (
 func createRandomOrderStatus(t *testing.T) OrderStatus {
 	var err error
 	orderStatuses := []string{"تحت الإجراء", "تم التسليم", "ملغي"}
-	var orderStatus OrderStatus
+	var orderStatus *OrderStatus
 	var orderStatusAll []OrderStatus
 	orderStatuseList, err := testStore.ListOrderStatuses(context.Background() /* arg*/)
 
@@ -25,7 +25,7 @@ func createRandomOrderStatus(t *testing.T) OrderStatus {
 			require.NoError(t, err)
 			require.NotEmpty(t, orderStatus)
 
-			orderStatusAll = append(orderStatusAll, orderStatus)
+			orderStatusAll = append(orderStatusAll, *orderStatus)
 		}
 		// select rand int from 0 - 2
 
@@ -37,7 +37,7 @@ func createRandomOrderStatus(t *testing.T) OrderStatus {
 	// fmt.Println("LENGTH NUMBER OUT", ln)
 	r := rand.IntN(len(orderStatuseList))
 	// fmt.Println("THIS IS THE RANDOM NUMBER OUT", r)
-	return orderStatuseList[r]
+	return *orderStatuseList[r]
 }
 func TestCreateOrderStatus(t *testing.T) {
 	createRandomOrderStatus(t)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ func TestGetProductAPI(t *testing.T) {
 				store.EXPECT().
 					GetProduct(gomock.Any(), gomock.Eq(product.ID)).
 					Times(1).
-					Return(db.Product{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +68,7 @@ func TestGetProductAPI(t *testing.T) {
 				store.EXPECT().
 					GetProduct(gomock.Any(), gomock.Eq(product.ID)).
 					Times(1).
-					Return(db.Product{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -244,7 +245,7 @@ func TestAdminCreateProductAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateProduct(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Product{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -305,7 +306,7 @@ func TestAdminCreateProductAPI(t *testing.T) {
 
 func TestListProductsAPI(t *testing.T) {
 	n := 5
-	products := make([]db.ListProductsRow, n)
+	products := make([]*db.ListProductsRow, n)
 	for i := 0; i < n; i++ {
 		products[i] = randomProductForList()
 	}
@@ -353,7 +354,7 @@ func TestListProductsAPI(t *testing.T) {
 				store.EXPECT().
 					ListProducts(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListProductsRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -412,8 +413,8 @@ func TestListProductsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -564,7 +565,7 @@ func TestUpdateProductAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateProduct(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Product{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -791,7 +792,7 @@ func TestAdminDeleteProductAPI(t *testing.T) {
 
 func TestListProductsV2API(t *testing.T) {
 	n := 10
-	products := make([]db.ListProductsV2Row, n)
+	products := make([]*db.ListProductsV2Row, n)
 	for i := 0; i < n; i++ {
 		products[i] = randomListProductV2()
 	}
@@ -831,7 +832,7 @@ func TestListProductsV2API(t *testing.T) {
 				store.EXPECT().
 					ListProductsV2(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListProductsV2Row{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -874,7 +875,7 @@ func TestListProductsV2API(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -888,8 +889,8 @@ func TestListProductsV2API(t *testing.T) {
 
 func TestListProductsNextPageAPI(t *testing.T) {
 	n := 10
-	products1 := make([]db.ListProductsNextPageRow, n)
-	products2 := make([]db.ListProductsNextPageRow, n)
+	products1 := make([]*db.ListProductsNextPageRow, n)
+	products2 := make([]*db.ListProductsNextPageRow, n)
 	for i := 0; i < n; i++ {
 		products1[i] = randomRestProductList()
 	}
@@ -942,7 +943,7 @@ func TestListProductsNextPageAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductsNextPage(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListProductsNextPageRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -986,8 +987,8 @@ func TestListProductsNextPageAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
+			q.Add("product_cursor", strconv.Itoa(tc.query.ProductCursor))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -1002,7 +1003,7 @@ func TestListProductsNextPageAPI(t *testing.T) {
 func TestSearchProductsAPI(t *testing.T) {
 	n := 10
 	q := "abc"
-	products := make([]db.SearchProductsRow, n)
+	products := make([]*db.SearchProductsRow, n)
 	for i := 0; i < n; i++ {
 		products[i] = randomSearchProducts()
 	}
@@ -1049,7 +1050,7 @@ func TestSearchProductsAPI(t *testing.T) {
 				store.EXPECT().
 					SearchProducts(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.SearchProductsRow{}, pgx.ErrTxClosed)
+					Return([]*db.SearchProductsRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1093,7 +1094,7 @@ func TestSearchProductsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
 			q.Add("query", tc.query.Query)
 			request.URL.RawQuery = q.Encode()
 
@@ -1109,8 +1110,8 @@ func TestSearchProductsAPI(t *testing.T) {
 func TestSearchProductsNextPageAPI(t *testing.T) {
 	n := 10
 	q := "abc"
-	products1 := make([]db.SearchProductsNextPageRow, n)
-	products2 := make([]db.SearchProductsNextPageRow, n)
+	products1 := make([]*db.SearchProductsNextPageRow, n)
+	products2 := make([]*db.SearchProductsNextPageRow, n)
 	for i := 0; i < n; i++ {
 		products1[i] = randomSearchProductNextPage()
 	}
@@ -1167,7 +1168,7 @@ func TestSearchProductsNextPageAPI(t *testing.T) {
 				store.EXPECT().
 					SearchProductsNextPage(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.SearchProductsNextPageRow{}, pgx.ErrTxClosed)
+					Return([]*db.SearchProductsNextPageRow{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -1212,9 +1213,9 @@ func TestSearchProductsNextPageAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("product_item_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
-			q.Add("product_cursor", fmt.Sprintf("%d", tc.query.ProductCursor))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
+			q.Add("product_item_cursor", strconv.Itoa(tc.query.ProductCursor))
+			q.Add("product_cursor", strconv.Itoa(tc.query.ProductCursor))
 			q.Add("query", tc.query.Query)
 			request.URL.RawQuery = q.Encode()
 
@@ -1243,8 +1244,8 @@ func randomPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func randomProduct() db.Product {
-	return db.Product{
+func randomProduct() *db.Product {
+	return &db.Product{
 		ID:          util.RandomInt(1, 1000),
 		CategoryID:  util.RandomInt(1, 1000),
 		BrandID:     util.RandomInt(1, 1000),
@@ -1254,8 +1255,8 @@ func randomProduct() db.Product {
 		Active: util.RandomBool(),
 	}
 }
-func randomProductForList() db.ListProductsRow {
-	return db.ListProductsRow{
+func randomProductForList() *db.ListProductsRow {
+	return &db.ListProductsRow{
 		ID:          util.RandomInt(1, 1000),
 		CategoryID:  util.RandomInt(1, 500),
 		Name:        util.RandomUser(),
@@ -1266,28 +1267,28 @@ func randomProductForList() db.ListProductsRow {
 	}
 }
 
-func requireBodyMatchProduct(t *testing.T, body io.ReadCloser, product db.Product) {
+func requireBodyMatchProduct(t *testing.T, body io.ReadCloser, product *db.Product) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProduct db.Product
+	var gotProduct *db.Product
 	err = json.Unmarshal(data, &gotProduct)
 	require.NoError(t, err)
 	require.Equal(t, product, gotProduct)
 }
 
-func requireBodyMatchProductsList(t *testing.T, body io.ReadCloser, products []db.ListProductsRow) {
+func requireBodyMatchProductsList(t *testing.T, body io.ReadCloser, products []*db.ListProductsRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.ListProductsRow
+	var gotProducts []*db.ListProductsRow
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)
 }
 
-func randomSearchProducts() db.SearchProductsRow {
-	return db.SearchProductsRow{
+func randomSearchProducts() *db.SearchProductsRow {
+	return &db.SearchProductsRow{
 		ID:          util.RandomInt(1, 1000),
 		Name:        "abc" + util.RandomUser(),
 		Description: util.RandomUser(),
@@ -1297,8 +1298,8 @@ func randomSearchProducts() db.SearchProductsRow {
 	}
 }
 
-func randomSearchProductNextPage() db.SearchProductsNextPageRow {
-	return db.SearchProductsNextPageRow{
+func randomSearchProductNextPage() *db.SearchProductsNextPageRow {
+	return &db.SearchProductsNextPageRow{
 		ID:          util.RandomInt(1, 1000),
 		Name:        "abc" + util.RandomUser(),
 		Description: util.RandomUser(),
@@ -1308,48 +1309,48 @@ func randomSearchProductNextPage() db.SearchProductsNextPageRow {
 	}
 }
 
-func requireBodyMatchSearchProducts(t *testing.T, body io.ReadCloser, products []db.SearchProductsRow) {
+func requireBodyMatchSearchProducts(t *testing.T, body io.ReadCloser, products []*db.SearchProductsRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.SearchProductsRow
+	var gotProducts []*db.SearchProductsRow
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)
 }
 
-func requireBodyMatchSearchProductsNextPage(t *testing.T, body io.ReadCloser, products []db.SearchProductsNextPageRow) {
+func requireBodyMatchSearchProductsNextPage(t *testing.T, body io.ReadCloser, products []*db.SearchProductsNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.SearchProductsNextPageRow
+	var gotProducts []*db.SearchProductsNextPageRow
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)
 }
 
-func requireBodyMatchListProductsV2(t *testing.T, body io.ReadCloser, products []db.ListProductsV2Row) {
+func requireBodyMatchListProductsV2(t *testing.T, body io.ReadCloser, products []*db.ListProductsV2Row) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.ListProductsV2Row
+	var gotProducts []*db.ListProductsV2Row
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)
 }
 
-func requireBodyMatchListProductsNextPage(t *testing.T, body io.ReadCloser, products []db.ListProductsNextPageRow) {
+func requireBodyMatchListProductsNextPage(t *testing.T, body io.ReadCloser, products []*db.ListProductsNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.ListProductsNextPageRow
+	var gotProducts []*db.ListProductsNextPageRow
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, products, gotProducts)
 }
 
-func randomListProductV2() db.ListProductsV2Row {
-	return db.ListProductsV2Row{
+func randomListProductV2() *db.ListProductsV2Row {
+	return &db.ListProductsV2Row{
 		ID:          util.RandomInt(1, 1000),
 		CategoryID:  util.RandomInt(1, 500),
 		BrandID:     util.RandomInt(1, 500),
@@ -1360,8 +1361,8 @@ func randomListProductV2() db.ListProductsV2Row {
 	}
 }
 
-func randomRestProductList() db.ListProductsNextPageRow {
-	return db.ListProductsNextPageRow{
+func randomRestProductList() *db.ListProductsNextPageRow {
+	return &db.ListProductsNextPageRow{
 		ID:          util.RandomInt(1, 1000),
 		CategoryID:  util.RandomInt(1, 500),
 		BrandID:     util.RandomInt(1, 500),

@@ -36,8 +36,8 @@ once the payments is finished successfully it creates ShopOrderItem record,
 substract from/update the product DB, adds the products to the users' shop_order_item DB,
 and update products quantity within a single database transaction.
 */
-func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurchaseTxParams) (FinishedPurchaseTxResult, error) {
-	var result FinishedPurchaseTxResult
+func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurchaseTxParams) (*FinishedPurchaseTxResult, error) {
+	var result *FinishedPurchaseTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
@@ -45,6 +45,10 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 		shopCartItems, err := q.ListShoppingCartItemsByCartID(ctx, arg.ShoppingCartID)
 		if err != nil {
 			return err
+		}
+
+		if shopCartItems == nil {
+			return errors.New("Shopping Cart Items Not Found")
 		}
 
 		trackNumber := util.GenerateTrackNumber()
@@ -77,11 +81,19 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 			return err
 		}
 
+		if shippingMethod == nil {
+			return errors.New("Shipping Method Not Found")
+		}
+
 		for i := 0; i < len(shopCartItems); i++ {
 
 			productSize, err := q.GetProductItemSizeForUpdate(ctx, shopCartItems[i].SizeID)
 			if err != nil {
 				return err
+			}
+
+			if productSize == nil {
+				return errors.New("Product Size Not Found")
 			}
 
 			if productSize.Qty > 0 && productSize.Qty <= shopCartItems[i].Qty {
@@ -92,7 +104,9 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				return errors.New("Stock is Empty")
 			}
 
-			result.ShopOrderID = createdShopOrder.ID
+			result = &FinishedPurchaseTxResult{
+				ShopOrderID: createdShopOrder.ID,
+			}
 
 			updatedProductSize, err := q.UpdateProductSize(ctx, UpdateProductSizeParams{
 				ID:            productSize.ID,
@@ -111,7 +125,7 @@ func (store *SQLStore) FinishedPurchaseTx(ctx context.Context, arg FinishedPurch
 				return err
 			}
 
-			bestDiscount := discount(productItemAfterUpdate)
+			bestDiscount := discount(*productItemAfterUpdate)
 
 			// discountValue := udecimal.NewFromInt(bestDiscount)
 

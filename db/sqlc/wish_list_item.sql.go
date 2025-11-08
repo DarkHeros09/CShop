@@ -28,7 +28,7 @@ type CreateWishListItemParams struct {
 	SizeID        int64 `json:"size_id"`
 }
 
-func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItemParams) (WishListItem, error) {
+func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItemParams) (*WishListItem, error) {
 	row := q.db.QueryRow(ctx, createWishListItem, arg.WishListID, arg.ProductItemID, arg.SizeID)
 	var i WishListItem
 	err := row.Scan(
@@ -39,7 +39,7 @@ func (q *Queries) CreateWishListItem(ctx context.Context, arg CreateWishListItem
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteWishListItem = `-- name: DeleteWishListItem :exec
@@ -75,13 +75,13 @@ RETURNING id, wish_list_id, product_item_id, size_id, created_at, updated_at
 //	SELECT id FROM "wish_list" WHERE user_id = $1
 //
 // )
-func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]WishListItem, error) {
+func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) ([]*WishListItem, error) {
 	rows, err := q.db.Query(ctx, deleteWishListItemAll, wishListID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []WishListItem{}
+	items := []*WishListItem{}
 	for rows.Next() {
 		var i WishListItem
 		if err := rows.Scan(
@@ -94,7 +94,7 @@ func (q *Queries) DeleteWishListItemAll(ctx context.Context, wishListID int64) (
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ SELECT id, wish_list_id, product_item_id, size_id, created_at, updated_at FROM "
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, error) {
+func (q *Queries) GetWishListItem(ctx context.Context, id int64) (*WishListItem, error) {
 	row := q.db.QueryRow(ctx, getWishListItem, id)
 	var i WishListItem
 	err := row.Scan(
@@ -118,7 +118,7 @@ func (q *Queries) GetWishListItem(ctx context.Context, id int64) (WishListItem, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getWishListItemByUserIDCartID = `-- name: GetWishListItemByUserIDCartID :one
@@ -137,7 +137,7 @@ type GetWishListItemByUserIDCartIDParams struct {
 	WishListID int64 `json:"wish_list_id"`
 }
 
-func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (WishListItem, error) {
+func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWishListItemByUserIDCartIDParams) (*WishListItem, error) {
 	row := q.db.QueryRow(ctx, getWishListItemByUserIDCartID, arg.UserID, arg.ID, arg.WishListID)
 	var i WishListItem
 	err := row.Scan(
@@ -148,7 +148,7 @@ func (q *Queries) GetWishListItemByUserIDCartID(ctx context.Context, arg GetWish
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const listWishListItems = `-- name: ListWishListItems :many
@@ -163,13 +163,13 @@ type ListWishListItemsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsParams) ([]WishListItem, error) {
+func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsParams) ([]*WishListItem, error) {
 	rows, err := q.db.Query(ctx, listWishListItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []WishListItem{}
+	items := []*WishListItem{}
 	for rows.Next() {
 		var i WishListItem
 		if err := rows.Scan(
@@ -182,7 +182,7 @@ func (q *Queries) ListWishListItems(ctx context.Context, arg ListWishListItemsPa
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -196,13 +196,13 @@ WHERE wish_list_id = $1
 ORDER BY id
 `
 
-func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]WishListItem, error) {
+func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int64) ([]*WishListItem, error) {
 	rows, err := q.db.Query(ctx, listWishListItemsByCartID, wishListID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []WishListItem{}
+	items := []*WishListItem{}
 	for rows.Next() {
 		var i WishListItem
 		if err := rows.Scan(
@@ -215,7 +215,7 @@ func (q *Queries) ListWishListItemsByCartID(ctx context.Context, wishListID int6
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -243,13 +243,13 @@ type ListWishListItemsByUserIDRow struct {
 	SizeValue     string    `json:"size_value"`
 }
 
-func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) ([]ListWishListItemsByUserIDRow, error) {
+func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) ([]*ListWishListItemsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listWishListItemsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListWishListItemsByUserIDRow{}
+	items := []*ListWishListItemsByUserIDRow{}
 	for rows.Next() {
 		var i ListWishListItemsByUserIDRow
 		if err := rows.Scan(
@@ -265,7 +265,7 @@ func (q *Queries) ListWishListItemsByUserID(ctx context.Context, userID int64) (
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -298,7 +298,7 @@ type UpdateWishListItemParams struct {
 //	WHERE wl.id = sqlc.arg(wish_list_id)
 //
 // )
-func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (WishListItem, error) {
+func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItemParams) (*WishListItem, error) {
 	row := q.db.QueryRow(ctx, updateWishListItem,
 		arg.ProductItemID,
 		arg.SizeID,
@@ -314,5 +314,5 @@ func (q *Queries) UpdateWishListItem(ctx context.Context, arg UpdateWishListItem
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

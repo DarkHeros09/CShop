@@ -43,7 +43,7 @@ type AdminCreatePromotionParams struct {
 	AdminID      int64     `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (Promotion, error) {
+func (q *Queries) AdminCreatePromotion(ctx context.Context, arg AdminCreatePromotionParams) (*Promotion, error) {
 	row := q.db.QueryRow(ctx, adminCreatePromotion,
 		arg.Name,
 		arg.Description,
@@ -63,7 +63,7 @@ func (q *Queries) AdminCreatePromotion(ctx context.Context, arg AdminCreatePromo
 		&i.StartDate,
 		&i.EndDate,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminUpdatePromotion = `-- name: AdminUpdatePromotion :one
@@ -97,7 +97,7 @@ type AdminUpdatePromotionParams struct {
 	AdminID      int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (Promotion, error) {
+func (q *Queries) AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromotionParams) (*Promotion, error) {
 	row := q.db.QueryRow(ctx, adminUpdatePromotion,
 		arg.Name,
 		arg.Description,
@@ -118,7 +118,7 @@ func (q *Queries) AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromo
 		&i.StartDate,
 		&i.EndDate,
 	)
-	return i, err
+	return &i, err
 }
 
 const createPromotion = `-- name: CreatePromotion :one
@@ -144,7 +144,7 @@ type CreatePromotionParams struct {
 	EndDate      time.Time `json:"end_date"`
 }
 
-func (q *Queries) CreatePromotion(ctx context.Context, arg CreatePromotionParams) (Promotion, error) {
+func (q *Queries) CreatePromotion(ctx context.Context, arg CreatePromotionParams) (*Promotion, error) {
 	row := q.db.QueryRow(ctx, createPromotion,
 		arg.Name,
 		arg.Description,
@@ -163,7 +163,7 @@ func (q *Queries) CreatePromotion(ctx context.Context, arg CreatePromotionParams
 		&i.StartDate,
 		&i.EndDate,
 	)
-	return i, err
+	return &i, err
 }
 
 const deletePromotion = `-- name: DeletePromotion :exec
@@ -181,7 +181,7 @@ SELECT id, name, description, discount_rate, active, start_date, end_date FROM "
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetPromotion(ctx context.Context, id int64) (Promotion, error) {
+func (q *Queries) GetPromotion(ctx context.Context, id int64) (*Promotion, error) {
 	row := q.db.QueryRow(ctx, getPromotion, id)
 	var i Promotion
 	err := row.Scan(
@@ -193,7 +193,7 @@ func (q *Queries) GetPromotion(ctx context.Context, id int64) (Promotion, error)
 		&i.StartDate,
 		&i.EndDate,
 	)
-	return i, err
+	return &i, err
 }
 
 const listPromotions = `-- name: ListPromotions :many
@@ -201,13 +201,13 @@ SELECT id, name, description, discount_rate, active, start_date, end_date FROM "
 ORDER BY id
 `
 
-func (q *Queries) ListPromotions(ctx context.Context) ([]Promotion, error) {
+func (q *Queries) ListPromotions(ctx context.Context) ([]*Promotion, error) {
 	rows, err := q.db.Query(ctx, listPromotions)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Promotion{}
+	items := []*Promotion{}
 	for rows.Next() {
 		var i Promotion
 		if err := rows.Scan(
@@ -221,7 +221,7 @@ func (q *Queries) ListPromotions(ctx context.Context) ([]Promotion, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -255,7 +255,7 @@ type UpdatePromotionParams struct {
 
 // LIMIT $1
 // OFFSET $2;
-func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (Promotion, error) {
+func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams) (*Promotion, error) {
 	row := q.db.QueryRow(ctx, updatePromotion,
 		arg.Name,
 		arg.Description,
@@ -275,5 +275,5 @@ func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams
 		&i.StartDate,
 		&i.EndDate,
 	)
-	return i, err
+	return &i, err
 }

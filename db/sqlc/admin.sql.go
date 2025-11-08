@@ -28,7 +28,7 @@ type CreateAdminParams struct {
 	TypeID   int64  `json:"type_id"`
 }
 
-func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin, error) {
+func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (*Admin, error) {
 	row := q.db.QueryRow(ctx, createAdmin,
 		arg.Username,
 		arg.Email,
@@ -47,7 +47,7 @@ func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (Admin
 		&i.UpdatedAt,
 		&i.LastLogin,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteAdmin = `-- name: DeleteAdmin :exec
@@ -65,7 +65,7 @@ SELECT id, username, email, password, active, type_id, created_at, updated_at, l
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAdmin(ctx context.Context, id int64) (Admin, error) {
+func (q *Queries) GetAdmin(ctx context.Context, id int64) (*Admin, error) {
 	row := q.db.QueryRow(ctx, getAdmin, id)
 	var i Admin
 	err := row.Scan(
@@ -79,7 +79,7 @@ func (q *Queries) GetAdmin(ctx context.Context, id int64) (Admin, error) {
 		&i.UpdatedAt,
 		&i.LastLogin,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAdminByEmail = `-- name: GetAdminByEmail :one
@@ -87,7 +87,7 @@ SELECT id, username, email, password, active, type_id, created_at, updated_at, l
 WHERE email = $1 LIMIT 1
 `
 
-func (q *Queries) GetAdminByEmail(ctx context.Context, email string) (Admin, error) {
+func (q *Queries) GetAdminByEmail(ctx context.Context, email string) (*Admin, error) {
 	row := q.db.QueryRow(ctx, getAdminByEmail, email)
 	var i Admin
 	err := row.Scan(
@@ -101,7 +101,7 @@ func (q *Queries) GetAdminByEmail(ctx context.Context, email string) (Admin, err
 		&i.UpdatedAt,
 		&i.LastLogin,
 	)
-	return i, err
+	return &i, err
 }
 
 const listAdmins = `-- name: ListAdmins :many
@@ -116,13 +116,13 @@ type ListAdminsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin, error) {
+func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]*Admin, error) {
 	rows, err := q.db.Query(ctx, listAdmins, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Admin{}
+	items := []*Admin{}
 	for rows.Next() {
 		var i Admin
 		if err := rows.Scan(
@@ -138,7 +138,7 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]Admin
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ type UpdateAdminParams struct {
 	Active bool  `json:"active"`
 }
 
-func (q *Queries) UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin, error) {
+func (q *Queries) UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (*Admin, error) {
 	row := q.db.QueryRow(ctx, updateAdmin, arg.ID, arg.Active)
 	var i Admin
 	err := row.Scan(
@@ -173,5 +173,5 @@ func (q *Queries) UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (Admin
 		&i.UpdatedAt,
 		&i.LastLogin,
 	)
-	return i, err
+	return &i, err
 }

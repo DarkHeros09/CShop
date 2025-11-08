@@ -42,7 +42,7 @@ type AdminCreateCategoryPromotionParams struct {
 	AdminID                int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateCategoryPromotion(ctx context.Context, arg AdminCreateCategoryPromotionParams) (CategoryPromotion, error) {
+func (q *Queries) AdminCreateCategoryPromotion(ctx context.Context, arg AdminCreateCategoryPromotionParams) (*CategoryPromotion, error) {
 	row := q.db.QueryRow(ctx, adminCreateCategoryPromotion,
 		arg.CategoryID,
 		arg.PromotionID,
@@ -57,7 +57,7 @@ func (q *Queries) AdminCreateCategoryPromotion(ctx context.Context, arg AdminCre
 		&i.CategoryPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminListCategoryPromotions = `-- name: AdminListCategoryPromotions :many
@@ -86,13 +86,13 @@ type AdminListCategoryPromotionsRow struct {
 	Active                 bool        `json:"active"`
 }
 
-func (q *Queries) AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]AdminListCategoryPromotionsRow, error) {
+func (q *Queries) AdminListCategoryPromotions(ctx context.Context, adminID int64) ([]*AdminListCategoryPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, adminListCategoryPromotions, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListCategoryPromotionsRow{}
+	items := []*AdminListCategoryPromotionsRow{}
 	for rows.Next() {
 		var i AdminListCategoryPromotionsRow
 		if err := rows.Scan(
@@ -105,7 +105,7 @@ func (q *Queries) AdminListCategoryPromotions(ctx context.Context, adminID int64
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ type AdminUpdateCategoryPromotionParams struct {
 	AdminID                int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (CategoryPromotion, error) {
+func (q *Queries) AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpdateCategoryPromotionParams) (*CategoryPromotion, error) {
 	row := q.db.QueryRow(ctx, adminUpdateCategoryPromotion,
 		arg.CategoryPromotionImage,
 		arg.Active,
@@ -153,7 +153,7 @@ func (q *Queries) AdminUpdateCategoryPromotion(ctx context.Context, arg AdminUpd
 		&i.CategoryPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const createCategoryPromotion = `-- name: CreateCategoryPromotion :one
@@ -178,7 +178,7 @@ type CreateCategoryPromotionParams struct {
 	Active                 bool        `json:"active"`
 }
 
-func (q *Queries) CreateCategoryPromotion(ctx context.Context, arg CreateCategoryPromotionParams) (CategoryPromotion, error) {
+func (q *Queries) CreateCategoryPromotion(ctx context.Context, arg CreateCategoryPromotionParams) (*CategoryPromotion, error) {
 	row := q.db.QueryRow(ctx, createCategoryPromotion,
 		arg.CategoryID,
 		arg.PromotionID,
@@ -192,7 +192,7 @@ func (q *Queries) CreateCategoryPromotion(ctx context.Context, arg CreateCategor
 		&i.CategoryPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteCategoryPromotion = `-- name: DeleteCategoryPromotion :exec
@@ -224,7 +224,7 @@ type GetCategoryPromotionParams struct {
 	PromotionID int64 `json:"promotion_id"`
 }
 
-func (q *Queries) GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (CategoryPromotion, error) {
+func (q *Queries) GetCategoryPromotion(ctx context.Context, arg GetCategoryPromotionParams) (*CategoryPromotion, error) {
 	row := q.db.QueryRow(ctx, getCategoryPromotion, arg.CategoryID, arg.PromotionID)
 	var i CategoryPromotion
 	err := row.Scan(
@@ -233,7 +233,7 @@ func (q *Queries) GetCategoryPromotion(ctx context.Context, arg GetCategoryPromo
 		&i.CategoryPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const listCategoryPromotions = `-- name: ListCategoryPromotions :many
@@ -248,13 +248,13 @@ type ListCategoryPromotionsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListCategoryPromotions(ctx context.Context, arg ListCategoryPromotionsParams) ([]CategoryPromotion, error) {
+func (q *Queries) ListCategoryPromotions(ctx context.Context, arg ListCategoryPromotionsParams) ([]*CategoryPromotion, error) {
 	rows, err := q.db.Query(ctx, listCategoryPromotions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []CategoryPromotion{}
+	items := []*CategoryPromotion{}
 	for rows.Next() {
 		var i CategoryPromotion
 		if err := rows.Scan(
@@ -265,7 +265,7 @@ func (q *Queries) ListCategoryPromotions(ctx context.Context, arg ListCategoryPr
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -299,13 +299,13 @@ type ListCategoryPromotionsWithImagesRow struct {
 	EndDate                time.Time   `json:"end_date"`
 }
 
-func (q *Queries) ListCategoryPromotionsWithImages(ctx context.Context) ([]ListCategoryPromotionsWithImagesRow, error) {
+func (q *Queries) ListCategoryPromotionsWithImages(ctx context.Context) ([]*ListCategoryPromotionsWithImagesRow, error) {
 	rows, err := q.db.Query(ctx, listCategoryPromotionsWithImages)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListCategoryPromotionsWithImagesRow{}
+	items := []*ListCategoryPromotionsWithImagesRow{}
 	for rows.Next() {
 		var i ListCategoryPromotionsWithImagesRow
 		if err := rows.Scan(
@@ -327,7 +327,7 @@ func (q *Queries) ListCategoryPromotionsWithImages(ctx context.Context) ([]ListC
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -352,7 +352,7 @@ type UpdateCategoryPromotionParams struct {
 	PromotionID            int64       `json:"promotion_id"`
 }
 
-func (q *Queries) UpdateCategoryPromotion(ctx context.Context, arg UpdateCategoryPromotionParams) (CategoryPromotion, error) {
+func (q *Queries) UpdateCategoryPromotion(ctx context.Context, arg UpdateCategoryPromotionParams) (*CategoryPromotion, error) {
 	row := q.db.QueryRow(ctx, updateCategoryPromotion,
 		arg.CategoryPromotionImage,
 		arg.Active,
@@ -366,5 +366,5 @@ func (q *Queries) UpdateCategoryPromotion(ctx context.Context, arg UpdateCategor
 		&i.CategoryPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }

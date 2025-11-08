@@ -29,8 +29,8 @@ type SignUpTxResult struct {
 /*
 SignUpTx performs a shop order item delete from DB, and update the new total price in shop order table
 */
-func (store *SQLStore) SignUpTx(ctx context.Context, arg SignUpTxParams) (SignUpTxResult, error) {
-	var result SignUpTxResult
+func (store *SQLStore) SignUpTx(ctx context.Context, arg SignUpTxParams) (*SignUpTxResult, error) {
+	var result *SignUpTxResult
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 
@@ -57,7 +57,7 @@ func (store *SQLStore) SignUpTx(ctx context.Context, arg SignUpTxParams) (SignUp
 			return err
 		}
 
-		result = SignUpTxResult{
+		result = &SignUpTxResult{
 			ID:              user.ID,
 			Username:        user.Username,
 			Email:           user.Email,

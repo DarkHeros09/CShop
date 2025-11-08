@@ -30,7 +30,7 @@ type CreateAppPolicyParams struct {
 	AdminID int64       `json:"admin_id"`
 }
 
-func (q *Queries) CreateAppPolicy(ctx context.Context, arg CreateAppPolicyParams) (AppPolicy, error) {
+func (q *Queries) CreateAppPolicy(ctx context.Context, arg CreateAppPolicyParams) (*AppPolicy, error) {
 	row := q.db.QueryRow(ctx, createAppPolicy, arg.Policy, arg.AdminID)
 	var i AppPolicy
 	err := row.Scan(
@@ -39,7 +39,7 @@ func (q *Queries) CreateAppPolicy(ctx context.Context, arg CreateAppPolicyParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteAppPolicy = `-- name: DeleteAppPolicy :one
@@ -60,7 +60,7 @@ type DeleteAppPolicyParams struct {
 	AdminID int64 `json:"admin_id"`
 }
 
-func (q *Queries) DeleteAppPolicy(ctx context.Context, arg DeleteAppPolicyParams) (AppPolicy, error) {
+func (q *Queries) DeleteAppPolicy(ctx context.Context, arg DeleteAppPolicyParams) (*AppPolicy, error) {
 	row := q.db.QueryRow(ctx, deleteAppPolicy, arg.ID, arg.AdminID)
 	var i AppPolicy
 	err := row.Scan(
@@ -69,7 +69,7 @@ func (q *Queries) DeleteAppPolicy(ctx context.Context, arg DeleteAppPolicyParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getAppPolicy = `-- name: GetAppPolicy :one
@@ -77,7 +77,7 @@ SELECT id, policy, created_at, updated_at FROM "app_policy"
 LIMIT 1
 `
 
-func (q *Queries) GetAppPolicy(ctx context.Context) (AppPolicy, error) {
+func (q *Queries) GetAppPolicy(ctx context.Context) (*AppPolicy, error) {
 	row := q.db.QueryRow(ctx, getAppPolicy)
 	var i AppPolicy
 	err := row.Scan(
@@ -86,7 +86,7 @@ func (q *Queries) GetAppPolicy(ctx context.Context) (AppPolicy, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateAppPolicy = `-- name: UpdateAppPolicy :one
@@ -111,7 +111,7 @@ type UpdateAppPolicyParams struct {
 	AdminID int64       `json:"admin_id"`
 }
 
-func (q *Queries) UpdateAppPolicy(ctx context.Context, arg UpdateAppPolicyParams) (AppPolicy, error) {
+func (q *Queries) UpdateAppPolicy(ctx context.Context, arg UpdateAppPolicyParams) (*AppPolicy, error) {
 	row := q.db.QueryRow(ctx, updateAppPolicy, arg.Policy, arg.ID, arg.AdminID)
 	var i AppPolicy
 	err := row.Scan(
@@ -120,5 +120,5 @@ func (q *Queries) UpdateAppPolicy(ctx context.Context, arg UpdateAppPolicyParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

@@ -17,7 +17,7 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
-	address := createRandomAddress(user, t)
+	address := createRandomAddress(*user, t)
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
@@ -46,10 +46,10 @@ func createRandomShopOrder(t *testing.T) ShopOrder {
 	require.Equal(t, arg.ShippingMethodID, shopOrder.ShippingMethodID)
 	require.Equal(t, arg.OrderStatusID, shopOrder.OrderStatusID)
 
-	return shopOrder
+	return *shopOrder
 }
 func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
-	var shopOrder ShopOrder
+	var shopOrder *ShopOrder
 	var err error
 	paymentMethod := createRandomPaymentMethod(t)
 
@@ -57,7 +57,7 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
-	address := createRandomAddress(user, t)
+	address := createRandomAddress(*user, t)
 	shippingMethod := createRandomShippingMethod(t)
 	orderStatus := createRandomOrderStatus(t)
 	arg := CreateShopOrderParams{
@@ -83,7 +83,7 @@ func createRandomShopOrderForListV2(t *testing.T) ShopOrder {
 		require.Equal(t, arg.OrderStatusID, shopOrder.OrderStatusID)
 	}
 
-	return shopOrder
+	return *shopOrder
 }
 func TestCreateShopOrder(t *testing.T) {
 	createRandomShopOrder(t)

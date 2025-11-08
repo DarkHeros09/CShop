@@ -27,7 +27,7 @@ func createRandomUserReview(t *testing.T) UserReview {
 	require.Equal(t, arg.OrderedProductID, userReview.OrderedProductID)
 	require.Equal(t, arg.RatingValue, userReview.RatingValue)
 
-	return userReview
+	return *userReview
 }
 func TestCreateUserReview(t *testing.T) {
 	t.Parallel()

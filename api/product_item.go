@@ -2,8 +2,8 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"math"
+	"strconv"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
@@ -68,7 +68,7 @@ func (server *Server) createProductItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -104,6 +104,12 @@ func (server *Server) getProductItem(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if productItem == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(productItem)
 	return nil
 }
@@ -137,9 +143,14 @@ func (server *Server) listProductItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if productItems == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	maxPage := int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.PageSize)))
 
-	ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	ctx.Set("Max-Page", strconv.FormatInt(maxPage, 10))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -192,7 +203,7 @@ func (server *Server) updateProductItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -230,7 +241,7 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -299,23 +310,23 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 		return nil
 	}
 	if len(productItems) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
 		return nil
 	}
 	// if len(productItems) != 0 {
 	// 	maxPage = int64(math.Ceil(float64(productItems[0].TotalCount) / float64(query.Limit)))
-	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 	// 	// ctx.Status(fiber.StatusOK).JSON(productItems)
 	// } else {
 	// 	maxPage = 0
-	// 	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 	// 	// ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsV2Row{})
 	// }
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -382,15 +393,15 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 		return nil
 	}
 	if len(productItems) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
 		return nil
 	}
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -426,7 +437,7 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 	if len(productItems) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.SearchProductItemsRow{})
 		return nil
 	}
@@ -437,13 +448,13 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 	// 		ctx.Set("Max-Page", "0")
 	// 	} else {
 	// 		maxPage := int64(math.Ceil(pagesNumber))
-	// 		ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 		ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 	// 	}
 	// } else {
 	// 	ctx.Set("Max-Page", "0")
 	// }
 	//! fix the next line
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -481,7 +492,7 @@ func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 		return nil
 	}
 	if len(productItems) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
 		return nil
@@ -492,13 +503,13 @@ func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
 	// 		ctx.Set("Max-Page", "0")
 	// 	} else {
 	// 		maxPage := int64(math.Ceil(pagesNumber))
-	// 		ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// 		ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 	// 	}
 	// } else {
 	// 	ctx.Set("Max-Page", f"0"))
 	// }
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -535,12 +546,12 @@ func (server *Server) listProductItemsWithPromotions(ctx *fiber.Ctx) error {
 		return nil
 	}
 	if len(productItems) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsWithPromotionsRow{})
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -576,15 +587,15 @@ func (server *Server) listProductItemsWithPromotionsNextPage(ctx *fiber.Ctx) err
 		return nil
 	}
 	if len(productItems) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
 		return nil
 	}
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -621,12 +632,12 @@ func (server *Server) listProductItemsWithBrandPromotions(ctx *fiber.Ctx) error 
 		return nil
 	}
 	if len(productItems) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsWithBrandPromotionsRow{})
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -664,15 +675,15 @@ func (server *Server) listProductItemsWithBrandPromotionsNextPage(ctx *fiber.Ctx
 		return nil
 	}
 	if len(productItems) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
 		return nil
 	}
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -709,12 +720,12 @@ func (server *Server) listProductItemsWithCategoryPromotions(ctx *fiber.Ctx) err
 		return nil
 	}
 	if len(productItems) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductItemsWithCategoryPromotionsRow{})
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 
@@ -752,15 +763,15 @@ func (server *Server) listProductItemsWithCategoryPromotionsNextPage(ctx *fiber.
 		return nil
 	}
 	if len(productItems) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductItemsNextPageRow{})
 		return nil
 	}
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productItems[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productItems[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productItems)
 	return nil
 

@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
@@ -52,7 +53,7 @@ func (server *Server) createCategoryPromotion(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -94,6 +95,12 @@ func (server *Server) getCategoryPromotion(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if categoryPromotion == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(categoryPromotion)
 	return nil
 }
@@ -127,6 +134,11 @@ func (server *Server) listCategoryPromotions(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if categoryPromotions == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(categoryPromotions)
 	return nil
 
@@ -143,6 +155,11 @@ func (server *Server) listCategoryPromotionsWithImages(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if categoryPromotions == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -179,6 +196,11 @@ func (server *Server) listCategoryPromotionsForAdmins(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if categoryPromotions == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -228,7 +250,7 @@ func (server *Server) updateCategoryPromotion(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -272,7 +294,7 @@ func (server *Server) deleteCategoryPromotion(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

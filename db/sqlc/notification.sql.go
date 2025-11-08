@@ -34,7 +34,7 @@ type CreateNotificationParams struct {
 	DeliveryUpdates bool        `json:"delivery_updates"`
 }
 
-func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
+func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (*Notification, error) {
 	row := q.db.QueryRow(ctx, createNotification,
 		arg.UserID,
 		arg.DeviceID,
@@ -50,7 +50,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteNotification = `-- name: DeleteNotification :one
@@ -65,7 +65,7 @@ type DeleteNotificationParams struct {
 	DeviceID null.String `json:"device_id"`
 }
 
-func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotificationParams) (Notification, error) {
+func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotificationParams) (*Notification, error) {
 	row := q.db.QueryRow(ctx, deleteNotification, arg.UserID, arg.DeviceID)
 	var i Notification
 	err := row.Scan(
@@ -76,7 +76,7 @@ func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotification
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteNotificationAllByUser = `-- name: DeleteNotificationAllByUser :exec
@@ -100,7 +100,7 @@ type GetNotificationParams struct {
 	DeviceID null.String `json:"device_id"`
 }
 
-func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams) (Notification, error) {
+func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams) (*Notification, error) {
 	row := q.db.QueryRow(ctx, getNotification, arg.UserID, arg.DeviceID)
 	var i Notification
 	err := row.Scan(
@@ -111,7 +111,7 @@ func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getNotificationV2 = `-- name: GetNotificationV2 :one
@@ -121,7 +121,7 @@ ORDER BY updated_at DESC, created_at DESC
 LIMIT 1
 `
 
-func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (Notification, error) {
+func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (*Notification, error) {
 	row := q.db.QueryRow(ctx, getNotificationV2, userID)
 	var i Notification
 	err := row.Scan(
@@ -132,7 +132,7 @@ func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (Notifica
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateNotification = `-- name: UpdateNotification :one
@@ -153,7 +153,7 @@ type UpdateNotificationParams struct {
 	DeviceID        null.String `json:"device_id"`
 }
 
-func (q *Queries) UpdateNotification(ctx context.Context, arg UpdateNotificationParams) (Notification, error) {
+func (q *Queries) UpdateNotification(ctx context.Context, arg UpdateNotificationParams) (*Notification, error) {
 	row := q.db.QueryRow(ctx, updateNotification,
 		arg.FcmToken,
 		arg.DeliveryUpdates,
@@ -169,5 +169,5 @@ func (q *Queries) UpdateNotification(ctx context.Context, arg UpdateNotification
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

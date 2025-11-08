@@ -98,7 +98,7 @@ func TestCreateAppPolicyAPI(t *testing.T) {
 				store.EXPECT().
 					CreateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.AppPolicy{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -289,7 +289,7 @@ func TestUpdateAppPolicyAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.AppPolicy{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -397,7 +397,7 @@ func TestDeleteAppPolicyAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.AppPolicy{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -419,7 +419,7 @@ func TestDeleteAppPolicyAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteAppPolicy(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.AppPolicy{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -620,12 +620,12 @@ func randomAppPolicyUser(t *testing.T) (admin db.User, password string) {
 	}
 	return
 }
-func randomAppPolicySuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomAppPolicySuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -636,15 +636,15 @@ func randomAppPolicySuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func createRandomAppPolicy() (AppPolicy db.AppPolicy) {
-	AppPolicy = db.AppPolicy{
+func createRandomAppPolicy() (AppPolicy *db.AppPolicy) {
+	AppPolicy = &db.AppPolicy{
 		ID:     util.RandomMoney(),
 		Policy: null.StringFrom(util.RandomString(10)),
 	}
 	return
 }
 
-func requireBodyMatchAppPolicy(t *testing.T, body io.ReadCloser, appPolicy db.AppPolicy) {
+func requireBodyMatchAppPolicy(t *testing.T, body io.ReadCloser, appPolicy *db.AppPolicy) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 

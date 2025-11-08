@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -27,6 +28,8 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 	admin, _ := randomOrderStatusSuperAdmin(t)
 	shopOrder := createRandomShopOrderForUpdate()
 	deviceId := util.RandomUser()
+	user, _ := randomNotificationUser(t)
+	notification := createRandomNotification(user)
 
 	testCases := []struct {
 		name          string
@@ -73,7 +76,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 
 				store.EXPECT().
 					GetNotificationV2(gomock.Any(), gomock.Any()).
-					Times(1)
+					Times(1).Return(notification, nil)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
@@ -134,7 +137,7 @@ func TestUpdateShopOrderAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateShopOrder(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ShopOrder{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -205,9 +208,9 @@ func TestListShopOrderAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
 	orderStatus := createRandomOrderStatus()
 	// shopOrder := createRandomShopOrderForList(user, orderStatus)
-	var shopOrders []db.ListShopOrdersByUserIDRow
+	var shopOrders []*db.ListShopOrdersByUserIDRow
 	n := 5
-	shopOrders = make([]db.ListShopOrdersByUserIDRow, n)
+	shopOrders = make([]*db.ListShopOrdersByUserIDRow, n)
 	for i := 0; i < n; i++ {
 		shopOrders[i] = createRandomShopOrderForList(user, orderStatus)
 	}
@@ -293,7 +296,7 @@ func TestListShopOrderAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrdersByUserID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return([]db.ListShopOrdersByUserIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -342,8 +345,8 @@ func TestListShopOrderAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -361,7 +364,7 @@ func TestAdminListShopOrdersV2API(t *testing.T) {
 	user, _ := randomSOUser(t)
 	orderStatus := createRandomOrderStatus()
 	n := 10
-	shopOrders := make([]db.AdminListShopOrdersV2Row, n)
+	shopOrders := make([]*db.AdminListShopOrdersV2Row, n)
 	for i := 0; i < n; i++ {
 		shopOrders[i] = randomListShopOrdersV2ForAdmin(user, orderStatus)
 	}
@@ -438,7 +441,7 @@ func TestAdminListShopOrdersV2API(t *testing.T) {
 				store.EXPECT().
 					AdminListShopOrdersV2(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.AdminListShopOrdersV2Row{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -467,7 +470,7 @@ func TestAdminListShopOrdersV2API(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
@@ -485,8 +488,8 @@ func TestAdminListShopOrdersNextPageAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
 	orderStatus := createRandomOrderStatus()
 	n := 10
-	shopOrders1 := make([]db.AdminListShopOrdersNextPageRow, n)
-	shopOrders2 := make([]db.AdminListShopOrdersNextPageRow, n)
+	shopOrders1 := make([]*db.AdminListShopOrdersNextPageRow, n)
+	shopOrders2 := make([]*db.AdminListShopOrdersNextPageRow, n)
 	for i := 0; i < n; i++ {
 		shopOrders1[i] = randomListShopOrdersByUserIDNextPageForAdmin(user, orderStatus)
 	}
@@ -577,7 +580,7 @@ func TestAdminListShopOrdersNextPageAPI(t *testing.T) {
 				store.EXPECT().
 					AdminListShopOrdersNextPage(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.AdminListShopOrdersNextPageRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -625,8 +628,8 @@ func TestAdminListShopOrdersNextPageAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
+			q.Add("cursor", strconv.Itoa(tc.query.Cursor))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
@@ -643,7 +646,7 @@ func TestListShopOrdersV2API(t *testing.T) {
 	user, _ := randomSOUser(t)
 	orderStatus := createRandomOrderStatus()
 	n := 10
-	shopOrders := make([]db.ListShopOrdersByUserIDV2Row, n)
+	shopOrders := make([]*db.ListShopOrdersByUserIDV2Row, n)
 	for i := 0; i < n; i++ {
 		shopOrders[i] = randomListShopOrdersV2(user, orderStatus)
 	}
@@ -720,7 +723,7 @@ func TestListShopOrdersV2API(t *testing.T) {
 				store.EXPECT().
 					ListShopOrdersByUserIDV2(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListShopOrdersByUserIDV2Row{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -749,7 +752,7 @@ func TestListShopOrdersV2API(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -766,8 +769,8 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 	user, _ := randomSOUser(t)
 	orderStatus := createRandomOrderStatus()
 	n := 10
-	shopOrders1 := make([]db.ListShopOrdersByUserIDNextPageRow, n)
-	shopOrders2 := make([]db.ListShopOrdersByUserIDNextPageRow, n)
+	shopOrders1 := make([]*db.ListShopOrdersByUserIDNextPageRow, n)
+	shopOrders2 := make([]*db.ListShopOrdersByUserIDNextPageRow, n)
 	for i := 0; i < n; i++ {
 		shopOrders1[i] = randomListShopOrdersByUserIDNextPage(user, orderStatus)
 	}
@@ -858,7 +861,7 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 				store.EXPECT().
 					ListShopOrdersByUserIDNextPage(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.ListShopOrdersByUserIDNextPageRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -906,8 +909,8 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("limit", fmt.Sprintf("%d", tc.query.Limit))
-			q.Add("cursor", fmt.Sprintf("%d", tc.query.Cursor))
+			q.Add("limit", strconv.Itoa(tc.query.Limit))
+			q.Add("cursor", strconv.Itoa(tc.query.Cursor))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -933,8 +936,8 @@ func TestListShopOrdersByUserIDNextPageAPI(t *testing.T) {
 // 	return
 // }
 
-func createRandomShopOrderForUpdate() (ShopOrder db.ShopOrder) {
-	ShopOrder = db.ShopOrder{
+func createRandomShopOrderForUpdate() (ShopOrder *db.ShopOrder) {
+	ShopOrder = &db.ShopOrder{
 		ID:                util.RandomMoney(),
 		TrackNumber:       util.GenerateTrackNumber(),
 		OrderNumber:       int32(util.RandomMoney()),
@@ -947,8 +950,8 @@ func createRandomShopOrderForUpdate() (ShopOrder db.ShopOrder) {
 	return
 }
 
-func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDV2Row {
-	return db.ListShopOrdersByUserIDV2Row{
+func randomListShopOrdersV2(user db.User, orderStatus *db.OrderStatus) *db.ListShopOrdersByUserIDV2Row {
+	return &db.ListShopOrdersByUserIDV2Row{
 		Status:      null.StringFrom(orderStatus.Status),
 		OrderNumber: int32(util.RandomMoney()),
 		ItemCount:   util.RandomMoney(),
@@ -963,25 +966,8 @@ func randomListShopOrdersV2(user db.User, orderStatus db.OrderStatus) db.ListSho
 		TotalCount:        util.RandomMoney(),
 	}
 }
-func randomListShopOrdersV2ForAdmin(user db.User, orderStatus db.OrderStatus) db.AdminListShopOrdersV2Row {
-	return db.AdminListShopOrdersV2Row{
-		Status:      null.StringFrom(orderStatus.Status),
-		OrderNumber: int32(util.RandomMoney()),
-		ItemCount:   util.RandomMoney(),
-		ID:          util.RandomMoney(),
-		TrackNumber: util.GenerateTrackNumber(),
-		UserID:      user.ID,
-		// PaymentMethodID:   util.RandomMoney(),
-		ShippingAddressID: null.IntFrom(util.RandomMoney()),
-		OrderTotal:        util.RandomDecimalString(0, 1000),
-		ShippingMethodID:  util.RandomMoney(),
-		OrderStatusID:     null.IntFrom(util.RandomMoney()),
-		TotalCount:        util.RandomMoney(),
-	}
-}
-
-func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus db.OrderStatus) db.ListShopOrdersByUserIDNextPageRow {
-	return db.ListShopOrdersByUserIDNextPageRow{
+func randomListShopOrdersV2ForAdmin(user db.User, orderStatus *db.OrderStatus) *db.AdminListShopOrdersV2Row {
+	return &db.AdminListShopOrdersV2Row{
 		Status:      null.StringFrom(orderStatus.Status),
 		OrderNumber: int32(util.RandomMoney()),
 		ItemCount:   util.RandomMoney(),
@@ -997,8 +983,25 @@ func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus db.OrderStat
 	}
 }
 
-func randomListShopOrdersByUserIDNextPageForAdmin(user db.User, orderStatus db.OrderStatus) db.AdminListShopOrdersNextPageRow {
-	return db.AdminListShopOrdersNextPageRow{
+func randomListShopOrdersByUserIDNextPage(user db.User, orderStatus *db.OrderStatus) *db.ListShopOrdersByUserIDNextPageRow {
+	return &db.ListShopOrdersByUserIDNextPageRow{
+		Status:      null.StringFrom(orderStatus.Status),
+		OrderNumber: int32(util.RandomMoney()),
+		ItemCount:   util.RandomMoney(),
+		ID:          util.RandomMoney(),
+		TrackNumber: util.GenerateTrackNumber(),
+		UserID:      user.ID,
+		// PaymentMethodID:   util.RandomMoney(),
+		ShippingAddressID: null.IntFrom(util.RandomMoney()),
+		OrderTotal:        util.RandomDecimalString(0, 1000),
+		ShippingMethodID:  util.RandomMoney(),
+		OrderStatusID:     null.IntFrom(util.RandomMoney()),
+		TotalCount:        util.RandomMoney(),
+	}
+}
+
+func randomListShopOrdersByUserIDNextPageForAdmin(user db.User, orderStatus *db.OrderStatus) *db.AdminListShopOrdersNextPageRow {
+	return &db.AdminListShopOrdersNextPageRow{
 		Status:      null.StringFrom(orderStatus.Status),
 		OrderNumber: int32(util.RandomMoney()),
 		ItemCount:   util.RandomMoney(),
@@ -1029,11 +1032,11 @@ func randomSOUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder []db.ListShopOrdersByUserIDRow) {
+func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder []*db.ListShopOrdersByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrder []db.ListShopOrdersByUserIDRow
+	var gotShopOrder []*db.ListShopOrdersByUserIDRow
 	err = json.Unmarshal(data, &gotShopOrder)
 
 	require.NoError(t, err)
@@ -1050,8 +1053,8 @@ func requireBodyMatchListShopOrder(t *testing.T, body io.ReadCloser, shopOrder [
 	}
 }
 
-func createRandomShopOrderForList(user db.User, orderStatus db.OrderStatus) (shopOrder db.ListShopOrdersByUserIDRow) {
-	shopOrder = db.ListShopOrdersByUserIDRow{
+func createRandomShopOrderForList(user db.User, orderStatus *db.OrderStatus) (shopOrder *db.ListShopOrdersByUserIDRow) {
+	shopOrder = &db.ListShopOrdersByUserIDRow{
 		Status:      null.StringFrom(orderStatus.Status),
 		ID:          util.RandomMoney(),
 		TrackNumber: util.RandomString(5),
@@ -1065,41 +1068,41 @@ func createRandomShopOrderForList(user db.User, orderStatus db.OrderStatus) (sho
 	return
 }
 
-func requireBodyMatchListShopOrdersV2(t *testing.T, body io.ReadCloser, shopOrders []db.ListShopOrdersByUserIDV2Row) {
+func requireBodyMatchListShopOrdersV2(t *testing.T, body io.ReadCloser, shopOrders []*db.ListShopOrdersByUserIDV2Row) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrders []db.ListShopOrdersByUserIDV2Row
+	var gotShopOrders []*db.ListShopOrdersByUserIDV2Row
 	err = json.Unmarshal(data, &gotShopOrders)
 	require.NoError(t, err)
 	require.Equal(t, shopOrders, gotShopOrders)
 }
 
-func requireBodyMatchListShopOrdersV2ForAdmin(t *testing.T, body io.ReadCloser, shopOrders []db.AdminListShopOrdersV2Row) {
+func requireBodyMatchListShopOrdersV2ForAdmin(t *testing.T, body io.ReadCloser, shopOrders []*db.AdminListShopOrdersV2Row) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrders []db.AdminListShopOrdersV2Row
+	var gotShopOrders []*db.AdminListShopOrdersV2Row
 	err = json.Unmarshal(data, &gotShopOrders)
 	require.NoError(t, err)
 	require.Equal(t, shopOrders, gotShopOrders)
 }
 
-func requireBodyMatchListShopOrdersByUserIDNextPage(t *testing.T, body io.ReadCloser, shopOrders []db.ListShopOrdersByUserIDNextPageRow) {
+func requireBodyMatchListShopOrdersByUserIDNextPage(t *testing.T, body io.ReadCloser, shopOrders []*db.ListShopOrdersByUserIDNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrders []db.ListShopOrdersByUserIDNextPageRow
+	var gotShopOrders []*db.ListShopOrdersByUserIDNextPageRow
 	err = json.Unmarshal(data, &gotShopOrders)
 	require.NoError(t, err)
 	require.Equal(t, shopOrders, gotShopOrders)
 }
 
-func requireBodyMatchListShopOrdersNextPageForAdmin(t *testing.T, body io.ReadCloser, shopOrders []db.AdminListShopOrdersNextPageRow) {
+func requireBodyMatchListShopOrdersNextPageForAdmin(t *testing.T, body io.ReadCloser, shopOrders []*db.AdminListShopOrdersNextPageRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShopOrders []db.AdminListShopOrdersNextPageRow
+	var gotShopOrders []*db.AdminListShopOrdersNextPageRow
 	err = json.Unmarshal(data, &gotShopOrders)
 	require.NoError(t, err)
 	require.Equal(t, shopOrders, gotShopOrders)

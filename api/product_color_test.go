@@ -24,7 +24,7 @@ import (
 )
 
 func TestCreateProductColorAPI(t *testing.T) {
-	admin, _ := randomPCategorieSuperAdmin(t)
+	admin, _ := randomProductColorSuperAdmin(t)
 	productColor := randomProductColor()
 
 	testCases := []struct {
@@ -116,7 +116,7 @@ func TestCreateProductColorAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateProductColor(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductColor{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -177,7 +177,7 @@ func TestCreateProductColorAPI(t *testing.T) {
 
 func TestListProductColorColorsAPI(t *testing.T) {
 	n := 5
-	productColors := make([]db.ProductColor, n)
+	productColors := make([]*db.ProductColor, n)
 	for i := 0; i < n; i++ {
 		productColors[i] = randomProductColorsForList()
 	}
@@ -207,7 +207,7 @@ func TestListProductColorColorsAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductColors(gomock.Any()).
 					Times(1).
-					Return([]db.ProductColor{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -350,7 +350,7 @@ func TestUpdateProductColorAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateProductColor(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductColor{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -407,12 +407,12 @@ func TestUpdateProductColorAPI(t *testing.T) {
 	}
 }
 
-func randomProductColorSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomProductColorSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -423,35 +423,35 @@ func randomProductColorSuperAdmin(t *testing.T) (admin db.Admin, password string
 	return
 }
 
-func randomProductColorsForList() db.ProductColor {
-	return db.ProductColor{
+func randomProductColorsForList() *db.ProductColor {
+	return &db.ProductColor{
 		ID:         util.RandomInt(1, 1000),
 		ColorValue: util.RandomColor(),
 	}
 }
 
-func requireBodyMatchProductColorsList(t *testing.T, body io.ReadCloser, productColors []db.ProductColor) {
+func requireBodyMatchProductColorsList(t *testing.T, body io.ReadCloser, productColors []*db.ProductColor) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProducts []db.ProductColor
+	var gotProducts []*db.ProductColor
 	err = json.Unmarshal(data, &gotProducts)
 	require.NoError(t, err)
 	require.Equal(t, productColors, gotProducts)
 }
 
-func randomProductColor() db.ProductColor {
-	return db.ProductColor{
+func randomProductColor() *db.ProductColor {
+	return &db.ProductColor{
 		ID:         util.RandomInt(0, 1000),
 		ColorValue: util.RandomColor(),
 	}
 }
 
-func requireBodyMatchProductColor(t *testing.T, body io.ReadCloser, productColor db.ProductColor) {
+func requireBodyMatchProductColor(t *testing.T, body io.ReadCloser, productColor *db.ProductColor) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductColor db.ProductColor
+	var gotProductColor *db.ProductColor
 	err = json.Unmarshal(data, &gotProductColor)
 	require.NoError(t, err)
 	require.Equal(t, productColor, gotProductColor)

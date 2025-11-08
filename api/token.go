@@ -1,10 +1,11 @@
 package api
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	db "github.com/cshop/v3/db/sqlc"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgx/v5"
@@ -30,8 +31,8 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 
 	refreshPayload, err := server.userTokenMaker.VerifyTokenForUser(req.RefreshToken)
 	if err != nil {
-		if err.Error() == "token has expired" {
-			err = fmt.Errorf("refresh token has expired")
+		if err.Error() == util.TokenHasExpired {
+			err = errors.New("refresh token has expired")
 
 			userSession, _ := server.store.GetUserSession(ctx.Context(), refreshPayload.ID)
 
@@ -60,25 +61,25 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	}
 
 	if userSession.IsBlocked {
-		err := fmt.Errorf("blocked session")
+		err := errors.New("blocked session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.UserID != refreshPayload.UserID {
-		err := fmt.Errorf("incorrect session user")
+		err := errors.New("incorrect session user")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.RefreshToken != req.RefreshToken {
-		err := fmt.Errorf("mismatched session token")
+		err := errors.New("mismatched session token")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	// if time.Now().After(userSession.ExpiresAt) {
-	// 	err := fmt.Errorf("expired session")
+	// 	err := errors.New("expired session")
 	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 	// 	return nil
 	// }
@@ -124,8 +125,8 @@ func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 
 	refreshPayload, err := server.userTokenMaker.VerifyTokenForUser(req.RefreshToken)
 	if err != nil {
-		if err.Error() == "token has expired" {
-			err = fmt.Errorf("refresh token has expired")
+		if err.Error() == util.TokenHasExpired {
+			err = errors.New("refresh token has expired")
 
 			userSession, _ := server.store.GetUserSession(ctx.Context(), refreshPayload.ID)
 
@@ -153,25 +154,25 @@ func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 	}
 
 	if userSession.IsBlocked {
-		err := fmt.Errorf("blocked session")
+		err := errors.New("blocked session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.UserID != refreshPayload.UserID {
-		err := fmt.Errorf("incorrect session user")
+		err := errors.New("incorrect session user")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.RefreshToken != req.RefreshToken {
-		err := fmt.Errorf("mismatched session token")
+		err := errors.New("mismatched session token")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	// if time.Now().After(userSession.ExpiresAt) {
-	// 	err := fmt.Errorf("expired session")
+	// 	err := errors.New("expired session")
 	// 	ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 	// 	return nil
 	// }
@@ -257,8 +258,8 @@ func (server *Server) renewAccessTokenForAdmin(ctx *fiber.Ctx) error {
 
 	refreshPayload, err := server.adminTokenMaker.VerifyTokenForAdmin(req.RefreshToken)
 	if err != nil {
-		if err.Error() == "token has expired" {
-			err = fmt.Errorf("refresh token has expired")
+		if err.Error() == util.TokenHasExpired {
+			err = errors.New("refresh token has expired")
 		}
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
@@ -275,25 +276,25 @@ func (server *Server) renewAccessTokenForAdmin(ctx *fiber.Ctx) error {
 	}
 
 	if userSession.IsBlocked {
-		err := fmt.Errorf("blocked session")
+		err := errors.New("blocked session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.AdminID != refreshPayload.AdminID {
-		err := fmt.Errorf("incorrect session user")
+		err := errors.New("incorrect session user")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.RefreshToken != req.RefreshToken {
-		err := fmt.Errorf("mismatched session token")
+		err := errors.New("mismatched session token")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if time.Now().After(userSession.ExpiresAt) {
-		err := fmt.Errorf("expired session")
+		err := errors.New("expired session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
@@ -341,8 +342,8 @@ func (server *Server) renewRefreshTokenForAdmin(ctx *fiber.Ctx) error {
 
 	refreshPayload, err := server.adminTokenMaker.VerifyTokenForAdmin(req.RefreshToken)
 	if err != nil {
-		if err.Error() == "token has expired" {
-			err = fmt.Errorf("refresh token has expired")
+		if err.Error() == util.TokenHasExpired {
+			err = errors.New("refresh token has expired")
 		}
 		ctx.Status(fiber.StatusUnauthorized).JSON(errorResponse(err))
 		return nil
@@ -359,25 +360,25 @@ func (server *Server) renewRefreshTokenForAdmin(ctx *fiber.Ctx) error {
 	}
 
 	if userSession.IsBlocked {
-		err := fmt.Errorf("blocked session")
+		err := errors.New("blocked session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.AdminID != refreshPayload.AdminID {
-		err := fmt.Errorf("incorrect session user")
+		err := errors.New("incorrect session user")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if userSession.RefreshToken != req.RefreshToken {
-		err := fmt.Errorf("mismatched session token")
+		err := errors.New("mismatched session token")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
 
 	if time.Now().After(userSession.ExpiresAt) {
-		err := fmt.Errorf("expired session")
+		err := errors.New("expired session")
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}

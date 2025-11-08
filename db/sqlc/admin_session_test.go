@@ -38,7 +38,7 @@ func createRandomAdminSession(t *testing.T) AdminSession {
 
 	require.NotEmpty(t, adminSession.CreatedAt)
 
-	return adminSession
+	return *adminSession
 }
 
 func TestCreateAdminSession(t *testing.T) {

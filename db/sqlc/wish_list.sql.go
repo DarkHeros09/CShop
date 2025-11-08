@@ -20,7 +20,7 @@ INSERT INTO "wish_list" (
 RETURNING id, user_id, created_at, updated_at
 `
 
-func (q *Queries) CreateWishList(ctx context.Context, userID int64) (WishList, error) {
+func (q *Queries) CreateWishList(ctx context.Context, userID int64) (*WishList, error) {
 	row := q.db.QueryRow(ctx, createWishList, userID)
 	var i WishList
 	err := row.Scan(
@@ -29,7 +29,7 @@ func (q *Queries) CreateWishList(ctx context.Context, userID int64) (WishList, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteWishList = `-- name: DeleteWishList :exec
@@ -47,7 +47,7 @@ SELECT id, user_id, created_at, updated_at FROM "wish_list"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetWishList(ctx context.Context, id int64) (WishList, error) {
+func (q *Queries) GetWishList(ctx context.Context, id int64) (*WishList, error) {
 	row := q.db.QueryRow(ctx, getWishList, id)
 	var i WishList
 	err := row.Scan(
@@ -56,7 +56,7 @@ func (q *Queries) GetWishList(ctx context.Context, id int64) (WishList, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getWishListByUserID = `-- name: GetWishListByUserID :one
@@ -64,7 +64,7 @@ SELECT id, user_id, created_at, updated_at FROM "wish_list"
 WHERE user_id = $1 LIMIT 1
 `
 
-func (q *Queries) GetWishListByUserID(ctx context.Context, userID int64) (WishList, error) {
+func (q *Queries) GetWishListByUserID(ctx context.Context, userID int64) (*WishList, error) {
 	row := q.db.QueryRow(ctx, getWishListByUserID, userID)
 	var i WishList
 	err := row.Scan(
@@ -73,7 +73,7 @@ func (q *Queries) GetWishListByUserID(ctx context.Context, userID int64) (WishLi
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const listWishLists = `-- name: ListWishLists :many
@@ -88,13 +88,13 @@ type ListWishListsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListWishLists(ctx context.Context, arg ListWishListsParams) ([]WishList, error) {
+func (q *Queries) ListWishLists(ctx context.Context, arg ListWishListsParams) ([]*WishList, error) {
 	rows, err := q.db.Query(ctx, listWishLists, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []WishList{}
+	items := []*WishList{}
 	for rows.Next() {
 		var i WishList
 		if err := rows.Scan(
@@ -105,7 +105,7 @@ func (q *Queries) ListWishLists(ctx context.Context, arg ListWishListsParams) ([
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ type UpdateWishListParams struct {
 	ID     int64    `json:"id"`
 }
 
-func (q *Queries) UpdateWishList(ctx context.Context, arg UpdateWishListParams) (WishList, error) {
+func (q *Queries) UpdateWishList(ctx context.Context, arg UpdateWishListParams) (*WishList, error) {
 	row := q.db.QueryRow(ctx, updateWishList, arg.UserID, arg.ID)
 	var i WishList
 	err := row.Scan(
@@ -136,5 +136,5 @@ func (q *Queries) UpdateWishList(ctx context.Context, arg UpdateWishListParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

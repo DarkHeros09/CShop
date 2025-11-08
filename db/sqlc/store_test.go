@@ -25,7 +25,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	// Qty := int32(5)
 	var userAddress Address
 	var listUsersAddress []Address
-	var productItem ProductItem
+	var productItem *ProductItem
 	// var listProductItem []ProductItem
 	var paymentType PaymentType
 	var listPaymentType []PaymentType
@@ -33,12 +33,12 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	var listShippingMethod []ShippingMethod
 	var orderStatus OrderStatus
 	var listOrderStatus []OrderStatus
-	var shoppingCart ShoppingCart
+	var shoppingCart *ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
-	var listShoppingCartItem []ShoppingCartItem
-	var paymentMethod PaymentMethod
-	var listPaymentMethod []PaymentMethod
+	var shoppingCartItem *ShoppingCartItem
+	var listShoppingCartItem []*ShoppingCartItem
+	var paymentMethod *PaymentMethod
+	var listPaymentMethod []*PaymentMethod
 	var err error
 	var price udecimal.Decimal
 	// var listPrice []udecimal.Decimal
@@ -46,7 +46,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 	// var listTotalPrice []string
 
 	errs := make(chan error)
-	results := make(chan FinishedPurchaseTxResult)
+	results := make(chan *FinishedPurchaseTxResult)
 	var lock sync.Mutex
 
 	for i := 0; i < n; i++ {
@@ -132,7 +132,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 		}()
 
 		// check results
-		var resultList []FinishedPurchaseTxResult
+		var resultList []*FinishedPurchaseTxResult
 		// time.Sleep(1 * time.Second)
 		for z := 0; z < n; z++ {
 			err := <-errs
@@ -206,7 +206,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	// Qty := int32(5)
 	var userAddress Address
 	var listUsersAddress []Address
-	var productItem ProductItem
+	var productItem *ProductItem
 	var listProductItem []ProductItem
 	var paymentType PaymentType
 	var listPaymentType []PaymentType
@@ -214,12 +214,12 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 	var listShippingMethod []ShippingMethod
 	var orderStatus OrderStatus
 	var listOrderStatus []OrderStatus
-	var shoppingCart ShoppingCart
+	var shoppingCart *ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
-	var listShoppingCartItem []ShoppingCartItem
-	var paymentMethod PaymentMethod
-	var listPaymentMethod []PaymentMethod
+	var shoppingCartItem *ShoppingCartItem
+	var listShoppingCartItem []*ShoppingCartItem
+	var paymentMethod *PaymentMethod
+	var listPaymentMethod []*PaymentMethod
 	var err error
 	var price udecimal.Decimal
 	// var listPrice []udecimal.Decimal
@@ -272,7 +272,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 			if err != nil {
 				log.Fatal("err is: ", err)
 			}
-			listProductItem = append(listProductItem, productItem)
+			listProductItem = append(listProductItem, *productItem)
 
 			shoppingCartItem, err = testStore.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
 				ShoppingCartID: shoppingCart.ID,
@@ -330,7 +330,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	// Qty := int32(5)
 	var userAddress Address
 	var listUsersAddress []Address
-	var productItem ProductItem
+	var productItem *ProductItem
 	var listProductItem []ProductItem
 	var paymentType PaymentType
 	var listPaymentType []PaymentType
@@ -338,18 +338,18 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 	var listShippingMethod []ShippingMethod
 	var orderStatus OrderStatus
 	var listOrderStatus []OrderStatus
-	var shoppingCart ShoppingCart
+	var shoppingCart *ShoppingCart
 	// var listShoppingCart []ShoppingCart
-	var shoppingCartItem ShoppingCartItem
-	var listShoppingCartItem []ShoppingCartItem
-	var paymentMethod PaymentMethod
-	var listPaymentMethod []PaymentMethod
+	var shoppingCartItem *ShoppingCartItem
+	var listShoppingCartItem []*ShoppingCartItem
+	var paymentMethod *PaymentMethod
+	listPaymentMethod := make([]*PaymentMethod, n)
 	var err error
 	var price udecimal.Decimal
 	// var listPrice []udecimal.Decimal
 	var totalPrice string
 	// var listTotalPrice []string
-	var result FinishedPurchaseTxResult
+	var result *FinishedPurchaseTxResult
 
 	// errs := make(chan error)
 	// results := make(chan FinishedPurchaseTxResult)
@@ -372,7 +372,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 		if err != nil {
 			log.Fatal("err is: ", err)
 		}
-		listPaymentMethod = append(listPaymentMethod, paymentMethod)
+		listPaymentMethod[i] = paymentMethod
 
 		shoppingCart, err = testStore.CreateShoppingCart(context.Background(), userAddress.UserID)
 		if err != nil {
@@ -397,7 +397,7 @@ func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
 			if err != nil {
 				log.Fatal("err is: ", err)
 			}
-			listProductItem = append(listProductItem, productItem)
+			listProductItem = append(listProductItem, *productItem)
 
 			shoppingCartItem, err = testStore.CreateShoppingCartItem(context.Background(), CreateShoppingCartItemParams{
 				ShoppingCartID: shoppingCart.ID,

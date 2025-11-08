@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const veifyYourEmailSubject = "Verify your email"
+
 //////////////* Create API //////////////
 
 type createUserRequest struct {
@@ -46,7 +48,7 @@ func newUserResponse(user db.User) userResponse {
 	}
 }
 
-func newUserWithCartResponse(user db.CreateUserWithCartAndWishListRow) userResponse {
+func newUserWithCartResponse(user *db.CreateUserWithCartAndWishListRow) userResponse {
 	return userResponse{
 		UserID:   user.ID,
 		Username: user.Username,
@@ -91,7 +93,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return err
 			}
@@ -180,6 +182,11 @@ func (server *Server) signUp(ctx *fiber.Ctx) error {
 		}
 	}
 
+	if checkUser == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if checkUser.IsEmailVerified {
 		ctx.Status(fiber.StatusConflict).JSON(errorResponse(errors.New("email already exists")))
 		return nil
@@ -194,7 +201,7 @@ func (server *Server) signUp(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -221,7 +228,7 @@ func (server *Server) signUp(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return err
 			}
@@ -231,7 +238,7 @@ func (server *Server) signUp(ctx *fiber.Ctx) error {
 	}
 
 	// send email
-	subject := "Verify your email"
+	subject := veifyYourEmailSubject
 
 	content := "Please verify your email by entering the following code in the mobile app: " + user.SecretCode
 
@@ -285,7 +292,7 @@ func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -295,6 +302,11 @@ func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -380,6 +392,11 @@ func (server *Server) resendOTP(ctx *fiber.Ctx) error {
 		}
 	}
 
+	if checkUser == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if checkUser.IsEmailVerified {
 		ctx.Status(fiber.StatusConflict).JSON(errorResponse(errors.New("email already verified")))
 		return nil
@@ -402,7 +419,7 @@ func (server *Server) resendOTP(ctx *fiber.Ctx) error {
 	}
 
 	// send email
-	subject := "Verify your email"
+	subject := veifyYourEmailSubject
 
 	content := "Please verify your email by entering the following code in the mobile app: " + secretCode
 
@@ -443,6 +460,11 @@ func (server *Server) resetPasswordRequest(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -522,6 +544,11 @@ func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if resetPassword == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if resetPassword.IsBlockedUser {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
@@ -537,7 +564,7 @@ func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -576,6 +603,11 @@ func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
 			ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 			return nil
 		}
+	}
+
+	if checkUser == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
 	}
 
 	if checkUser.IsBlockedUser {
@@ -659,6 +691,11 @@ func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if lastUsedPasswordReset == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if lastUsedPasswordReset.SecretCode == req.OTP {
 
 		getUser, err := server.store.GetUserByEmail(ctx.Context(), req.Email)
@@ -708,7 +745,7 @@ func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
 		if err != nil {
 			if pqErr, ok := err.(*pgconn.PgError); ok {
 				switch pqErr.Message {
-				case "foreign_key_violation", "unique_violation":
+				case util.ForeignKeyViolation, util.UniqueViolation:
 					ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 					return nil
 				}
@@ -718,7 +755,7 @@ func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
 		}
 
 		// //! i think it should be empty response
-		// rsp := newUserResponse(user)
+		// rsp := newUserResponse(*user)
 		// ctx.Status(fiber.StatusOK).JSON(rsp)
 		ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
 		return nil
@@ -759,6 +796,11 @@ func (server *Server) changePassword(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if user == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -832,23 +874,28 @@ func (server *Server) getUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if user == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if user.IsBlocked {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 		return nil
 	}
 
-	rsp := newUserResponse(user)
+	rsp := newUserResponse(*user)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
 
 //////////////* Get API For Admin //////////////
 
-func newSearchUserByEmailResponse(searchedUsers []db.AdminSearchUserByEmailRow) []userResponse {
-	rsp := make([]userResponse, len(searchedUsers))
+func newSearchUserByEmailResponse(searchedUsers []*db.AdminSearchUserByEmailRow) []*userResponse {
+	rsp := make([]*userResponse, len(searchedUsers))
 	for i := 0; i < len(searchedUsers); i++ {
-		rsp[i] = userResponse{
+		rsp[i] = &userResponse{
 			UserID:          searchedUsers[i].ID,
 			Username:        searchedUsers[i].Username,
 			Email:           searchedUsers[i].Email,
@@ -893,6 +940,11 @@ func (server *Server) searchUserByEmailForAdmin(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if searchedUsers == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -942,6 +994,12 @@ func (server *Server) listUsers(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if users == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(users)
 	return nil
 
@@ -983,7 +1041,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -992,7 +1050,7 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := newUserResponse(user)
+	rsp := newUserResponse(*user)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
@@ -1033,7 +1091,7 @@ func (server *Server) adminUpdateUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -1042,7 +1100,7 @@ func (server *Server) adminUpdateUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	rsp := newUserResponse(user)
+	rsp := newUserResponse(*user)
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }
@@ -1072,7 +1130,7 @@ func (server *Server) deleteUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -1135,6 +1193,11 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if user == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	if user.IsBlocked {
 		err := errors.New("account unauthorized")
 		ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
@@ -1159,6 +1222,12 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 			}
 		}
 
+		if checkUser == nil {
+
+			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+			return nil
+		}
+
 		if !checkUser.IsUsed && time.Now().Before(checkUser.ExpiredAt) {
 			secretCode = checkUser.SecretCode
 		} else {
@@ -1176,7 +1245,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		}
 
 		// send email
-		subject := "Verify your email"
+		subject := veifyYourEmailSubject
 
 		content := "Please verify your email by entering the following code in the mobile app: " + secretCode
 
@@ -1247,7 +1316,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		User:                  newUserLoginResponse(user),
+		User:                  newUserLoginResponse(*user),
 	}
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
@@ -1296,7 +1365,7 @@ func (server *Server) logoutUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

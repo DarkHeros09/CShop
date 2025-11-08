@@ -31,7 +31,7 @@ type CreateShoppingCartItemParams struct {
 	Qty            int32 `json:"qty"`
 }
 
-func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (ShoppingCartItem, error) {
+func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShoppingCartItemParams) (*ShoppingCartItem, error) {
 	row := q.db.QueryRow(ctx, createShoppingCartItem,
 		arg.ShoppingCartID,
 		arg.ProductItemID,
@@ -48,7 +48,7 @@ func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShopping
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteShoppingCartItem = `-- name: DeleteShoppingCartItem :exec
@@ -89,13 +89,13 @@ type DeleteShoppingCartItemAllByUserParams struct {
 	ShoppingCartID int64 `json:"shopping_cart_id"`
 }
 
-func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]ShoppingCartItem, error) {
+func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg DeleteShoppingCartItemAllByUserParams) ([]*ShoppingCartItem, error) {
 	rows, err := q.db.Query(ctx, deleteShoppingCartItemAllByUser, arg.UserID, arg.ShoppingCartID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShoppingCartItem{}
+	items := []*ShoppingCartItem{}
 	for rows.Next() {
 		var i ShoppingCartItem
 		if err := rows.Scan(
@@ -109,7 +109,7 @@ func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg Delet
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ SELECT id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCartItem, error) {
+func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (*ShoppingCartItem, error) {
 	row := q.db.QueryRow(ctx, getShoppingCartItem, id)
 	var i ShoppingCartItem
 	err := row.Scan(
@@ -134,7 +134,7 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (ShoppingCa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getShoppingCartItemByUserIDCartID = `-- name: GetShoppingCartItemByUserIDCartID :many
@@ -161,13 +161,13 @@ type GetShoppingCartItemByUserIDCartIDRow struct {
 	UserID         null.Int  `json:"user_id"`
 }
 
-func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) ([]GetShoppingCartItemByUserIDCartIDRow, error) {
+func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg GetShoppingCartItemByUserIDCartIDParams) ([]*GetShoppingCartItemByUserIDCartIDRow, error) {
 	rows, err := q.db.Query(ctx, getShoppingCartItemByUserIDCartID, arg.UserID, arg.ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetShoppingCartItemByUserIDCartIDRow{}
+	items := []*GetShoppingCartItemByUserIDCartIDRow{}
 	for rows.Next() {
 		var i GetShoppingCartItemByUserIDCartIDRow
 		if err := rows.Scan(
@@ -182,7 +182,7 @@ func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg Get
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -204,13 +204,13 @@ type ListShoppingCartItemsParams struct {
 }
 
 // LIMIT 1;
-func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]ShoppingCartItem, error) {
+func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCartItemsParams) ([]*ShoppingCartItem, error) {
 	rows, err := q.db.Query(ctx, listShoppingCartItems, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShoppingCartItem{}
+	items := []*ShoppingCartItem{}
 	for rows.Next() {
 		var i ShoppingCartItem
 		if err := rows.Scan(
@@ -224,7 +224,7 @@ func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCar
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -238,13 +238,13 @@ WHERE shopping_cart_id = $1
 ORDER BY id
 `
 
-func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]ShoppingCartItem, error) {
+func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCartID int64) ([]*ShoppingCartItem, error) {
 	rows, err := q.db.Query(ctx, listShoppingCartItemsByCartID, shoppingCartID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShoppingCartItem{}
+	items := []*ShoppingCartItem{}
 	for rows.Next() {
 		var i ShoppingCartItem
 		if err := rows.Scan(
@@ -258,7 +258,7 @@ func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCar
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -287,13 +287,13 @@ type ListShoppingCartItemsByUserIDRow struct {
 	SizeValue      string    `json:"size_value"`
 }
 
-func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]ListShoppingCartItemsByUserIDRow, error) {
+func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int64) ([]*ListShoppingCartItemsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listShoppingCartItemsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShoppingCartItemsByUserIDRow{}
+	items := []*ListShoppingCartItemsByUserIDRow{}
 	for rows.Next() {
 		var i ListShoppingCartItemsByUserIDRow
 		if err := rows.Scan(
@@ -310,7 +310,7 @@ func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int6
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -353,7 +353,7 @@ type UpdateShoppingCartItemRow struct {
 	UserID         int64     `json:"user_id"`
 }
 
-func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (UpdateShoppingCartItemRow, error) {
+func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShoppingCartItemParams) (*UpdateShoppingCartItemRow, error) {
 	row := q.db.QueryRow(ctx, updateShoppingCartItem,
 		arg.ProductItemID,
 		arg.SizeID,
@@ -372,5 +372,5 @@ func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShopping
 		&i.UpdatedAt,
 		&i.UserID,
 	)
-	return i, err
+	return &i, err
 }

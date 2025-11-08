@@ -26,7 +26,7 @@ func createRandomWishListItem(t *testing.T) WishListItem {
 	require.Equal(t, arg.WishListID, wishListItem.WishListID)
 	require.Equal(t, arg.ProductItemID, wishListItem.ProductItemID)
 
-	return wishListItem
+	return *wishListItem
 }
 
 func TestCreateWishListItem(t *testing.T) {

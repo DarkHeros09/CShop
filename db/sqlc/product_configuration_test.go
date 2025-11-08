@@ -24,7 +24,7 @@ func createRandomProductConfiguration(t *testing.T) ProductConfiguration {
 	require.Equal(t, arg.ProductItemID, productConfiguration.ProductItemID)
 	require.Equal(t, arg.VariationOptionID, productConfiguration.VariationOptionID)
 
-	return productConfiguration
+	return *productConfiguration
 }
 func TestCreateProductConfiguration(t *testing.T) {
 	createRandomProductConfiguration(t)

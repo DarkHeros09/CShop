@@ -28,7 +28,7 @@ func createRandomResetPassword(t *testing.T, user User) ResetPassword {
 
 	require.NotEmpty(t, resetPassword.CreatedAt)
 
-	return resetPassword
+	return *resetPassword
 }
 
 func TestCreateResetPassword(t *testing.T) {

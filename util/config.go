@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	ForeignKeyViolation = "foreign_key_violation"
+	UniqueViolation     = "unique_violation"
+	TokenHasExpired     = "token has expired"
+)
+
 // config stores all configuration of the application
 // The values are read by viper from a config file or environment variable.
 type Config struct {

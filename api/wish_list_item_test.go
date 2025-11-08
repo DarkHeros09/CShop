@@ -108,7 +108,7 @@ func TestCreateWishListItemAPI(t *testing.T) {
 				store.EXPECT().
 					CreateWishListItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.WishListItem{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -245,7 +245,7 @@ func TestGetWishListItemAPI(t *testing.T) {
 				store.EXPECT().
 					GetWishListItemByUserIDCartID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.WishListItem{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -306,16 +306,14 @@ func TestListWishListItemAPI(t *testing.T) {
 	wishList := createRandomWishList(user)
 
 	n := 5
-	wishListItems := make([]db.ListWishListItemsByUserIDRow, n)
+	wishListItems := make([]*db.ListWishListItemsByUserIDRow, n)
 	// productItems := make([]db.ProductItem, n)
-	var productItems []db.ListProductItemsV2Row
-	var productSizes []db.ProductSize
+	productItems := make([]*db.ListProductItemsV2Row, n)
+	productSizes := make([]*db.ProductSize, n)
 	for i := 0; i < n; i++ {
-		randomProductItems := randomProductItemNew()
-		productItems = append(productItems, randomProductItems)
-		randomProductSize := randomProductSizeWithProductItemID(randomProductItems.ID)
-		productSizes = append(productSizes, randomProductSize)
-		wishListItems[i] = createRandomListWishListItem(wishList, randomProductItems, randomProductSize)
+		productItems[i] = randomProductItemNew()
+		productSizes[i] = randomProductSizeWithProductItemID(productItems[i].ID)
+		wishListItems[i] = createRandomListWishListItem(wishList, productItems[i], productSizes[i])
 	}
 
 	productIds := createProductIdsForWishList(wishListItems)
@@ -388,7 +386,7 @@ func TestListWishListItemAPI(t *testing.T) {
 				store.EXPECT().
 					ListWishListItemsByUserID(gomock.Any(), gomock.Eq(wishList.UserID)).
 					Times(1).
-					Return([]db.ListWishListItemsByUserIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -524,7 +522,7 @@ func TestUpdateWishListItemAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateWishListItem(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.WishListItem{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -726,7 +724,7 @@ func TestDeleteWishListItemAllAPI(t *testing.T) {
 	wishList := createRandomWishList(user)
 	wishListItem := createRandomWishListItem(wishList)
 
-	var wishListItemList []db.WishListItem
+	var wishListItemList []*db.WishListItem
 	wishListItemList = append(wishListItemList, wishListItem)
 
 	testCases := []struct {
@@ -767,7 +765,7 @@ func TestDeleteWishListItemAllAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteWishListItemAll(gomock.Any(), gomock.Eq(wishList.ID)).
 					Times(1).
-					Return([]db.WishListItem{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -785,7 +783,7 @@ func TestDeleteWishListItemAllAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteWishListItemAll(gomock.Any(), gomock.Eq(wishList.ID)).
 					Times(1).
-					Return([]db.WishListItem{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -859,16 +857,16 @@ func randomWLIUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomWishList(user db.User) (shoppingSession db.WishList) {
-	shoppingSession = db.WishList{
+func createRandomWishList(user db.User) (shoppingSession *db.WishList) {
+	shoppingSession = &db.WishList{
 		ID:     util.RandomMoney(),
 		UserID: user.ID,
 	}
 	return
 }
 
-func createRandomWishListItem(wishList db.WishList) (wishListItem db.WishListItem) {
-	wishListItem = db.WishListItem{
+func createRandomWishListItem(wishList *db.WishList) (wishListItem *db.WishListItem) {
+	wishListItem = &db.WishListItem{
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
@@ -877,8 +875,8 @@ func createRandomWishListItem(wishList db.WishList) (wishListItem db.WishListIte
 	return
 }
 
-func createRandomListWishListItem(wishList db.WishList, productItem db.ListProductItemsV2Row, productSize db.ProductSize) (wishListItem db.ListWishListItemsByUserIDRow) {
-	wishListItem = db.ListWishListItemsByUserIDRow{
+func createRandomListWishListItem(wishList *db.WishList, productItem *db.ListProductItemsV2Row, productSize *db.ProductSize) (wishListItem *db.ListWishListItemsByUserIDRow) {
+	wishListItem = &db.ListWishListItemsByUserIDRow{
 		UserID:        wishList.UserID,
 		ID:            null.IntFrom(util.RandomMoney()),
 		WishListID:    null.IntFrom(wishList.ID),
@@ -889,8 +887,8 @@ func createRandomListWishListItem(wishList db.WishList, productItem db.ListProdu
 	return
 }
 
-func createRandomWishListItemForGet(wishList db.WishList) (wishListItem db.WishListItem) {
-	wishListItem = db.WishListItem{
+func createRandomWishListItemForGet(wishList *db.WishList) (wishListItem *db.WishListItem) {
+	wishListItem = &db.WishListItem{
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
@@ -898,8 +896,8 @@ func createRandomWishListItemForGet(wishList db.WishList) (wishListItem db.WishL
 	return
 }
 
-func createRandomWishListItemForUpdate(wishList db.WishList) (wishListItem db.WishListItem) {
-	wishListItem = db.WishListItem{
+func createRandomWishListItemForUpdate(wishList *db.WishList) (wishListItem *db.WishListItem) {
+	wishListItem = &db.WishListItem{
 		ID:            util.RandomMoney(),
 		WishListID:    wishList.ID,
 		ProductItemID: util.RandomMoney(),
@@ -918,11 +916,11 @@ func createRandomWishListItemForUpdate(wishList db.WishList) (wishListItem db.Wi
 // 	return
 // }
 
-func requireBodyMatchWishListItem(t *testing.T, body io.ReadCloser, wishListItem db.WishListItem) {
+func requireBodyMatchWishListItem(t *testing.T, body io.ReadCloser, wishListItem *db.WishListItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotWishListItem db.WishListItem
+	var gotWishListItem *db.WishListItem
 	err = json.Unmarshal(data, &gotWishListItem)
 
 	require.NoError(t, err)
@@ -932,11 +930,11 @@ func requireBodyMatchWishListItem(t *testing.T, body io.ReadCloser, wishListItem
 	require.Equal(t, wishListItem.CreatedAt, gotWishListItem.CreatedAt)
 }
 
-func requireBodyMatchWishListItemForGet(t *testing.T, body io.ReadCloser, wishListItem db.WishListItem) {
+func requireBodyMatchWishListItemForGet(t *testing.T, body io.ReadCloser, wishListItem *db.WishListItem) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotWishListItem db.WishListItem
+	var gotWishListItem *db.WishListItem
 	err = json.Unmarshal(data, &gotWishListItem)
 
 	require.NoError(t, err)
@@ -962,48 +960,49 @@ func requireBodyMatchWishListItemForGet(t *testing.T, body io.ReadCloser, wishLi
 // 	}
 // }
 
-func createProductIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow) (productId []int64) {
-	var productsIds []int64
+func createProductIdsForWishList(wishListItems []*db.ListWishListItemsByUserIDRow) []int64 {
+	productsIds := make([]int64, len(wishListItems))
 
 	for i := 0; i < len(wishListItems); i++ {
-		productsIds = append(productsIds, wishListItems[i].ProductItemID.Int64)
+		productsIds[i] = wishListItems[i].ProductItemID.Int64
 	}
 
 	return productsIds
 }
 
-func createSizeIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow) (sizeId []int64) {
-	var sizesIds []int64
+func createSizeIdsForWishList(wishListItems []*db.ListWishListItemsByUserIDRow) []int64 {
+	sizesIds := make([]int64, len(wishListItems))
 
 	for i := 0; i < len(wishListItems); i++ {
-		sizesIds = append(sizesIds, wishListItems[i].SizeID.Int64)
+		sizesIds[i] = wishListItems[i].SizeID.Int64
 	}
 
 	return sizesIds
 }
 
-func createRandomListSizesByIdsForWishList(wishListItems []db.ListWishListItemsByUserIDRow, productSizes []db.ProductSize) (listByIds []db.ProductSize) {
-	sizesIds := make([]db.ProductSize, len(wishListItems))
+func createRandomListSizesByIdsForWishList(wishListItems []*db.ListWishListItemsByUserIDRow, productSizes []*db.ProductSize) []*db.ProductSize {
+	sizesIds := make([]*db.ProductSize, len(wishListItems))
 
 	for i := 0; i < len(wishListItems); i++ {
 		for j := 0; j < len(productSizes); j++ {
 			if wishListItems[i].ProductItemID.Int64 == productSizes[j].ProductItemID {
-				_ = append(sizesIds, db.ProductSize{
+				sizesIds[j] = &db.ProductSize{
 					ID:            productSizes[j].ID,
 					ProductItemID: productSizes[j].ProductItemID,
 					SizeValue:     productSizes[j].SizeValue,
 					Qty:           productSizes[j].Qty,
-				})
+				}
 			}
 		}
 	}
 
-	return
+	return sizesIds
 }
 
-func createFinalRspForWishList(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productSizes []db.ProductSize) (rsp []listWishListItemsResponse) {
+func createFinalRspForWishList(wishListItems []*db.ListWishListItemsByUserIDRow, productItems []*db.ListProductItemsByIDsRow, productSizes []*db.ProductSize) []*listWishListItemsResponse {
+	rsp := make([]*listWishListItemsResponse, len(wishListItems))
 	for i := 0; i < len(productItems); i++ {
-		rsp = append(rsp, listWishListItemsResponse{
+		rsp[i] = &listWishListItemsResponse{
 			ID:            wishListItems[i].ID,
 			WishListID:    wishListItems[i].WishListID,
 			CreatedAt:     wishListItems[i].CreatedAt,
@@ -1016,16 +1015,16 @@ func createFinalRspForWishList(wishListItems []db.ListWishListItemsByUserIDRow, 
 			ProductImage:  productItems[i].ProductImage1.String,
 			Price:         productItems[i].Price,
 			Active:        productItems[i].Active,
-		})
+		}
 	}
-	return
+	return rsp
 }
 
-func createRandomListProductsByIdsForWishList(wishListItem []db.ListWishListItemsByUserIDRow, productItem []db.ListProductItemsV2Row) (listByIds []db.ListProductItemsByIDsRow) {
-	productsIds := make([]db.ListProductItemsByIDsRow, len(wishListItem))
+func createRandomListProductsByIdsForWishList(wishListItem []*db.ListWishListItemsByUserIDRow, productItem []*db.ListProductItemsV2Row) []*db.ListProductItemsByIDsRow {
+	productsIds := make([]*db.ListProductItemsByIDsRow, len(wishListItem))
 
 	for i := 0; i < len(wishListItem); i++ {
-		_ = append(productsIds, db.ListProductItemsByIDsRow{
+		productsIds[i] = &db.ListProductItemsByIDsRow{
 			ID:            productItem[i].ID,
 			Name:          null.StringFrom(util.RandomString(10)),
 			ProductID:     productItem[i].ProductID,
@@ -1036,17 +1035,17 @@ func createRandomListProductsByIdsForWishList(wishListItem []db.ListWishListItem
 			ColorValue: productItem[i].ColorValue,
 			Price:      productItem[i].Price,
 			Active:     productItem[i].Active,
-		})
+		}
 	}
 
-	return
+	return productsIds
 }
 
-func requireBodyMatchFinalListWishListItem(t *testing.T, body io.ReadCloser, finalRsp []listWishListItemsResponse) {
+func requireBodyMatchFinalListWishListItem(t *testing.T, body io.ReadCloser, finalRsp []*listWishListItemsResponse) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotWishListItems []listWishListItemsResponse
+	var gotWishListItems []*listWishListItemsResponse
 	err = json.Unmarshal(data, &gotWishListItems)
 
 	require.NoError(t, err)

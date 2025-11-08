@@ -24,7 +24,7 @@ func createRandomVariation(t *testing.T) Variation {
 	require.Equal(t, arg.CategoryID, variation.CategoryID)
 	require.Equal(t, arg.Name, variation.Name)
 
-	return variation
+	return *variation
 }
 func TestCreateVariation(t *testing.T) {
 	createRandomVariation(t)

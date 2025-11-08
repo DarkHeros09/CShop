@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -101,7 +102,7 @@ func TestCreateUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					CreateUserReview(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -225,7 +226,7 @@ func TestGetUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserReview(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -246,7 +247,7 @@ func TestGetUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					GetUserReview(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -306,13 +307,11 @@ func TestGetUserReviewAPI(t *testing.T) {
 
 func TestListUsersReviewAPI(t *testing.T) {
 	n := 5
-	userReviews := make([]db.UserReview, n)
+	userReviews := make([]*db.UserReview, n)
 	user, _ := randomURUser(t)
-	userReview1 := createRandomUserReview(user)
-	userReview2 := createRandomUserReview(user)
-	userReview3 := createRandomUserReview(user)
-
-	userReviews = append(userReviews, userReview1, userReview2, userReview3)
+	for i := 0; i < len(userReviews); i++ {
+		userReviews[i] = createRandomUserReview(user)
+	}
 
 	type Query struct {
 		pageID   int
@@ -368,7 +367,7 @@ func TestListUsersReviewAPI(t *testing.T) {
 				store.EXPECT().
 					ListUserReviews(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.UserReview{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -435,8 +434,8 @@ func TestListUsersReviewAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -534,7 +533,7 @@ func TestUpdateUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateUserReview(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -642,7 +641,7 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUserReview(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -663,7 +662,7 @@ func TestDeleteUserReviewAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteUserReview(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.UserReview{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -737,8 +736,8 @@ func randomURUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomUserReview(user db.User) (userReview db.UserReview) {
-	userReview = db.UserReview{
+func createRandomUserReview(user db.User) (userReview *db.UserReview) {
+	userReview = &db.UserReview{
 		ID:               util.RandomMoney(),
 		UserID:           user.ID,
 		OrderedProductID: util.RandomMoney(),
@@ -747,11 +746,11 @@ func createRandomUserReview(user db.User) (userReview db.UserReview) {
 	return
 }
 
-func requireBodyMatchUserReview(t *testing.T, body io.ReadCloser, userReview db.UserReview) {
+func requireBodyMatchUserReview(t *testing.T, body io.ReadCloser, userReview *db.UserReview) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserReview db.UserReview
+	var gotUserReview *db.UserReview
 	err = json.Unmarshal(data, &gotUserReview)
 
 	require.NoError(t, err)
@@ -761,11 +760,11 @@ func requireBodyMatchUserReview(t *testing.T, body io.ReadCloser, userReview db.
 	require.Equal(t, userReview.RatingValue, gotUserReview.RatingValue)
 }
 
-func requireBodyMatchUserReviews(t *testing.T, body io.ReadCloser, userReviews []db.UserReview) {
+func requireBodyMatchUserReviews(t *testing.T, body io.ReadCloser, userReviews []*db.UserReview) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotUserReviews []db.UserReview
+	var gotUserReviews []*db.UserReview
 	err = json.Unmarshal(data, &gotUserReviews)
 	require.NoError(t, err)
 	require.Equal(t, userReviews, gotUserReviews)
