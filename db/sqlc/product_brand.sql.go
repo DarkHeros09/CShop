@@ -34,11 +34,11 @@ type AdminCreateProductBrandParams struct {
 	AdminID    int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (ProductBrand, error) {
+func (q *Queries) AdminCreateProductBrand(ctx context.Context, arg AdminCreateProductBrandParams) (*ProductBrand, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductBrand, arg.BrandName, arg.BrandImage, arg.AdminID)
 	var i ProductBrand
 	err := row.Scan(&i.ID, &i.BrandName, &i.BrandImage)
-	return i, err
+	return &i, err
 }
 
 const createProductBrand = `-- name: CreateProductBrand :one
@@ -59,11 +59,11 @@ type CreateProductBrandParams struct {
 	BrandImage string `json:"brand_image"`
 }
 
-func (q *Queries) CreateProductBrand(ctx context.Context, arg CreateProductBrandParams) (ProductBrand, error) {
+func (q *Queries) CreateProductBrand(ctx context.Context, arg CreateProductBrandParams) (*ProductBrand, error) {
 	row := q.db.QueryRow(ctx, createProductBrand, arg.BrandName, arg.BrandImage)
 	var i ProductBrand
 	err := row.Scan(&i.ID, &i.BrandName, &i.BrandImage)
-	return i, err
+	return &i, err
 }
 
 const deleteProductBrand = `-- name: DeleteProductBrand :exec
@@ -81,11 +81,11 @@ SELECT id, brand_name, brand_image FROM "product_brand"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProductBrand(ctx context.Context, id int64) (ProductBrand, error) {
+func (q *Queries) GetProductBrand(ctx context.Context, id int64) (*ProductBrand, error) {
 	row := q.db.QueryRow(ctx, getProductBrand, id)
 	var i ProductBrand
 	err := row.Scan(&i.ID, &i.BrandName, &i.BrandImage)
-	return i, err
+	return &i, err
 }
 
 const listProductBrands = `-- name: ListProductBrands :many
@@ -93,19 +93,19 @@ SELECT id, brand_name, brand_image FROM "product_brand"
 ORDER BY id
 `
 
-func (q *Queries) ListProductBrands(ctx context.Context) ([]ProductBrand, error) {
+func (q *Queries) ListProductBrands(ctx context.Context) ([]*ProductBrand, error) {
 	rows, err := q.db.Query(ctx, listProductBrands)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductBrand{}
+	items := []*ProductBrand{}
 	for rows.Next() {
 		var i ProductBrand
 		if err := rows.Scan(&i.ID, &i.BrandName, &i.BrandImage); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -128,9 +128,9 @@ type UpdateProductBrandParams struct {
 
 // LIMIT $1
 // OFFSET $2;
-func (q *Queries) UpdateProductBrand(ctx context.Context, arg UpdateProductBrandParams) (ProductBrand, error) {
+func (q *Queries) UpdateProductBrand(ctx context.Context, arg UpdateProductBrandParams) (*ProductBrand, error) {
 	row := q.db.QueryRow(ctx, updateProductBrand, arg.BrandName, arg.ID)
 	var i ProductBrand
 	err := row.Scan(&i.ID, &i.BrandName, &i.BrandImage)
-	return i, err
+	return &i, err
 }

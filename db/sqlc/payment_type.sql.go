@@ -34,11 +34,11 @@ type AdminCreatePaymentTypeParams struct {
 	AdminID  int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreatePaymentType(ctx context.Context, arg AdminCreatePaymentTypeParams) (PaymentType, error) {
+func (q *Queries) AdminCreatePaymentType(ctx context.Context, arg AdminCreatePaymentTypeParams) (*PaymentType, error) {
 	row := q.db.QueryRow(ctx, adminCreatePaymentType, arg.Value, arg.IsActive, arg.AdminID)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
-	return i, err
+	return &i, err
 }
 
 const adminDeletePaymentType = `-- name: AdminDeletePaymentType :exec
@@ -78,19 +78,19 @@ WHERE (SELECT is_admin FROM t1) = 1
 // ORDER BY id
 // LIMIT $1
 // OFFSET $2;
-func (q *Queries) AdminListPaymentTypes(ctx context.Context, adminID int64) ([]PaymentType, error) {
+func (q *Queries) AdminListPaymentTypes(ctx context.Context, adminID int64) ([]*PaymentType, error) {
 	rows, err := q.db.Query(ctx, adminListPaymentTypes, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []PaymentType{}
+	items := []*PaymentType{}
 	for rows.Next() {
 		var i PaymentType
 		if err := rows.Scan(&i.ID, &i.Value, &i.IsActive); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ type AdminUpdatePaymentTypeParams struct {
 	AdminID  int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdatePaymentType(ctx context.Context, arg AdminUpdatePaymentTypeParams) (PaymentType, error) {
+func (q *Queries) AdminUpdatePaymentType(ctx context.Context, arg AdminUpdatePaymentTypeParams) (*PaymentType, error) {
 	row := q.db.QueryRow(ctx, adminUpdatePaymentType,
 		arg.Value,
 		arg.IsActive,
@@ -130,7 +130,7 @@ func (q *Queries) AdminUpdatePaymentType(ctx context.Context, arg AdminUpdatePay
 	)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
-	return i, err
+	return &i, err
 }
 
 const createPaymentType = `-- name: CreatePaymentType :one
@@ -143,11 +143,11 @@ ON CONFLICT(value) DO UPDATE SET value = $1
 RETURNING id, value, is_active
 `
 
-func (q *Queries) CreatePaymentType(ctx context.Context, value string) (PaymentType, error) {
+func (q *Queries) CreatePaymentType(ctx context.Context, value string) (*PaymentType, error) {
 	row := q.db.QueryRow(ctx, createPaymentType, value)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
-	return i, err
+	return &i, err
 }
 
 const deletePaymentType = `-- name: DeletePaymentType :exec
@@ -165,30 +165,30 @@ SELECT id, value, is_active FROM "payment_type"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetPaymentType(ctx context.Context, id int64) (PaymentType, error) {
+func (q *Queries) GetPaymentType(ctx context.Context, id int64) (*PaymentType, error) {
 	row := q.db.QueryRow(ctx, getPaymentType, id)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
-	return i, err
+	return &i, err
 }
 
 const listPaymentTypes = `-- name: ListPaymentTypes :many
 SELECT id, value, is_active FROM "payment_type"
 `
 
-func (q *Queries) ListPaymentTypes(ctx context.Context) ([]PaymentType, error) {
+func (q *Queries) ListPaymentTypes(ctx context.Context) ([]*PaymentType, error) {
 	rows, err := q.db.Query(ctx, listPaymentTypes)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []PaymentType{}
+	items := []*PaymentType{}
 	for rows.Next() {
 		var i PaymentType
 		if err := rows.Scan(&i.ID, &i.Value, &i.IsActive); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -211,9 +211,9 @@ type UpdatePaymentTypeParams struct {
 	ID       int64       `json:"id"`
 }
 
-func (q *Queries) UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (PaymentType, error) {
+func (q *Queries) UpdatePaymentType(ctx context.Context, arg UpdatePaymentTypeParams) (*PaymentType, error) {
 	row := q.db.QueryRow(ctx, updatePaymentType, arg.Value, arg.IsActive, arg.ID)
 	var i PaymentType
 	err := row.Scan(&i.ID, &i.Value, &i.IsActive)
-	return i, err
+	return &i, err
 }

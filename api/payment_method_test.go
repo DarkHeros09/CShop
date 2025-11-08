@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -102,7 +103,7 @@ func TestCreatePaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					CreatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
+					Return(&db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -239,7 +240,7 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrNoRows)
+					Return(&db.PaymentMethod{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -264,7 +265,7 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					GetPaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
+					Return(&db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -332,14 +333,12 @@ func TestGetPaymentMethodAPI(t *testing.T) {
 
 func TestListPaymentMethodAPI(t *testing.T) {
 	n := 5
-	paymentMethods := make([]db.PaymentMethod, n)
+	paymentMethods := make([]*db.PaymentMethod, n)
 	user, _ := randomPMUser(t)
 	paymentType := createRandomPaymentType()
-	paymentMethod1 := createRandomPaymentMethod(user, paymentType)
-	paymentMethod2 := createRandomPaymentMethod(user, paymentType)
-	paymentMethod3 := createRandomPaymentMethod(user, paymentType)
-
-	paymentMethods = append(paymentMethods, paymentMethod1, paymentMethod2, paymentMethod3)
+	for i := 0; i < len(paymentMethods); i++ {
+		paymentMethods[i] = createRandomPaymentMethod(user, paymentType)
+	}
 
 	type Query struct {
 		pageID   int
@@ -378,7 +377,7 @@ func TestListPaymentMethodAPI(t *testing.T) {
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchPaymentMethodss(t, rsp.Body, paymentMethods)
+				requireBodyMatchPaymentMethods(t, rsp.Body, paymentMethods)
 			},
 		},
 		{
@@ -395,7 +394,7 @@ func TestListPaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					ListPaymentMethods(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.PaymentMethod{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -462,8 +461,8 @@ func TestListPaymentMethodAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -560,7 +559,7 @@ func TestUpdatePaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					UpdatePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
+					Return(&db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -673,7 +672,7 @@ func TestDeletePaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					DeletePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrNoRows)
+					Return(&db.PaymentMethod{}, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -695,7 +694,7 @@ func TestDeletePaymentMethodAPI(t *testing.T) {
 				store.EXPECT().
 					DeletePaymentMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.PaymentMethod{}, pgx.ErrTxClosed)
+					Return(&db.PaymentMethod{}, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -754,12 +753,12 @@ func TestDeletePaymentMethodAPI(t *testing.T) {
 
 }
 
-func randomPMUser(t *testing.T) (user db.User, password string) {
+func randomPMUser(t *testing.T) (user *db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.User{
+	user = &db.User{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -769,8 +768,8 @@ func randomPMUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomPaymentMethod(user db.User, paymentType db.PaymentType) (paymentMethod db.PaymentMethod) {
-	paymentMethod = db.PaymentMethod{
+func createRandomPaymentMethod(user *db.User, paymentType *db.PaymentType) (paymentMethod *db.PaymentMethod) {
+	paymentMethod = &db.PaymentMethod{
 		ID:            util.RandomMoney(),
 		UserID:        user.ID,
 		PaymentTypeID: paymentType.ID,
@@ -779,19 +778,19 @@ func createRandomPaymentMethod(user db.User, paymentType db.PaymentType) (paymen
 	}
 	return
 }
-func createRandomPaymentType() (paymentType db.PaymentType) {
-	paymentType = db.PaymentType{
+func createRandomPaymentType() (paymentType *db.PaymentType) {
+	paymentType = &db.PaymentType{
 		ID:    util.RandomMoney(),
 		Value: util.RandomUser(),
 	}
 	return
 }
 
-func requireBodyMatchPaymentMethod(t *testing.T, body io.ReadCloser, paymentMethod db.PaymentMethod) {
+func requireBodyMatchPaymentMethod(t *testing.T, body io.ReadCloser, paymentMethod *db.PaymentMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPaymentMethod db.PaymentMethod
+	var gotPaymentMethod *db.PaymentMethod
 	err = json.Unmarshal(data, &gotPaymentMethod)
 
 	require.NoError(t, err)
@@ -802,11 +801,11 @@ func requireBodyMatchPaymentMethod(t *testing.T, body io.ReadCloser, paymentMeth
 	require.Equal(t, paymentMethod.Provider, gotPaymentMethod.Provider)
 }
 
-func requireBodyMatchPaymentMethodss(t *testing.T, body io.ReadCloser, paymentMethods []db.PaymentMethod) {
+func requireBodyMatchPaymentMethods(t *testing.T, body io.ReadCloser, paymentMethods []*db.PaymentMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPaymentMethods []db.PaymentMethod
+	var gotPaymentMethods []*db.PaymentMethod
 	err = json.Unmarshal(data, &gotPaymentMethods)
 	require.NoError(t, err)
 	require.Equal(t, paymentMethods, gotPaymentMethods)

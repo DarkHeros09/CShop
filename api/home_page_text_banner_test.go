@@ -65,7 +65,7 @@ func TestGetHomePageTextBannerAPI(t *testing.T) {
 				store.EXPECT().
 					GetHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
-					Return(db.HomePageTextBanner{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -83,7 +83,7 @@ func TestGetHomePageTextBannerAPI(t *testing.T) {
 				store.EXPECT().
 					GetHomePageTextBanner(gomock.Any(), gomock.Eq(textBanner.ID)).
 					Times(1).
-					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -240,7 +240,7 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 				store.EXPECT().
 					CreateHomePageTextBanner(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -302,7 +302,7 @@ func TestCreateHomePageTextBannerAPI(t *testing.T) {
 
 func TestListHomePageTextBannersAPI(t *testing.T) {
 	n := 5
-	textBanners := make([]db.HomePageTextBanner, n)
+	textBanners := make([]*db.HomePageTextBanner, n)
 	for i := 0; i < n; i++ {
 		textBanners[i] = randomHomePageTextBanner()
 	}
@@ -333,7 +333,7 @@ func TestListHomePageTextBannersAPI(t *testing.T) {
 				store.EXPECT().
 					ListHomePageTextBanners(gomock.Any()).
 					Times(1).
-					Return([]db.HomePageTextBanner{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -362,8 +362,8 @@ func TestListHomePageTextBannersAPI(t *testing.T) {
 
 			// // Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -494,7 +494,7 @@ func TestUpdateHomePageTextBannerAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateHomePageTextBanner(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.HomePageTextBanner{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -726,12 +726,12 @@ func TestDeleteHomePageTextBannerAPI(t *testing.T) {
 
 }
 
-func randomHomePageTextBannerSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomHomePageTextBannerSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -742,29 +742,29 @@ func randomHomePageTextBannerSuperAdmin(t *testing.T) (admin db.Admin, password 
 	return
 }
 
-func randomHomePageTextBanner() db.HomePageTextBanner {
-	return db.HomePageTextBanner{
+func randomHomePageTextBanner() *db.HomePageTextBanner {
+	return &db.HomePageTextBanner{
 		ID:          util.RandomMoney(),
 		Name:        util.RandomUser(),
 		Description: util.RandomUser(),
 	}
 }
 
-func requireBodyMatchHomePageTextBanner(t *testing.T, body io.ReadCloser, textBanner db.HomePageTextBanner) {
+func requireBodyMatchHomePageTextBanner(t *testing.T, body io.ReadCloser, textBanner *db.HomePageTextBanner) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotHomePageTextBanner db.HomePageTextBanner
+	var gotHomePageTextBanner *db.HomePageTextBanner
 	err = json.Unmarshal(data, &gotHomePageTextBanner)
 	require.NoError(t, err)
 	require.Equal(t, textBanner, gotHomePageTextBanner)
 }
 
-func requireBodyMatchHomePageTextBanners(t *testing.T, body io.ReadCloser, HomePageTextBanners []db.HomePageTextBanner) {
+func requireBodyMatchHomePageTextBanners(t *testing.T, body io.ReadCloser, HomePageTextBanners []*db.HomePageTextBanner) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotHomePageTextBanners []db.HomePageTextBanner
+	var gotHomePageTextBanners []*db.HomePageTextBanner
 	err = json.Unmarshal(data, &gotHomePageTextBanners)
 	require.NoError(t, err)
 	require.Equal(t, HomePageTextBanners, gotHomePageTextBanners)

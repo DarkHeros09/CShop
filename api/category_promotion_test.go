@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -66,7 +67,7 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.CategoryPromotion{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -84,7 +85,7 @@ func TestGetCategoryPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -256,7 +257,7 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateCategoryPromotion(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -320,7 +321,7 @@ func TestCreateCategoryPromotionAPI(t *testing.T) {
 
 func TestListCategoryPromotionsAPI(t *testing.T) {
 	n := 5
-	categoryPromotions := make([]db.CategoryPromotion, n)
+	categoryPromotions := make([]*db.CategoryPromotion, n)
 	for i := 0; i < n; i++ {
 		categoryPromotions[i] = randomCategoryPromotion()
 	}
@@ -368,7 +369,7 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 				store.EXPECT().
 					ListCategoryPromotions(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.CategoryPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -427,8 +428,8 @@ func TestListCategoryPromotionsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -556,7 +557,7 @@ func TestAdminUpdateCategoryPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateCategoryPromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.CategoryPromotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -620,7 +621,7 @@ func TestAdminUpdateCategoryPromotionAPI(t *testing.T) {
 func TestAdminListCategoryPromotionsAPI(t *testing.T) {
 	admin, _ := randomCategoryPromotionSuperAdmin(t)
 	n := 5
-	categoryPromotions := make([]db.AdminListCategoryPromotionsRow, n)
+	categoryPromotions := make([]*db.AdminListCategoryPromotionsRow, n)
 	for i := 0; i < n; i++ {
 		categoryPromotions[i] = randomCategoryPromotionForAdmin()
 	}
@@ -687,7 +688,7 @@ func TestAdminListCategoryPromotionsAPI(t *testing.T) {
 				store.EXPECT().
 					AdminListCategoryPromotions(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return([]db.AdminListCategoryPromotionsRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -917,12 +918,12 @@ func TestDeleteCategoryPromotionAPI(t *testing.T) {
 
 }
 
-func randomCategoryPromotionSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomCategoryPromotionSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -933,8 +934,8 @@ func randomCategoryPromotionSuperAdmin(t *testing.T) (admin db.Admin, password s
 	return
 }
 
-func randomCategoryPromotion() db.CategoryPromotion {
-	return db.CategoryPromotion{
+func randomCategoryPromotion() *db.CategoryPromotion {
+	return &db.CategoryPromotion{
 		CategoryID:             util.RandomMoney(),
 		PromotionID:            util.RandomMoney(),
 		Active:                 util.RandomBool(),
@@ -942,8 +943,8 @@ func randomCategoryPromotion() db.CategoryPromotion {
 	}
 }
 
-func randomCategoryPromotionForAdmin() db.AdminListCategoryPromotionsRow {
-	return db.AdminListCategoryPromotionsRow{
+func randomCategoryPromotionForAdmin() *db.AdminListCategoryPromotionsRow {
+	return &db.AdminListCategoryPromotionsRow{
 		CategoryID:             util.RandomMoney(),
 		CategoryName:           null.StringFrom(util.RandomUser()),
 		PromotionID:            util.RandomMoney(),
@@ -953,21 +954,21 @@ func randomCategoryPromotionForAdmin() db.AdminListCategoryPromotionsRow {
 	}
 }
 
-func requireBodyMatchCategoryPromotion(t *testing.T, body io.ReadCloser, categoryPromotion db.CategoryPromotion) {
+func requireBodyMatchCategoryPromotion(t *testing.T, body io.ReadCloser, categoryPromotion *db.CategoryPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotCategoryPromotion db.CategoryPromotion
+	var gotCategoryPromotion *db.CategoryPromotion
 	err = json.Unmarshal(data, &gotCategoryPromotion)
 	require.NoError(t, err)
 	require.Equal(t, categoryPromotion, gotCategoryPromotion)
 }
 
-func requireBodyMatchCategoryPromotions(t *testing.T, body io.ReadCloser, CategoryPromotions []db.CategoryPromotion) {
+func requireBodyMatchCategoryPromotions(t *testing.T, body io.ReadCloser, CategoryPromotions []*db.CategoryPromotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotCategoryPromotions []db.CategoryPromotion
+	var gotCategoryPromotions []*db.CategoryPromotion
 	err = json.Unmarshal(data, &gotCategoryPromotions)
 	require.NoError(t, err)
 	require.Equal(t, CategoryPromotions, gotCategoryPromotions)

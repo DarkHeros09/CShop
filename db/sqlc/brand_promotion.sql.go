@@ -42,7 +42,7 @@ type AdminCreateBrandPromotionParams struct {
 	AdminID             int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateBrandPromotion(ctx context.Context, arg AdminCreateBrandPromotionParams) (BrandPromotion, error) {
+func (q *Queries) AdminCreateBrandPromotion(ctx context.Context, arg AdminCreateBrandPromotionParams) (*BrandPromotion, error) {
 	row := q.db.QueryRow(ctx, adminCreateBrandPromotion,
 		arg.BrandID,
 		arg.PromotionID,
@@ -57,7 +57,7 @@ func (q *Queries) AdminCreateBrandPromotion(ctx context.Context, arg AdminCreate
 		&i.BrandPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminListBrandPromotions = `-- name: AdminListBrandPromotions :many
@@ -86,13 +86,13 @@ type AdminListBrandPromotionsRow struct {
 	Active              bool        `json:"active"`
 }
 
-func (q *Queries) AdminListBrandPromotions(ctx context.Context, adminID int64) ([]AdminListBrandPromotionsRow, error) {
+func (q *Queries) AdminListBrandPromotions(ctx context.Context, adminID int64) ([]*AdminListBrandPromotionsRow, error) {
 	rows, err := q.db.Query(ctx, adminListBrandPromotions, adminID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListBrandPromotionsRow{}
+	items := []*AdminListBrandPromotionsRow{}
 	for rows.Next() {
 		var i AdminListBrandPromotionsRow
 		if err := rows.Scan(
@@ -105,7 +105,7 @@ func (q *Queries) AdminListBrandPromotions(ctx context.Context, adminID int64) (
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ type AdminUpdateBrandPromotionParams struct {
 	AdminID             int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (BrandPromotion, error) {
+func (q *Queries) AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdateBrandPromotionParams) (*BrandPromotion, error) {
 	row := q.db.QueryRow(ctx, adminUpdateBrandPromotion,
 		arg.BrandPromotionImage,
 		arg.Active,
@@ -153,7 +153,7 @@ func (q *Queries) AdminUpdateBrandPromotion(ctx context.Context, arg AdminUpdate
 		&i.BrandPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const createBrandPromotion = `-- name: CreateBrandPromotion :one
@@ -178,7 +178,7 @@ type CreateBrandPromotionParams struct {
 	Active              bool        `json:"active"`
 }
 
-func (q *Queries) CreateBrandPromotion(ctx context.Context, arg CreateBrandPromotionParams) (BrandPromotion, error) {
+func (q *Queries) CreateBrandPromotion(ctx context.Context, arg CreateBrandPromotionParams) (*BrandPromotion, error) {
 	row := q.db.QueryRow(ctx, createBrandPromotion,
 		arg.BrandID,
 		arg.PromotionID,
@@ -192,7 +192,7 @@ func (q *Queries) CreateBrandPromotion(ctx context.Context, arg CreateBrandPromo
 		&i.BrandPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteBrandPromotion = `-- name: DeleteBrandPromotion :exec
@@ -224,7 +224,7 @@ type GetBrandPromotionParams struct {
 	PromotionID int64 `json:"promotion_id"`
 }
 
-func (q *Queries) GetBrandPromotion(ctx context.Context, arg GetBrandPromotionParams) (BrandPromotion, error) {
+func (q *Queries) GetBrandPromotion(ctx context.Context, arg GetBrandPromotionParams) (*BrandPromotion, error) {
 	row := q.db.QueryRow(ctx, getBrandPromotion, arg.BrandID, arg.PromotionID)
 	var i BrandPromotion
 	err := row.Scan(
@@ -233,7 +233,7 @@ func (q *Queries) GetBrandPromotion(ctx context.Context, arg GetBrandPromotionPa
 		&i.BrandPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }
 
 const listBrandPromotions = `-- name: ListBrandPromotions :many
@@ -248,13 +248,13 @@ type ListBrandPromotionsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListBrandPromotions(ctx context.Context, arg ListBrandPromotionsParams) ([]BrandPromotion, error) {
+func (q *Queries) ListBrandPromotions(ctx context.Context, arg ListBrandPromotionsParams) ([]*BrandPromotion, error) {
 	rows, err := q.db.Query(ctx, listBrandPromotions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []BrandPromotion{}
+	items := []*BrandPromotion{}
 	for rows.Next() {
 		var i BrandPromotion
 		if err := rows.Scan(
@@ -265,7 +265,7 @@ func (q *Queries) ListBrandPromotions(ctx context.Context, arg ListBrandPromotio
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -298,13 +298,13 @@ type ListBrandPromotionsWithImagesRow struct {
 	EndDate             time.Time   `json:"end_date"`
 }
 
-func (q *Queries) ListBrandPromotionsWithImages(ctx context.Context) ([]ListBrandPromotionsWithImagesRow, error) {
+func (q *Queries) ListBrandPromotionsWithImages(ctx context.Context) ([]*ListBrandPromotionsWithImagesRow, error) {
 	rows, err := q.db.Query(ctx, listBrandPromotionsWithImages)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListBrandPromotionsWithImagesRow{}
+	items := []*ListBrandPromotionsWithImagesRow{}
 	for rows.Next() {
 		var i ListBrandPromotionsWithImagesRow
 		if err := rows.Scan(
@@ -325,7 +325,7 @@ func (q *Queries) ListBrandPromotionsWithImages(ctx context.Context) ([]ListBran
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -350,7 +350,7 @@ type UpdateBrandPromotionParams struct {
 	PromotionID         int64       `json:"promotion_id"`
 }
 
-func (q *Queries) UpdateBrandPromotion(ctx context.Context, arg UpdateBrandPromotionParams) (BrandPromotion, error) {
+func (q *Queries) UpdateBrandPromotion(ctx context.Context, arg UpdateBrandPromotionParams) (*BrandPromotion, error) {
 	row := q.db.QueryRow(ctx, updateBrandPromotion,
 		arg.BrandPromotionImage,
 		arg.Active,
@@ -364,5 +364,5 @@ func (q *Queries) UpdateBrandPromotion(ctx context.Context, arg UpdateBrandPromo
 		&i.BrandPromotionImage,
 		&i.Active,
 	)
-	return i, err
+	return &i, err
 }

@@ -2,10 +2,11 @@ package api
 
 import (
 	"errors"
-	"fmt"
+	"strconv"
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/imagekit-developer/imagekit-go/api/media"
@@ -50,7 +51,7 @@ func (server *Server) createProductImages(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -139,13 +140,14 @@ func (server *Server) listProductImagesV2(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
 	if len(productImages) == 0 {
-		ctx.Set("Next-Available", fmt.Sprint(false))
+		ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusOK).JSON([]db.ListProductImagesV2Row{})
 		return nil
 	}
 
-	ctx.Set("Next-Available", fmt.Sprint(productImages[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productImages[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productImages)
 	return nil
 
@@ -179,16 +181,23 @@ func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if productImages == nil {
+
+		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+		return nil
+	}
+
 	if len(productImages) == 0 {
-		// ctx.Set("Next-Available", fmt.Sprint(false))
+		// ctx.Set("Next-Available", strconv.FormatBool(false))
 		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(pgx.ErrNoRows))
 		// ctx.Status(fiber.StatusNotFound).JSON([]db.ListProductImagesNextPageRow{})
 		return nil
 	}
 
-	// ctx.Set("Max-Page", fmt.Sprint(maxPage))
+	// ctx.Set("Max-Page", strconv.FormatInt(maxPage,10))
 
-	ctx.Set("Next-Available", fmt.Sprint(productImages[0].NextAvailable))
+	ctx.Set("Next-Available", strconv.FormatBool(productImages[0].NextAvailable))
 	ctx.Status(fiber.StatusOK).JSON(productImages)
 	return nil
 
@@ -235,7 +244,7 @@ func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

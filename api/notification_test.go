@@ -107,7 +107,7 @@ func TestCreateNotificationAPI(t *testing.T) {
 				store.EXPECT().
 					CreateNotification(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -237,7 +237,7 @@ func TestGetNotificationAPI(t *testing.T) {
 				store.EXPECT().
 					GetNotification(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(rsp *http.Response) {
@@ -375,7 +375,7 @@ func TestUpdateNotificationAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateNotification(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
@@ -483,7 +483,7 @@ func TestDeleteNotificationAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteNotification(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -505,7 +505,7 @@ func TestDeleteNotificationAPI(t *testing.T) {
 				store.EXPECT().
 					DeleteNotification(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Notification{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -621,7 +621,7 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 				store.EXPECT().
 // 					DeleteNotificationAllByUser(gomock.Any(), gomock.Eq(arg)).
 // 					Times(1).
-// 					Return([]db.Notification{}, pgx.ErrNoRows)
+// 					Return([]nil, pgx.ErrNoRows)
 // 			},
 // 			checkResponse: func(t *testing.T, rsp *http.Response) {
 // 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -642,7 +642,7 @@ func TestDeleteNotificationAPI(t *testing.T) {
 // 				store.EXPECT().
 // 					DeleteNotificationAllByUser(gomock.Any(), gomock.Eq(arg)).
 // 					Times(1).
-// 					Return([]db.Notification{}, pgx.ErrTxClosed)
+// 					Return([]nil, pgx.ErrTxClosed)
 // 			},
 // 			checkResponse: func(t *testing.T, rsp *http.Response) {
 // 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -699,12 +699,12 @@ func TestDeleteNotificationAPI(t *testing.T) {
 
 // }
 
-func randomNotificationUser(t *testing.T) (user db.User, password string) {
+func randomNotificationUser(t *testing.T) (user *db.User, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	user = db.User{
+	user = &db.User{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Password: hashedPassword,
@@ -714,8 +714,8 @@ func randomNotificationUser(t *testing.T) (user db.User, password string) {
 	return
 }
 
-func createRandomNotification(user db.User) (Notification db.Notification) {
-	return db.Notification{
+func createRandomNotification(user *db.User) (Notification *db.Notification) {
+	return &db.Notification{
 		UserID:          user.ID,
 		DeviceID:        null.StringFrom(util.RandomString(10)),
 		FcmToken:        null.StringFrom(util.RandomString(10)),
@@ -723,11 +723,11 @@ func createRandomNotification(user db.User) (Notification db.Notification) {
 	}
 }
 
-func requireBodyMatchNotification(t *testing.T, body io.ReadCloser, notification db.Notification) {
+func requireBodyMatchNotification(t *testing.T, body io.ReadCloser, notification *db.Notification) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotNotification db.Notification
+	var gotNotification *db.Notification
 	err = json.Unmarshal(data, &gotNotification)
 
 	require.NoError(t, err)

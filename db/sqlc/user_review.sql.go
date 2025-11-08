@@ -28,7 +28,7 @@ type CreateUserReviewParams struct {
 	RatingValue      int32 `json:"rating_value"`
 }
 
-func (q *Queries) CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (UserReview, error) {
+func (q *Queries) CreateUserReview(ctx context.Context, arg CreateUserReviewParams) (*UserReview, error) {
 	row := q.db.QueryRow(ctx, createUserReview, arg.UserID, arg.OrderedProductID, arg.RatingValue)
 	var i UserReview
 	err := row.Scan(
@@ -39,7 +39,7 @@ func (q *Queries) CreateUserReview(ctx context.Context, arg CreateUserReviewPara
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteUserReview = `-- name: DeleteUserReview :one
@@ -54,7 +54,7 @@ type DeleteUserReviewParams struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) DeleteUserReview(ctx context.Context, arg DeleteUserReviewParams) (UserReview, error) {
+func (q *Queries) DeleteUserReview(ctx context.Context, arg DeleteUserReviewParams) (*UserReview, error) {
 	row := q.db.QueryRow(ctx, deleteUserReview, arg.ID, arg.UserID)
 	var i UserReview
 	err := row.Scan(
@@ -65,7 +65,7 @@ func (q *Queries) DeleteUserReview(ctx context.Context, arg DeleteUserReviewPara
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getUserReview = `-- name: GetUserReview :one
@@ -80,7 +80,7 @@ type GetUserReviewParams struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) GetUserReview(ctx context.Context, arg GetUserReviewParams) (UserReview, error) {
+func (q *Queries) GetUserReview(ctx context.Context, arg GetUserReviewParams) (*UserReview, error) {
 	row := q.db.QueryRow(ctx, getUserReview, arg.ID, arg.UserID)
 	var i UserReview
 	err := row.Scan(
@@ -91,7 +91,7 @@ func (q *Queries) GetUserReview(ctx context.Context, arg GetUserReviewParams) (U
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const listUserReviews = `-- name: ListUserReviews :many
@@ -108,13 +108,13 @@ type ListUserReviewsParams struct {
 	UserID int64 `json:"user_id"`
 }
 
-func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams) ([]UserReview, error) {
+func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams) ([]*UserReview, error) {
 	rows, err := q.db.Query(ctx, listUserReviews, arg.Limit, arg.Offset, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []UserReview{}
+	items := []*UserReview{}
 	for rows.Next() {
 		var i UserReview
 		if err := rows.Scan(
@@ -127,7 +127,7 @@ func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ type UpdateUserReviewParams struct {
 	UserID           int64    `json:"user_id"`
 }
 
-func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (UserReview, error) {
+func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewParams) (*UserReview, error) {
 	row := q.db.QueryRow(ctx, updateUserReview,
 		arg.OrderedProductID,
 		arg.RatingValue,
@@ -169,5 +169,5 @@ func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewPara
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
+	return &i, err
 }

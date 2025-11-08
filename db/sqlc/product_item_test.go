@@ -107,7 +107,7 @@ func createRandomProductItem(t *testing.T) ProductItem {
 		}
 	}
 
-	return productItem
+	return *productItem
 }
 
 func adminCreateRandomProductItem(t *testing.T) ProductItem {
@@ -204,7 +204,7 @@ func adminCreateRandomProductItem(t *testing.T) ProductItem {
 		}
 	}
 
-	return productItem
+	return *productItem
 }
 func TestCreateProductItem(t *testing.T) {
 	createRandomProductItem(t)

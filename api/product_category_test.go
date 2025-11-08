@@ -54,7 +54,7 @@ func TestGetProductCategoryAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductCategory(gomock.Any(), gomock.Eq(productCategory.ID)).
 					Times(1).
-					Return(db.ProductCategory{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +67,7 @@ func TestGetProductCategoryAPI(t *testing.T) {
 				store.EXPECT().
 					GetProductCategory(gomock.Any(), gomock.Eq(productCategory.ID)).
 					Times(1).
-					Return(db.ProductCategory{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -223,7 +223,7 @@ func TestCreateProductCategoryAPI(t *testing.T) {
 				store.EXPECT().
 					CreateProductCategory(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductCategory{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -383,7 +383,7 @@ func TestCreateProductCategoryWithoutParentCategoryIdAPI(t *testing.T) {
 				store.EXPECT().
 					CreateProductCategory(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.ProductCategory{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -444,7 +444,7 @@ func TestCreateProductCategoryWithoutParentCategoryIdAPI(t *testing.T) {
 
 func TestListProductCategoriesAPI(t *testing.T) {
 	n := 5
-	productCategories := make([]db.ProductCategory, n)
+	productCategories := make([]*db.ProductCategory, n)
 	for i := 0; i < n; i++ {
 		productCategories[i] = randomProductCategory()
 	}
@@ -487,7 +487,7 @@ func TestListProductCategoriesAPI(t *testing.T) {
 				store.EXPECT().
 					ListProductCategories(gomock.Any()).
 					Times(1).
-					Return([]db.ProductCategory{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -546,8 +546,8 @@ func TestListProductCategoriesAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -670,7 +670,7 @@ func TestUpdateProductCategoryAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateProductCategory(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ProductCategory{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -917,12 +917,12 @@ func TestDeleteProductCategoryAPI(t *testing.T) {
 
 }
 
-func randomPCategorieSuperAdmin(t *testing.T) (admin db.Admin, password string) {
+func randomPCategorieSuperAdmin(t *testing.T) (admin *db.Admin, password string) {
 	password = util.RandomString(6)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
-	admin = db.Admin{
+	admin = &db.Admin{
 		ID:       util.RandomMoney(),
 		Username: util.RandomUser(),
 		Email:    util.RandomEmail(),
@@ -933,8 +933,8 @@ func randomPCategorieSuperAdmin(t *testing.T) (admin db.Admin, password string) 
 	return
 }
 
-func randomProductCategory() db.ProductCategory {
-	return db.ProductCategory{
+func randomProductCategory() *db.ProductCategory {
+	return &db.ProductCategory{
 		ID:               util.RandomInt(1, 1000),
 		ParentCategoryID: null.IntFrom(util.RandomMoney()),
 		CategoryName:     util.RandomUser(),
@@ -942,29 +942,29 @@ func randomProductCategory() db.ProductCategory {
 	}
 }
 
-func randomProductCategoryWithoutParentID() db.ProductCategory {
-	return db.ProductCategory{
+func randomProductCategoryWithoutParentID() *db.ProductCategory {
+	return &db.ProductCategory{
 		ID:            util.RandomInt(1, 1000),
 		CategoryName:  util.RandomUser(),
 		CategoryImage: util.RandomURL(),
 	}
 }
 
-func requireBodyMatchProductCategory(t *testing.T, body io.ReadCloser, productCategory db.ProductCategory) {
+func requireBodyMatchProductCategory(t *testing.T, body io.ReadCloser, productCategory *db.ProductCategory) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductCategory db.ProductCategory
+	var gotProductCategory *db.ProductCategory
 	err = json.Unmarshal(data, &gotProductCategory)
 	require.NoError(t, err)
 	require.Equal(t, productCategory, gotProductCategory)
 }
 
-func requireBodyMatchProductCategories(t *testing.T, body io.ReadCloser, productCategories []db.ProductCategory) {
+func requireBodyMatchProductCategories(t *testing.T, body io.ReadCloser, productCategories []*db.ProductCategory) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotProductCategories []db.ProductCategory
+	var gotProductCategories []*db.ProductCategory
 	err = json.Unmarshal(data, &gotProductCategories)
 	require.NoError(t, err)
 	require.Equal(t, productCategories, gotProductCategories)

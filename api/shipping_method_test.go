@@ -102,7 +102,7 @@ func TestCreateShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreateShippingMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ShippingMethod{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -227,7 +227,7 @@ func TestGetShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					GetShippingMethodByUserID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetShippingMethodByUserIDRow{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -248,7 +248,7 @@ func TestGetShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					GetShippingMethodByUserID(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.GetShippingMethodByUserIDRow{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -308,13 +308,11 @@ func TestGetShippingMethodAPI(t *testing.T) {
 
 func TestListShippingMethodAPI(t *testing.T) {
 	n := 5
-	ShippingMethods := make([]db.ShippingMethod, n)
+	shippingMethods := make([]*db.ShippingMethod, n)
 	user, _ := randomSMUser(t)
-	ShippingMethod1 := createRandomShippingMethodForList()
-	ShippingMethod2 := createRandomShippingMethodForList()
-	ShippingMethod3 := createRandomShippingMethodForList()
-
-	ShippingMethods = append(ShippingMethods, ShippingMethod1, ShippingMethod2, ShippingMethod3)
+	for i := 0; i < len(shippingMethods); i++ {
+		shippingMethods[i] = createRandomShippingMethodForList()
+	}
 
 	// type Query struct {
 	// 	pageID   int
@@ -349,11 +347,11 @@ func TestListShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					ListShippingMethods(gomock.Any()).
 					Times(1).
-					Return(ShippingMethods, nil)
+					Return(shippingMethods, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchShippingMethods(t, rsp.Body, ShippingMethods)
+				requireBodyMatchShippingMethods(t, rsp.Body, shippingMethods)
 			},
 		},
 		{
@@ -370,7 +368,7 @@ func TestListShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					ListShippingMethods(gomock.Any()).
 					Times(1).
-					Return([]db.ShippingMethod{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -437,8 +435,8 @@ func TestListShippingMethodAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.userTokenMaker)
@@ -454,12 +452,10 @@ func TestListShippingMethodAPI(t *testing.T) {
 func TestAdminListShippingMethodAPI(t *testing.T) {
 	admin, _ := randomShippingMethodSuperAdmin(t)
 	n := 5
-	ShippingMethods := make([]db.ShippingMethod, n)
-	ShippingMethod1 := createRandomShippingMethodForList()
-	ShippingMethod2 := createRandomShippingMethodForList()
-	ShippingMethod3 := createRandomShippingMethodForList()
-
-	ShippingMethods = append(ShippingMethods, ShippingMethod1, ShippingMethod2, ShippingMethod3)
+	shippingMethods := make([]*db.ShippingMethod, n)
+	for i := 0; i < len(shippingMethods); i++ {
+		shippingMethods[i] = createRandomShippingMethodForList()
+	}
 
 	// type Query struct {
 	// 	pageID   int
@@ -494,11 +490,11 @@ func TestAdminListShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					ListShippingMethods(gomock.Any()).
 					Times(1).
-					Return(ShippingMethods, nil)
+					Return(shippingMethods, nil)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusOK, rsp.StatusCode)
-				requireBodyMatchShippingMethods(t, rsp.Body, ShippingMethods)
+				requireBodyMatchShippingMethods(t, rsp.Body, shippingMethods)
 			},
 		},
 		{
@@ -515,7 +511,7 @@ func TestAdminListShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					ListShippingMethods(gomock.Any()).
 					Times(1).
-					Return([]db.ShippingMethod{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -582,8 +578,8 @@ func TestAdminListShippingMethodAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
@@ -679,7 +675,7 @@ func TestUpdateShippingMethodAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdateShippingMethod(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.ShippingMethod{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -891,8 +887,8 @@ func randomShippingMethodSuperAdmin(t *testing.T) (admin db.Admin, password stri
 	return
 }
 
-func createRandomShippingMethodForMethod() (ShippingMethod db.ShippingMethod) {
-	ShippingMethod = db.ShippingMethod{
+func createRandomShippingMethodForMethod() (ShippingMethod *db.ShippingMethod) {
+	ShippingMethod = &db.ShippingMethod{
 		ID:    util.RandomMoney(),
 		Name:  util.RandomUser(),
 		Price: util.RandomDecimalString(1, 1000),
@@ -900,8 +896,8 @@ func createRandomShippingMethodForMethod() (ShippingMethod db.ShippingMethod) {
 	return
 }
 
-func createRandomShippingMethodForGet(user db.User) (ShippingMethod db.GetShippingMethodByUserIDRow) {
-	ShippingMethod = db.GetShippingMethodByUserIDRow{
+func createRandomShippingMethodForGet(user db.User) (ShippingMethod *db.GetShippingMethodByUserIDRow) {
+	ShippingMethod = &db.GetShippingMethodByUserIDRow{
 		ID:     util.RandomMoney(),
 		Name:   util.RandomUser(),
 		Price:  util.RandomDecimalString(1, 1000),
@@ -910,8 +906,8 @@ func createRandomShippingMethodForGet(user db.User) (ShippingMethod db.GetShippi
 	return
 }
 
-func createRandomShippingMethodForList() (ShippingMethod db.ShippingMethod) {
-	ShippingMethod = db.ShippingMethod{
+func createRandomShippingMethodForList() (ShippingMethod *db.ShippingMethod) {
+	ShippingMethod = &db.ShippingMethod{
 		ID:    util.RandomMoney(),
 		Name:  util.RandomUser(),
 		Price: util.RandomDecimalString(1, 1000),
@@ -920,11 +916,11 @@ func createRandomShippingMethodForList() (ShippingMethod db.ShippingMethod) {
 	return
 }
 
-func requireBodyMatchShippingMethod(t *testing.T, body io.ReadCloser, shippingMethod db.ShippingMethod) {
+func requireBodyMatchShippingMethod(t *testing.T, body io.ReadCloser, shippingMethod *db.ShippingMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShippingMethod db.ShippingMethod
+	var gotShippingMethod *db.ShippingMethod
 	err = json.Unmarshal(data, &gotShippingMethod)
 
 	require.NoError(t, err)
@@ -933,11 +929,11 @@ func requireBodyMatchShippingMethod(t *testing.T, body io.ReadCloser, shippingMe
 	require.Equal(t, shippingMethod.Price, gotShippingMethod.Price)
 }
 
-func requireBodyMatchShippingMethodForGet(t *testing.T, body io.ReadCloser, shippingMethod db.GetShippingMethodByUserIDRow) {
+func requireBodyMatchShippingMethodForGet(t *testing.T, body io.ReadCloser, shippingMethod *db.GetShippingMethodByUserIDRow) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShippingMethod db.GetShippingMethodByUserIDRow
+	var gotShippingMethod *db.GetShippingMethodByUserIDRow
 	err = json.Unmarshal(data, &gotShippingMethod)
 
 	require.NoError(t, err)
@@ -947,11 +943,11 @@ func requireBodyMatchShippingMethodForGet(t *testing.T, body io.ReadCloser, ship
 	require.Equal(t, shippingMethod.UserID.Int64, gotShippingMethod.UserID.Int64)
 }
 
-func requireBodyMatchShippingMethods(t *testing.T, body io.ReadCloser, shippingMethods []db.ShippingMethod) {
+func requireBodyMatchShippingMethods(t *testing.T, body io.ReadCloser, shippingMethods []*db.ShippingMethod) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotShippingMethods []db.ShippingMethod
+	var gotShippingMethods []*db.ShippingMethod
 	err = json.Unmarshal(data, &gotShippingMethods)
 	require.NoError(t, err)
 	for i := range gotShippingMethods {

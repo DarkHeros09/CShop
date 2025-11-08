@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
@@ -47,7 +48,7 @@ func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -97,6 +98,12 @@ func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if shippingMethod == nil {
+
+		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(shippingMethod)
 	return nil
 }
@@ -141,6 +148,13 @@ func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if shippingMethods == nil {
+
+		ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(shippingMethods)
 	return nil
 }
@@ -175,6 +189,12 @@ func (server *Server) adminListShippingMethods(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if shippingMethods == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	ctx.Status(fiber.StatusOK).JSON(shippingMethods)
 	return nil
 }
@@ -217,7 +237,7 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -256,7 +276,7 @@ func (server *Server) deleteShippingMethod(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

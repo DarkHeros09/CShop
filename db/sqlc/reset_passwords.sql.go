@@ -25,7 +25,7 @@ type CreateResetPasswordParams struct {
 	SecretCode string `json:"secret_code"`
 }
 
-func (q *Queries) CreateResetPassword(ctx context.Context, arg CreateResetPasswordParams) (ResetPassword, error) {
+func (q *Queries) CreateResetPassword(ctx context.Context, arg CreateResetPasswordParams) (*ResetPassword, error) {
 	row := q.db.QueryRow(ctx, createResetPassword, arg.UserID, arg.SecretCode)
 	var i ResetPassword
 	err := row.Scan(
@@ -37,7 +37,7 @@ func (q *Queries) CreateResetPassword(ctx context.Context, arg CreateResetPasswo
 		&i.UpdatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getLastUsedResetPassword = `-- name: GetLastUsedResetPassword :one
@@ -51,7 +51,7 @@ LIMIT 1
 `
 
 // AND secret_code = $2
-func (q *Queries) GetLastUsedResetPassword(ctx context.Context, email string) (ResetPassword, error) {
+func (q *Queries) GetLastUsedResetPassword(ctx context.Context, email string) (*ResetPassword, error) {
 	row := q.db.QueryRow(ctx, getLastUsedResetPassword, email)
 	var i ResetPassword
 	err := row.Scan(
@@ -63,7 +63,7 @@ func (q *Queries) GetLastUsedResetPassword(ctx context.Context, email string) (R
 		&i.UpdatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getResetPassword = `-- name: GetResetPassword :one
@@ -71,7 +71,7 @@ SELECT id, user_id, secret_code, is_used, created_at, updated_at, expired_at FRO
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetResetPassword(ctx context.Context, id int64) (ResetPassword, error) {
+func (q *Queries) GetResetPassword(ctx context.Context, id int64) (*ResetPassword, error) {
 	row := q.db.QueryRow(ctx, getResetPassword, id)
 	var i ResetPassword
 	err := row.Scan(
@@ -83,7 +83,7 @@ func (q *Queries) GetResetPassword(ctx context.Context, id int64) (ResetPassword
 		&i.UpdatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getResetPasswordUserIDByID = `-- name: GetResetPasswordUserIDByID :one
@@ -131,7 +131,7 @@ type GetResetPasswordsByEmailRow struct {
 	ExpiredAt       time.Time `json:"expired_at"`
 }
 
-func (q *Queries) GetResetPasswordsByEmail(ctx context.Context, email string) (GetResetPasswordsByEmailRow, error) {
+func (q *Queries) GetResetPasswordsByEmail(ctx context.Context, email string) (*GetResetPasswordsByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getResetPasswordsByEmail, email)
 	var i GetResetPasswordsByEmailRow
 	err := row.Scan(
@@ -147,7 +147,7 @@ func (q *Queries) GetResetPasswordsByEmail(ctx context.Context, email string) (G
 		&i.UpdatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateResetPassword = `-- name: UpdateResetPassword :one
@@ -167,7 +167,7 @@ type UpdateResetPasswordParams struct {
 	SecretCode string `json:"secret_code"`
 }
 
-func (q *Queries) UpdateResetPassword(ctx context.Context, arg UpdateResetPasswordParams) (ResetPassword, error) {
+func (q *Queries) UpdateResetPassword(ctx context.Context, arg UpdateResetPasswordParams) (*ResetPassword, error) {
 	row := q.db.QueryRow(ctx, updateResetPassword, arg.ID, arg.SecretCode)
 	var i ResetPassword
 	err := row.Scan(
@@ -179,5 +179,5 @@ func (q *Queries) UpdateResetPassword(ctx context.Context, arg UpdateResetPasswo
 		&i.UpdatedAt,
 		&i.ExpiredAt,
 	)
-	return i, err
+	return &i, err
 }

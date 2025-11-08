@@ -38,7 +38,7 @@ type AdminCreateProductSizeParams struct {
 	AdminID       int64  `json:"admin_id"`
 }
 
-func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (ProductSize, error) {
+func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreateProductSizeParams) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, adminCreateProductSize,
 		arg.ProductItemID,
 		arg.SizeValue,
@@ -52,7 +52,7 @@ func (q *Queries) AdminCreateProductSize(ctx context.Context, arg AdminCreatePro
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }
 
 const adminUpdateProductSize = `-- name: AdminUpdateProductSize :one
@@ -80,7 +80,7 @@ type AdminUpdateProductSizeParams struct {
 	AdminID       int64       `json:"admin_id"`
 }
 
-func (q *Queries) AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (ProductSize, error) {
+func (q *Queries) AdminUpdateProductSize(ctx context.Context, arg AdminUpdateProductSizeParams) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, adminUpdateProductSize,
 		arg.SizeValue,
 		arg.Qty,
@@ -95,7 +95,7 @@ func (q *Queries) AdminUpdateProductSize(ctx context.Context, arg AdminUpdatePro
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }
 
 const createProductSize = `-- name: CreateProductSize :one
@@ -115,7 +115,7 @@ type CreateProductSizeParams struct {
 	Qty           int32  `json:"qty"`
 }
 
-func (q *Queries) CreateProductSize(ctx context.Context, arg CreateProductSizeParams) (ProductSize, error) {
+func (q *Queries) CreateProductSize(ctx context.Context, arg CreateProductSizeParams) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, createProductSize, arg.ProductItemID, arg.SizeValue, arg.Qty)
 	var i ProductSize
 	err := row.Scan(
@@ -124,7 +124,7 @@ func (q *Queries) CreateProductSize(ctx context.Context, arg CreateProductSizePa
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteProductSize = `-- name: DeleteProductSize :exec
@@ -153,7 +153,7 @@ WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
 
-func (q *Queries) GetProductItemSizeForUpdate(ctx context.Context, id int64) (ProductSize, error) {
+func (q *Queries) GetProductItemSizeForUpdate(ctx context.Context, id int64) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, getProductItemSizeForUpdate, id)
 	var i ProductSize
 	err := row.Scan(
@@ -162,7 +162,7 @@ func (q *Queries) GetProductItemSizeForUpdate(ctx context.Context, id int64) (Pr
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }
 
 const getProductSize = `-- name: GetProductSize :one
@@ -170,7 +170,7 @@ SELECT id, product_item_id, size_value, qty FROM "product_size"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetProductSize(ctx context.Context, id int64) (ProductSize, error) {
+func (q *Queries) GetProductSize(ctx context.Context, id int64) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, getProductSize, id)
 	var i ProductSize
 	err := row.Scan(
@@ -179,7 +179,7 @@ func (q *Queries) GetProductSize(ctx context.Context, id int64) (ProductSize, er
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }
 
 const listProductSizes = `-- name: ListProductSizes :many
@@ -187,13 +187,13 @@ SELECT id, product_item_id, size_value, qty FROM "product_size"
 ORDER BY id
 `
 
-func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
+func (q *Queries) ListProductSizes(ctx context.Context) ([]*ProductSize, error) {
 	rows, err := q.db.Query(ctx, listProductSizes)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductSize{}
+	items := []*ProductSize{}
 	for rows.Next() {
 		var i ProductSize
 		if err := rows.Scan(
@@ -204,7 +204,7 @@ func (q *Queries) ListProductSizes(ctx context.Context) ([]ProductSize, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -218,13 +218,13 @@ WHERE ps.id = ANY($1::bigint[])
 `
 
 // JOIN "shopping_cart_item" AS sci ON sci.size_id = ps.product_item_id
-func (q *Queries) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]ProductSize, error) {
+func (q *Queries) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) ([]*ProductSize, error) {
 	rows, err := q.db.Query(ctx, listProductSizesByIDs, sizesIds)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductSize{}
+	items := []*ProductSize{}
 	for rows.Next() {
 		var i ProductSize
 		if err := rows.Scan(
@@ -235,7 +235,7 @@ func (q *Queries) ListProductSizesByIDs(ctx context.Context, sizesIds []int64) (
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -248,13 +248,13 @@ SELECT id, product_item_id, size_value, qty FROM "product_size"
 WHERE product_item_id = $1
 `
 
-func (q *Queries) ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]ProductSize, error) {
+func (q *Queries) ListProductSizesByProductItemID(ctx context.Context, productItemID int64) ([]*ProductSize, error) {
 	rows, err := q.db.Query(ctx, listProductSizesByProductItemID, productItemID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ProductSize{}
+	items := []*ProductSize{}
 	for rows.Next() {
 		var i ProductSize
 		if err := rows.Scan(
@@ -265,7 +265,7 @@ func (q *Queries) ListProductSizesByProductItemID(ctx context.Context, productIt
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -290,7 +290,7 @@ type UpdateProductSizeParams struct {
 	ProductItemID int64       `json:"product_item_id"`
 }
 
-func (q *Queries) UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (ProductSize, error) {
+func (q *Queries) UpdateProductSize(ctx context.Context, arg UpdateProductSizeParams) (*ProductSize, error) {
 	row := q.db.QueryRow(ctx, updateProductSize,
 		arg.SizeValue,
 		arg.Qty,
@@ -304,5 +304,5 @@ func (q *Queries) UpdateProductSize(ctx context.Context, arg UpdateProductSizePa
 		&i.SizeValue,
 		&i.Qty,
 	)
-	return i, err
+	return &i, err
 }

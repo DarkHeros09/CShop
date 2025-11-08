@@ -82,7 +82,7 @@ type AdminListShopOrdersNextPageRow struct {
 	NextAvailable     bool        `json:"next_available"`
 }
 
-func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminListShopOrdersNextPageParams) ([]AdminListShopOrdersNextPageRow, error) {
+func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminListShopOrdersNextPageParams) ([]*AdminListShopOrdersNextPageRow, error) {
 	rows, err := q.db.Query(ctx, adminListShopOrdersNextPage,
 		arg.Limit,
 		arg.AdminID,
@@ -94,7 +94,7 @@ func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminList
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListShopOrdersNextPageRow{}
+	items := []*AdminListShopOrdersNextPageRow{}
 	for rows.Next() {
 		var i AdminListShopOrdersNextPageRow
 		if err := rows.Scan(
@@ -123,7 +123,7 @@ func (q *Queries) AdminListShopOrdersNextPage(ctx context.Context, arg AdminList
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -199,7 +199,7 @@ type AdminListShopOrdersV2Row struct {
 	NextAvailable     bool        `json:"next_available"`
 }
 
-func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]AdminListShopOrdersV2Row, error) {
+func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOrdersV2Params) ([]*AdminListShopOrdersV2Row, error) {
 	rows, err := q.db.Query(ctx, adminListShopOrdersV2,
 		arg.Limit,
 		arg.AdminID,
@@ -210,7 +210,7 @@ func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOr
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AdminListShopOrdersV2Row{}
+	items := []*AdminListShopOrdersV2Row{}
 	for rows.Next() {
 		var i AdminListShopOrdersV2Row
 		if err := rows.Scan(
@@ -239,7 +239,7 @@ func (q *Queries) AdminListShopOrdersV2(ctx context.Context, arg AdminListShopOr
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ type CreateShopOrderParams struct {
 	AddressCity       string   `json:"address_city"`
 }
 
-func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (ShopOrder, error) {
+func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams) (*ShopOrder, error) {
 	row := q.db.QueryRow(ctx, createShopOrder,
 		arg.TrackNumber,
 		arg.UserID,
@@ -323,7 +323,7 @@ func (q *Queries) CreateShopOrder(ctx context.Context, arg CreateShopOrderParams
 		&i.UpdatedAt,
 		&i.CompletedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteShopOrder = `-- name: DeleteShopOrder :exec
@@ -365,7 +365,7 @@ SELECT id, track_number, order_number, user_id, payment_type_id, shipping_addres
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error) {
+func (q *Queries) GetShopOrder(ctx context.Context, id int64) (*ShopOrder, error) {
 	row := q.db.QueryRow(ctx, getShopOrder, id)
 	var i ShopOrder
 	err := row.Scan(
@@ -387,7 +387,7 @@ func (q *Queries) GetShopOrder(ctx context.Context, id int64) (ShopOrder, error)
 		&i.UpdatedAt,
 		&i.CompletedAt,
 	)
-	return i, err
+	return &i, err
 }
 
 const getShopOrdersCountByStatusId = `-- name: GetShopOrdersCountByStatusId :one
@@ -444,13 +444,13 @@ type ListShopOrdersParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]ShopOrder, error) {
+func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) ([]*ShopOrder, error) {
 	rows, err := q.db.Query(ctx, listShopOrders, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ShopOrder{}
+	items := []*ShopOrder{}
 	for rows.Next() {
 		var i ShopOrder
 		if err := rows.Scan(
@@ -474,7 +474,7 @@ func (q *Queries) ListShopOrders(ctx context.Context, arg ListShopOrdersParams) 
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -526,13 +526,13 @@ type ListShopOrdersByUserIDRow struct {
 	CompletedAt       time.Time   `json:"completed_at"`
 }
 
-func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]ListShopOrdersByUserIDRow, error) {
+func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrdersByUserIDParams) ([]*ListShopOrdersByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listShopOrdersByUserID, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShopOrdersByUserIDRow{}
+	items := []*ListShopOrdersByUserIDRow{}
 	for rows.Next() {
 		var i ListShopOrdersByUserIDRow
 		if err := rows.Scan(
@@ -559,7 +559,7 @@ func (q *Queries) ListShopOrdersByUserID(ctx context.Context, arg ListShopOrders
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -618,7 +618,7 @@ type ListShopOrdersByUserIDNextPageRow struct {
 }
 
 // ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
-func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListShopOrdersByUserIDNextPageParams) ([]ListShopOrdersByUserIDNextPageRow, error) {
+func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListShopOrdersByUserIDNextPageParams) ([]*ListShopOrdersByUserIDNextPageRow, error) {
 	rows, err := q.db.Query(ctx, listShopOrdersByUserIDNextPage,
 		arg.Limit,
 		arg.UserID,
@@ -629,7 +629,7 @@ func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListSh
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShopOrdersByUserIDNextPageRow{}
+	items := []*ListShopOrdersByUserIDNextPageRow{}
 	for rows.Next() {
 		var i ListShopOrdersByUserIDNextPageRow
 		if err := rows.Scan(
@@ -656,7 +656,7 @@ func (q *Queries) ListShopOrdersByUserIDNextPage(ctx context.Context, arg ListSh
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -713,13 +713,13 @@ type ListShopOrdersByUserIDV2Row struct {
 }
 
 // ROW_NUMBER() OVER(ORDER BY so.id) AS order_number,
-func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrdersByUserIDV2Params) ([]ListShopOrdersByUserIDV2Row, error) {
+func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrdersByUserIDV2Params) ([]*ListShopOrdersByUserIDV2Row, error) {
 	rows, err := q.db.Query(ctx, listShopOrdersByUserIDV2, arg.Limit, arg.UserID, arg.OrderStatus)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListShopOrdersByUserIDV2Row{}
+	items := []*ListShopOrdersByUserIDV2Row{}
 	for rows.Next() {
 		var i ListShopOrdersByUserIDV2Row
 		if err := rows.Scan(
@@ -746,7 +746,7 @@ func (q *Queries) ListShopOrdersByUserIDV2(ctx context.Context, arg ListShopOrde
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -793,7 +793,7 @@ type UpdateShopOrderParams struct {
 	AdminID           int64       `json:"admin_id"`
 }
 
-func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (ShopOrder, error) {
+func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams) (*ShopOrder, error) {
 	row := q.db.QueryRow(ctx, updateShopOrder,
 		arg.TrackNumber,
 		arg.UserID,
@@ -825,5 +825,5 @@ func (q *Queries) UpdateShopOrder(ctx context.Context, arg UpdateShopOrderParams
 		&i.UpdatedAt,
 		&i.CompletedAt,
 	)
-	return i, err
+	return &i, err
 }

@@ -11,7 +11,7 @@ import (
 
 func createRandomShippingMethod(t *testing.T) ShippingMethod {
 	shippingMethods := []string{"توصيل سريع"}
-	var shippingMethod ShippingMethod
+	var shippingMethod *ShippingMethod
 	var err error
 	for i := 0; i < len(shippingMethods); i++ {
 		arg := CreateShippingMethodParams{
@@ -27,14 +27,14 @@ func createRandomShippingMethod(t *testing.T) ShippingMethod {
 		require.Equal(t, arg.Price, shippingMethod.Price)
 	}
 
-	return shippingMethod
+	return *shippingMethod
 }
 
 func adminCreateRandomShippingMethod(t *testing.T) ShippingMethod {
 	admin := createRandomAdmin(t)
 	shippingMethods := []string{"توصيل سريع"}
 	price := util.RandomDecimalString(1, 100)
-	var shippingMethod ShippingMethod
+	var shippingMethod *ShippingMethod
 	var err error
 	for i := 0; i < len(shippingMethods); i++ {
 		arg := AdminCreateShippingMethodParams{
@@ -51,7 +51,7 @@ func adminCreateRandomShippingMethod(t *testing.T) ShippingMethod {
 		require.Equal(t, arg.Price, shippingMethod.Price)
 	}
 
-	return shippingMethod
+	return *shippingMethod
 }
 func TestCreateShippingMethod(t *testing.T) {
 	createRandomShippingMethod(t)

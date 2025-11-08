@@ -24,7 +24,7 @@ func createRandomProductImage(t *testing.T) ProductImage {
 	require.Equal(t, arg.ProductImage2, productImage.ProductImage2)
 	require.Equal(t, arg.ProductImage3, productImage.ProductImage3)
 
-	return productImage
+	return *productImage
 }
 
 func adminCreateRandomProductImages(t *testing.T) ProductImage {
@@ -43,7 +43,7 @@ func adminCreateRandomProductImages(t *testing.T) ProductImage {
 	require.Equal(t, arg.ProductImage2, productImage.ProductImage2)
 	require.Equal(t, arg.ProductImage3, productImage.ProductImage3)
 
-	return productImage
+	return *productImage
 }
 func TestCreateProductImage(t *testing.T) {
 	createRandomProductImage(t)

@@ -41,7 +41,7 @@ func createRandomShoppingCartItem(t *testing.T) (ShoppingCartItem, ShoppingCart)
 	require.Equal(t, arg.ProductItemID, shoppingCartItem.ProductItemID)
 	require.Equal(t, arg.Qty, shoppingCartItem.Qty)
 
-	return shoppingCartItem, shoppingCart
+	return *shoppingCartItem, shoppingCart
 }
 
 func TestCreateShoppingCartItem(t *testing.T) {
@@ -158,7 +158,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 		Limit:  5,
 		Offset: 0,
 	}
-	shoppingCartItemsChan := make(chan []ShoppingCartItem)
+	shoppingCartItemsChan := make(chan []*ShoppingCartItem)
 	errChan := make(chan error)
 	go func() {
 		shoppingCartItems, err := testStore.ListShoppingCartItems(context.Background(), arg)

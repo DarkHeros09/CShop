@@ -54,7 +54,7 @@ func TestGetPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetPromotion(gomock.Any(), gomock.Eq(promotion.ID)).
 					Times(1).
-					Return(db.Promotion{}, pgx.ErrNoRows)
+					Return(nil, pgx.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusNotFound, rsp.StatusCode)
@@ -67,7 +67,7 @@ func TestGetPromotionAPI(t *testing.T) {
 				store.EXPECT().
 					GetPromotion(gomock.Any(), gomock.Eq(promotion.ID)).
 					Times(1).
-					Return(db.Promotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -244,7 +244,7 @@ func TestCreatePromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminCreatePromotion(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Promotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -310,7 +310,7 @@ func TestCreatePromotionAPI(t *testing.T) {
 
 func TestListPromotionsAPI(t *testing.T) {
 	n := 5
-	Promotions := make([]db.Promotion, n)
+	Promotions := make([]*db.Promotion, n)
 	for i := 0; i < n; i++ {
 		Promotions[i] = randomPromotion()
 	}
@@ -358,7 +358,7 @@ func TestListPromotionsAPI(t *testing.T) {
 				store.EXPECT().
 					ListPromotions(gomock.Any()).
 					Times(1).
-					Return([]db.Promotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -417,8 +417,8 @@ func TestListPromotionsAPI(t *testing.T) {
 
 			// Add query parameters to request URL
 			// q := request.URL.Query()
-			// q.Add("page_id", fmt.Sprintf("%d", tc.query.pageID))
-			// q.Add("page_size", fmt.Sprintf("%d", tc.query.pageSize))
+			// q.Add("page_id", strconv.Itoa(tc.query.pageID))
+			// q.Add("page_size", strconv.Itoa(tc.query.pageSize))
 			// request.URL.RawQuery = q.Encode()
 
 			request.Header.Set("Content-Type", "application/json")
@@ -577,7 +577,7 @@ func TestUpdatePromotionAPI(t *testing.T) {
 				store.EXPECT().
 					AdminUpdatePromotion(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(db.Promotion{}, pgx.ErrTxClosed)
+					Return(nil, pgx.ErrTxClosed)
 			},
 			checkResponse: func(t *testing.T, rsp *http.Response) {
 				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
@@ -797,10 +797,10 @@ func randomPSuperAdmin(t *testing.T) (admin db.Admin, password string) {
 	return
 }
 
-func randomPromotion() db.Promotion {
+func randomPromotion() *db.Promotion {
 	startTime, _ := time.Parse(timeLayout, time.Now().Truncate(0).Local().UTC().Format(timeLayout))
 	endTime, _ := time.Parse(timeLayout, time.Now().Truncate(0).Local().UTC().Format(timeLayout))
-	return db.Promotion{
+	return &db.Promotion{
 		ID:           util.RandomInt(1, 1000),
 		Name:         util.RandomUser(),
 		Description:  util.RandomUser(),
@@ -811,21 +811,21 @@ func randomPromotion() db.Promotion {
 	}
 }
 
-func requireBodyMatchPromotion(t *testing.T, body io.ReadCloser, Promotion db.Promotion) {
+func requireBodyMatchPromotion(t *testing.T, body io.ReadCloser, Promotion *db.Promotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPromotion db.Promotion
+	var gotPromotion *db.Promotion
 	err = json.Unmarshal(data, &gotPromotion)
 	require.NoError(t, err)
 	require.Equal(t, Promotion, gotPromotion)
 }
 
-func requireBodyMatchPromotions(t *testing.T, body io.ReadCloser, Promotions []db.Promotion) {
+func requireBodyMatchPromotions(t *testing.T, body io.ReadCloser, Promotions []*db.Promotion) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
-	var gotPromotions []db.Promotion
+	var gotPromotions []*db.Promotion
 	err = json.Unmarshal(data, &gotPromotions)
 	require.NoError(t, err)
 	require.Equal(t, Promotions, gotPromotions)

@@ -5,6 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
+	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/guregu/null/v5"
 	"github.com/jackc/pgconn"
@@ -49,7 +50,7 @@ func (server *Server) createWishListItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -98,6 +99,11 @@ func (server *Server) getWishListItem(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if wishListItem == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -150,13 +156,13 @@ type listWishListItemsResponse struct {
 	ProductPromoEndDate       null.Time   `json:"product_promo_end_date"`
 }
 
-func newlistWishListItemsResponse(wishListItems []db.ListWishListItemsByUserIDRow, productItems []db.ListProductItemsByIDsRow, productsSizes []db.ProductSize) []listWishListItemsResponse {
-	rsp := make([]listWishListItemsResponse, len(productItems))
+func newlistWishListItemsResponse(wishListItems []*db.ListWishListItemsByUserIDRow, productItems []*db.ListProductItemsByIDsRow, productsSizes []*db.ProductSize) []*listWishListItemsResponse {
+	rsp := make([]*listWishListItemsResponse, len(productItems))
 	for i := 0; i < len(productItems); i++ {
 		for j := 0; j < len(wishListItems); j++ {
 			for k := 0; k < len(productsSizes); k++ {
 				if productItems[i].ID == wishListItems[j].ProductItemID.Int64 && productItems[i].ID == productsSizes[k].ProductItemID {
-					rsp[i] = listWishListItemsResponse{
+					rsp[i] = &listWishListItemsResponse{
 						ID:                        wishListItems[j].ID,
 						WishListID:                wishListItems[j].WishListID,
 						CreatedAt:                 wishListItems[j].CreatedAt,
@@ -225,6 +231,12 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
 	}
+
+	if wishListItems == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	productsItemsIds := make([]int64, len(wishListItems))
 	for i := 0; i < len(wishListItems); i++ {
 		productsItemsIds[i] = wishListItems[i].ProductItemID.Int64
@@ -240,6 +252,11 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	if productItems == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
+		return nil
+	}
+
 	productsSizesIds := make([]int64, len(wishListItems))
 	for i := 0; i < len(wishListItems); i++ {
 		productsSizesIds[i] = wishListItems[i].SizeID.Int64
@@ -252,6 +269,11 @@ func (server *Server) listWishListItems(ctx *fiber.Ctx) error {
 			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		return nil
+	}
+
+	if productsSizes == nil {
+		ctx.Status(fiber.StatusNotFound).JSON(pgx.ErrNoRows)
 		return nil
 	}
 
@@ -300,7 +322,7 @@ func (server *Server) updateWishListItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -344,7 +366,7 @@ func (server *Server) deleteWishListItem(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}
@@ -386,7 +408,7 @@ func (server *Server) deleteWishListItemAll(ctx *fiber.Ctx) error {
 	if err != nil {
 		if pqErr, ok := err.(*pgconn.PgError); ok {
 			switch pqErr.Message {
-			case "foreign_key_violation", "unique_violation":
+			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
 				return nil
 			}

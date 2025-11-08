@@ -20,7 +20,7 @@ func createRandomWishList(t *testing.T) WishList {
 
 	require.Equal(t, user1.ID, wishList.UserID)
 
-	return wishList
+	return *wishList
 }
 
 func TestCreateWishList(t *testing.T) {
