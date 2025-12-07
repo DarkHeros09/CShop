@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateCategoryPromotion = `-- name: AdminCreateCategoryPromotion :one
@@ -274,7 +274,7 @@ func (q *Queries) ListCategoryPromotions(ctx context.Context, arg ListCategoryPr
 }
 
 const listCategoryPromotionsWithImages = `-- name: ListCategoryPromotionsWithImages :many
-SELECT category_id, promotion_id, category_promotion_image, cp.active, pc.id, parent_category_id, category_name, category_image, promo.id, name, description, discount_rate, promo.active, start_date, end_date FROM "category_promotion" AS cp
+SELECT category_id, promotion_id, category_promotion_image, cp.active, pc.id, parent_category_id, category_name, category_image, promo.id, name, description, discount_rate, start_date, end_date, promo.active FROM "category_promotion" AS cp
 LEFT JOIN "product_category" AS pc ON pc.id = cp.category_id
 JOIN "promotion" AS promo ON promo.id = cp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 WHERE cp.category_promotion_image IS NOT NULL AND cp.active = true
@@ -294,9 +294,9 @@ type ListCategoryPromotionsWithImagesRow struct {
 	Name                   string      `json:"name"`
 	Description            string      `json:"description"`
 	DiscountRate           int64       `json:"discount_rate"`
-	Active_2               bool        `json:"active_2"`
 	StartDate              time.Time   `json:"start_date"`
 	EndDate                time.Time   `json:"end_date"`
+	Active_2               bool        `json:"active_2"`
 }
 
 func (q *Queries) ListCategoryPromotionsWithImages(ctx context.Context) ([]*ListCategoryPromotionsWithImagesRow, error) {
@@ -321,9 +321,9 @@ func (q *Queries) ListCategoryPromotionsWithImages(ctx context.Context) ([]*List
 			&i.Name,
 			&i.Description,
 			&i.DiscountRate,
-			&i.Active_2,
 			&i.StartDate,
 			&i.EndDate,
+			&i.Active_2,
 		); err != nil {
 			return nil, err
 		}

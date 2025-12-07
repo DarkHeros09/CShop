@@ -7,7 +7,7 @@ import (
 	"github.com/bytedance/sonic"
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
 )

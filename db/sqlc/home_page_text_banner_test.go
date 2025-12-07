@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -83,9 +83,9 @@ func TestDeleteHomePageTextBanner(t *testing.T) {
 }
 
 func TestListHomePageTextBanners(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 5; i++ {
-		createRandomHomePageTextBanner(t)
+		_ = createRandomHomePageTextBanner(t)
 	}
 
 	textBanners, err := testStore.ListHomePageTextBanners(context.Background())

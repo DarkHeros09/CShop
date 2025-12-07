@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -174,7 +174,7 @@ func TestDeleteShopOrder(t *testing.T) {
 }
 
 func TestListShopOrders(t *testing.T) {
-	t.Parallel()
+
 	// var wg sync.WaitGroup
 	// wg.Add(10)
 	for i := 0; i < 10; i++ {
@@ -201,7 +201,7 @@ func TestListShopOrders(t *testing.T) {
 }
 
 func TestListShopOrdersByUserID(t *testing.T) {
-	t.Parallel()
+
 	// var wg sync.WaitGroup
 	var shopOrder ShopOrder
 	// wg.Add(10)

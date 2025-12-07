@@ -8,7 +8,7 @@ package db
 import (
 	"context"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createNotification = `-- name: CreateNotification :one
@@ -24,7 +24,7 @@ ON CONFLICT(user_id) DO UPDATE SET
 device_id = EXCLUDED.device_id,
 fcm_token = EXCLUDED.fcm_token,
 delivery_updates = EXCLUDED.delivery_updates
-RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
+RETURNING user_id, device_id, fcm_token, created_at, updated_at, delivery_updates
 `
 
 type CreateNotificationParams struct {
@@ -46,9 +46,9 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
-		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeliveryUpdates,
 	)
 	return &i, err
 }
@@ -57,7 +57,7 @@ const deleteNotification = `-- name: DeleteNotification :one
 DELETE FROM "notification"
 WHERE user_id = $1
 AND device_id = $2
-RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
+RETURNING user_id, device_id, fcm_token, created_at, updated_at, delivery_updates
 `
 
 type DeleteNotificationParams struct {
@@ -72,9 +72,9 @@ func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotification
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
-		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeliveryUpdates,
 	)
 	return &i, err
 }
@@ -90,7 +90,7 @@ func (q *Queries) DeleteNotificationAllByUser(ctx context.Context, userID int64)
 }
 
 const getNotification = `-- name: GetNotification :one
-SELECT user_id, device_id, fcm_token, delivery_updates, created_at, updated_at FROM "notification"
+SELECT user_id, device_id, fcm_token, created_at, updated_at, delivery_updates FROM "notification"
 WHERE user_id = $1
 AND device_id = $2
 `
@@ -107,15 +107,15 @@ func (q *Queries) GetNotification(ctx context.Context, arg GetNotificationParams
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
-		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeliveryUpdates,
 	)
 	return &i, err
 }
 
 const getNotificationV2 = `-- name: GetNotificationV2 :one
-SELECT user_id, device_id, fcm_token, delivery_updates, created_at, updated_at FROM "notification"
+SELECT user_id, device_id, fcm_token, created_at, updated_at, delivery_updates FROM "notification"
 WHERE user_id = $1
 ORDER BY updated_at DESC, created_at DESC
 LIMIT 1
@@ -128,9 +128,9 @@ func (q *Queries) GetNotificationV2(ctx context.Context, userID int64) (*Notific
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
-		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeliveryUpdates,
 	)
 	return &i, err
 }
@@ -143,7 +143,7 @@ delivery_updates  = COALESCE($2,delivery_updates),
 updated_at = now()
 WHERE user_id = $3
 AND device_id = $4
-RETURNING user_id, device_id, fcm_token, delivery_updates, created_at, updated_at
+RETURNING user_id, device_id, fcm_token, created_at, updated_at, delivery_updates
 `
 
 type UpdateNotificationParams struct {
@@ -165,9 +165,9 @@ func (q *Queries) UpdateNotification(ctx context.Context, arg UpdateNotification
 		&i.UserID,
 		&i.DeviceID,
 		&i.FcmToken,
-		&i.DeliveryUpdates,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeliveryUpdates,
 	)
 	return &i, err
 }

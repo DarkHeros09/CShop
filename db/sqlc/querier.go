@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 type Querier interface {

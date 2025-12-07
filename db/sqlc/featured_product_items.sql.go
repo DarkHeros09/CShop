@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateFeaturedProductItem = `-- name: AdminCreateFeaturedProductItem :one
@@ -28,7 +28,7 @@ INSERT INTO "featured_product_item" (
 )
 SELECT $1, $2, $3, $4, $5 FROM t1
 WHERE is_admin=1
-RETURNING id, product_item_id, active, start_date, end_date, priority
+RETURNING id, product_item_id, start_date, end_date, priority, active
 `
 
 type AdminCreateFeaturedProductItemParams struct {
@@ -53,10 +53,10 @@ func (q *Queries) AdminCreateFeaturedProductItem(ctx context.Context, arg AdminC
 	err := row.Scan(
 		&i.ID,
 		&i.ProductItemID,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
 		&i.Priority,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -69,7 +69,7 @@ SELECT 1 AS is_admin
     AND active = TRUE
     )
 SELECT 
-fp.id, fp.product_item_id, fp.active, fp.start_date, fp.end_date, fp.priority, pi.id, pi.product_id, pi.image_id, pi.color_id, pi.product_sku, pi.price, pi.active, pi.created_at, pi.updated_at, p.name AS product_name, 
+fp.id, fp.product_item_id, fp.start_date, fp.end_date, fp.priority, fp.active, pi.id, pi.product_id, pi.image_id, pi.color_id, pi.price, pi.created_at, pi.updated_at, pi.product_sku, pi.active, p.name AS product_name, 
 p.description FROM "featured_product_item" AS fp
 LEFT JOIN "product_item" AS pi ON pi.id = fp.product_item_id
 LEFT JOIN "product" AS p ON p.id = pi.product_id
@@ -80,19 +80,19 @@ ORDER BY product_item_id
 type AdminListFeaturedProductItemsRow struct {
 	ID            int64       `json:"id"`
 	ProductItemID int64       `json:"product_item_id"`
-	Active        bool        `json:"active"`
 	StartDate     time.Time   `json:"start_date"`
 	EndDate       time.Time   `json:"end_date"`
 	Priority      null.Int    `json:"priority"`
+	Active        bool        `json:"active"`
 	ID_2          null.Int    `json:"id_2"`
 	ProductID     null.Int    `json:"product_id"`
 	ImageID       null.Int    `json:"image_id"`
 	ColorID       null.Int    `json:"color_id"`
-	ProductSku    null.Int    `json:"product_sku"`
 	Price         null.String `json:"price"`
-	Active_2      null.Bool   `json:"active_2"`
 	CreatedAt     null.Time   `json:"created_at"`
 	UpdatedAt     null.Time   `json:"updated_at"`
+	ProductSku    null.Int    `json:"product_sku"`
+	Active_2      null.Bool   `json:"active_2"`
 	ProductName   null.String `json:"product_name"`
 	Description   null.String `json:"description"`
 }
@@ -109,19 +109,19 @@ func (q *Queries) AdminListFeaturedProductItems(ctx context.Context, adminID int
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductItemID,
-			&i.Active,
 			&i.StartDate,
 			&i.EndDate,
 			&i.Priority,
+			&i.Active,
 			&i.ID_2,
 			&i.ProductID,
 			&i.ImageID,
 			&i.ColorID,
-			&i.ProductSku,
 			&i.Price,
-			&i.Active_2,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ProductSku,
+			&i.Active_2,
 			&i.ProductName,
 			&i.Description,
 		); err != nil {
@@ -150,7 +150,7 @@ end_date = COALESCE($3,end_date),
 priority = COALESCE($4,priority)
 WHERE product_item_id = $5
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, product_item_id, active, start_date, end_date, priority
+RETURNING id, product_item_id, start_date, end_date, priority, active
 `
 
 type AdminUpdateFeaturedProductItemParams struct {
@@ -175,10 +175,10 @@ func (q *Queries) AdminUpdateFeaturedProductItem(ctx context.Context, arg AdminU
 	err := row.Scan(
 		&i.ID,
 		&i.ProductItemID,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
 		&i.Priority,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -193,7 +193,7 @@ SELECT 1 AS is_admin
 DELETE FROM "featured_product_item"
 WHERE product_item_id = $1
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, product_item_id, active, start_date, end_date, priority
+RETURNING id, product_item_id, start_date, end_date, priority, active
 `
 
 type DeleteFeaturedProductItemParams struct {
@@ -207,7 +207,7 @@ func (q *Queries) DeleteFeaturedProductItem(ctx context.Context, arg DeleteFeatu
 }
 
 const getFeaturedProductItem = `-- name: GetFeaturedProductItem :one
-SELECT id, product_item_id, active, start_date, end_date, priority FROM "featured_product_item"
+SELECT id, product_item_id, start_date, end_date, priority, active FROM "featured_product_item"
 WHERE product_item_id = $1
 LIMIT 1
 `
@@ -218,16 +218,16 @@ func (q *Queries) GetFeaturedProductItem(ctx context.Context, productItemID int6
 	err := row.Scan(
 		&i.ID,
 		&i.ProductItemID,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
 		&i.Priority,
+		&i.Active,
 	)
 	return &i, err
 }
 
 const listFeaturedProductItems = `-- name: ListFeaturedProductItems :many
-SELECT id, product_item_id, active, start_date, end_date, priority FROM "featured_product_item"
+SELECT id, product_item_id, start_date, end_date, priority, active FROM "featured_product_item"
 ORDER BY product_item_id
 LIMIT $1
 OFFSET $2
@@ -250,10 +250,10 @@ func (q *Queries) ListFeaturedProductItems(ctx context.Context, arg ListFeatured
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProductItemID,
-			&i.Active,
 			&i.StartDate,
 			&i.EndDate,
 			&i.Priority,
+			&i.Active,
 		); err != nil {
 			return nil, err
 		}

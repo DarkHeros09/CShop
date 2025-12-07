@@ -83,7 +83,7 @@ func main() {
 	// multi stage build - stage 2
 	// golang image with cached dependencies
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).
-		From("golang:1.25.2").
+		From("golang:1.25.5").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db
@@ -103,7 +103,8 @@ func main() {
 		WithExec([]string{"chmod", "+x", "install.sh"}).
 		WithExec([]string{"./install.sh"}).
 		WithExec([]string{"dotenvx", "help"}).
-		WithExec([]string{"make", "test"}). // execute go test
+		WithExec([]string{"make", "test"}).     // execute go test
+		WithExec([]string{"make", "testrace"}). // execute go test
 		Stdout(ctx)
 
 	if err != nil {

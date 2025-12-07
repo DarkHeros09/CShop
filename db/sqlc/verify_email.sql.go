@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createVerifyEmail = `-- name: CreateVerifyEmail :one
@@ -19,7 +19,7 @@ INSERT INTO "verify_email" (
     secret_code
 ) VALUES (
     $1, $2
-) RETURNING id, user_id, secret_code, is_used, created_at, expired_at
+) RETURNING id, user_id, secret_code, created_at, expired_at, is_used
 `
 
 type CreateVerifyEmailParams struct {
@@ -34,15 +34,15 @@ func (q *Queries) CreateVerifyEmail(ctx context.Context, arg CreateVerifyEmailPa
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
 
 const getVerifyEmail = `-- name: GetVerifyEmail :one
-SELECT id, user_id, secret_code, is_used, created_at, expired_at FROM "verify_email"
+SELECT id, user_id, secret_code, created_at, expired_at, is_used FROM "verify_email"
 WHERE id = $1 LIMIT 1
 `
 
@@ -53,16 +53,16 @@ func (q *Queries) GetVerifyEmail(ctx context.Context, id int64) (*VerifyEmail, e
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
 
 const getVerifyEmailByEmail = `-- name: GetVerifyEmailByEmail :one
 SELECT u.email, u.username, u.is_blocked, u.is_email_verified, 
-ve.id, ve.user_id, ve.secret_code, ve.is_used, ve.created_at, ve.expired_at FROM "verify_email" AS ve
+ve.id, ve.user_id, ve.secret_code, ve.created_at, ve.expired_at, ve.is_used FROM "verify_email" AS ve
 JOIN "user" AS u ON u.id = ve.user_id
 WHERE u.email = $1
 ORDER BY ve.created_at DESC
@@ -77,9 +77,9 @@ type GetVerifyEmailByEmailRow struct {
 	ID              int64     `json:"id"`
 	UserID          null.Int  `json:"user_id"`
 	SecretCode      string    `json:"secret_code"`
-	IsUsed          bool      `json:"is_used"`
 	CreatedAt       time.Time `json:"created_at"`
 	ExpiredAt       time.Time `json:"expired_at"`
+	IsUsed          bool      `json:"is_used"`
 }
 
 func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (*GetVerifyEmailByEmailRow, error) {
@@ -93,9 +93,9 @@ func (q *Queries) GetVerifyEmailByEmail(ctx context.Context, email string) (*Get
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
@@ -112,7 +112,7 @@ SET is_used = TRUE
 WHERE secret_code = $2
 AND user_id = (SELECT id FROM t1)
 AND expired_at > NOW()
-RETURNING id, user_id, secret_code, is_used, created_at, expired_at
+RETURNING id, user_id, secret_code, created_at, expired_at, is_used
 ),
 t3 AS (
 UPDATE "user"

@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateProductPromotion = `-- name: AdminCreateProductPromotion :one
@@ -267,7 +267,7 @@ func (q *Queries) ListProductPromotions(ctx context.Context, arg ListProductProm
 }
 
 const listProductPromotionsWithImages = `-- name: ListProductPromotionsWithImages :many
-SELECT pp.product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.active, p.created_at, p.updated_at, search, promo.id, promo.name, promo.description, discount_rate, promo.active, start_date, end_date, pi.id, pi.product_id, image_id, color_id, product_sku, price, pi.active, pi.created_at, pi.updated_at FROM "product_promotion" AS pp
+SELECT pp.product_id, promotion_id, product_promotion_image, pp.active, p.id, category_id, brand_id, p.name, p.description, p.created_at, p.updated_at, p.active, search, promo.id, promo.name, promo.description, discount_rate, start_date, end_date, promo.active, pi.id, pi.product_id, image_id, color_id, price, pi.created_at, pi.updated_at, product_sku, pi.active FROM "product_promotion" AS pp
 LEFT JOIN "product" AS p ON p.id = pp.product_id
 JOIN "promotion" AS promo ON promo.id = pp.promotion_id AND promo.active = TRUE AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 JOIN "product_item" AS pi ON pi.product_id = p.id AND pi.active =TRUE
@@ -285,26 +285,26 @@ type ListProductPromotionsWithImagesRow struct {
 	BrandID               null.Int    `json:"brand_id"`
 	Name                  null.String `json:"name"`
 	Description           null.String `json:"description"`
-	Active_2              null.Bool   `json:"active_2"`
 	CreatedAt             null.Time   `json:"created_at"`
 	UpdatedAt             null.Time   `json:"updated_at"`
+	Active_2              null.Bool   `json:"active_2"`
 	Search                null.String `json:"search"`
 	ID_2                  int64       `json:"id_2"`
 	Name_2                string      `json:"name_2"`
 	Description_2         string      `json:"description_2"`
 	DiscountRate          int64       `json:"discount_rate"`
-	Active_3              bool        `json:"active_3"`
 	StartDate             time.Time   `json:"start_date"`
 	EndDate               time.Time   `json:"end_date"`
+	Active_3              bool        `json:"active_3"`
 	ID_3                  int64       `json:"id_3"`
 	ProductID_2           int64       `json:"product_id_2"`
 	ImageID               int64       `json:"image_id"`
 	ColorID               int64       `json:"color_id"`
-	ProductSku            int64       `json:"product_sku"`
 	Price                 string      `json:"price"`
-	Active_4              bool        `json:"active_4"`
 	CreatedAt_2           time.Time   `json:"created_at_2"`
 	UpdatedAt_2           time.Time   `json:"updated_at_2"`
+	ProductSku            int64       `json:"product_sku"`
+	Active_4              bool        `json:"active_4"`
 }
 
 func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]*ListProductPromotionsWithImagesRow, error) {
@@ -326,26 +326,26 @@ func (q *Queries) ListProductPromotionsWithImages(ctx context.Context) ([]*ListP
 			&i.BrandID,
 			&i.Name,
 			&i.Description,
-			&i.Active_2,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Active_2,
 			&i.Search,
 			&i.ID_2,
 			&i.Name_2,
 			&i.Description_2,
 			&i.DiscountRate,
-			&i.Active_3,
 			&i.StartDate,
 			&i.EndDate,
+			&i.Active_3,
 			&i.ID_3,
 			&i.ProductID_2,
 			&i.ImageID,
 			&i.ColorID,
-			&i.ProductSku,
 			&i.Price,
-			&i.Active_4,
 			&i.CreatedAt_2,
 			&i.UpdatedAt_2,
+			&i.ProductSku,
+			&i.Active_4,
 		); err != nil {
 			return nil, err
 		}

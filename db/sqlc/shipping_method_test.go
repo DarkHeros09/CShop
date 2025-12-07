@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/stretchr/testify/require"
 )
 

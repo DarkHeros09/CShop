@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -40,7 +40,7 @@ func TestCreateShopOrderItem(t *testing.T) {
 }
 
 func TestGetShopOrderItem(t *testing.T) {
-	t.Parallel()
+
 	shopOrderItem1, _ := createRandomShopOrderItem(t)
 	shopOrderItem2, err := testStore.GetShopOrderItem(context.Background(), shopOrderItem1.ID)
 
@@ -128,7 +128,7 @@ func TestListShopOrderItemsByUserIDOrderID(t *testing.T) {
 }
 
 func TestListShopOrderItems(t *testing.T) {
-	t.Parallel()
+
 	// var wg sync.WaitGroup
 	// wg.Add(10)
 	for i := 0; i < 5; i++ {

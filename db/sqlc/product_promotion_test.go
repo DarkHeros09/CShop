@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -137,7 +137,7 @@ func TestDeleteProductPromotion(t *testing.T) {
 }
 
 func TestListProductPromotions(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 5; i++ {
 		createRandomProductPromotion(t)
 	}
@@ -158,7 +158,7 @@ func TestListProductPromotions(t *testing.T) {
 }
 
 func TestListProductPromotionsWithImages(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 5; i++ {
 		createRandomProductPromotion(t)
 	}

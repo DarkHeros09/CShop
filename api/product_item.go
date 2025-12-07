@@ -9,7 +9,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -260,7 +260,6 @@ func (server *Server) deleteProductItem(ctx *fiber.Ctx) error {
 //////////////* Pagination List API //////////////
 
 type listProductItemsV2QueryRequest struct {
-	Limit            int32     `query:"limit" validate:"required,min=5,max=10"`
 	CategoryID       null.Int  `query:"category_id" validate:"omitempty"`
 	BrandID          null.Int  `query:"brand_id" validate:"omitempty"`
 	SizeID           null.Int  `query:"size_id" validate:"omitempty"`
@@ -273,6 +272,7 @@ type listProductItemsV2QueryRequest struct {
 	OrderByHighPrice null.Bool `query:"order_by_high_price" validate:"omitempty"`
 	OrderByNew       null.Bool `query:"order_by_new" validate:"omitempty"`
 	OrderByOld       null.Bool `query:"order_by_old" validate:"omitempty"`
+	Limit            int32     `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
@@ -335,7 +335,6 @@ func (server *Server) listProductItemsV2(ctx *fiber.Ctx) error {
 type listProductItemsNextPageQueryRequest struct {
 	ProductItemCursor int64       `query:"product_item_cursor" validate:"required,min=1"`
 	ProductCursor     int64       `query:"product_cursor" validate:"required,min=1"`
-	Limit             int32       `query:"limit" validate:"required,min=5,max=10"`
 	CategoryID        null.Int    `query:"category_id" validate:"omitempty"`
 	BrandID           null.Int    `query:"brand_id" validate:"omitempty"`
 	SizeID            null.Int    `query:"size_id" validate:"omitempty"`
@@ -350,6 +349,7 @@ type listProductItemsNextPageQueryRequest struct {
 	CreatedAtCursor   null.String `query:"created_at_cursor" validate:"omitempty"`
 	OrderByNew        null.Bool   `query:"order_by_new" validate:"omitempty"`
 	OrderByOld        null.Bool   `query:"order_by_old" validate:"omitempty"`
+	Limit             int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
@@ -410,8 +410,8 @@ func (server *Server) listProductItemsNextPage(ctx *fiber.Ctx) error {
 //////////////* Paginated Search API //////////////
 
 type searchProductItemsQueryRequest struct {
-	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
 	Query string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
+	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
@@ -463,8 +463,8 @@ func (server *Server) searchProductItems(ctx *fiber.Ctx) error {
 type searchProductItemsNextPageQueryRequest struct {
 	ProductItemCursor int64  `query:"product_item_cursor" validate:"required,min=1"`
 	ProductCursor     int64  `query:"product_cursor" validate:"required,min=1"`
-	Limit             int32  `query:"limit" validate:"required,min=5,max=10"`
 	Query             string `query:"query" validate:"omitempty,required,alphanumunicode_space"`
+	Limit             int32  `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) searchProductItemsNextPage(ctx *fiber.Ctx) error {
