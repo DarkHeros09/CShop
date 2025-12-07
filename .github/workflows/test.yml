@@ -35,7 +35,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v6
       with:
-        go-version: '>=1.25.4'
+        go-version: '>=1.25.5'
         cache: false
   
     - name: Install golang-migrate
@@ -52,6 +52,11 @@ jobs:
 
     - name: Test
       run: make test
+      env:
+        DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
+
+    - name: Race Test
+      run: make testrace
       env:
         DOTENV_PRIVATE_KEY_TEST: ${{ secrets.DOTENV_PRIVATE_KEY_TEST }}
       

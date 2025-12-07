@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -33,12 +33,12 @@ func createRandomNotification(t *testing.T) Notification {
 }
 
 func TestCreateNotification(t *testing.T) {
-	t.Parallel()
+
 	createRandomNotification(t)
 }
 
 func TestGetNotification(t *testing.T) {
-	t.Parallel()
+
 	notification1 := createRandomNotification(t)
 
 	arg := GetNotificationParams{
@@ -58,7 +58,7 @@ func TestGetNotification(t *testing.T) {
 
 }
 func TestGetNotificationV2(t *testing.T) {
-	t.Parallel()
+
 	notification1 := createRandomNotification(t)
 
 	notification2, err := testStore.GetNotificationV2(context.Background(), notification1.UserID)

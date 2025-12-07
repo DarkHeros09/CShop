@@ -18,7 +18,7 @@ INSERT INTO "admin" (
 ) VALUES (
   $1, $2, $3, $4
 )
-RETURNING id, username, email, password, active, type_id, created_at, updated_at, last_login
+RETURNING id, username, email, password, type_id, created_at, updated_at, last_login, active
 `
 
 type CreateAdminParams struct {
@@ -41,11 +41,11 @@ func (q *Queries) CreateAdmin(ctx context.Context, arg CreateAdminParams) (*Admi
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Active,
 		&i.TypeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastLogin,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -61,7 +61,7 @@ func (q *Queries) DeleteAdmin(ctx context.Context, id int64) error {
 }
 
 const getAdmin = `-- name: GetAdmin :one
-SELECT id, username, email, password, active, type_id, created_at, updated_at, last_login FROM "admin"
+SELECT id, username, email, password, type_id, created_at, updated_at, last_login, active FROM "admin"
 WHERE id = $1 LIMIT 1
 `
 
@@ -73,17 +73,17 @@ func (q *Queries) GetAdmin(ctx context.Context, id int64) (*Admin, error) {
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Active,
 		&i.TypeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastLogin,
+		&i.Active,
 	)
 	return &i, err
 }
 
 const getAdminByEmail = `-- name: GetAdminByEmail :one
-SELECT id, username, email, password, active, type_id, created_at, updated_at, last_login FROM "admin"
+SELECT id, username, email, password, type_id, created_at, updated_at, last_login, active FROM "admin"
 WHERE email = $1 LIMIT 1
 `
 
@@ -95,17 +95,17 @@ func (q *Queries) GetAdminByEmail(ctx context.Context, email string) (*Admin, er
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Active,
 		&i.TypeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastLogin,
+		&i.Active,
 	)
 	return &i, err
 }
 
 const listAdmins = `-- name: ListAdmins :many
-SELECT id, username, email, password, active, type_id, created_at, updated_at, last_login FROM "admin"
+SELECT id, username, email, password, type_id, created_at, updated_at, last_login, active FROM "admin"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -130,11 +130,11 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]*Admi
 			&i.Username,
 			&i.Email,
 			&i.Password,
-			&i.Active,
 			&i.TypeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.LastLogin,
+			&i.Active,
 		); err != nil {
 			return nil, err
 		}
@@ -151,7 +151,7 @@ UPDATE "admin"
 SET active = $2,
 updated_at = NOW()
 WHERE id = $1
-RETURNING id, username, email, password, active, type_id, created_at, updated_at, last_login
+RETURNING id, username, email, password, type_id, created_at, updated_at, last_login, active
 `
 
 type UpdateAdminParams struct {
@@ -167,11 +167,11 @@ func (q *Queries) UpdateAdmin(ctx context.Context, arg UpdateAdminParams) (*Admi
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.Active,
 		&i.TypeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.LastLogin,
+		&i.Active,
 	)
 	return &i, err
 }

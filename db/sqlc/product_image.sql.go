@@ -8,7 +8,7 @@ package db
 import (
 	"context"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateProductImages = `-- name: AdminCreateProductImages :one

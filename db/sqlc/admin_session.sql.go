@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createAdminSession = `-- name: CreateAdminSession :one
@@ -25,7 +25,7 @@ INSERT INTO "admin_session" (
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, admin_id, refresh_token, admin_agent, client_ip, is_blocked, created_at, updated_at, expires_at
+RETURNING id, admin_id, refresh_token, admin_agent, client_ip, created_at, updated_at, expires_at, is_blocked
 `
 
 type CreateAdminSessionParams struct {
@@ -55,16 +55,16 @@ func (q *Queries) CreateAdminSession(ctx context.Context, arg CreateAdminSession
 		&i.RefreshToken,
 		&i.AdminAgent,
 		&i.ClientIp,
-		&i.IsBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiresAt,
+		&i.IsBlocked,
 	)
 	return &i, err
 }
 
 const getAdminSession = `-- name: GetAdminSession :one
-SELECT id, admin_id, refresh_token, admin_agent, client_ip, is_blocked, created_at, updated_at, expires_at FROM "admin_session"
+SELECT id, admin_id, refresh_token, admin_agent, client_ip, created_at, updated_at, expires_at, is_blocked FROM "admin_session"
 WHERE id = $1 LIMIT 1
 `
 
@@ -77,10 +77,10 @@ func (q *Queries) GetAdminSession(ctx context.Context, id uuid.UUID) (*AdminSess
 		&i.RefreshToken,
 		&i.AdminAgent,
 		&i.ClientIp,
-		&i.IsBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiresAt,
+		&i.IsBlocked,
 	)
 	return &i, err
 }
@@ -93,7 +93,7 @@ updated_at = now()
 WHERE id = $2
 AND admin_id = $3
 AND refresh_token = $4
-RETURNING id, admin_id, refresh_token, admin_agent, client_ip, is_blocked, created_at, updated_at, expires_at
+RETURNING id, admin_id, refresh_token, admin_agent, client_ip, created_at, updated_at, expires_at, is_blocked
 `
 
 type UpdateAdminSessionParams struct {
@@ -117,10 +117,10 @@ func (q *Queries) UpdateAdminSession(ctx context.Context, arg UpdateAdminSession
 		&i.RefreshToken,
 		&i.AdminAgent,
 		&i.ClientIp,
-		&i.IsBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiresAt,
+		&i.IsBlocked,
 	)
 	return &i, err
 }

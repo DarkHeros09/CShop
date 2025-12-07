@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreatePromotion = `-- name: AdminCreatePromotion :one
@@ -30,7 +30,7 @@ INSERT INTO "promotion" (
 SELECT $1, $2, $3,
 $4, $5, $6 FROM t1
 WHERE is_admin=1
-RETURNING id, name, description, discount_rate, active, start_date, end_date
+RETURNING id, name, description, discount_rate, start_date, end_date, active
 `
 
 type AdminCreatePromotionParams struct {
@@ -59,9 +59,9 @@ func (q *Queries) AdminCreatePromotion(ctx context.Context, arg AdminCreatePromo
 		&i.Name,
 		&i.Description,
 		&i.DiscountRate,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -83,7 +83,7 @@ start_date = COALESCE($5,start_date),
 end_date = COALESCE($6,end_date)
 WHERE "promotion".id = $7
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, name, description, discount_rate, active, start_date, end_date
+RETURNING id, name, description, discount_rate, start_date, end_date, active
 `
 
 type AdminUpdatePromotionParams struct {
@@ -114,9 +114,9 @@ func (q *Queries) AdminUpdatePromotion(ctx context.Context, arg AdminUpdatePromo
 		&i.Name,
 		&i.Description,
 		&i.DiscountRate,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -132,7 +132,7 @@ INSERT INTO "promotion" (
 ) VALUES (
   $1, $2, $3, $4, $5, $6
 )
-RETURNING id, name, description, discount_rate, active, start_date, end_date
+RETURNING id, name, description, discount_rate, start_date, end_date, active
 `
 
 type CreatePromotionParams struct {
@@ -159,9 +159,9 @@ func (q *Queries) CreatePromotion(ctx context.Context, arg CreatePromotionParams
 		&i.Name,
 		&i.Description,
 		&i.DiscountRate,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -177,7 +177,7 @@ func (q *Queries) DeletePromotion(ctx context.Context, id int64) error {
 }
 
 const getPromotion = `-- name: GetPromotion :one
-SELECT id, name, description, discount_rate, active, start_date, end_date FROM "promotion"
+SELECT id, name, description, discount_rate, start_date, end_date, active FROM "promotion"
 WHERE id = $1 LIMIT 1
 `
 
@@ -189,15 +189,15 @@ func (q *Queries) GetPromotion(ctx context.Context, id int64) (*Promotion, error
 		&i.Name,
 		&i.Description,
 		&i.DiscountRate,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
+		&i.Active,
 	)
 	return &i, err
 }
 
 const listPromotions = `-- name: ListPromotions :many
-SELECT id, name, description, discount_rate, active, start_date, end_date FROM "promotion"
+SELECT id, name, description, discount_rate, start_date, end_date, active FROM "promotion"
 ORDER BY id
 `
 
@@ -215,9 +215,9 @@ func (q *Queries) ListPromotions(ctx context.Context) ([]*Promotion, error) {
 			&i.Name,
 			&i.Description,
 			&i.DiscountRate,
-			&i.Active,
 			&i.StartDate,
 			&i.EndDate,
+			&i.Active,
 		); err != nil {
 			return nil, err
 		}
@@ -240,7 +240,7 @@ active = COALESCE($4,active),
 start_date = COALESCE($5,start_date),
 end_date = COALESCE($6,end_date)
 WHERE id = $7
-RETURNING id, name, description, discount_rate, active, start_date, end_date
+RETURNING id, name, description, discount_rate, start_date, end_date, active
 `
 
 type UpdatePromotionParams struct {
@@ -271,9 +271,9 @@ func (q *Queries) UpdatePromotion(ctx context.Context, arg UpdatePromotionParams
 		&i.Name,
 		&i.Description,
 		&i.DiscountRate,
-		&i.Active,
 		&i.StartDate,
 		&i.EndDate,
+		&i.Active,
 	)
 	return &i, err
 }

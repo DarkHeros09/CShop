@@ -17,7 +17,7 @@ INSERT INTO "reset_passwords" (
     secret_code
 ) VALUES (
     $1, $2
-) RETURNING id, user_id, secret_code, is_used, created_at, updated_at, expired_at
+) RETURNING id, user_id, secret_code, created_at, updated_at, expired_at, is_used
 `
 
 type CreateResetPasswordParams struct {
@@ -32,16 +32,16 @@ func (q *Queries) CreateResetPassword(ctx context.Context, arg CreateResetPasswo
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
 
 const getLastUsedResetPassword = `-- name: GetLastUsedResetPassword :one
-SELECT rp.id, rp.user_id, rp.secret_code, rp.is_used, rp.created_at, rp.updated_at, rp.expired_at FROM "reset_passwords" AS rp
+SELECT rp.id, rp.user_id, rp.secret_code, rp.created_at, rp.updated_at, rp.expired_at, rp.is_used FROM "reset_passwords" AS rp
 JOIN "user" AS u ON u.id = rp.user_id
 WHERE u.email = $1
 AND is_used = TRUE
@@ -58,16 +58,16 @@ func (q *Queries) GetLastUsedResetPassword(ctx context.Context, email string) (*
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
 
 const getResetPassword = `-- name: GetResetPassword :one
-SELECT id, user_id, secret_code, is_used, created_at, updated_at, expired_at FROM "reset_passwords"
+SELECT id, user_id, secret_code, created_at, updated_at, expired_at, is_used FROM "reset_passwords"
 WHERE id = $1 LIMIT 1
 `
 
@@ -78,10 +78,10 @@ func (q *Queries) GetResetPassword(ctx context.Context, id int64) (*ResetPasswor
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
@@ -110,7 +110,7 @@ func (q *Queries) GetResetPasswordUserIDByID(ctx context.Context, arg GetResetPa
 
 const getResetPasswordsByEmail = `-- name: GetResetPasswordsByEmail :one
 SELECT u.email, u.username, u.is_blocked AS is_blocked_user, u.is_email_verified, 
-rp.id, rp.user_id, rp.secret_code, rp.is_used, rp.created_at, rp.updated_at, rp.expired_at FROM "reset_passwords" AS rp
+rp.id, rp.user_id, rp.secret_code, rp.created_at, rp.updated_at, rp.expired_at, rp.is_used FROM "reset_passwords" AS rp
 JOIN "user" AS u ON u.id = rp.user_id
 WHERE u.email = $1
 ORDER BY rp.created_at DESC
@@ -125,10 +125,10 @@ type GetResetPasswordsByEmailRow struct {
 	ID              int64     `json:"id"`
 	UserID          int64     `json:"user_id"`
 	SecretCode      string    `json:"secret_code"`
-	IsUsed          bool      `json:"is_used"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	ExpiredAt       time.Time `json:"expired_at"`
+	IsUsed          bool      `json:"is_used"`
 }
 
 func (q *Queries) GetResetPasswordsByEmail(ctx context.Context, email string) (*GetResetPasswordsByEmailRow, error) {
@@ -142,10 +142,10 @@ func (q *Queries) GetResetPasswordsByEmail(ctx context.Context, email string) (*
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }
@@ -159,7 +159,7 @@ WHERE
     AND secret_code = $2
     AND is_used = FALSE
     AND expired_at > now()
-RETURNING id, user_id, secret_code, is_used, created_at, updated_at, expired_at
+RETURNING id, user_id, secret_code, created_at, updated_at, expired_at, is_used
 `
 
 type UpdateResetPasswordParams struct {
@@ -174,10 +174,10 @@ func (q *Queries) UpdateResetPassword(ctx context.Context, arg UpdateResetPasswo
 		&i.ID,
 		&i.UserID,
 		&i.SecretCode,
-		&i.IsUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ExpiredAt,
+		&i.IsUsed,
 	)
 	return &i, err
 }

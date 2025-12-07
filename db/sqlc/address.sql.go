@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createAddress = `-- name: CreateAddress :one
@@ -145,7 +145,7 @@ func (q *Queries) GetAddressByCity(ctx context.Context, city string) (*Address, 
 }
 
 const getUserAddress = `-- name: GetUserAddress :one
-SELECT ad.id, user_id, name, telephone, address_line, region, city, ad.created_at, ad.updated_at, u.id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, u.created_at, u.updated_at FROM "address" AS ad
+SELECT ad.id, user_id, name, telephone, address_line, region, city, ad.created_at, ad.updated_at, u.id, username, email, password, default_payment, default_address_id, u.created_at, u.updated_at, is_blocked, is_email_verified FROM "address" AS ad
 JOIN "user" AS u ON u.id = ad.user_id
 WHERE user_id = $1
 AND ad.id = $2
@@ -171,12 +171,12 @@ type GetUserAddressRow struct {
 	Username         string    `json:"username"`
 	Email            string    `json:"email"`
 	Password         string    `json:"password"`
-	IsBlocked        bool      `json:"is_blocked"`
-	IsEmailVerified  bool      `json:"is_email_verified"`
 	DefaultPayment   null.Int  `json:"default_payment"`
 	DefaultAddressID null.Int  `json:"default_address_id"`
 	CreatedAt_2      time.Time `json:"created_at_2"`
 	UpdatedAt_2      time.Time `json:"updated_at_2"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
 }
 
 func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) (*GetUserAddressRow, error) {
@@ -196,12 +196,12 @@ func (q *Queries) GetUserAddress(ctx context.Context, arg GetUserAddressParams) 
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt_2,
 		&i.UpdatedAt_2,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }

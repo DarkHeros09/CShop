@@ -8,7 +8,7 @@ package db
 import (
 	"context"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createUserReview = `-- name: CreateUserReview :one
@@ -19,7 +19,7 @@ INSERT INTO "user_review" (
 ) VALUES (
   $1, $2, $3
 )
-RETURNING id, user_id, ordered_product_id, rating_value, created_at, updated_at
+RETURNING id, user_id, ordered_product_id, created_at, updated_at, rating_value
 `
 
 type CreateUserReviewParams struct {
@@ -35,9 +35,9 @@ func (q *Queries) CreateUserReview(ctx context.Context, arg CreateUserReviewPara
 		&i.ID,
 		&i.UserID,
 		&i.OrderedProductID,
-		&i.RatingValue,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RatingValue,
 	)
 	return &i, err
 }
@@ -46,7 +46,7 @@ const deleteUserReview = `-- name: DeleteUserReview :one
 DELETE FROM "user_review"
 WHERE id = $1
 And user_id =$2
-RETURNING id, user_id, ordered_product_id, rating_value, created_at, updated_at
+RETURNING id, user_id, ordered_product_id, created_at, updated_at, rating_value
 `
 
 type DeleteUserReviewParams struct {
@@ -61,15 +61,15 @@ func (q *Queries) DeleteUserReview(ctx context.Context, arg DeleteUserReviewPara
 		&i.ID,
 		&i.UserID,
 		&i.OrderedProductID,
-		&i.RatingValue,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RatingValue,
 	)
 	return &i, err
 }
 
 const getUserReview = `-- name: GetUserReview :one
-SELECT id, user_id, ordered_product_id, rating_value, created_at, updated_at FROM "user_review"
+SELECT id, user_id, ordered_product_id, created_at, updated_at, rating_value FROM "user_review"
 WHERE id = $1 
 AND user_id = $2
 LIMIT 1
@@ -87,15 +87,15 @@ func (q *Queries) GetUserReview(ctx context.Context, arg GetUserReviewParams) (*
 		&i.ID,
 		&i.UserID,
 		&i.OrderedProductID,
-		&i.RatingValue,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RatingValue,
 	)
 	return &i, err
 }
 
 const listUserReviews = `-- name: ListUserReviews :many
-SELECT id, user_id, ordered_product_id, rating_value, created_at, updated_at FROM "user_review"
+SELECT id, user_id, ordered_product_id, created_at, updated_at, rating_value FROM "user_review"
 WHERE user_id = $3
 ORDER BY id
 LIMIT $1
@@ -121,9 +121,9 @@ func (q *Queries) ListUserReviews(ctx context.Context, arg ListUserReviewsParams
 			&i.ID,
 			&i.UserID,
 			&i.OrderedProductID,
-			&i.RatingValue,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.RatingValue,
 		); err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ rating_value = COALESCE($2,rating_value),
 updated_at = now()
 WHERE id = $3
 AND user_id = $4
-RETURNING id, user_id, ordered_product_id, rating_value, created_at, updated_at
+RETURNING id, user_id, ordered_product_id, created_at, updated_at, rating_value
 `
 
 type UpdateUserReviewParams struct {
@@ -165,9 +165,9 @@ func (q *Queries) UpdateUserReview(ctx context.Context, arg UpdateUserReviewPara
 		&i.ID,
 		&i.UserID,
 		&i.OrderedProductID,
-		&i.RatingValue,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.RatingValue,
 	)
 	return &i, err
 }

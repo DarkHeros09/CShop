@@ -9,7 +9,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -23,9 +23,9 @@ type createPromotionJsonRequest struct {
 	Name         string `json:"name" validate:"required,alphanumunicode_space"`
 	Description  string `json:"description" validate:"required"`
 	DiscountRate int64  `json:"discount_rate" validate:"required,min=1"`
-	Active       bool   `json:"active" validate:"boolean"`
 	StartDate    string `json:"start_date" validate:"required"`
 	EndDate      string `json:"end_date" validate:"required"`
+	Active       bool   `json:"active" validate:"boolean"`
 }
 
 const (

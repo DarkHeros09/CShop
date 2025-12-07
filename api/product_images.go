@@ -8,7 +8,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/imagekit-developer/imagekit-go/api/media"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"

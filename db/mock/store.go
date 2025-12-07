@@ -15,7 +15,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	uuid "github.com/google/uuid"
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 	gomock "go.uber.org/mock/gomock"
 )
 

@@ -57,17 +57,19 @@ WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE;
 
 -- name: GetProductItemWithPromotions :one
-SELECT pi.*, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/ pimg.product_image_1,
+SELECT pi.*,  /*ps.size_value,*/ pimg.product_image_1,
 pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ COALESCE(bpromo.active, FALSE) AS brand_promo_active, COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -95,17 +97,19 @@ WHERE pi.id = $1 LIMIT 1;
 
 -- name: ListProductItemsByIDs :many
 SELECT pi.id, p.name, pi.product_id, 
-pi.price, pi.active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/ pimg.product_image_1,
+pi.price, /*ps.size_value,*/ pimg.product_image_1,
 pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate,
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date, COALESCE(stock.total_stock,0) as qty_in_stock,
+ pi.active, COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -163,17 +167,19 @@ OFFSET $2;
 -- LIMIT 1
 -- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
- cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
+ cpromo.discount_rate as category_promo_discount_rate, 
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
  bpromo.id as brand_promo_id, bpromo.name as brand_promo_name, bpromo.description as brand_promo_description,
- bpromo.discount_rate as brand_promo_discount_rate, COALESCE(bpromo.active, false) as brand_promo_active,
+ bpromo.discount_rate as brand_promo_discount_rate,
  bpromo.start_date as brand_promo_start_date, bpromo.end_date as brand_promo_end_date,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
- ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
- ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
+ ppromo.discount_rate as product_promo_discount_rate, 
+ ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date,  COALESCE(stock.total_stock,0) as qty_in_stock,
+ p.active as parent_product_active, COALESCE(cpromo.active, false) as category_promo_active,  COALESCE(bpromo.active, false) as brand_promo_active,
+ COALESCE(ppromo.active, false) as product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -242,17 +248,20 @@ LIMIT $1;
 -- LIMIT 1
 -- )
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
- cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
+ cpromo.discount_rate as category_promo_discount_rate, 
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
  bpromo.id as brand_promo_id, bpromo.name as brand_promo_name, bpromo.description as brand_promo_description,
- bpromo.discount_rate as brand_promo_discount_rate, COALESCE(bpromo.active, false) as brand_promo_active,
+ bpromo.discount_rate as brand_promo_discount_rate, 
  bpromo.start_date as brand_promo_start_date, bpromo.end_date as brand_promo_end_date,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
- ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
- ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
+ ppromo.discount_rate as product_promo_discount_rate, 
+ ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active as parent_product_active,
+ COALESCE(cpromo.active, false) as category_promo_active, COALESCE(bpromo.active, false) as brand_promo_active,
+ COALESCE(ppromo.active, false) as product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -318,17 +327,20 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate,
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -443,17 +455,20 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock,  p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -610,17 +625,20 @@ LIMIT $1;
 
 -- name: SearchProductItemsOld :many
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,   /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
- cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
+ cpromo.discount_rate as category_promo_discount_rate, 
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
  bpromo.id as brand_promo_id, bpromo.name as brand_promo_name, bpromo.description as brand_promo_description,
- bpromo.discount_rate as brand_promo_discount_rate, COALESCE(bpromo.active, false) as brand_promo_active,
+ bpromo.discount_rate as brand_promo_discount_rate, 
  bpromo.start_date as brand_promo_start_date, bpromo.end_date as brand_promo_end_date,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
- ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
- ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
+ ppromo.discount_rate as product_promo_discount_rate, 
+ ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active as parent_product_active,
+ COALESCE(cpromo.active, false) as category_promo_active, COALESCE(bpromo.active, false) as brand_promo_active,
+ COALESCE(ppromo.active, false) as product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id AND p.active = TRUE
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -661,17 +679,20 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,   /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -720,17 +741,20 @@ LIMIT $1;
 
 -- name: SearchProductItemsNextPageOld :many
 SELECT pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active as parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value, COUNT(*) OVER() AS total_count,
  cpromo.id as category_promo_id, cpromo.name as category_promo_name, cpromo.description as category_promo_description,
- cpromo.discount_rate as category_promo_discount_rate, COALESCE(cpromo.active, false) as category_promo_active,
+ cpromo.discount_rate as category_promo_discount_rate, 
  cpromo.start_date as category_promo_start_date, cpromo.end_date as category_promo_end_date,
  bpromo.id as brand_promo_id, bpromo.name as brand_promo_name, bpromo.description as brand_promo_description,
- bpromo.discount_rate as brand_promo_discount_rate, COALESCE(bpromo.active, false) as brand_promo_active,
+ bpromo.discount_rate as brand_promo_discount_rate,
  bpromo.start_date as brand_promo_start_date, bpromo.end_date as brand_promo_end_date,
  ppromo.id as product_promo_id, ppromo.name as product_promo_name, ppromo.description as product_promo_description,
- ppromo.discount_rate as product_promo_discount_rate, COALESCE(ppromo.active, false) as product_promo_active,
- ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date
+ ppromo.discount_rate as product_promo_discount_rate, 
+ ppromo.start_date as product_promo_start_date, ppromo.end_date as product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock,  p.active as parent_product_active,
+ COALESCE(cpromo.active, false) as category_promo_active, COALESCE(bpromo.active, false) as brand_promo_active,
+ COALESCE(ppromo.active, false) as product_promo_active
 FROM "product_item" AS pi
 LEFT JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -774,17 +798,20 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -878,11 +905,13 @@ WHERE id = $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -923,11 +952,13 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -969,11 +1000,13 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image, /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
- bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+ bpromo.discount_rate AS brand_promo_discount_rate, 
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(bpromo.active, FALSE) AS brand_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -1014,11 +1047,13 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
- bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date
+ bpromo.discount_rate AS brand_promo_discount_rate, 
+ bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(bpromo.active, FALSE) AS brand_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -1061,11 +1096,13 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
- cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+ cpromo.discount_rate AS category_promo_discount_rate, 
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -1106,11 +1143,13 @@ LIMIT $1;
 WITH t1 AS(
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,  /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
 cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
- cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date
+ cpromo.discount_rate AS category_promo_discount_rate, 
+ cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active, 
+ COALESCE(cpromo.active, FALSE) AS category_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id
@@ -1181,17 +1220,20 @@ WITH sales_data AS (
 )
 SELECT 
  pi.*, p.name, p.description, p.category_id, p.brand_id, pc.category_name, pc.parent_category_id,
- pc.category_image, pb.brand_name, pb.brand_image, p.active AS parent_product_active, COALESCE(stock.total_stock,0) as qty_in_stock, /*ps.size_value,*/
+ pc.category_image, pb.brand_name, pb.brand_image,   /*ps.size_value,*/
  pimg.product_image_1, pimg.product_image_2, pimg.product_image_3, pclr.color_value,
  cpromo.id AS category_promo_id, cpromo.name AS category_promo_name, cpromo.description AS category_promo_description,
- cpromo.discount_rate AS category_promo_discount_rate, COALESCE(cpromo.active, FALSE) AS category_promo_active,
+ cpromo.discount_rate AS category_promo_discount_rate, 
  cpromo.start_date AS category_promo_start_date, cpromo.end_date AS category_promo_end_date,
  bpromo.id AS brand_promo_id, bpromo.name AS brand_promo_name, bpromo.description AS brand_promo_description,
- bpromo.discount_rate AS brand_promo_discount_rate, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ bpromo.discount_rate AS brand_promo_discount_rate, 
  bpromo.start_date AS brand_promo_start_date, bpromo.end_date AS brand_promo_end_date,
  ppromo.id AS product_promo_id, ppromo.name AS product_promo_name, ppromo.description AS product_promo_description,
- ppromo.discount_rate AS product_promo_discount_rate, COALESCE(ppromo.active, FALSE) AS product_promo_active,
- ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date, sd.total_sold
+ ppromo.discount_rate AS product_promo_discount_rate, 
+ ppromo.start_date AS product_promo_start_date, ppromo.end_date AS product_promo_end_date, sd.total_sold,
+ COALESCE(stock.total_stock,0) as qty_in_stock, p.active AS parent_product_active,
+ COALESCE(cpromo.active, FALSE) AS category_promo_active, COALESCE(bpromo.active, FALSE) AS brand_promo_active,
+ COALESCE(ppromo.active, FALSE) AS product_promo_active
 FROM "product_item" AS pi
 INNER JOIN "product" AS p ON p.id = pi.product_id
 -- LEFT JOIN "product_size" AS ps ON ps.product_item_id = pi.id

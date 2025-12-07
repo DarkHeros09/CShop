@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -78,7 +78,7 @@ func TestGetShoppingCartItem(t *testing.T) {
 // }
 
 func TestUpdateShoppingCartItem(t *testing.T) {
-	t.Parallel()
+
 	shoppingCartItem1, _ := createRandomShoppingCartItem(t)
 	arg := UpdateShoppingCartItemParams{
 		Qty:            null.IntFrom(int64(shoppingCartItem1.Qty) + 1),
@@ -96,7 +96,7 @@ func TestUpdateShoppingCartItem(t *testing.T) {
 }
 
 func TestDeleteShoppingCartItem(t *testing.T) {
-	t.Parallel()
+
 	shoppingCartItem1, shoppingCart := createRandomShoppingCartItem(t)
 
 	arg := DeleteShoppingCartItemParams{
@@ -118,7 +118,7 @@ func TestDeleteShoppingCartItem(t *testing.T) {
 }
 
 func TestListShoppingCartItemes(t *testing.T) {
-	t.Parallel()
+
 	shoppingCart := createRandomShoppingCart(t)
 	// var wg sync.WaitGroup
 
@@ -177,7 +177,7 @@ func TestListShoppingCartItemes(t *testing.T) {
 }
 
 func TestListShoppingCartItemsByCartID(t *testing.T) {
-	t.Parallel()
+
 	shoppingCart := createRandomShoppingCart(t)
 	for i := 0; i < 5; i++ {
 		// time.Sleep(time.Millisecond * 500)
@@ -202,7 +202,7 @@ func TestListShoppingCartItemsByCartID(t *testing.T) {
 }
 
 func TestListShoppingCartItemsByUserID(t *testing.T) {
-	t.Parallel()
+
 	// var shoppingCartItems []ListShoppingCartItemsByUserIDRow
 	// var totalShoppingCartItems []ListShoppingCartItemsByUserIDRow
 	// shoppingCartItemsChan := make(chan []ListShoppingCartItemsByUserIDRow)
@@ -258,7 +258,7 @@ func TestListShoppingCartItemsByUserID(t *testing.T) {
 }
 
 func TestDeleteALLShoppingCartItemes(t *testing.T) {
-	t.Parallel()
+
 	shoppingCart := createRandomShoppingCart(t)
 	for i := 0; i < 5; i++ {
 		productItem := createRandomProductItem(t)

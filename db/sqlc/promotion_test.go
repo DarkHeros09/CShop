@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -112,11 +112,14 @@ func TestUpdatePromotionName(t *testing.T) {
 
 func TestUpdatePromotionDiscriptionAndDiscountRate(t *testing.T) {
 	promotion1 := createRandomPromotion(t)
+	updatedDiscountRate := util.RandomInt(1, 99)
+	for promotion1.DiscountRate == updatedDiscountRate {
+		updatedDiscountRate = util.RandomInt(1, 99)
+	}
 	arg := UpdatePromotionParams{
 		Description:  null.StringFrom(util.RandomString(5)),
-		DiscountRate: null.IntFrom(util.RandomInt(1, 99)),
-		ID:           promotion1.ID,
-	}
+		DiscountRate: null.IntFrom(updatedDiscountRate),
+		ID:           promotion1.ID}
 
 	promotion2, err := testStore.UpdatePromotion(context.Background(), arg)
 	require.NoError(t, err)

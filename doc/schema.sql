@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2025-10-10T15:50:35.748Z
+-- Generated at: 2025-12-07T09:35:39.721Z
 
 CREATE TABLE "admin_type" (
   "id" bigserial PRIMARY KEY NOT NULL,
@@ -14,11 +14,11 @@ CREATE TABLE "admin" (
   "username" varchar UNIQUE NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
-  "active" boolean NOT NULL DEFAULT true,
   "type_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "last_login" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "last_login" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "active" boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE "admin_session" (
@@ -27,10 +27,10 @@ CREATE TABLE "admin_session" (
   "refresh_token" varchar NOT NULL,
   "admin_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
-  "is_blocked" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "expires_at" timestamptz NOT NULL
+  "expires_at" timestamptz NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "user" (
@@ -38,31 +38,31 @@ CREATE TABLE "user" (
   "username" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password" varchar NOT NULL,
-  "is_blocked" boolean NOT NULL DEFAULT false,
-  "is_email_verified" boolean NOT NULL DEFAULT false,
   "default_payment" bigint,
   "default_address_id" bigint,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "is_blocked" boolean NOT NULL DEFAULT false,
+  "is_email_verified" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "verify_email" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint,
   "secret_code" varchar NOT NULL,
-  "is_used" bool NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
+  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes'),
+  "is_used" bool NOT NULL DEFAULT false
 );
 
 CREATE TABLE "reset_passwords" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint NOT NULL,
   "secret_code" varchar NOT NULL,
-  "is_used" bool NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
+  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes'),
+  "is_used" bool NOT NULL DEFAULT false
 );
 
 CREATE TABLE "user_session" (
@@ -71,19 +71,19 @@ CREATE TABLE "user_session" (
   "refresh_token" varchar NOT NULL,
   "user_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
-  "is_blocked" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "expires_at" timestamptz NOT NULL
+  "expires_at" timestamptz NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "notification" (
   "user_id" bigint UNIQUE NOT NULL,
   "device_id" varchar,
   "fcm_token" varchar,
-  "delivery_updates" boolean NOT NULL DEFAULT true,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "delivery_updates" boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE "app_policy" (
@@ -109,9 +109,9 @@ CREATE TABLE "user_review" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "user_id" bigint NOT NULL,
   "ordered_product_id" bigint UNIQUE NOT NULL,
-  "rating_value" int NOT NULL DEFAULT 0,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "rating_value" int NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "payment_method" (
@@ -140,9 +140,9 @@ CREATE TABLE "shopping_cart_item" (
   "shopping_cart_id" bigint NOT NULL,
   "product_item_id" bigint NOT NULL,
   "size_id" bigint NOT NULL,
-  "qty" int NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "qty" int NOT NULL
 );
 
 CREATE TABLE "wish_list" (
@@ -165,21 +165,21 @@ CREATE TABLE "shop_order_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_item_id" bigint NOT NULL,
   "order_id" bigint NOT NULL,
-  "quantity" int NOT NULL DEFAULT 0,
   "price" varchar NOT NULL,
-  "discount" int NOT NULL DEFAULT 0,
   "shipping_method_price" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "quantity" int NOT NULL DEFAULT 0,
+  "discount" int NOT NULL DEFAULT 0
 );
 
 CREATE TABLE "featured_product_item" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "product_item_id" bigint NOT NULL,
-  "active" boolean NOT NULL DEFAULT false,
   "start_date" timestamptz NOT NULL DEFAULT 'now()',
   "end_date" timestamptz NOT NULL,
-  "priority" int DEFAULT 0
+  "priority" int DEFAULT 0,
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "product_item" (
@@ -187,11 +187,11 @@ CREATE TABLE "product_item" (
   "product_id" bigint NOT NULL,
   "image_id" bigint NOT NULL,
   "color_id" bigint NOT NULL,
-  "product_sku" bigint NOT NULL,
   "price" varchar NOT NULL,
-  "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "product_sku" bigint NOT NULL,
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "product" (
@@ -200,9 +200,9 @@ CREATE TABLE "product" (
   "brand_id" bigint NOT NULL,
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
-  "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "product_size" (
@@ -248,9 +248,9 @@ CREATE TABLE "home_page_text_banner" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "name" varchar UNIQUE NOT NULL,
   "description" varchar NOT NULL,
-  "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "promotion" (
@@ -258,9 +258,9 @@ CREATE TABLE "promotion" (
   "name" varchar NOT NULL,
   "description" varchar NOT NULL,
   "discount_rate" bigint NOT NULL,
-  "active" boolean NOT NULL DEFAULT false,
   "start_date" timestamptz NOT NULL,
-  "end_date" timestamptz NOT NULL
+  "end_date" timestamptz NOT NULL,
+  "active" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "category_promotion" (
@@ -297,7 +297,6 @@ CREATE TABLE "product_configuration" (
 CREATE TABLE "shop_order" (
   "id" bigserial PRIMARY KEY NOT NULL,
   "track_number" varchar NOT NULL,
-  "order_number" int NOT NULL,
   "user_id" bigint NOT NULL,
   "payment_type_id" bigint NOT NULL,
   "shipping_address_id" bigint,
@@ -311,7 +310,8 @@ CREATE TABLE "shop_order" (
   "address_city" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "completed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z'
+  "completed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "order_number" int NOT NULL
 );
 
 CREATE TABLE "order_status" (
@@ -341,9 +341,9 @@ COMMENT ON COLUMN "payment_type"."value" IS 'for companies payment system like B
 
 COMMENT ON COLUMN "shop_order_item"."price" IS 'price of product when ordered';
 
-COMMENT ON COLUMN "shop_order_item"."discount" IS 'discount of product when ordered';
-
 COMMENT ON COLUMN "shop_order_item"."shipping_method_price" IS 'shipping method price when the order was made';
+
+COMMENT ON COLUMN "shop_order_item"."discount" IS 'discount of product when ordered';
 
 COMMENT ON COLUMN "product_item"."active" IS 'default is false';
 

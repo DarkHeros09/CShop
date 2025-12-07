@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createShoppingCartItem = `-- name: CreateShoppingCartItem :one
@@ -21,7 +21,7 @@ INSERT INTO "shopping_cart_item" (
 ) VALUES (
   $1, $2, $3, $4
 )
-RETURNING id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_at
+RETURNING id, shopping_cart_id, product_item_id, size_id, created_at, updated_at, qty
 `
 
 type CreateShoppingCartItemParams struct {
@@ -44,9 +44,9 @@ func (q *Queries) CreateShoppingCartItem(ctx context.Context, arg CreateShopping
 		&i.ShoppingCartID,
 		&i.ProductItemID,
 		&i.SizeID,
-		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Qty,
 	)
 	return &i, err
 }
@@ -81,7 +81,7 @@ WITH t1 AS(
 )
 DELETE FROM "shopping_cart_item"
 WHERE shopping_cart_id = (SELECT id FROM t1)
-RETURNING id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_at
+RETURNING id, shopping_cart_id, product_item_id, size_id, created_at, updated_at, qty
 `
 
 type DeleteShoppingCartItemAllByUserParams struct {
@@ -103,9 +103,9 @@ func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg Delet
 			&i.ShoppingCartID,
 			&i.ProductItemID,
 			&i.SizeID,
-			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Qty,
 		); err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (q *Queries) DeleteShoppingCartItemAllByUser(ctx context.Context, arg Delet
 }
 
 const getShoppingCartItem = `-- name: GetShoppingCartItem :one
-SELECT id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_at FROM "shopping_cart_item"
+SELECT id, shopping_cart_id, product_item_id, size_id, created_at, updated_at, qty FROM "shopping_cart_item"
 WHERE id = $1 LIMIT 1
 `
 
@@ -130,15 +130,15 @@ func (q *Queries) GetShoppingCartItem(ctx context.Context, id int64) (*ShoppingC
 		&i.ShoppingCartID,
 		&i.ProductItemID,
 		&i.SizeID,
-		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Qty,
 	)
 	return &i, err
 }
 
 const getShoppingCartItemByUserIDCartID = `-- name: GetShoppingCartItemByUserIDCartID :many
-SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.qty, sci.created_at, sci.updated_at, sc.user_id
+SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.created_at, sci.updated_at, sci.qty, sc.user_id
 FROM "shopping_cart_item" AS sci
 LEFT JOIN "shopping_cart" AS sc ON sc.id = sci.shopping_cart_id
 WHERE sc.user_id = $1
@@ -155,9 +155,9 @@ type GetShoppingCartItemByUserIDCartIDRow struct {
 	ShoppingCartID int64     `json:"shopping_cart_id"`
 	ProductItemID  int64     `json:"product_item_id"`
 	SizeID         int64     `json:"size_id"`
-	Qty            int32     `json:"qty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	Qty            int32     `json:"qty"`
 	UserID         null.Int  `json:"user_id"`
 }
 
@@ -175,9 +175,9 @@ func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg Get
 			&i.ShoppingCartID,
 			&i.ProductItemID,
 			&i.SizeID,
-			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Qty,
 			&i.UserID,
 		); err != nil {
 			return nil, err
@@ -192,7 +192,7 @@ func (q *Queries) GetShoppingCartItemByUserIDCartID(ctx context.Context, arg Get
 
 const listShoppingCartItems = `-- name: ListShoppingCartItems :many
 
-SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.qty, sci.created_at, sci.updated_at FROM "shopping_cart_item" AS sci
+SELECT sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.created_at, sci.updated_at, sci.qty FROM "shopping_cart_item" AS sci
 ORDER BY sci.id
 LIMIT $1
 OFFSET $2
@@ -218,9 +218,9 @@ func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCar
 			&i.ShoppingCartID,
 			&i.ProductItemID,
 			&i.SizeID,
-			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Qty,
 		); err != nil {
 			return nil, err
 		}
@@ -233,7 +233,7 @@ func (q *Queries) ListShoppingCartItems(ctx context.Context, arg ListShoppingCar
 }
 
 const listShoppingCartItemsByCartID = `-- name: ListShoppingCartItemsByCartID :many
-SELECT id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_at FROM "shopping_cart_item"
+SELECT id, shopping_cart_id, product_item_id, size_id, created_at, updated_at, qty FROM "shopping_cart_item"
 WHERE shopping_cart_id = $1
 ORDER BY id
 `
@@ -252,9 +252,9 @@ func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCar
 			&i.ShoppingCartID,
 			&i.ProductItemID,
 			&i.SizeID,
-			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Qty,
 		); err != nil {
 			return nil, err
 		}
@@ -267,7 +267,7 @@ func (q *Queries) ListShoppingCartItemsByCartID(ctx context.Context, shoppingCar
 }
 
 const listShoppingCartItemsByUserID = `-- name: ListShoppingCartItemsByUserID :many
-SELECT sc.user_id, sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.qty, sci.created_at, sci.updated_at, ps.qty AS size_qty, ps.size_value
+SELECT sc.user_id, sci.id, sci.shopping_cart_id, sci.product_item_id, sci.size_id, sci.created_at, sci.updated_at, sci.qty, ps.qty AS size_qty, ps.size_value
 FROM "shopping_cart" AS sc
 LEFT JOIN "shopping_cart_item" AS sci ON sci.shopping_cart_id = sc.id
 JOIN "product_size" AS ps ON sci.size_id = ps.id
@@ -280,9 +280,9 @@ type ListShoppingCartItemsByUserIDRow struct {
 	ShoppingCartID null.Int  `json:"shopping_cart_id"`
 	ProductItemID  null.Int  `json:"product_item_id"`
 	SizeID         null.Int  `json:"size_id"`
-	Qty            null.Int  `json:"qty"`
 	CreatedAt      null.Time `json:"created_at"`
 	UpdatedAt      null.Time `json:"updated_at"`
+	Qty            null.Int  `json:"qty"`
 	SizeQty        int32     `json:"size_qty"`
 	SizeValue      string    `json:"size_value"`
 }
@@ -302,9 +302,9 @@ func (q *Queries) ListShoppingCartItemsByUserID(ctx context.Context, userID int6
 			&i.ShoppingCartID,
 			&i.ProductItemID,
 			&i.SizeID,
-			&i.Qty,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Qty,
 			&i.SizeQty,
 			&i.SizeValue,
 		); err != nil {
@@ -331,7 +331,7 @@ size_id = COALESCE($2,size_id),
 qty = COALESCE($3,qty),
 updated_at = now()
 WHERE sci.id = $4
-RETURNING id, shopping_cart_id, product_item_id, size_id, qty, created_at, updated_at, (SELECT user_id FROM t1)
+RETURNING id, shopping_cart_id, product_item_id, size_id, created_at, updated_at, qty, (SELECT user_id FROM t1)
 `
 
 type UpdateShoppingCartItemParams struct {
@@ -347,9 +347,9 @@ type UpdateShoppingCartItemRow struct {
 	ShoppingCartID int64     `json:"shopping_cart_id"`
 	ProductItemID  int64     `json:"product_item_id"`
 	SizeID         int64     `json:"size_id"`
-	Qty            int32     `json:"qty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	Qty            int32     `json:"qty"`
 	UserID         int64     `json:"user_id"`
 }
 
@@ -367,9 +367,9 @@ func (q *Queries) UpdateShoppingCartItem(ctx context.Context, arg UpdateShopping
 		&i.ShoppingCartID,
 		&i.ProductItemID,
 		&i.SizeID,
-		&i.Qty,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Qty,
 		&i.UserID,
 	)
 	return &i, err

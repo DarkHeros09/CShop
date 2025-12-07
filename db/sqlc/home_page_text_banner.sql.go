@@ -8,7 +8,7 @@ package db
 import (
 	"context"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createHomePageTextBanner = `-- name: CreateHomePageTextBanner :one
@@ -28,7 +28,7 @@ SELECT $1,
  $3
 FROM t1
 WHERE EXISTS (SELECT 1 FROM t1)
-RETURNING id, name, description, active, created_at, updated_at
+RETURNING id, name, description, created_at, updated_at, active
 `
 
 type CreateHomePageTextBannerParams struct {
@@ -50,9 +50,9 @@ func (q *Queries) CreateHomePageTextBanner(ctx context.Context, arg CreateHomePa
 		&i.ID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 	)
 	return &i, err
 }
@@ -80,7 +80,7 @@ func (q *Queries) DeleteHomePageTextBanner(ctx context.Context, arg DeleteHomePa
 }
 
 const getHomePageTextBanner = `-- name: GetHomePageTextBanner :one
-SELECT id, name, description, active, created_at, updated_at FROM "home_page_text_banner"
+SELECT id, name, description, created_at, updated_at, active FROM "home_page_text_banner"
 WHERE id = $1 LIMIT 1
 `
 
@@ -91,15 +91,15 @@ func (q *Queries) GetHomePageTextBanner(ctx context.Context, id int64) (*HomePag
 		&i.ID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 	)
 	return &i, err
 }
 
 const listHomePageTextBanners = `-- name: ListHomePageTextBanners :many
-SELECT id, name, description, active, created_at, updated_at FROM "home_page_text_banner"
+SELECT id, name, description, created_at, updated_at, active FROM "home_page_text_banner"
 WHERE active = TRUE
 ORDER BY created_at DESC, updated_at DESC
 LIMIT 5
@@ -118,9 +118,9 @@ func (q *Queries) ListHomePageTextBanners(ctx context.Context) ([]*HomePageTextB
 			&i.ID,
 			&i.Name,
 			&i.Description,
-			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Active,
 		); err != nil {
 			return nil, err
 		}
@@ -146,7 +146,7 @@ description = COALESCE($2,description),
 active = COALESCE($3,active)
 WHERE "home_page_text_banner".id = $4
 AND EXISTS (SELECT 1 FROM t1)
-RETURNING id, name, description, active, created_at, updated_at
+RETURNING id, name, description, created_at, updated_at, active
 `
 
 type UpdateHomePageTextBannerParams struct {
@@ -170,9 +170,9 @@ func (q *Queries) UpdateHomePageTextBanner(ctx context.Context, arg UpdateHomePa
 		&i.ID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 	)
 	return &i, err
 }

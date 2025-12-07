@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateBrandPromotion = `-- name: AdminCreateBrandPromotion :one
@@ -274,7 +274,7 @@ func (q *Queries) ListBrandPromotions(ctx context.Context, arg ListBrandPromotio
 }
 
 const listBrandPromotionsWithImages = `-- name: ListBrandPromotionsWithImages :many
-SELECT brand_id, promotion_id, brand_promotion_image, bp.active, pb.id, brand_name, brand_image, promo.id, name, description, discount_rate, promo.active, start_date, end_date FROM "brand_promotion" AS bp
+SELECT brand_id, promotion_id, brand_promotion_image, bp.active, pb.id, brand_name, brand_image, promo.id, name, description, discount_rate, start_date, end_date, promo.active FROM "brand_promotion" AS bp
 LEFT JOIN "product_brand" AS pb ON pb.id = bp.brand_id
 JOIN "promotion" AS promo ON promo.id = bp.promotion_id AND promo.active = true AND promo.start_date <= CURRENT_DATE AND promo.end_date >= CURRENT_DATE
 WHERE bp.brand_promotion_image IS NOT NULL AND bp.active = true
@@ -293,9 +293,9 @@ type ListBrandPromotionsWithImagesRow struct {
 	Name                string      `json:"name"`
 	Description         string      `json:"description"`
 	DiscountRate        int64       `json:"discount_rate"`
-	Active_2            bool        `json:"active_2"`
 	StartDate           time.Time   `json:"start_date"`
 	EndDate             time.Time   `json:"end_date"`
+	Active_2            bool        `json:"active_2"`
 }
 
 func (q *Queries) ListBrandPromotionsWithImages(ctx context.Context) ([]*ListBrandPromotionsWithImagesRow, error) {
@@ -319,9 +319,9 @@ func (q *Queries) ListBrandPromotionsWithImages(ctx context.Context) ([]*ListBra
 			&i.Name,
 			&i.Description,
 			&i.DiscountRate,
-			&i.Active_2,
 			&i.StartDate,
 			&i.EndDate,
+			&i.Active_2,
 		); err != nil {
 			return nil, err
 		}

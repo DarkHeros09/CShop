@@ -7,7 +7,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -91,6 +91,7 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 	)
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		println("err: ", err)
 		return nil
 	}
 
@@ -99,6 +100,7 @@ func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
 		AccessToken:          accessToken,
 		AccessTokenExpiresAt: accessPayload.ExpiredAt,
 	}
+
 	ctx.Status(fiber.StatusOK).JSON(rsp)
 	return nil
 }

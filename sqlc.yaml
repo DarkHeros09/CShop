@@ -25,48 +25,48 @@ sql:
         - db_type: "pg_catalog.int8"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "Int"
 
         - db_type: "bigserial"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "Int"
 
         - db_type: "pg_catalog.int4"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "Int"
 
         - db_type: "pg_catalog.varchar"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "String"
 
         - db_type: "timestamptz"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "Time"
 
         - db_type: "pg_catalog.bool"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "Bool"
 
         - column: "product.search"
           nullable: true
           go_type:
-            import: "github.com/guregu/null/v5"
+            import: "github.com/guregu/null/v6"
             package: "null"
             type: "String"

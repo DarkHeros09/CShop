@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ func TestCreateVariation(t *testing.T) {
 }
 
 func TestGetVariation(t *testing.T) {
-	t.Parallel()
+
 	variation1 := createRandomVariation(t)
 	variation2, err := testStore.GetVariation(context.Background(), variation1.ID)
 
@@ -44,7 +44,7 @@ func TestGetVariation(t *testing.T) {
 }
 
 func TestUpdateVariationNameAndCategoryID(t *testing.T) {
-	t.Parallel()
+
 	variation1 := createRandomVariation(t)
 	// category := createRandomProductCategory(t)
 	arg := UpdateVariationParams{
@@ -64,7 +64,7 @@ func TestUpdateVariationNameAndCategoryID(t *testing.T) {
 }
 
 func TestDeleteVariation(t *testing.T) {
-	t.Parallel()
+
 	variation1 := createRandomVariation(t)
 	err := testStore.DeleteVariation(context.Background(), variation1.CategoryID)
 
@@ -79,7 +79,7 @@ func TestDeleteVariation(t *testing.T) {
 }
 
 func TestListVariations(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 10; i++ {
 		createRandomVariation(t)
 	}

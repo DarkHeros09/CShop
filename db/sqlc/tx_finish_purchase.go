@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 )
 
 // FinishedPurchaseTx contains the input parameters of the purchase transaction

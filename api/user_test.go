@@ -13,7 +13,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 
@@ -70,7 +70,7 @@ func addAccess(
 }
 
 func TestCreateUserAPI(t *testing.T) {
-	t.Parallel()
+
 	userChan := make(chan *db.CreateUserWithCartAndWishListRow)
 	passwordChan := make(chan string)
 
@@ -365,20 +365,8 @@ func EqSignUpTxParamsMatcher(arg db.SignUpTxParams, password string) gomock.Matc
 }
 
 func TestSignUpAPI(t *testing.T) {
-	t.Parallel()
-	userChan := make(chan *db.SignUpTxResult)
-	passwordChan := make(chan string)
-	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
-
-	go func() {
-		user, password := randomSignUpV2User()
-		userChan <- user
-		passwordChan <- password
-		verifyEmailChan <- randomVerifyEmail(user)
-	}()
-	user := <-userChan
-	password := <-passwordChan
-	verifyEmail := <-verifyEmailChan
+	user, password := randomSignUpV2User()
+	verifyEmail := randomVerifyEmail(user)
 	// user, password := randomUserWithCartAndWishList(t)
 	finalRsp := userResponse{
 		UserID:          user.ID,
@@ -603,7 +591,7 @@ func TestSignUpAPI(t *testing.T) {
 	}
 }
 func TestVerifyOTPAPI(t *testing.T) {
-	t.Parallel()
+
 	userChan := make(chan *db.SignUpTxResult)
 	passwordChan := make(chan string)
 	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
@@ -781,7 +769,7 @@ func TestVerifyOTPAPI(t *testing.T) {
 }
 
 func TestResendOTPAPI(t *testing.T) {
-	t.Parallel()
+
 	userChan := make(chan *db.SignUpTxResult)
 	// passwordChan := make(chan string)
 	verifyEmailChan := make(chan *db.GetVerifyEmailByEmailRow)
@@ -886,7 +874,7 @@ func TestResendOTPAPI(t *testing.T) {
 }
 
 func TestResetPasswordRequestAPI(t *testing.T) {
-	t.Parallel()
+
 	userChan := make(chan *db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
 	// verifyEmailChan := make(chan db.GetVerifyEmailByEmailRow)
@@ -991,7 +979,7 @@ func TestResetPasswordRequestAPI(t *testing.T) {
 }
 
 func TestVerifyResetPasswordOTPAPI(t *testing.T) {
-	t.Parallel()
+
 	userChan := make(chan *db.GetUserByEmailRow)
 	// passwordChan := make(chan string)
 	resetPasswordChan := make(chan *db.GetResetPasswordsByEmailRow)
@@ -1119,20 +1107,10 @@ func TestVerifyResetPasswordOTPAPI(t *testing.T) {
 }
 
 func TestResendPasswordResetOTPAPI(t *testing.T) {
-	t.Parallel()
-	userChan := make(chan *db.GetUserByEmailRow)
-	// passwordChan := make(chan string)
-	resetPasswordChan := make(chan *db.GetResetPasswordsByEmailRow)
 
-	go func() {
-		user, _ := randomUserLogin(t)
-		userChan <- user
-		// passwordChan <- password
-		resetPasswordChan <- randomResetPasswordOTP(user)
-	}()
-	user := <-userChan
+	user, _ := randomUserLogin(t)
 	// password := <-passwordChan
-	resetPassword := <-resetPasswordChan
+	resetPassword := randomResetPasswordOTP(user)
 	// user, password := randomUserWithCartAndWishList(t)
 
 	testCases := []struct {
@@ -1254,7 +1232,7 @@ func EqUpdateUserParamsMatcher(arg db.UpdateUserParams, password string) gomock.
 }
 
 func TestResetPasswordApprovedAPI(t *testing.T) {
-	t.Parallel()
+	//
 	user, _ := randomUserLogin(t)
 	newPassword := "newpassword"
 	passwordReset := randomResetPassword(user)
@@ -1366,7 +1344,7 @@ func TestResetPasswordApprovedAPI(t *testing.T) {
 }
 
 func TestLoginUserAPI(t *testing.T) {
-	t.Parallel()
+
 	user, password := randomUserLogin(t)
 	user2, password2 := randomUserLoginNotVerified(t)
 

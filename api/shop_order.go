@@ -12,7 +12,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -211,8 +211,8 @@ type listShopOrdersV2ParamsRequest struct {
 }
 
 type listShopOrdersV2QueryRequest struct {
-	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listShopOrdersV2(ctx *fiber.Ctx) error {
@@ -264,8 +264,8 @@ type listShopOrdersNextPageParamsRequest struct {
 
 type listShopOrdersNextPageQueryRequest struct {
 	Cursor      int64       `query:"cursor" validate:"required,min=1"`
-	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
@@ -319,9 +319,9 @@ type adminListShopOrdersV2ParamsRequest struct {
 }
 
 type adminListShopOrdersV2QueryRequest struct {
-	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
 	UserID      null.Int64  `query:"user_id" validate:"omitempty,required"`
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
@@ -369,8 +369,8 @@ type adminListShopOrdersNextPageParamsRequest struct {
 
 type adminListShopOrdersNextPageQueryRequest struct {
 	Cursor      int64       `query:"cursor" validate:"required,min=1"`
-	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 	OrderStatus null.String `query:"order_status" validate:"omitempty,required"`
+	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
 func (server *Server) listShopOrdersNextPageForAdmin(ctx *fiber.Ctx) error {

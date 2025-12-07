@@ -32,13 +32,13 @@ func createRandomResetPassword(t *testing.T, user User) ResetPassword {
 }
 
 func TestCreateResetPassword(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	createRandomResetPassword(t, user1)
 }
 
 func TestGetResetPassword(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	resetPassword := createRandomResetPassword(t, user1)
 
@@ -54,7 +54,7 @@ func TestGetResetPassword(t *testing.T) {
 }
 
 func TestGetResetPasswordByEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	resetPassword := createRandomResetPassword(t, user1)
 
