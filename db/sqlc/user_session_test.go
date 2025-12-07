@@ -7,7 +7,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/google/uuid"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,12 +42,12 @@ func createRandomUserSession(t *testing.T) UserSession {
 }
 
 func TestCreateUserSession(t *testing.T) {
-	t.Parallel()
+
 	createRandomUserSession(t)
 }
 
 func TestGetUserSession(t *testing.T) {
-	t.Parallel()
+
 	userSession1 := createRandomUserSession(t)
 
 	userSession2, err := testStore.GetUserSession(context.Background(), userSession1.ID)

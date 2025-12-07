@@ -9,7 +9,6 @@ import (
 )
 
 func TestSignUpTx(t *testing.T) {
-	t.Parallel()
 
 	user := SignUpTxParams{
 		Username: util.RandomUser(),

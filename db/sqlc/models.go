@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 type Address struct {
@@ -28,11 +28,11 @@ type Admin struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	Active    bool      `json:"active"`
 	TypeID    int64     `json:"type_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	LastLogin time.Time `json:"last_login"`
+	Active    bool      `json:"active"`
 }
 
 type AdminSession struct {
@@ -41,10 +41,10 @@ type AdminSession struct {
 	RefreshToken string    `json:"refresh_token"`
 	AdminAgent   string    `json:"admin_agent"`
 	ClientIp     string    `json:"client_ip"`
-	IsBlocked    bool      `json:"is_blocked"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	ExpiresAt    time.Time `json:"expires_at"`
+	IsBlocked    bool      `json:"is_blocked"`
 }
 
 type AdminType struct {
@@ -80,29 +80,29 @@ type CategoryPromotion struct {
 type FeaturedProductItem struct {
 	ID            int64     `json:"id"`
 	ProductItemID int64     `json:"product_item_id"`
-	Active        bool      `json:"active"`
 	StartDate     time.Time `json:"start_date"`
 	EndDate       time.Time `json:"end_date"`
 	Priority      null.Int  `json:"priority"`
+	Active        bool      `json:"active"`
 }
 
 type HomePageTextBanner struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 	// default is false
-	Active    bool      `json:"active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Active bool `json:"active"`
 }
 
 type Notification struct {
 	UserID          int64       `json:"user_id"`
 	DeviceID        null.String `json:"device_id"`
 	FcmToken        null.String `json:"fcm_token"`
-	DeliveryUpdates bool        `json:"delivery_updates"`
 	CreatedAt       time.Time   `json:"created_at"`
 	UpdatedAt       time.Time   `json:"updated_at"`
+	DeliveryUpdates bool        `json:"delivery_updates"`
 }
 
 type OrderStatus struct {
@@ -129,16 +129,16 @@ type PaymentType struct {
 }
 
 type Product struct {
-	ID          int64  `json:"id"`
-	CategoryID  int64  `json:"category_id"`
-	BrandID     int64  `json:"brand_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          int64     `json:"id"`
+	CategoryID  int64     `json:"category_id"`
+	BrandID     int64     `json:"brand_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 	// default is false
-	Active    bool        `json:"active"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-	Search    null.String `json:"search"`
+	Active bool        `json:"active"`
+	Search null.String `json:"search"`
 }
 
 type ProductBrand struct {
@@ -172,16 +172,16 @@ type ProductImage struct {
 }
 
 type ProductItem struct {
-	ID         int64  `json:"id"`
-	ProductID  int64  `json:"product_id"`
-	ImageID    int64  `json:"image_id"`
-	ColorID    int64  `json:"color_id"`
-	ProductSku int64  `json:"product_sku"`
-	Price      string `json:"price"`
+	ID         int64     `json:"id"`
+	ProductID  int64     `json:"product_id"`
+	ImageID    int64     `json:"image_id"`
+	ColorID    int64     `json:"color_id"`
+	Price      string    `json:"price"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	ProductSku int64     `json:"product_sku"`
 	// default is false
-	Active    bool      `json:"active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Active bool `json:"active"`
 }
 
 type ProductPromotion struct {
@@ -200,24 +200,24 @@ type ProductSize struct {
 }
 
 type Promotion struct {
-	ID           int64  `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	DiscountRate int64  `json:"discount_rate"`
+	ID           int64     `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	DiscountRate int64     `json:"discount_rate"`
+	StartDate    time.Time `json:"start_date"`
+	EndDate      time.Time `json:"end_date"`
 	// default is false
-	Active    bool      `json:"active"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
+	Active bool `json:"active"`
 }
 
 type ResetPassword struct {
 	ID         int64     `json:"id"`
 	UserID     int64     `json:"user_id"`
 	SecretCode string    `json:"secret_code"`
-	IsUsed     bool      `json:"is_used"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 	ExpiredAt  time.Time `json:"expired_at"`
+	IsUsed     bool      `json:"is_used"`
 }
 
 type ShippingMethod struct {
@@ -230,7 +230,6 @@ type ShippingMethod struct {
 type ShopOrder struct {
 	ID                int64     `json:"id"`
 	TrackNumber       string    `json:"track_number"`
-	OrderNumber       int32     `json:"order_number"`
 	UserID            int64     `json:"user_id"`
 	PaymentTypeID     int64     `json:"payment_type_id"`
 	ShippingAddressID null.Int  `json:"shipping_address_id"`
@@ -245,21 +244,22 @@ type ShopOrder struct {
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 	CompletedAt       time.Time `json:"completed_at"`
+	OrderNumber       int32     `json:"order_number"`
 }
 
 type ShopOrderItem struct {
 	ID            int64 `json:"id"`
 	ProductItemID int64 `json:"product_item_id"`
 	OrderID       int64 `json:"order_id"`
-	Quantity      int32 `json:"quantity"`
 	// price of product when ordered
 	Price string `json:"price"`
-	// discount of product when ordered
-	Discount int32 `json:"discount"`
 	// shipping method price when the order was made
 	ShippingMethodPrice string    `json:"shipping_method_price"`
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
+	Quantity            int32     `json:"quantity"`
+	// discount of product when ordered
+	Discount int32 `json:"discount"`
 }
 
 type ShoppingCart struct {
@@ -274,9 +274,9 @@ type ShoppingCartItem struct {
 	ShoppingCartID int64     `json:"shopping_cart_id"`
 	ProductItemID  int64     `json:"product_item_id"`
 	SizeID         int64     `json:"size_id"`
-	Qty            int32     `json:"qty"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	Qty            int32     `json:"qty"`
 }
 
 type User struct {
@@ -284,21 +284,21 @@ type User struct {
 	Username         string    `json:"username"`
 	Email            string    `json:"email"`
 	Password         string    `json:"password"`
-	IsBlocked        bool      `json:"is_blocked"`
-	IsEmailVerified  bool      `json:"is_email_verified"`
 	DefaultPayment   null.Int  `json:"default_payment"`
 	DefaultAddressID null.Int  `json:"default_address_id"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
 }
 
 type UserReview struct {
 	ID               int64     `json:"id"`
 	UserID           int64     `json:"user_id"`
 	OrderedProductID int64     `json:"ordered_product_id"`
-	RatingValue      int32     `json:"rating_value"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+	RatingValue      int32     `json:"rating_value"`
 }
 
 type UserSession struct {
@@ -307,10 +307,10 @@ type UserSession struct {
 	RefreshToken string    `json:"refresh_token"`
 	UserAgent    string    `json:"user_agent"`
 	ClientIp     string    `json:"client_ip"`
-	IsBlocked    bool      `json:"is_blocked"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	ExpiresAt    time.Time `json:"expires_at"`
+	IsBlocked    bool      `json:"is_blocked"`
 }
 
 type Variation struct {
@@ -331,9 +331,9 @@ type VerifyEmail struct {
 	ID         int64     `json:"id"`
 	UserID     null.Int  `json:"user_id"`
 	SecretCode string    `json:"secret_code"`
-	IsUsed     bool      `json:"is_used"`
 	CreatedAt  time.Time `json:"created_at"`
 	ExpiredAt  time.Time `json:"expired_at"`
+	IsUsed     bool      `json:"is_used"`
 }
 
 type WishList struct {

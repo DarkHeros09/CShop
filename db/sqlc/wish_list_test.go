@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func createRandomWishList(t *testing.T) WishList {
 }
 
 func TestCreateWishList(t *testing.T) {
-	t.Parallel()
+
 	createRandomWishList(t)
 }
 
@@ -54,7 +54,7 @@ func TestUpdateWishList(t *testing.T) {
 }
 
 func TestDeleteWishList(t *testing.T) {
-	t.Parallel()
+
 	wishList1 := createRandomWishList(t)
 
 	err := testStore.DeleteWishList(context.Background(), wishList1.ID)

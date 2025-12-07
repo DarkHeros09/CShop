@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -362,7 +362,7 @@ func TestDeleteProductItem(t *testing.T) {
 }
 
 func TestListProductItems(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 5; i++ {
 		createRandomProductItem(t)
 	}
@@ -461,7 +461,7 @@ func TestListProductItemsV2(t *testing.T) {
 	require.Greater(t, initialSearchResult[len(initialSearchResult)-1].ID, thirdPage[len(thirdPage)-1].ID)
 }
 func TestListProductItemsV2OrderByHighPrice(t *testing.T) {
-	// t.Parallel()
+	//
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}
@@ -533,7 +533,7 @@ func TestListProductItemsV2OrderByHighPrice(t *testing.T) {
 }
 
 func TestListProductItemsV2OrderByLowPrice(t *testing.T) {
-	// t.Parallel()
+	//
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}
@@ -653,7 +653,7 @@ func TestListProductItemsV2OrderByNew(t *testing.T) {
 }
 
 func TestListProductItemsV2OrderByOld(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 30; i++ {
 		createRandomProductItem(t)
 	}
@@ -736,7 +736,7 @@ func TestSearchProductItems(t *testing.T) {
 }
 
 func TestListProductItemsWithPromotion(t *testing.T) {
-	t.Parallel()
+
 	var productId int64
 	var ok bool = false
 	for {
@@ -787,7 +787,7 @@ func TestListProductItemsWithPromotion(t *testing.T) {
 }
 
 func TestListProductItemsWithBrandPromotion(t *testing.T) {
-	t.Parallel()
+
 	var brandId int64
 	for {
 		pi := createRandomProductItem(t)
@@ -834,7 +834,7 @@ func TestListProductItemsWithBrandPromotion(t *testing.T) {
 }
 
 func TestListProductItemsWithCategoryPromotion(t *testing.T) {
-	t.Parallel()
+
 	var categoryId int64
 	var isOK = true
 	for isOK {

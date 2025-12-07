@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +34,7 @@ func TestCreateShoppingCart(t *testing.T) {
 }
 
 func TestGetShoppingCart(t *testing.T) {
-	t.Parallel()
+
 	shoppingCart1 := createRandomShoppingCart(t)
 
 	shoppingCart2, err := testStore.GetShoppingCart(context.Background(), shoppingCart1.ID)

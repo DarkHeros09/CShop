@@ -7,7 +7,7 @@ import (
 
 	"github.com/cshop/v3/util"
 	"github.com/google/uuid"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,12 +42,12 @@ func createRandomAdminSession(t *testing.T) AdminSession {
 }
 
 func TestCreateAdminSession(t *testing.T) {
-	t.Parallel()
+
 	createRandomAdminSession(t)
 }
 
 func TestGetAdminSession(t *testing.T) {
-	t.Parallel()
+
 	adminSession1 := createRandomAdminSession(t)
 
 	adminSession2, err := testStore.GetAdminSession(context.Background(), adminSession1.ID)

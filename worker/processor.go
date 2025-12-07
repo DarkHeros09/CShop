@@ -6,8 +6,8 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/mail"
 	"github.com/cshop/v3/util"
-	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 )
 

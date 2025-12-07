@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +30,7 @@ func createRandomUserReview(t *testing.T) UserReview {
 	return *userReview
 }
 func TestCreateUserReview(t *testing.T) {
-	t.Parallel()
+
 	createRandomUserReview(t)
 }
 
@@ -53,7 +53,7 @@ func TestGetUserReview(t *testing.T) {
 }
 
 func TestUpdateUserReviewRating(t *testing.T) {
-	t.Parallel()
+
 	userReview1 := createRandomUserReview(t)
 	arg := UpdateUserReviewParams{
 		UserID:           userReview1.UserID,
@@ -73,7 +73,7 @@ func TestUpdateUserReviewRating(t *testing.T) {
 }
 
 func TestDeleteUserReview(t *testing.T) {
-	t.Parallel()
+
 	userReview1 := createRandomUserReview(t)
 
 	arg1 := DeleteUserReviewParams{
@@ -97,7 +97,7 @@ func TestDeleteUserReview(t *testing.T) {
 }
 
 func TestListUserReviews(t *testing.T) {
-	t.Parallel()
+
 	var lastUserReview UserReview
 	// lastUserReviewChan := make(chan UserReview)
 	// var wg sync.WaitGroup

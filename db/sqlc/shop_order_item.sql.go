@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const createShopOrderItem = `-- name: CreateShopOrderItem :one
@@ -23,7 +23,7 @@ INSERT INTO "shop_order_item" (
 ) VALUES (
   $1, $2, $3, $4, $5, $6
 )
-RETURNING id, product_item_id, order_id, quantity, price, discount, shipping_method_price, created_at, updated_at
+RETURNING id, product_item_id, order_id, price, shipping_method_price, created_at, updated_at, quantity, discount
 `
 
 type CreateShopOrderItemParams struct {
@@ -49,12 +49,12 @@ func (q *Queries) CreateShopOrderItem(ctx context.Context, arg CreateShopOrderIt
 		&i.ID,
 		&i.ProductItemID,
 		&i.OrderID,
-		&i.Quantity,
 		&i.Price,
-		&i.Discount,
 		&i.ShippingMethodPrice,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Quantity,
+		&i.Discount,
 	)
 	return &i, err
 }
@@ -69,7 +69,7 @@ SELECT 1 AS is_admin
 DELETE FROM "shop_order_item"
 WHERE "shop_order_item".id = $1
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, product_item_id, order_id, quantity, price, discount, shipping_method_price, created_at, updated_at
+RETURNING id, product_item_id, order_id, price, shipping_method_price, created_at, updated_at, quantity, discount
 `
 
 type DeleteShopOrderItemParams struct {
@@ -84,18 +84,18 @@ func (q *Queries) DeleteShopOrderItem(ctx context.Context, arg DeleteShopOrderIt
 		&i.ID,
 		&i.ProductItemID,
 		&i.OrderID,
-		&i.Quantity,
 		&i.Price,
-		&i.Discount,
 		&i.ShippingMethodPrice,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Quantity,
+		&i.Discount,
 	)
 	return &i, err
 }
 
 const getShopOrderItem = `-- name: GetShopOrderItem :one
-SELECT id, product_item_id, order_id, quantity, price, discount, shipping_method_price, created_at, updated_at FROM "shop_order_item"
+SELECT id, product_item_id, order_id, price, shipping_method_price, created_at, updated_at, quantity, discount FROM "shop_order_item"
 WHERE id = $1 LIMIT 1
 `
 
@@ -106,18 +106,18 @@ func (q *Queries) GetShopOrderItem(ctx context.Context, id int64) (*ShopOrderIte
 		&i.ID,
 		&i.ProductItemID,
 		&i.OrderID,
-		&i.Quantity,
 		&i.Price,
-		&i.Discount,
 		&i.ShippingMethodPrice,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Quantity,
+		&i.Discount,
 	)
 	return &i, err
 }
 
 const getShopOrderItemByUserIDOrderID = `-- name: GetShopOrderItemByUserIDOrderID :one
-SELECT soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at, so.user_id
+SELECT soi.id, soi.product_item_id, soi.order_id, soi.price, soi.shipping_method_price, soi.created_at, soi.updated_at, soi.quantity, soi.discount, so.user_id
 FROM "shop_order_item" AS soi
 LEFT JOIN "shop_order" AS so ON so.id = soi.order_id
 WHERE so.user_id = $1
@@ -134,12 +134,12 @@ type GetShopOrderItemByUserIDOrderIDRow struct {
 	ID                  int64     `json:"id"`
 	ProductItemID       int64     `json:"product_item_id"`
 	OrderID             int64     `json:"order_id"`
-	Quantity            int32     `json:"quantity"`
 	Price               string    `json:"price"`
-	Discount            int32     `json:"discount"`
 	ShippingMethodPrice string    `json:"shipping_method_price"`
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
+	Quantity            int32     `json:"quantity"`
+	Discount            int32     `json:"discount"`
 	UserID              null.Int  `json:"user_id"`
 }
 
@@ -150,19 +150,19 @@ func (q *Queries) GetShopOrderItemByUserIDOrderID(ctx context.Context, arg GetSh
 		&i.ID,
 		&i.ProductItemID,
 		&i.OrderID,
-		&i.Quantity,
 		&i.Price,
-		&i.Discount,
 		&i.ShippingMethodPrice,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Quantity,
+		&i.Discount,
 		&i.UserID,
 	)
 	return &i, err
 }
 
 const listShopOrderItems = `-- name: ListShopOrderItems :many
-SELECT id, product_item_id, order_id, quantity, price, discount, shipping_method_price, created_at, updated_at FROM "shop_order_item"
+SELECT id, product_item_id, order_id, price, shipping_method_price, created_at, updated_at, quantity, discount FROM "shop_order_item"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -186,12 +186,12 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 			&i.ID,
 			&i.ProductItemID,
 			&i.OrderID,
-			&i.Quantity,
 			&i.Price,
-			&i.Discount,
 			&i.ShippingMethodPrice,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Quantity,
+			&i.Discount,
 		); err != nil {
 			return nil, err
 		}
@@ -205,7 +205,7 @@ func (q *Queries) ListShopOrderItems(ctx context.Context, arg ListShopOrderItems
 
 const listShopOrderItemsByUserID = `-- name: ListShopOrderItemsByUserID :many
 
-SELECT so.id, so.track_number, so.order_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.address_name, so.address_telephone, so.address_line, so.address_region, so.address_city, so.created_at, so.updated_at, so.completed_at, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at 
+SELECT so.id, so.track_number, so.user_id, so.payment_type_id, so.shipping_address_id, so.order_total, so.shipping_method_id, so.order_status_id, so.address_name, so.address_telephone, so.address_line, so.address_region, so.address_city, so.created_at, so.updated_at, so.completed_at, so.order_number, soi.id, soi.product_item_id, soi.order_id, soi.price, soi.shipping_method_price, soi.created_at, soi.updated_at, soi.quantity, soi.discount 
 FROM "shop_order" AS so
 LEFT JOIN "shop_order_item" AS soi ON soi.order_id = so.id
 WHERE so.user_id = $3
@@ -223,7 +223,6 @@ type ListShopOrderItemsByUserIDParams struct {
 type ListShopOrderItemsByUserIDRow struct {
 	ID                  int64       `json:"id"`
 	TrackNumber         string      `json:"track_number"`
-	OrderNumber         int32       `json:"order_number"`
 	UserID              int64       `json:"user_id"`
 	PaymentTypeID       int64       `json:"payment_type_id"`
 	ShippingAddressID   null.Int    `json:"shipping_address_id"`
@@ -238,15 +237,16 @@ type ListShopOrderItemsByUserIDRow struct {
 	CreatedAt           time.Time   `json:"created_at"`
 	UpdatedAt           time.Time   `json:"updated_at"`
 	CompletedAt         time.Time   `json:"completed_at"`
+	OrderNumber         int32       `json:"order_number"`
 	ID_2                null.Int    `json:"id_2"`
 	ProductItemID       null.Int    `json:"product_item_id"`
 	OrderID             null.Int    `json:"order_id"`
-	Quantity            null.Int    `json:"quantity"`
 	Price               null.String `json:"price"`
-	Discount            null.Int    `json:"discount"`
 	ShippingMethodPrice null.String `json:"shipping_method_price"`
 	CreatedAt_2         null.Time   `json:"created_at_2"`
 	UpdatedAt_2         null.Time   `json:"updated_at_2"`
+	Quantity            null.Int    `json:"quantity"`
+	Discount            null.Int    `json:"discount"`
 }
 
 // ORDER BY soi.id;
@@ -262,7 +262,6 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 		if err := rows.Scan(
 			&i.ID,
 			&i.TrackNumber,
-			&i.OrderNumber,
 			&i.UserID,
 			&i.PaymentTypeID,
 			&i.ShippingAddressID,
@@ -277,15 +276,16 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CompletedAt,
+			&i.OrderNumber,
 			&i.ID_2,
 			&i.ProductItemID,
 			&i.OrderID,
-			&i.Quantity,
 			&i.Price,
-			&i.Discount,
 			&i.ShippingMethodPrice,
 			&i.CreatedAt_2,
 			&i.UpdatedAt_2,
+			&i.Quantity,
+			&i.Discount,
 		); err != nil {
 			return nil, err
 		}
@@ -298,7 +298,7 @@ func (q *Queries) ListShopOrderItemsByUserID(ctx context.Context, arg ListShopOr
 }
 
 const listShopOrderItemsByUserIDOrderID = `-- name: ListShopOrderItemsByUserIDOrderID :many
-SELECT os.status, so.track_number, soi.shipping_method_price AS delivery_price, so.order_total, soi.id, soi.product_item_id, soi.order_id, soi.quantity, soi.price, soi.discount, soi.shipping_method_price, soi.created_at, soi.updated_at, p.name AS product_name, pt.value as payment_type,
+SELECT os.status, so.track_number, soi.shipping_method_price AS delivery_price, so.order_total, soi.id, soi.product_item_id, soi.order_id, soi.price, soi.shipping_method_price, soi.created_at, soi.updated_at, soi.quantity, soi.discount, p.name AS product_name, pt.value as payment_type,
 pimg.product_image_1 AS product_image,
 pcolor.color_value AS product_color, psize.size_value AS product_size,
 pi.active AS product_active, a.address_line, a.region, a.city,
@@ -330,12 +330,12 @@ type ListShopOrderItemsByUserIDOrderIDRow struct {
 	ID                  int64       `json:"id"`
 	ProductItemID       int64       `json:"product_item_id"`
 	OrderID             int64       `json:"order_id"`
-	Quantity            int32       `json:"quantity"`
 	Price               string      `json:"price"`
-	Discount            int32       `json:"discount"`
 	ShippingMethodPrice string      `json:"shipping_method_price"`
 	CreatedAt           time.Time   `json:"created_at"`
 	UpdatedAt           time.Time   `json:"updated_at"`
+	Quantity            int32       `json:"quantity"`
+	Discount            int32       `json:"discount"`
 	ProductName         null.String `json:"product_name"`
 	PaymentType         null.String `json:"payment_type"`
 	ProductImage        null.String `json:"product_image"`
@@ -372,12 +372,12 @@ func (q *Queries) ListShopOrderItemsByUserIDOrderID(ctx context.Context, arg Lis
 			&i.ID,
 			&i.ProductItemID,
 			&i.OrderID,
-			&i.Quantity,
 			&i.Price,
-			&i.Discount,
 			&i.ShippingMethodPrice,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Quantity,
+			&i.Discount,
 			&i.ProductName,
 			&i.PaymentType,
 			&i.ProductImage,
@@ -411,7 +411,7 @@ updated_at = now()
 WHERE id = $5
 AND order_id = $6
 AND product_item_id = $7
-RETURNING id, product_item_id, order_id, quantity, price, discount, shipping_method_price, created_at, updated_at
+RETURNING id, product_item_id, order_id, price, shipping_method_price, created_at, updated_at, quantity, discount
 `
 
 type UpdateShopOrderItemParams struct {
@@ -443,12 +443,12 @@ func (q *Queries) UpdateShopOrderItem(ctx context.Context, arg UpdateShopOrderIt
 		&i.ID,
 		&i.ProductItemID,
 		&i.OrderID,
-		&i.Quantity,
 		&i.Price,
-		&i.Discount,
 		&i.ShippingMethodPrice,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Quantity,
+		&i.Discount,
 	)
 	return &i, err
 }

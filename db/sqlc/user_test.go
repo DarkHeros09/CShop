@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +44,7 @@ func createRandomUser(t *testing.T) User {
 
 }
 func TestCreateUser(t *testing.T) {
-	t.Parallel()
+
 	createRandomUser(t)
 }
 
@@ -87,7 +87,7 @@ func TestCreateUserWithCart(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	user2, err := testStore.GetUser(context.Background(), user1.ID)
 
@@ -104,7 +104,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestGetUserByEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	user2, err := testStore.GetUserByEmail(context.Background(), user1.Email)
 
@@ -121,7 +121,7 @@ func TestGetUserByEmail(t *testing.T) {
 }
 
 func TestAdminSearchUserByEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	user2, err := testStore.AdminSearchUserByEmail(context.Background(), user1.Email)
 
@@ -130,7 +130,7 @@ func TestAdminSearchUserByEmail(t *testing.T) {
 }
 
 func TestUpdateUserPassword(t *testing.T) {
-	t.Parallel()
+
 	hashedPassword, err := util.HashPassword(util.RandomString(6))
 	require.NoError(t, err)
 	require.NotEmpty(t, hashedPassword)
@@ -172,7 +172,7 @@ func TestUpdateUserPassword(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 
 	arg := UpdateUserParams{
@@ -197,7 +197,7 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestAdminUpdateUser(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 
 	arg := AdminUpdateUserParams{
@@ -236,7 +236,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestListUsers(t *testing.T) {
-	t.Parallel()
+
 	var wg sync.WaitGroup
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
@@ -262,7 +262,7 @@ func TestListUsers(t *testing.T) {
 }
 
 func TestGetActiveUsersCount(t *testing.T) {
-	t.Parallel()
+
 	admin := createRandomAdmin(t)
 	user2, err := testStore.GetActiveUsersCount(context.Background(), admin.ID)
 
@@ -270,7 +270,7 @@ func TestGetActiveUsersCount(t *testing.T) {
 	require.NotEmpty(t, user2)
 }
 func TestGetTotalUsersCount(t *testing.T) {
-	t.Parallel()
+
 	admin := createRandomAdmin(t)
 	user2, err := testStore.GetTotalUsersCount(context.Background(), admin.ID)
 

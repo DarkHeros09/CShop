@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminCreateProduct = `-- name: AdminCreateProduct :one
@@ -28,7 +28,7 @@ INSERT INTO "product" (
 )
 SELECT $1, $2, $3, $4, $5 FROM t1
 WHERE is_admin=1
-RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+RETURNING id, category_id, brand_id, name, description, created_at, updated_at, active, search
 `
 
 type AdminCreateProductParams struct {
@@ -56,9 +56,9 @@ func (q *Queries) AdminCreateProduct(ctx context.Context, arg AdminCreateProduct
 		&i.BrandID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 		&i.Search,
 	)
 	return &i, err
@@ -103,7 +103,7 @@ active = COALESCE($5,active),
 updated_at = now()
 WHERE "product".id = $6
 AND (SELECT is_admin FROM t1) = 1
-RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+RETURNING id, category_id, brand_id, name, description, created_at, updated_at, active, search
 `
 
 type AdminUpdateProductParams struct {
@@ -134,9 +134,9 @@ func (q *Queries) AdminUpdateProduct(ctx context.Context, arg AdminUpdateProduct
 		&i.BrandID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 		&i.Search,
 	)
 	return &i, err
@@ -153,7 +153,7 @@ INSERT INTO "product" (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+RETURNING id, category_id, brand_id, name, description, created_at, updated_at, active, search
 `
 
 type CreateProductParams struct {
@@ -179,9 +179,9 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (*
 		&i.BrandID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 		&i.Search,
 	)
 	return &i, err
@@ -198,7 +198,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, category_id, brand_id, name, description, active, created_at, updated_at, search FROM "product"
+SELECT id, category_id, brand_id, name, description, created_at, updated_at, active, search FROM "product"
 WHERE id = $1 LIMIT 1
 `
 
@@ -211,16 +211,16 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (*Product, error) {
 		&i.BrandID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 		&i.Search,
 	)
 	return &i, err
 }
 
 const getProductsByIDs = `-- name: GetProductsByIDs :many
-SELECT id, category_id, brand_id, name, description, active, created_at, updated_at, search FROM "product"
+SELECT id, category_id, brand_id, name, description, created_at, updated_at, active, search FROM "product"
 WHERE id = ANY($1::bigint[])
 `
 
@@ -239,9 +239,9 @@ func (q *Queries) GetProductsByIDs(ctx context.Context, ids []int64) ([]*Product
 			&i.BrandID,
 			&i.Name,
 			&i.Description,
-			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Active,
 			&i.Search,
 		); err != nil {
 			return nil, err
@@ -255,7 +255,7 @@ func (q *Queries) GetProductsByIDs(ctx context.Context, ids []int64) ([]*Product
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, category_id, brand_id, name, description, active, created_at, updated_at, search ,
+SELECT id, category_id, brand_id, name, description, created_at, updated_at, active, search ,
 COUNT(*) OVER() AS total_count
 FROM "product"
 ORDER BY id
@@ -274,9 +274,9 @@ type ListProductsRow struct {
 	BrandID     int64       `json:"brand_id"`
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
-	Active      bool        `json:"active"`
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`
+	Active      bool        `json:"active"`
 	Search      null.String `json:"search"`
 	TotalCount  int64       `json:"total_count"`
 }
@@ -303,9 +303,9 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]*
 			&i.BrandID,
 			&i.Name,
 			&i.Description,
-			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Active,
 			&i.Search,
 			&i.TotalCount,
 		); err != nil {
@@ -596,7 +596,7 @@ description = COALESCE($4,description),
 active = COALESCE($5,active),
 updated_at = now()
 WHERE id = $6
-RETURNING id, category_id, brand_id, name, description, active, created_at, updated_at, search
+RETURNING id, category_id, brand_id, name, description, created_at, updated_at, active, search
 `
 
 type UpdateProductParams struct {
@@ -628,9 +628,9 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (*
 		&i.BrandID,
 		&i.Name,
 		&i.Description,
-		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Active,
 		&i.Search,
 	)
 	return &i, err

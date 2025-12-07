@@ -9,7 +9,7 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )

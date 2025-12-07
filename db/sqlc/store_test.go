@@ -17,7 +17,7 @@ import (
 // }
 
 func TestFinishedPurchaseTx(t *testing.T) {
-	t.Parallel()
+
 	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
@@ -198,7 +198,7 @@ func TestFinishedPurchaseTx(t *testing.T) {
 }
 
 func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
-	t.Parallel()
+
 	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction
@@ -322,7 +322,7 @@ func TestFinishedPurchaseTxFailedNotEnoughStock(t *testing.T) {
 }
 
 func TestFinishedPurchaseTxFailedEmptyStock(t *testing.T) {
-	t.Parallel()
+
 	// store := NewStore(testDB)
 
 	// run n concurrent purchases transaction

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,13 +32,13 @@ func createRandomVerifyEmail(t *testing.T, user User) VerifyEmail {
 }
 
 func TestCreateVerifyEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	createRandomVerifyEmail(t, user1)
 }
 
 func TestGetVerifyEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	verifyEmail := createRandomVerifyEmail(t, user1)
 
@@ -54,7 +54,7 @@ func TestGetVerifyEmail(t *testing.T) {
 }
 
 func TestGetVerifyEmailByEmail(t *testing.T) {
-	t.Parallel()
+
 	user1 := createRandomUser(t)
 	verifyEmail := createRandomVerifyEmail(t, user1)
 

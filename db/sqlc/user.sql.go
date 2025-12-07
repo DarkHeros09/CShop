@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	null "github.com/guregu/null/v5"
+	null "github.com/guregu/null/v6"
 )
 
 const adminSearchUserByEmail = `-- name: AdminSearchUserByEmail :many
@@ -65,7 +65,7 @@ SET
 is_blocked = COALESCE($1,is_blocked),
 updated_at = NOW()
 WHERE id = $2
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 `
 
 type AdminUpdateUserParams struct {
@@ -81,12 +81,12 @@ func (q *Queries) AdminUpdateUser(ctx context.Context, arg AdminUpdateUserParams
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }
@@ -102,7 +102,7 @@ INSERT INTO "user" (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 `
 
 type CreateUserParams struct {
@@ -127,12 +127,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (*User, 
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }
@@ -149,7 +149,7 @@ INSERT INTO "user" (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 ),
 t2 AS(
   INSERT INTO "shopping_cart" (
@@ -164,7 +164,7 @@ t3 AS(
   RETURNING id
 )
 
-SELECT t1.id, t1.username, t1.email, t1.password, t1.is_blocked, t1.is_email_verified, t1.default_payment, t1.default_address_id, t1.created_at, t1.updated_at, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3
+SELECT t1.id, t1.username, t1.email, t1.password, t1.default_payment, t1.default_address_id, t1.created_at, t1.updated_at, t1.is_blocked, t1.is_email_verified, t2.id AS shopping_cart_id, t3.id AS wish_list_id FROM t1, t2, t3
 `
 
 type CreateUserWithCartAndWishListParams struct {
@@ -180,12 +180,12 @@ type CreateUserWithCartAndWishListRow struct {
 	Username         string    `json:"username"`
 	Email            string    `json:"email"`
 	Password         string    `json:"password"`
-	IsBlocked        bool      `json:"is_blocked"`
-	IsEmailVerified  bool      `json:"is_email_verified"`
 	DefaultPayment   null.Int  `json:"default_payment"`
 	DefaultAddressID null.Int  `json:"default_address_id"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
 	ShoppingCartID   int64     `json:"shopping_cart_id"`
 	WishListID       int64     `json:"wish_list_id"`
 }
@@ -204,12 +204,12 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 		&i.ShoppingCartID,
 		&i.WishListID,
 	)
@@ -219,7 +219,7 @@ func (q *Queries) CreateUserWithCartAndWishList(ctx context.Context, arg CreateU
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM "user"
 WHERE id = $1
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int64) (*User, error) {
@@ -230,12 +230,12 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (*User, error) {
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }
@@ -289,7 +289,7 @@ func (q *Queries) GetTotalUsersCount(ctx context.Context, adminID int64) (int64,
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
+SELECT id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified FROM "user"
 WHERE id = $1 LIMIT 1
 `
 
@@ -301,18 +301,18 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (*User, error) {
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT u.id, u.username, u.email, u.password, u.is_blocked, u.is_email_verified, u.default_payment, u.default_address_id, u.created_at, u.updated_at, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
+SELECT u.id, u.username, u.email, u.password, u.default_payment, u.default_address_id, u.created_at, u.updated_at, u.is_blocked, u.is_email_verified, sc.id AS shop_cart_id, wl.id AS wish_list_id FROM "user" AS u
 LEFT JOIN shopping_cart AS sc ON sc.user_id = u.id
 LEFT JOIN wish_list AS wl ON wl.user_id = u.id
 WHERE email = $1
@@ -323,12 +323,12 @@ type GetUserByEmailRow struct {
 	Username         string    `json:"username"`
 	Email            string    `json:"email"`
 	Password         string    `json:"password"`
-	IsBlocked        bool      `json:"is_blocked"`
-	IsEmailVerified  bool      `json:"is_email_verified"`
 	DefaultPayment   null.Int  `json:"default_payment"`
 	DefaultAddressID null.Int  `json:"default_address_id"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+	IsBlocked        bool      `json:"is_blocked"`
+	IsEmailVerified  bool      `json:"is_email_verified"`
 	ShopCartID       null.Int  `json:"shop_cart_id"`
 	WishListID       null.Int  `json:"wish_list_id"`
 }
@@ -343,12 +343,12 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (*GetUserByE
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 		&i.ShopCartID,
 		&i.WishListID,
 	)
@@ -356,7 +356,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (*GetUserByE
 }
 
 const listAllUsers = `-- name: ListAllUsers :many
-SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
+SELECT id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified FROM "user"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -381,12 +381,12 @@ func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]*
 			&i.Username,
 			&i.Email,
 			&i.Password,
-			&i.IsBlocked,
-			&i.IsEmailVerified,
 			&i.DefaultPayment,
 			&i.DefaultAddressID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsBlocked,
+			&i.IsEmailVerified,
 		); err != nil {
 			return nil, err
 		}
@@ -399,7 +399,7 @@ func (q *Queries) ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]*
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at FROM "user"
+SELECT id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified FROM "user"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -424,12 +424,12 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]*User, 
 			&i.Username,
 			&i.Email,
 			&i.Password,
-			&i.IsBlocked,
-			&i.IsEmailVerified,
 			&i.DefaultPayment,
 			&i.DefaultAddressID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsBlocked,
+			&i.IsEmailVerified,
 		); err != nil {
 			return nil, err
 		}
@@ -451,7 +451,7 @@ default_payment = COALESCE($4,default_payment),
 default_address_id = COALESCE($5,default_address_id),
 updated_at = NOW()
 WHERE id = $6
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 `
 
 type UpdateUserParams struct {
@@ -479,12 +479,12 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (*User, 
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }
@@ -510,7 +510,7 @@ AND is_email_verified = TRUE
 AND is_blocked = FALSE
 AND password = $3
 AND password != $1
-RETURNING id, username, email, password, is_blocked, is_email_verified, default_payment, default_address_id, created_at, updated_at
+RETURNING id, username, email, password, default_payment, default_address_id, created_at, updated_at, is_blocked, is_email_verified
 `
 
 type UpdateUserPasswordParams struct {
@@ -527,12 +527,12 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 		&i.Username,
 		&i.Email,
 		&i.Password,
-		&i.IsBlocked,
-		&i.IsEmailVerified,
 		&i.DefaultPayment,
 		&i.DefaultAddressID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsBlocked,
+		&i.IsEmailVerified,
 	)
 	return &i, err
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -51,12 +51,12 @@ func createRandomAppPolicy(t *testing.T) AppPolicy {
 }
 
 func TestCreateAppPolicy(t *testing.T) {
-	t.Parallel()
+
 	createRandomAppPolicy(t)
 }
 
 func TestGetAppPolicy(t *testing.T) {
-	t.Parallel()
+
 	createRandomAppPolicy(t)
 
 	appPolicy2, err := testStore.GetAppPolicy(context.Background())

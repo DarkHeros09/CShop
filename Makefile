@@ -116,7 +116,9 @@ testwin:
 		Get-Variable result | Select-Object -ExpandProperty Value | \
 		Select-String -Pattern 'FAIL:', 'Error Trace:', 'Error:', 'Test:', '\[build failed\]';\
 	"
-
+testrace:
+	dotenvx run -f $(ENVFILE) -- go test -v ./...
+	
 docker_login:
 	powershell -command '$$env:DOCKER_ACCESS_TOKEN | docker login -u mohammednajib --password-stdin'
 

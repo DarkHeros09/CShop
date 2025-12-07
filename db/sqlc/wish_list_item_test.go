@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -30,12 +30,12 @@ func createRandomWishListItem(t *testing.T) WishListItem {
 }
 
 func TestCreateWishListItem(t *testing.T) {
-	t.Parallel()
+
 	createRandomWishListItem(t)
 }
 
 func TestGetWishListItem(t *testing.T) {
-	t.Parallel()
+
 	wishListItem1 := createRandomWishListItem(t)
 
 	wishListItem2, err := testStore.GetWishListItem(context.Background(), wishListItem1.ID)
@@ -47,7 +47,7 @@ func TestGetWishListItem(t *testing.T) {
 }
 
 func TestGetWishListItemByUserIDWishID(t *testing.T) {
-	t.Parallel()
+
 	wishListItem1 := createRandomWishListItem(t)
 
 	wishList, err := testStore.GetWishList(context.Background(), wishListItem1.WishListID)
@@ -67,7 +67,7 @@ func TestGetWishListItemByUserIDWishID(t *testing.T) {
 }
 
 func TestUpdateWishListItem(t *testing.T) {
-	t.Parallel()
+
 	wishListItem := createRandomWishListItem(t)
 	newProduct := createRandomProductItem(t)
 	arg := UpdateWishListItemParams{
@@ -85,7 +85,7 @@ func TestUpdateWishListItem(t *testing.T) {
 }
 
 func TestDeleteWishListItem(t *testing.T) {
-	t.Parallel()
+
 	wishListItem1 := createRandomWishListItem(t)
 
 	wishList, err := testStore.GetWishList(context.Background(), wishListItem1.WishListID)
@@ -109,7 +109,7 @@ func TestDeleteWishListItem(t *testing.T) {
 }
 
 func TestDeleteWishListItemAll(t *testing.T) {
-	t.Parallel()
+
 	wishListItem1 := createRandomWishListItem(t)
 
 	_, err := testStore.DeleteWishListItemAll(context.Background(), wishListItem1.WishListID)
@@ -125,7 +125,7 @@ func TestDeleteWishListItemAll(t *testing.T) {
 }
 
 func TestListWishListItemes(t *testing.T) {
-	t.Parallel()
+
 	var wg sync.WaitGroup
 	wg.Add(5)
 	for i := 0; i < 5; i++ {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cshop/v3/util"
-	"github.com/guregu/null/v5"
+	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +74,7 @@ func TestDeleteVariationOption(t *testing.T) {
 }
 
 func TestListVariationOptions(t *testing.T) {
-	t.Parallel()
+
 	for i := 0; i < 10; i++ {
 		createRandomVariationOption(t)
 	}
