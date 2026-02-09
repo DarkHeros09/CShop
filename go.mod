@@ -8,7 +8,7 @@ require (
 	firebase.google.com/go/v4 v4.18.0
 	github.com/bytedance/sonic v1.14.2
 	github.com/go-playground/validator/v10 v10.28.0
-	github.com/gofiber/fiber/v2 v2.52.10
+	github.com/gofiber/fiber/v2 v2.52.11
 	github.com/google/uuid v1.6.0
 	github.com/guregu/null/v6 v6.0.0
 	github.com/hibiken/asynq v0.25.1
