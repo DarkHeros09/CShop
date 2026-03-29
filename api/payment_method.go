@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,14 +15,14 @@ import (
 //////////////* Create API //////////////
 
 type createPaymentMethodParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type createPaymentMethodJsonRequest struct {
 	Provider      string `json:"provider" validate:"required"`
 	PaymentTypeID int64  `json:"payment_type_id" validate:"required,min=1"`
 }
 
-func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
+func (server *Server) createPaymentMethod(ctx fiber.Ctx) error {
 	params := &createPaymentMethodParamsRequest{}
 	req := &createPaymentMethodJsonRequest{}
 
@@ -64,15 +64,15 @@ func (server *Server) createPaymentMethod(ctx *fiber.Ctx) error {
 // //////////////* Get API //////////////
 
 type getPaymentMethodParamsRequest struct {
-	// ID     int64 `params:"paymentId" validate:"required,min=1"`
-	UserID int64 `params:"id" validate:"required,min=1"`
+	// ID     int64 `uri:"paymentId" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type getPaymentMethodJsonRequest struct {
 	PaymentTypeID int64 `json:"payment_type_id" validate:"required,min=1"`
 }
 
-func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
+func (server *Server) getPaymentMethod(ctx fiber.Ctx) error {
 	params := &getPaymentMethodParamsRequest{}
 	req := &getPaymentMethodJsonRequest{}
 
@@ -116,7 +116,7 @@ func (server *Server) getPaymentMethod(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type listPaymentMethodsParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type listPaymentMethodsRequest struct {
@@ -124,7 +124,7 @@ type listPaymentMethodsRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listPaymentMethods(ctx *fiber.Ctx) error {
+func (server *Server) listPaymentMethods(ctx fiber.Ctx) error {
 	params := &listPaymentMethodsParamsRequest{}
 	query := &listPaymentMethodsRequest{}
 
@@ -165,8 +165,8 @@ func (server *Server) listPaymentMethods(ctx *fiber.Ctx) error {
 
 // //////////////* UPDATE API ///////////////
 type updatePaymentMethodParamsRequest struct {
-	ID     int64 `params:"paymentId" validate:"required,min=1"`
-	UserID int64 `params:"id" validate:"required,min=1"`
+	ID     int64 `uri:"paymentId" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updatePaymentMethodJsonRequest struct {
@@ -174,7 +174,7 @@ type updatePaymentMethodJsonRequest struct {
 	Provider      *string `json:"provider" validate:"required"`
 }
 
-func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
+func (server *Server) updatePaymentMethod(ctx fiber.Ctx) error {
 	params := &updatePaymentMethodParamsRequest{}
 	req := &updatePaymentMethodJsonRequest{}
 
@@ -216,11 +216,11 @@ func (server *Server) updatePaymentMethod(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deletePaymentMethodParamsRequest struct {
-	ID     int64 `params:"paymentId" validate:"required,min=1"`
-	UserID int64 `params:"id" validate:"required,min=1"`
+	ID     int64 `uri:"paymentId" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) deletePaymentMethod(ctx *fiber.Ctx) error {
+func (server *Server) deletePaymentMethod(ctx fiber.Ctx) error {
 	params := &deletePaymentMethodParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

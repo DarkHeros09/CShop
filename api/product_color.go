@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,14 +14,14 @@ import (
 
 // ////////////* Create API //////////////
 type createProductColorParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductColorJsonRequest struct {
 	ColorValue string `json:"color_value" validate:"required,alphanumunicode_space"`
 }
 
-func (server *Server) createProductColor(ctx *fiber.Ctx) error {
+func (server *Server) createProductColor(ctx fiber.Ctx) error {
 	params := &createProductColorParamsRequest{}
 	req := &createProductColorJsonRequest{}
 
@@ -61,7 +61,7 @@ func (server *Server) createProductColor(ctx *fiber.Ctx) error {
 
 // ////////////* List API //////////////
 
-func (server *Server) listProductColors(ctx *fiber.Ctx) error {
+func (server *Server) listProductColors(ctx fiber.Ctx) error {
 
 	productColors, err := server.store.ListProductColors(ctx.Context())
 	if err != nil {
@@ -85,15 +85,15 @@ func (server *Server) listProductColors(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductColorParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updateProductColorJsonRequest struct {
 	Color *string `json:"color" validate:"omitempty,required,alphaunicode"`
 }
 
-func (server *Server) updateProductColor(ctx *fiber.Ctx) error {
+func (server *Server) updateProductColor(ctx fiber.Ctx) error {
 	params := &updateProductColorParamsRequest{}
 	req := &updateProductColorJsonRequest{}
 

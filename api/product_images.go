@@ -7,7 +7,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/imagekit-developer/imagekit-go/api/media"
 	"github.com/jackc/pgconn"
@@ -15,7 +15,7 @@ import (
 )
 
 type createProductImagesParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductImagesJsonRequest struct {
@@ -24,7 +24,7 @@ type createProductImagesJsonRequest struct {
 	ProductImage3 string `json:"product_image_3" validate:"required,url"`
 }
 
-func (server *Server) createProductImages(ctx *fiber.Ctx) error {
+func (server *Server) createProductImages(ctx fiber.Ctx) error {
 	params := &createProductImagesParamsRequest{}
 	req := &createProductImagesJsonRequest{}
 
@@ -70,7 +70,7 @@ type imageResponse struct {
 }
 
 type listproductImagesParamsResquest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type listproductImagesQueryRequest struct {
@@ -78,7 +78,7 @@ type listproductImagesQueryRequest struct {
 	Tag  string `query:"tag" validate:"omitempty,required,alphaunicode"`
 }
 
-func (server *Server) listproductImages(ctx *fiber.Ctx) error {
+func (server *Server) listproductImages(ctx fiber.Ctx) error {
 	params := &listproductImagesParamsResquest{}
 	query := &listproductImagesQueryRequest{}
 
@@ -122,7 +122,7 @@ type listProductImagesV2QueryRequest struct {
 	Limit int32 `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProductImagesV2(ctx *fiber.Ctx) error {
+func (server *Server) listProductImagesV2(ctx fiber.Ctx) error {
 	query := &listProductImagesV2QueryRequest{}
 	// var maxPage int64
 
@@ -158,7 +158,7 @@ type listProductImagesNextPageQueryRequest struct {
 	Limit         int32 `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
+func (server *Server) listProductImagesNextPage(ctx fiber.Ctx) error {
 	query := &listProductImagesNextPageQueryRequest{}
 	// var maxPage int64
 
@@ -206,8 +206,8 @@ func (server *Server) listProductImagesNextPage(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductImagesParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updateProductImagesJsonRequest struct {
@@ -216,7 +216,7 @@ type updateProductImagesJsonRequest struct {
 	ProductImage3 *string `json:"product_image_3" validate:"omitempty,required,url"`
 }
 
-func (server *Server) updateProductImages(ctx *fiber.Ctx) error {
+func (server *Server) updateProductImages(ctx fiber.Ctx) error {
 	params := &updateProductImagesParamsRequest{}
 	req := &updateProductImagesJsonRequest{}
 

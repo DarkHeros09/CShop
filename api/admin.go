@@ -7,7 +7,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
@@ -46,7 +46,7 @@ type loginAdminResponse struct {
 	Admin                 adminResponse `json:"admin"`
 }
 
-func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
+func (server *Server) loginAdmin(ctx fiber.Ctx) error {
 	req := &loginAdminRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -109,7 +109,7 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 		ID:           refreshPayload.ID,
 		AdminID:      admin.ID,
 		RefreshToken: refreshToken,
-		AdminAgent:   string(ctx.Context().UserAgent()),
+		AdminAgent:   string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
@@ -135,7 +135,7 @@ func (server *Server) loginAdmin(ctx *fiber.Ctx) error {
 // //////////////* Logout API //////////////
 
 type logoutAdminParamsRequest struct {
-	AdminID int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type logoutAdminJsonRequest struct {
@@ -143,7 +143,7 @@ type logoutAdminJsonRequest struct {
 	RefreshToken   string `json:"refresh_token" validate:"required"`
 }
 
-func (server *Server) logoutAdmin(ctx *fiber.Ctx) error {
+func (server *Server) logoutAdmin(ctx fiber.Ctx) error {
 	params := &logoutAdminParamsRequest{}
 	req := &logoutAdminJsonRequest{}
 

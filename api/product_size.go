@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,7 +14,7 @@ import (
 
 // ////////////* Create API //////////////
 type createProductSizeParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductSizeJsonRequest struct {
@@ -23,7 +23,7 @@ type createProductSizeJsonRequest struct {
 	Qty           int64  `json:"qty" validate:"required,min=1"`
 }
 
-func (server *Server) createProductSize(ctx *fiber.Ctx) error {
+func (server *Server) createProductSize(ctx fiber.Ctx) error {
 	params := &createProductSizeParamsRequest{}
 	req := &createProductSizeJsonRequest{}
 
@@ -66,10 +66,10 @@ func (server *Server) createProductSize(ctx *fiber.Ctx) error {
 // ////////////* List API //////////////
 
 type listProductSizesParamsRequest struct {
-	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
+	ProductItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
-func (server *Server) listProductSizes(ctx *fiber.Ctx) error {
+func (server *Server) listProductSizes(ctx fiber.Ctx) error {
 	params := &getProductItemsParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -99,8 +99,8 @@ func (server *Server) listProductSizes(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductSizeParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updateProductSizeJsonRequest struct {
@@ -109,7 +109,7 @@ type updateProductSizeJsonRequest struct {
 	ProductItemID int64   `json:"product_item_id" validate:"required,min=1"`
 }
 
-func (server *Server) updateProductSize(ctx *fiber.Ctx) error {
+func (server *Server) updateProductSize(ctx fiber.Ctx) error {
 	params := &updateProductSizeParamsRequest{}
 	req := &updateProductSizeJsonRequest{}
 

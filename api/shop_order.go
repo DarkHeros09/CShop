@@ -11,7 +11,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -19,8 +19,8 @@ import (
 
 // //////////////* UPDATE API ///////////////
 type updateShopOrderParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	ShopOrderID int64 `params:"shopOrderId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	ShopOrderID int64 `uri:"shopOrderId" validate:"required,min=1"`
 }
 
 type updateShopOrderJsonRequest struct {
@@ -34,7 +34,7 @@ type updateShopOrderJsonRequest struct {
 	// DeviceID          string  `json:"device_id" validate:"required"`
 }
 
-func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
+func (server *Server) updateShopOrder(ctx fiber.Ctx) error {
 	params := &updateShopOrderParamsRequest{}
 	req := &updateShopOrderJsonRequest{}
 
@@ -157,14 +157,14 @@ func (server *Server) updateShopOrder(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listShopOrdersParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type listShopOrdersQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrders(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrders(ctx fiber.Ctx) error {
 	params := &listShopOrdersParamsRequest{}
 	query := &listShopOrdersQueryRequest{}
 
@@ -207,7 +207,7 @@ func (server *Server) listShopOrders(ctx *fiber.Ctx) error {
 //////////////* Pagination List API //////////////
 
 type listShopOrdersV2ParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type listShopOrdersV2QueryRequest struct {
@@ -215,7 +215,7 @@ type listShopOrdersV2QueryRequest struct {
 	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrdersV2(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrdersV2(ctx fiber.Ctx) error {
 	params := &listShopOrdersV2ParamsRequest{}
 	query := &listShopOrdersV2QueryRequest{}
 	var maxPage int64
@@ -259,7 +259,7 @@ func (server *Server) listShopOrdersV2(ctx *fiber.Ctx) error {
 }
 
 type listShopOrdersNextPageParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type listShopOrdersNextPageQueryRequest struct {
@@ -268,7 +268,7 @@ type listShopOrdersNextPageQueryRequest struct {
 	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrdersNextPage(ctx fiber.Ctx) error {
 	params := &listShopOrdersNextPageParamsRequest{}
 	query := &listShopOrdersNextPageQueryRequest{}
 	var maxPage int64
@@ -315,7 +315,7 @@ func (server *Server) listShopOrdersNextPage(ctx *fiber.Ctx) error {
 //////////////* Admin Pagination List API //////////////
 
 type adminListShopOrdersV2ParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type adminListShopOrdersV2QueryRequest struct {
@@ -324,7 +324,7 @@ type adminListShopOrdersV2QueryRequest struct {
 	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrdersV2ForAdmin(ctx fiber.Ctx) error {
 	params := &adminListShopOrdersV2ParamsRequest{}
 	query := &adminListShopOrdersV2QueryRequest{}
 
@@ -364,7 +364,7 @@ func (server *Server) listShopOrdersV2ForAdmin(ctx *fiber.Ctx) error {
 }
 
 type adminListShopOrdersNextPageParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type adminListShopOrdersNextPageQueryRequest struct {
@@ -373,7 +373,7 @@ type adminListShopOrdersNextPageQueryRequest struct {
 	Limit       int32       `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrdersNextPageForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrdersNextPageForAdmin(ctx fiber.Ctx) error {
 	params := &adminListShopOrdersNextPageParamsRequest{}
 	query := &adminListShopOrdersNextPageQueryRequest{}
 

@@ -25,6 +25,10 @@ func main() {
 	// OS
 	platform := dagger.Platform("linux/amd64")
 
+	// Get the dotenvx binary from the official image
+	dotenvxBin := client.Container().From("dotenv/dotenvx:v1.52").
+		File("/usr/local/bin/dotenvx")
+
 	// Database service used for application tests
 	database, err := client.Container(dagger.ContainerOpts{Platform: platform}).From("postgres:alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
@@ -83,7 +87,7 @@ func main() {
 	// multi stage build - stage 2
 	// golang image with cached dependencies
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).
-		From("golang:1.25.5").
+		From("golang:1.25.5-alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db
@@ -99,10 +103,9 @@ func main() {
 	// multi stage build - stage 3
 	// Run Service with tests
 	out, err := container.
-		WithFile("install.sh", client.HTTP("https://dotenvx.sh/install.sh")).
-		WithExec([]string{"chmod", "+x", "install.sh"}).
-		WithExec([]string{"./install.sh"}).
+		WithFile("/usr/local/bin/dotenvx", dotenvxBin).
 		WithExec([]string{"dotenvx", "help"}).
+		WithExec([]string{"apk", "add", "make"}).
 		WithExec([]string{"make", "test"}).     // execute go test
 		WithExec([]string{"make", "testrace"}). // execute go test
 		Stdout(ctx)

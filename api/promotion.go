@@ -8,7 +8,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -17,7 +17,7 @@ import (
 //////////////* Create API //////////////
 
 type createPromotionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 type createPromotionJsonRequest struct {
 	Name         string `json:"name" validate:"required,alphanumunicode_space"`
@@ -32,7 +32,7 @@ const (
 	timeLayout = "2006-01-02T15:04:05.000"
 )
 
-func (server *Server) createPromotion(ctx *fiber.Ctx) error {
+func (server *Server) createPromotion(ctx fiber.Ctx) error {
 	params := &createPromotionParamsRequest{}
 	req := &createPromotionJsonRequest{}
 
@@ -89,11 +89,11 @@ func (server *Server) createPromotion(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getPromotionParamsRequest struct {
-	ID int64 `params:"promotionId" validate:"required,min=1"`
+	ID int64 `uri:"promotionId" validate:"required,min=1"`
 }
 
-func (server *Server) getPromotion(ctx *fiber.Ctx) error {
-	params := &getPromotionParamsRequest{}
+func (server *Server) getPromotion(ctx fiber.Ctx) error {
+	params := new(getPromotionParamsRequest)
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
@@ -126,7 +126,7 @@ func (server *Server) getPromotion(ctx *fiber.Ctx) error {
 // 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 // }
 
-func (server *Server) listPromotions(ctx *fiber.Ctx) error {
+func (server *Server) listPromotions(ctx fiber.Ctx) error {
 	// query := &listPromotionsQueryRequest{}
 
 	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -169,8 +169,8 @@ func parseTimeOrNil(layout, value string) (*time.Time, error) {
 }
 
 type updatePromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	PromotionID int64 `uri:"promotionId" validate:"required,min=1"`
 }
 
 type updatePromotionJsonRequest struct {
@@ -182,7 +182,7 @@ type updatePromotionJsonRequest struct {
 	EndDate      *string `json:"end_date" validate:"omitempty,required"`
 }
 
-func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
+func (server *Server) updatePromotion(ctx fiber.Ctx) error {
 	params := &updatePromotionParamsRequest{}
 	req := &updatePromotionJsonRequest{}
 
@@ -240,11 +240,11 @@ func (server *Server) updatePromotion(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deletePromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	PromotionID int64 `uri:"promotionId" validate:"required,min=1"`
 }
 
-func (server *Server) deletePromotion(ctx *fiber.Ctx) error {
+func (server *Server) deletePromotion(ctx fiber.Ctx) error {
 	params := &deletePromotionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,14 +14,14 @@ import (
 
 // ////////////* Create API //////////////
 type createOrderStatusParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createOrderStatusJsonRequest struct {
 	Status string `json:"status" validate:"required"`
 }
 
-func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
+func (server *Server) createOrderStatus(ctx fiber.Ctx) error {
 	params := &createOrderStatusParamsRequest{}
 	req := &createOrderStatusJsonRequest{}
 
@@ -57,11 +57,11 @@ func (server *Server) createOrderStatus(ctx *fiber.Ctx) error {
 // //////////////* Get API //////////////
 
 type getOrderStatusParamsRequest struct {
-	UserID   int64 `params:"id" validate:"required,min=1"`
-	StatusID int64 `params:"statusId" validate:"required,min=1"`
+	UserID   int64 `uri:"id" validate:"required,min=1"`
+	StatusID int64 `uri:"statusId" validate:"required,min=1"`
 }
 
-func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
+func (server *Server) getOrderStatus(ctx fiber.Ctx) error {
 	params := &getOrderStatusParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -102,14 +102,14 @@ func (server *Server) getOrderStatus(ctx *fiber.Ctx) error {
 
 // //////////////* List API //////////////
 type listOrderStatusParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type listOrderStatusQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
+func (server *Server) listOrderStatuses(ctx fiber.Ctx) error {
 	params := &listOrderStatusParamsRequest{}
 	query := &listOrderStatusQueryRequest{}
 
@@ -151,8 +151,8 @@ func (server *Server) listOrderStatuses(ctx *fiber.Ctx) error {
 
 // //////////////* UPDATE API ///////////////
 type updateOrderStatusParamsRequest struct {
-	AdminID  int64 `params:"adminId" validate:"required,min=1"`
-	StatusID int64 `params:"statusId" validate:"required,min=1"`
+	AdminID  int64 `uri:"adminId" validate:"required,min=1"`
+	StatusID int64 `uri:"statusId" validate:"required,min=1"`
 }
 
 type updateOrderStatusJsonRequest struct {
@@ -161,7 +161,7 @@ type updateOrderStatusJsonRequest struct {
 	// DeviceID *string `json:"device_id" validate:"omitempty,required"`
 }
 
-func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
+func (server *Server) updateOrderStatus(ctx fiber.Ctx) error {
 	params := &updateOrderStatusParamsRequest{}
 	req := &updateOrderStatusJsonRequest{}
 
@@ -202,11 +202,11 @@ func (server *Server) updateOrderStatus(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 
 type deleteOrderStatusParamsRequest struct {
-	StatusID int64 `params:"statusId" validate:"required,min=1"`
-	AdminID  int64 `params:"adminId" validate:"required,min=1"`
+	StatusID int64 `uri:"statusId" validate:"required,min=1"`
+	AdminID  int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
+func (server *Server) deleteOrderStatus(ctx fiber.Ctx) error {
 	params := &deleteOrderStatusParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -243,10 +243,10 @@ func (server *Server) deleteOrderStatus(ctx *fiber.Ctx) error {
 
 // //////////////* Admin List API //////////////
 type adminListOrderStatusParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) listOrderStatusesForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) listOrderStatusesForAdmin(ctx fiber.Ctx) error {
 	params := &adminListOrderStatusParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

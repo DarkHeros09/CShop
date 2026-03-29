@@ -17,7 +17,7 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	mockwk "github.com/cshop/v3/worker/mock"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
@@ -350,7 +350,7 @@ func TestGetUserAddressAPI(t *testing.T) {
 			tc.setupAuth(t, request, server.userTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 			//check response
 			tc.checkResponse(t, rsp)
@@ -505,7 +505,7 @@ func TestListUsersAddressAPI(t *testing.T) {
 			tc.setupAuth(t, request, server.userTokenMaker)
 			request.Header.Set("Content-Type", "application/json")
 
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 			tc.checkResponse(t, rsp)
 		})
