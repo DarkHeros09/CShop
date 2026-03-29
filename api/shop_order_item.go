@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
@@ -14,11 +14,11 @@ import (
 //////////////* Get API //////////////
 
 type getShopOrderItemParamsRequest struct {
-	UserID      int64 `params:"id" validate:"required,min=1"`
-	ShopOrderID int64 `params:"orderId" validate:"required,min=1"`
+	UserID      int64 `uri:"id" validate:"required,min=1"`
+	ShopOrderID int64 `uri:"orderId" validate:"required,min=1"`
 }
 
-func (server *Server) getShopOrderItems(ctx *fiber.Ctx) error {
+func (server *Server) getShopOrderItems(ctx fiber.Ctx) error {
 	params := &getShopOrderItemParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -60,14 +60,14 @@ func (server *Server) getShopOrderItems(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listShopOrderItemsParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type listShopOrderItemsQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listShopOrderItems(ctx *fiber.Ctx) error {
+func (server *Server) listShopOrderItems(ctx fiber.Ctx) error {
 	params := &listShopOrderItemsParamsRequest{}
 	query := &listShopOrderItemsQueryRequest{}
 
@@ -110,15 +110,15 @@ func (server *Server) listShopOrderItems(ctx *fiber.Ctx) error {
 //////////////* Admin Get API //////////////
 
 type adminGetShopOrderItemParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	ShopOrderID int64 `params:"orderId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	ShopOrderID int64 `uri:"orderId" validate:"required,min=1"`
 }
 
 type adminGetShopOrderItemJsonRequest struct {
 	UserID int64 `json:"user_id" validate:"required,min=1"`
 }
 
-func (server *Server) getShopOrderItemsForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) getShopOrderItemsForAdmin(ctx fiber.Ctx) error {
 	params := &adminGetShopOrderItemParamsRequest{}
 	req := &adminGetShopOrderItemJsonRequest{}
 
@@ -161,11 +161,11 @@ func (server *Server) getShopOrderItemsForAdmin(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteShopOrderItemParamsRequest struct {
-	AdminID         int64 `params:"adminId" validate:"required,min=1"`
-	ShopOrderItemID int64 `params:"id" validate:"required,min=1"`
+	AdminID         int64 `uri:"adminId" validate:"required,min=1"`
+	ShopOrderItemID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShopOrderItem(ctx *fiber.Ctx) error {
+func (server *Server) deleteShopOrderItem(ctx fiber.Ctx) error {
 	params := &deleteShopOrderItemParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

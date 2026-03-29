@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +15,7 @@ import (
 //////////////* Create API //////////////
 
 type createNotificationParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type createNotificationRequest struct {
 	DeviceID        string `json:"device_id" validate:"required"`
@@ -23,7 +23,7 @@ type createNotificationRequest struct {
 	DeliveryUpdates *bool  `json:"delivery_updates" validate:"required,boolean"`
 }
 
-func (server *Server) createNotification(ctx *fiber.Ctx) error {
+func (server *Server) createNotification(ctx fiber.Ctx) error {
 	params := &createNotificationParamsRequest{}
 	req := &createNotificationRequest{}
 
@@ -65,11 +65,11 @@ func (server *Server) createNotification(ctx *fiber.Ctx) error {
 
 // ////////////* Get API //////////////
 type getNotificationParamsRequest struct {
-	UserID   int64  `params:"id" validate:"required,min=1"`
-	DeviceID string `params:"deviceId" validate:"required"`
+	UserID   int64  `uri:"id" validate:"required,min=1"`
+	DeviceID string `uri:"deviceId" validate:"required"`
 }
 
-func (server *Server) getNotification(ctx *fiber.Ctx) error {
+func (server *Server) getNotification(ctx fiber.Ctx) error {
 	params := &getNotificationParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -110,8 +110,8 @@ func (server *Server) getNotification(ctx *fiber.Ctx) error {
 
 // ////////////* UPDATE API //////////////
 type updateNotificationParamsRequest struct {
-	UserID   int64  `params:"id" validate:"required,min=1"`
-	DeviceID string `params:"deviceId" validate:"required"`
+	UserID   int64  `uri:"id" validate:"required,min=1"`
+	DeviceID string `uri:"deviceId" validate:"required"`
 }
 
 type updateNotificationJsonRequest struct {
@@ -119,7 +119,7 @@ type updateNotificationJsonRequest struct {
 	DeliveryUpdates *bool   `json:"delivery_updates" validate:"required"`
 }
 
-func (server *Server) updateNotification(ctx *fiber.Ctx) error {
+func (server *Server) updateNotification(ctx fiber.Ctx) error {
 	params := &updateNotificationParamsRequest{}
 	req := &updateNotificationJsonRequest{}
 
@@ -161,11 +161,11 @@ func (server *Server) updateNotification(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deleteNotificationParamsRequest struct {
-	UserID   int64  `params:"id" validate:"required,min=1"`
-	DeviceID string `params:"deviceId" validate:"required"`
+	UserID   int64  `uri:"id" validate:"required,min=1"`
+	DeviceID string `uri:"deviceId" validate:"required"`
 }
 
-func (server *Server) deleteNotification(ctx *fiber.Ctx) error {
+func (server *Server) deleteNotification(ctx fiber.Ctx) error {
 	params := &deleteNotificationParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -208,10 +208,10 @@ func (server *Server) deleteNotification(ctx *fiber.Ctx) error {
 // ////////////* Delete All API //////////////
 
 type deleteNotificationAllParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteNotificationAllByUser(ctx *fiber.Ctx) error {
+func (server *Server) deleteNotificationAllByUser(ctx fiber.Ctx) error {
 	params := &deleteNotificationAllParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

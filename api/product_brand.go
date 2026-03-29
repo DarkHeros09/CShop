@@ -6,14 +6,14 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
 )
 
 // ////////////* Create API //////////////
 type createProductBrandParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductBrandJsonRequest struct {
@@ -21,7 +21,7 @@ type createProductBrandJsonRequest struct {
 	BrandImage string `json:"brand_image" validate:"required,http_url"`
 }
 
-func (server *Server) createProductBrand(ctx *fiber.Ctx) error {
+func (server *Server) createProductBrand(ctx fiber.Ctx) error {
 	params := &createProductBrandParamsRequest{}
 	req := &createProductBrandJsonRequest{}
 
@@ -62,10 +62,10 @@ func (server *Server) createProductBrand(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductBrandParamsRequest struct {
-	BrandID int64 `params:"brandId" validate:"required,min=1"`
+	BrandID int64 `uri:"brandId" validate:"required,min=1"`
 }
 
-func (server *Server) getProductBrand(ctx *fiber.Ctx) error {
+func (server *Server) getProductBrand(ctx fiber.Ctx) error {
 	params := &getProductBrandParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -99,7 +99,7 @@ func (server *Server) getProductBrand(ctx *fiber.Ctx) error {
 // 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 // }
 
-func (server *Server) listProductBrands(ctx *fiber.Ctx) error {
+func (server *Server) listProductBrands(ctx fiber.Ctx) error {
 	// query := &listProductBrandsQueryRequest{}
 
 	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -134,8 +134,8 @@ func (server *Server) listProductBrands(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductBrandParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	BrandID int64 `params:"brandId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	BrandID int64 `uri:"brandId" validate:"required,min=1"`
 }
 
 type updateProductBrandJsonRequest struct {
@@ -143,7 +143,7 @@ type updateProductBrandJsonRequest struct {
 	BrandName string `json:"brand_name" validate:"omitempty,required"`
 }
 
-func (server *Server) updateProductBrand(ctx *fiber.Ctx) error {
+func (server *Server) updateProductBrand(ctx fiber.Ctx) error {
 	params := &updateProductBrandParamsRequest{}
 	req := &updateProductBrandJsonRequest{}
 
@@ -183,11 +183,11 @@ func (server *Server) updateProductBrand(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductBrandParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	BrandID int64 `params:"brandId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	BrandID int64 `uri:"brandId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteProductBrand(ctx *fiber.Ctx) error {
+func (server *Server) deleteProductBrand(ctx fiber.Ctx) error {
 	params := &deleteProductBrandParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

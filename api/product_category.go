@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,7 +14,7 @@ import (
 
 // ////////////* Create API //////////////
 type createProductCategoryParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductCategoryJsonRequest struct {
@@ -23,7 +23,7 @@ type createProductCategoryJsonRequest struct {
 	CategoryImage    string `json:"category_image" validate:"required,http_url"`
 }
 
-func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
+func (server *Server) createProductCategory(ctx fiber.Ctx) error {
 	params := &createProductCategoryParamsRequest{}
 	req := &createProductCategoryJsonRequest{}
 
@@ -65,10 +65,10 @@ func (server *Server) createProductCategory(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductCategoryParamsRequest struct {
-	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
+	CategoryID int64 `uri:"categoryId" validate:"required,min=1"`
 }
 
-func (server *Server) getProductCategory(ctx *fiber.Ctx) error {
+func (server *Server) getProductCategory(ctx fiber.Ctx) error {
 	params := &getProductCategoryParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -102,7 +102,7 @@ func (server *Server) getProductCategory(ctx *fiber.Ctx) error {
 // 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 // }
 
-func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
+func (server *Server) listProductCategories(ctx fiber.Ctx) error {
 	// query := &listProductCategoriesQueryRequest{}
 
 	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -137,8 +137,8 @@ func (server *Server) listProductCategories(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductCategoryParamsRequest struct {
-	AdminID    int64 `params:"adminId" validate:"required,min=1"`
-	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
+	AdminID    int64 `uri:"adminId" validate:"required,min=1"`
+	CategoryID int64 `uri:"categoryId" validate:"required,min=1"`
 }
 
 type updateProductCategoryJsonRequest struct {
@@ -147,7 +147,7 @@ type updateProductCategoryJsonRequest struct {
 	ParentCategoryID *int64 `json:"parent_category_id" validate:"omitempty,required,min=1"`
 }
 
-func (server *Server) updateProductCategory(ctx *fiber.Ctx) error {
+func (server *Server) updateProductCategory(ctx fiber.Ctx) error {
 	params := &updateProductCategoryParamsRequest{}
 	req := &updateProductCategoryJsonRequest{}
 
@@ -188,15 +188,15 @@ func (server *Server) updateProductCategory(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductCategoryParamsRequest struct {
-	AdminID    int64 `params:"adminId" validate:"required,min=1"`
-	CategoryID int64 `params:"categoryId" validate:"required,min=1"`
+	AdminID    int64 `uri:"adminId" validate:"required,min=1"`
+	CategoryID int64 `uri:"categoryId" validate:"required,min=1"`
 }
 
 type deleteProductCategoryJsonRequest struct {
 	ParentCategoryID int64 `json:"parent_category_id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteProductCategory(ctx *fiber.Ctx) error {
+func (server *Server) deleteProductCategory(ctx fiber.Ctx) error {
 	params := &deleteProductCategoryParamsRequest{}
 	req := &deleteProductCategoryJsonRequest{}
 

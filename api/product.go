@@ -8,7 +8,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -17,7 +17,7 @@ import (
 //////////////* Create API //////////////
 
 type createProductParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createProductJsonRequest struct {
@@ -29,7 +29,7 @@ type createProductJsonRequest struct {
 	Active bool `json:"active" validate:"boolean"`
 }
 
-func (server *Server) createProduct(ctx *fiber.Ctx) error {
+func (server *Server) createProduct(ctx fiber.Ctx) error {
 	params := &createProductParamsRequest{}
 	req := &createProductJsonRequest{}
 
@@ -75,10 +75,10 @@ func (server *Server) createProduct(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductRequest struct {
-	ProductID int64 `params:"productId" validate:"required,min=1"`
+	ProductID int64 `uri:"productId" validate:"required,min=1"`
 }
 
-func (server *Server) getProduct(ctx *fiber.Ctx) error {
+func (server *Server) getProduct(ctx fiber.Ctx) error {
 	params := &getProductRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -126,7 +126,7 @@ type listProductsQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProducts(ctx *fiber.Ctx) error {
+func (server *Server) listProducts(ctx fiber.Ctx) error {
 	query := &listProductsQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -164,8 +164,8 @@ func (server *Server) listProducts(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductParamsRequest struct {
-	AdminID   int64 `params:"adminId" validate:"required,min=1"`
-	ProductID int64 `params:"productId" validate:"required,min=1"`
+	AdminID   int64 `uri:"adminId" validate:"required,min=1"`
+	ProductID int64 `uri:"productId" validate:"required,min=1"`
 }
 
 type updateProductJsonRequest struct {
@@ -176,7 +176,7 @@ type updateProductJsonRequest struct {
 	Active      *bool   `json:"active" validate:"omitempty,required,boolean"`
 }
 
-func (server *Server) updateProduct(ctx *fiber.Ctx) error {
+func (server *Server) updateProduct(ctx fiber.Ctx) error {
 	params := &updateProductParamsRequest{}
 	req := &updateProductJsonRequest{}
 
@@ -221,11 +221,11 @@ func (server *Server) updateProduct(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductParamsRequest struct {
-	AdminID   int64 `params:"adminId" validate:"required,min=1"`
-	ProductID int64 `params:"productId" validate:"required,min=1"`
+	AdminID   int64 `uri:"adminId" validate:"required,min=1"`
+	ProductID int64 `uri:"productId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteProduct(ctx *fiber.Ctx) error {
+func (server *Server) deleteProduct(ctx fiber.Ctx) error {
 	params := &deleteProductParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -271,7 +271,7 @@ type listProductsV2QueryRequest struct {
 	Limit int32 `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProductsV2(ctx *fiber.Ctx) error {
+func (server *Server) listProductsV2(ctx fiber.Ctx) error {
 	query := &listProductsV2QueryRequest{}
 	// var maxPage int64
 
@@ -317,7 +317,7 @@ type listProductsNextPageQueryRequest struct {
 	Limit         int32 `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProductsNextPage(ctx *fiber.Ctx) error {
+func (server *Server) listProductsNextPage(ctx fiber.Ctx) error {
 	query := &listProductsNextPageQueryRequest{}
 	// var maxPage int64
 
@@ -362,7 +362,7 @@ type searchProductsQueryRequest struct {
 	Limit int32  `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) searchProducts(ctx *fiber.Ctx) error {
+func (server *Server) searchProducts(ctx fiber.Ctx) error {
 	query := &searchProductsQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -414,7 +414,7 @@ type searchProductsNextPageQueryRequest struct {
 	Limit         int32  `query:"limit" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) searchProductsNextPage(ctx *fiber.Ctx) error {
+func (server *Server) searchProductsNextPage(ctx fiber.Ctx) error {
 	query := &searchProductsNextPageQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {

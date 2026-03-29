@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,7 +14,7 @@ import (
 
 // ////////////* Create API //////////////
 type createHomePageTextBannerParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createHomePageTextBannerJsonRequest struct {
@@ -22,7 +22,7 @@ type createHomePageTextBannerJsonRequest struct {
 	Description string `json:"description" validate:"required"`
 }
 
-func (server *Server) createHomePageTextBanner(ctx *fiber.Ctx) error {
+func (server *Server) createHomePageTextBanner(ctx fiber.Ctx) error {
 	params := &createHomePageTextBannerParamsRequest{}
 	req := &createHomePageTextBannerJsonRequest{}
 
@@ -64,10 +64,10 @@ func (server *Server) createHomePageTextBanner(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getHomePageTextBannerParamsRequest struct {
-	HomePageTextBannerID int64 `params:"textBannerId" validate:"required,min=1"`
+	HomePageTextBannerID int64 `uri:"textBannerId" validate:"required,min=1"`
 }
 
-func (server *Server) getHomePageTextBanner(ctx *fiber.Ctx) error {
+func (server *Server) getHomePageTextBanner(ctx fiber.Ctx) error {
 	params := &getHomePageTextBannerParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -101,7 +101,7 @@ func (server *Server) getHomePageTextBanner(ctx *fiber.Ctx) error {
 // 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 // }
 
-func (server *Server) listHomePageTextBanners(ctx *fiber.Ctx) error {
+func (server *Server) listHomePageTextBanners(ctx fiber.Ctx) error {
 	// query := &listHomePageTextBannersQueryRequest{}
 
 	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -136,8 +136,8 @@ func (server *Server) listHomePageTextBanners(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateHomePageTextBannerParamsRequest struct {
-	AdminID              int64 `params:"adminId" validate:"required,min=1"`
-	HomePageTextBannerID int64 `params:"textBannerId" validate:"required,min=1"`
+	AdminID              int64 `uri:"adminId" validate:"required,min=1"`
+	HomePageTextBannerID int64 `uri:"textBannerId" validate:"required,min=1"`
 }
 
 type updateHomePageTextBannerJsonRequest struct {
@@ -145,7 +145,7 @@ type updateHomePageTextBannerJsonRequest struct {
 	Description *string `json:"description" validate:"omitempty,required"`
 }
 
-func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
+func (server *Server) updateHomePageTextBanner(ctx fiber.Ctx) error {
 	params := &updateHomePageTextBannerParamsRequest{}
 	req := &updateHomePageTextBannerJsonRequest{}
 
@@ -187,11 +187,11 @@ func (server *Server) updateHomePageTextBanner(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteHomePageTextBannerParamsRequest struct {
-	AdminID              int64 `params:"adminId" validate:"required,min=1"`
-	HomePageTextBannerID int64 `params:"textBannerId" validate:"required,min=1"`
+	AdminID              int64 `uri:"adminId" validate:"required,min=1"`
+	HomePageTextBannerID int64 `uri:"textBannerId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteHomePageTextBanner(ctx *fiber.Ctx) error {
+func (server *Server) deleteHomePageTextBanner(ctx fiber.Ctx) error {
 	params := &deleteHomePageTextBannerParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

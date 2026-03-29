@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,15 +14,15 @@ import (
 
 // ////////////* Create API //////////////
 type createProductConfigurationParamsRequest struct {
-	AdminID       int64 `params:"adminId" validate:"required,min=1"`
-	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
+	AdminID       int64 `uri:"adminId" validate:"required,min=1"`
+	ProductItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
 type createProductConfigurationJsonRequest struct {
 	VariationOptionID int64 `json:"variation_id" validate:"required,min=1"`
 }
 
-func (server *Server) createProductConfiguration(ctx *fiber.Ctx) error {
+func (server *Server) createProductConfiguration(ctx fiber.Ctx) error {
 	params := &createProductConfigurationParamsRequest{}
 	req := &createProductConfigurationJsonRequest{}
 
@@ -63,11 +63,11 @@ func (server *Server) createProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getProductConfigurationParamsRequest struct {
-	ProductItemID     int64 `params:"itemId" validate:"required,min=1"`
-	VariationOptionID int64 `params:"variationId" validate:"required,min=1"`
+	ProductItemID     int64 `uri:"itemId" validate:"required,min=1"`
+	VariationOptionID int64 `uri:"variationId" validate:"required,min=1"`
 }
 
-func (server *Server) getProductConfiguration(ctx *fiber.Ctx) error {
+func (server *Server) getProductConfiguration(ctx fiber.Ctx) error {
 	params := &getProductConfigurationParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -102,7 +102,7 @@ func (server *Server) getProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listProductConfigurationsParamsRequest struct {
-	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
+	ProductItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
 type listProductConfigurationsQueryRequest struct {
@@ -110,7 +110,7 @@ type listProductConfigurationsQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listProductConfigurations(ctx *fiber.Ctx) error {
+func (server *Server) listProductConfigurations(ctx fiber.Ctx) error {
 	params := &listProductConfigurationsParamsRequest{}
 	query := &listProductConfigurationsQueryRequest{}
 
@@ -146,15 +146,15 @@ func (server *Server) listProductConfigurations(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateProductConfigurationParamsRequest struct {
-	AdminID       int64 `params:"adminId" validate:"required,min=1"`
-	ProductItemID int64 `params:"itemId" validate:"required,min=1"`
+	AdminID       int64 `uri:"adminId" validate:"required,min=1"`
+	ProductItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
 type updateProductConfigurationJsonRequest struct {
 	VariationOptionID *int64 `json:"variation_id" validate:"omitempty,required,min=1"`
 }
 
-func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
+func (server *Server) updateProductConfiguration(ctx fiber.Ctx) error {
 	params := &updateProductConfigurationParamsRequest{}
 	req := &updateProductConfigurationJsonRequest{}
 
@@ -194,12 +194,12 @@ func (server *Server) updateProductConfiguration(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteProductConfigurationParamsRequest struct {
-	AdminID           int64 `params:"adminId" validate:"required,min=1"`
-	ProductItemID     int64 `params:"itemId" validate:"required,min=1"`
-	VariationOptionID int64 `params:"variationId" validate:"omitempty,required,min=1"`
+	AdminID           int64 `uri:"adminId" validate:"required,min=1"`
+	ProductItemID     int64 `uri:"itemId" validate:"required,min=1"`
+	VariationOptionID int64 `uri:"variationId" validate:"omitempty,required,min=1"`
 }
 
-func (server *Server) deleteProductConfiguration(ctx *fiber.Ctx) error {
+func (server *Server) deleteProductConfiguration(ctx fiber.Ctx) error {
 	params := &deleteProductConfigurationParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

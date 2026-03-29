@@ -16,8 +16,8 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/etag"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/etag"
 )
 
 type Server struct {

@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +15,7 @@ import (
 // //////////////* Admin Create Payment Type API ////////////
 
 type createPaymentTypeParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createPaymentTypeJsonRequest struct {
@@ -23,7 +23,7 @@ type createPaymentTypeJsonRequest struct {
 	IsActive bool   `json:"is_active" validate:"boolean"`
 }
 
-func (server *Server) createPaymentType(ctx *fiber.Ctx) error {
+func (server *Server) createPaymentType(ctx fiber.Ctx) error {
 	params := &createPaymentTypeParamsRequest{}
 	req := &createPaymentTypeJsonRequest{}
 
@@ -65,10 +65,10 @@ func (server *Server) createPaymentType(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type adminListPaymentTypesParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) adminListPaymentTypes(ctx *fiber.Ctx) error {
+func (server *Server) adminListPaymentTypes(ctx fiber.Ctx) error {
 	params := &adminListPaymentTypesParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -105,8 +105,8 @@ func (server *Server) adminListPaymentTypes(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updatePaymentTypeParamsRequest struct {
-	AdminID       int64 `params:"adminId" validate:"required,min=1"`
-	PaymentTypeID int64 `params:"paymentTypeId" validate:"required,min=1"`
+	AdminID       int64 `uri:"adminId" validate:"required,min=1"`
+	PaymentTypeID int64 `uri:"paymentTypeId" validate:"required,min=1"`
 }
 
 type updatePaymentTypeJsonRequest struct {
@@ -114,7 +114,7 @@ type updatePaymentTypeJsonRequest struct {
 	IsActive *bool   `json:"is_active" validate:"omitempty,required,boolean"`
 }
 
-func (server *Server) updatePaymentType(ctx *fiber.Ctx) error {
+func (server *Server) updatePaymentType(ctx fiber.Ctx) error {
 	params := &updatePaymentTypeParamsRequest{}
 	req := &updatePaymentTypeJsonRequest{}
 
@@ -156,11 +156,11 @@ func (server *Server) updatePaymentType(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deletePaymentTypeParamsRequest struct {
-	AdminID       int64 `params:"adminId" validate:"required,min=1"`
-	PaymentTypeID int64 `params:"paymentTypeId" validate:"required,min=1"`
+	AdminID       int64 `uri:"adminId" validate:"required,min=1"`
+	PaymentTypeID int64 `uri:"paymentTypeId" validate:"required,min=1"`
 }
 
-func (server *Server) deletePaymentType(ctx *fiber.Ctx) error {
+func (server *Server) deletePaymentType(ctx fiber.Ctx) error {
 	params := &deletePaymentTypeParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -203,10 +203,10 @@ func (server *Server) deletePaymentType(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type listPaymentTypesParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) listPaymentTypes(ctx *fiber.Ctx) error {
+func (server *Server) listPaymentTypes(ctx fiber.Ctx) error {
 	params := &listPaymentTypesParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

@@ -10,14 +10,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomProductPromotion(t *testing.T) ProductPromotion {
+func createRandomProductPromotion(t *testing.T, active *bool) ProductPromotion {
 	product := createRandomProduct(t)
 	promotion := createRandomPromotion(t)
+	var isActive bool
+	if active != nil {
+		isActive = *active
+	} else {
+		isActive = util.RandomBool()
+	}
 	arg := CreateProductPromotionParams{
 		ProductID:             product.ID,
 		PromotionID:           promotion.ID,
 		ProductPromotionImage: null.StringFrom(util.RandomPromotionURL()),
-		Active:                util.RandomBool(),
+		Active:                isActive,
 	}
 
 	productPromotion, err := testStore.CreateProductPromotion(context.Background(), arg)
@@ -54,7 +60,7 @@ func adminCreateRandomProductPromotion(t *testing.T) ProductPromotion {
 	return *productPromotion
 }
 func TestCreateProductPromotion(t *testing.T) {
-	createRandomProductPromotion(t)
+	createRandomProductPromotion(t, nil)
 }
 
 func TestAdminCreateProductPromotion(t *testing.T) {
@@ -62,7 +68,7 @@ func TestAdminCreateProductPromotion(t *testing.T) {
 }
 
 func TestGetProductPromotion(t *testing.T) {
-	productPromotion1 := createRandomProductPromotion(t)
+	productPromotion1 := createRandomProductPromotion(t, nil)
 
 	arg := GetProductPromotionParams{
 		ProductID:   productPromotion1.ProductID,
@@ -79,7 +85,7 @@ func TestGetProductPromotion(t *testing.T) {
 }
 
 func TestUpdateProductPromotionActive(t *testing.T) {
-	productPromotion1 := createRandomProductPromotion(t)
+	productPromotion1 := createRandomProductPromotion(t, nil)
 	arg := UpdateProductPromotionParams{
 		PromotionID: productPromotion1.PromotionID,
 		Active:      null.BoolFrom(!productPromotion1.Active),
@@ -97,7 +103,7 @@ func TestUpdateProductPromotionActive(t *testing.T) {
 
 func TestAdminUpdateProductPromotionActive(t *testing.T) {
 	admin := createRandomAdmin(t)
-	productPromotion1 := createRandomProductPromotion(t)
+	productPromotion1 := createRandomProductPromotion(t, nil)
 	arg := AdminUpdateProductPromotionParams{
 		AdminID:     admin.ID,
 		PromotionID: productPromotion1.PromotionID,
@@ -115,7 +121,7 @@ func TestAdminUpdateProductPromotionActive(t *testing.T) {
 }
 
 func TestDeleteProductPromotion(t *testing.T) {
-	productPromotion1 := createRandomProductPromotion(t)
+	productPromotion1 := createRandomProductPromotion(t, nil)
 	arg := DeleteProductPromotionParams{
 		ProductID:   productPromotion1.ProductID,
 		PromotionID: productPromotion1.PromotionID,
@@ -139,7 +145,7 @@ func TestDeleteProductPromotion(t *testing.T) {
 func TestListProductPromotions(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
-		createRandomProductPromotion(t)
+		createRandomProductPromotion(t, nil)
 	}
 	arg := ListProductPromotionsParams{
 		Limit:  5,
@@ -158,9 +164,10 @@ func TestListProductPromotions(t *testing.T) {
 }
 
 func TestListProductPromotionsWithImages(t *testing.T) {
-
+	active := true
 	for i := 0; i < 5; i++ {
-		createRandomProductPromotion(t)
+		promotion := createRandomProductPromotion(t, &active)
+		require.NotEmpty(t, promotion, "Failed to create promotion on iteration %d", i)
 	}
 
 	productPromotions, err := testStore.ListProductPromotionsWithImages(context.Background())
@@ -176,7 +183,7 @@ func TestListProductPromotionsWithImages(t *testing.T) {
 func TestAdminListProductPromotions(t *testing.T) {
 	admin := createRandomAdmin(t)
 	for i := 0; i < 5; i++ {
-		createRandomProductPromotion(t)
+		createRandomProductPromotion(t, nil)
 	}
 
 	productPromotions, err := testStore.AdminListProductPromotions(context.Background(), admin.ID)
