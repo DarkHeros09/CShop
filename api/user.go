@@ -7,7 +7,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
@@ -68,7 +68,7 @@ type createUserResponse struct {
 	User                  userResponse `json:"user"`
 }
 
-func (server *Server) createUser(ctx *fiber.Ctx) error {
+func (server *Server) createUser(ctx fiber.Ctx) error {
 	req := &createUserRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -126,7 +126,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 		ID:           refreshPayload.ID,
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    string(ctx.Context().UserAgent()),
+		UserAgent:    string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
@@ -165,7 +165,7 @@ func (server *Server) createUser(ctx *fiber.Ctx) error {
 
 //////////////* SignUpV2 API //////////////
 
-func (server *Server) signUp(ctx *fiber.Ctx) error {
+func (server *Server) signUp(ctx fiber.Ctx) error {
 	req := &createUserRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -275,7 +275,7 @@ type verifyOTPJsonRequest struct {
 	OTP   string `json:"otp" validate:"required,numeric,len=6"`
 }
 
-func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
+func (server *Server) verifyOTP(ctx fiber.Ctx) error {
 	req := &verifyOTPJsonRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -334,7 +334,7 @@ func (server *Server) verifyOTP(ctx *fiber.Ctx) error {
 		ID:           refreshPayload.ID,
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    string(ctx.Context().UserAgent()),
+		UserAgent:    string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
@@ -373,7 +373,7 @@ type resendOTPJsonRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-func (server *Server) resendOTP(ctx *fiber.Ctx) error {
+func (server *Server) resendOTP(ctx fiber.Ctx) error {
 	req := &resendOTPJsonRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -445,7 +445,7 @@ type resetPasswordRequestJsonRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-func (server *Server) resetPasswordRequest(ctx *fiber.Ctx) error {
+func (server *Server) resetPasswordRequest(ctx fiber.Ctx) error {
 	req := &resetPasswordRequestJsonRequest{}
 
 	var secretCode string
@@ -526,7 +526,7 @@ type verifyResetPasswordOTPJsonRequest struct {
 	OTP   string `json:"otp" validate:"required,numeric,len=6"`
 }
 
-func (server *Server) verifyResetPasswordOTP(ctx *fiber.Ctx) error {
+func (server *Server) verifyResetPasswordOTP(ctx fiber.Ctx) error {
 	req := &verifyResetPasswordOTPJsonRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -587,7 +587,7 @@ type resendResetPasswordOTPJsonRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-func (server *Server) resendResetPasswordOTP(ctx *fiber.Ctx) error {
+func (server *Server) resendResetPasswordOTP(ctx fiber.Ctx) error {
 	req := &resendResetPasswordOTPJsonRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -673,7 +673,7 @@ type resetPasswordApprovedRequest struct {
 	OTP      string `json:"otp" validate:"required,numeric,len=6"`
 }
 
-func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
+func (server *Server) resetPasswordApproved(ctx fiber.Ctx) error {
 	req := &resetPasswordApprovedRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -766,14 +766,14 @@ func (server *Server) resetPasswordApproved(ctx *fiber.Ctx) error {
 
 // ////////////* Change Password API //////////////
 type changePasswordParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type changePasswordJsonRequest struct {
 	OldPassword string `json:"old_password" validate:"required,min=6"`
 	NewPassword string `json:"new_password" validate:"required,min=6"`
 }
 
-func (server *Server) changePassword(ctx *fiber.Ctx) error {
+func (server *Server) changePassword(ctx fiber.Ctx) error {
 	params := &changePasswordParamsRequest{}
 	req := &changePasswordJsonRequest{}
 
@@ -846,10 +846,10 @@ func (server *Server) changePassword(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getUserParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) getUser(ctx *fiber.Ctx) error {
+func (server *Server) getUser(ctx fiber.Ctx) error {
 	params := &getUserParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -909,13 +909,13 @@ func newSearchUserByEmailResponse(searchedUsers []*db.AdminSearchUserByEmailRow)
 }
 
 type searchUserByEmailForAdminParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 type searchUserByEmailForAdminQueryRequest struct {
 	Email string `query:"email" validate:"required"`
 }
 
-func (server *Server) searchUserByEmailForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) searchUserByEmailForAdmin(ctx fiber.Ctx) error {
 	params := &searchUserByEmailForAdminParamsRequest{}
 	query := &searchUserByEmailForAdminQueryRequest{}
 
@@ -956,7 +956,7 @@ func (server *Server) searchUserByEmailForAdmin(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type listUsersParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type listUsersQueryRequest struct {
@@ -964,7 +964,7 @@ type listUsersQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listUsers(ctx *fiber.Ctx) error {
+func (server *Server) listUsers(ctx fiber.Ctx) error {
 	params := &listUsersParamsRequest{}
 	query := &listUsersQueryRequest{}
 
@@ -1008,14 +1008,14 @@ func (server *Server) listUsers(ctx *fiber.Ctx) error {
 // //////////////* Update API //////////////
 
 type updateUserParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type updateUserJsonRequest struct {
 	// Telephone      *int64 `json:"telephone" validate:"omitempty,required,numeric,min=910000000,max=929999999"`
 	DefaultPayment *int64 `json:"default_payment" validate:"omitempty,required"`
 }
 
-func (server *Server) updateUser(ctx *fiber.Ctx) error {
+func (server *Server) updateUser(ctx fiber.Ctx) error {
 	params := &updateUserParamsRequest{}
 	req := &updateUserJsonRequest{}
 
@@ -1058,14 +1058,14 @@ func (server *Server) updateUser(ctx *fiber.Ctx) error {
 // //////////////* Admin Update User API //////////////
 
 type adminUpdateUserParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	UserID  int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	UserID  int64 `uri:"id" validate:"required,min=1"`
 }
 type adminUpdateUserJsonRequest struct {
 	IsBlocked *bool `json:"is_blocked" validate:"omitempty,required,boolean"`
 }
 
-func (server *Server) adminUpdateUser(ctx *fiber.Ctx) error {
+func (server *Server) adminUpdateUser(ctx fiber.Ctx) error {
 	params := &adminUpdateUserParamsRequest{}
 	req := &adminUpdateUserJsonRequest{}
 
@@ -1108,11 +1108,11 @@ func (server *Server) adminUpdateUser(ctx *fiber.Ctx) error {
 // //////////////* Delete API //////////////
 
 type deleteUserParamsRequest struct {
-	UserID  int64 `params:"id" validate:"required,min=1"`
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	UserID  int64 `uri:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteUser(ctx *fiber.Ctx) error {
+func (server *Server) deleteUser(ctx fiber.Ctx) error {
 	params := &deleteUserParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -1175,7 +1175,7 @@ func newUserLoginResponse(user db.GetUserByEmailRow) userResponse {
 	}
 }
 
-func (server *Server) loginUser(ctx *fiber.Ctx) error {
+func (server *Server) loginUser(ctx fiber.Ctx) error {
 	req := &loginUserRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -1299,7 +1299,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 		ID:           refreshPayload.ID,
 		UserID:       user.ID,
 		RefreshToken: refreshToken,
-		UserAgent:    string(ctx.Context().UserAgent()),
+		UserAgent:    string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
@@ -1325,7 +1325,7 @@ func (server *Server) loginUser(ctx *fiber.Ctx) error {
 // //////////////* Logout API //////////////
 
 type logoutUserParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type logoutUserJsonRequest struct {
@@ -1333,7 +1333,7 @@ type logoutUserJsonRequest struct {
 	RefreshToken  string `json:"refresh_token" validate:"required"`
 }
 
-func (server *Server) logoutUser(ctx *fiber.Ctx) error {
+func (server *Server) logoutUser(ctx fiber.Ctx) error {
 	params := &logoutUserParamsRequest{}
 	req := &logoutUserJsonRequest{}
 

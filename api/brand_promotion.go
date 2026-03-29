@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +15,7 @@ import (
 //////////////* Create API //////////////
 
 type createBrandPromotionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
 type createBrandPromotionJsonRequest struct {
@@ -25,7 +25,7 @@ type createBrandPromotionJsonRequest struct {
 	Active              bool   `json:"active" validate:"boolean"`
 }
 
-func (server *Server) createBrandPromotion(ctx *fiber.Ctx) error {
+func (server *Server) createBrandPromotion(ctx fiber.Ctx) error {
 	params := &createBrandPromotionParamsRequest{}
 	req := &createBrandPromotionJsonRequest{}
 
@@ -69,11 +69,11 @@ func (server *Server) createBrandPromotion(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getBrandPromotionParamsRequest struct {
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
-	BrandID     int64 `params:"brandId" validate:"required,min=1"`
+	PromotionID int64 `uri:"promotionId" validate:"required,min=1"`
+	BrandID     int64 `uri:"brandId" validate:"required,min=1"`
 }
 
-func (server *Server) getBrandPromotion(ctx *fiber.Ctx) error {
+func (server *Server) getBrandPromotion(ctx fiber.Ctx) error {
 	params := &getBrandPromotionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -112,7 +112,7 @@ type listBrandPromotionsQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listBrandPromotions(ctx *fiber.Ctx) error {
+func (server *Server) listBrandPromotions(ctx fiber.Ctx) error {
 	query := &listBrandPromotionsQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -146,7 +146,7 @@ func (server *Server) listBrandPromotions(ctx *fiber.Ctx) error {
 
 //////////////* List API with Images //////////////
 
-func (server *Server) listBrandPromotionsWithImages(ctx *fiber.Ctx) error {
+func (server *Server) listBrandPromotionsWithImages(ctx fiber.Ctx) error {
 
 	brandPromotions, err := server.store.ListBrandPromotionsWithImages(ctx.Context())
 	if err != nil {
@@ -171,10 +171,10 @@ func (server *Server) listBrandPromotionsWithImages(ctx *fiber.Ctx) error {
 //////////////* Admin List API with Images //////////////
 
 type adminListBrandPromotionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) listBrandPromotionsForAdmins(ctx *fiber.Ctx) error {
+func (server *Server) listBrandPromotionsForAdmins(ctx fiber.Ctx) error {
 	params := &adminListBrandPromotionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -212,9 +212,9 @@ func (server *Server) listBrandPromotionsForAdmins(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateBrandPromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	BrandID     int64 `params:"brandId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	BrandID     int64 `uri:"brandId" validate:"required,min=1"`
+	PromotionID int64 `uri:"promotionId" validate:"required,min=1"`
 }
 
 type updateBrandPromotionJsonRequest struct {
@@ -222,7 +222,7 @@ type updateBrandPromotionJsonRequest struct {
 	Active              *bool   `json:"active" validate:"omitempty,required,boolean"`
 }
 
-func (server *Server) updateBrandPromotion(ctx *fiber.Ctx) error {
+func (server *Server) updateBrandPromotion(ctx fiber.Ctx) error {
 	params := &updateBrandPromotionParamsRequest{}
 	req := &updateBrandPromotionJsonRequest{}
 
@@ -265,12 +265,12 @@ func (server *Server) updateBrandPromotion(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteBrandPromotionParamsRequest struct {
-	AdminID     int64 `params:"adminId" validate:"required,min=1"`
-	PromotionID int64 `params:"promotionId" validate:"required,min=1"`
-	BrandID     int64 `params:"brandId" validate:"required,min=1"`
+	AdminID     int64 `uri:"adminId" validate:"required,min=1"`
+	PromotionID int64 `uri:"promotionId" validate:"required,min=1"`
+	BrandID     int64 `uri:"brandId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteBrandPromotion(ctx *fiber.Ctx) error {
+func (server *Server) deleteBrandPromotion(ctx fiber.Ctx) error {
 	params := &deleteBrandPromotionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

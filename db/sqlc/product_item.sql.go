@@ -724,15 +724,15 @@ WHERE
     ) 
     WHEN COALESCE($7, FALSE) = TRUE
 	THEN (
-        (pi.price < $8) OR
-        (pi.price = $8 AND pi.id < $4) OR
-        (pi.price = $8 AND pi.id = $4 AND pi.product_id < $5)
+        (pi.price::NUMERIC < ($8::VARCHAR)::NUMERIC) OR
+        (pi.price::NUMERIC = ($8::VARCHAR)::NUMERIC AND pi.id < $4) OR
+        (pi.price::NUMERIC = ($8::VARCHAR)::NUMERIC AND pi.id = $4 AND pi.product_id < $5)
         )
     WHEN COALESCE($9, FALSE) = TRUE
 	THEN (
-        (pi.price > $8) OR
-        (pi.price = $8 AND pi.id < $4) OR
-        (pi.price = $8 AND pi.id = $4 AND pi.product_id < $5)
+        (pi.price::NUMERIC > ($8::VARCHAR)::NUMERIC) OR
+        (pi.price::NUMERIC = ($8::VARCHAR)::NUMERIC AND pi.id < $4) OR
+        (pi.price::NUMERIC = ($8::VARCHAR)::NUMERIC AND pi.id = $4 AND pi.product_id < $5)
          )
 	ELSE (pi.id < $4 
          OR (pi.id = $4 AND pi.product_id < $5))

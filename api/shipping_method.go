@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,14 +15,14 @@ import (
 //////////////* Create API //////////////
 
 type createShippingMethodParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 type createShippingMethodJsonRequest struct {
 	Name  string `json:"name" validate:"required"`
 	Price string `json:"price" validate:"required"`
 }
 
-func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
+func (server *Server) createShippingMethod(ctx fiber.Ctx) error {
 	params := &createShippingMethodParamsRequest{}
 	req := &createShippingMethodJsonRequest{}
 
@@ -64,11 +64,11 @@ func (server *Server) createShippingMethod(ctx *fiber.Ctx) error {
 // //////////////* Get API //////////////
 
 type getShippingMethodParamsRequest struct {
-	UserID           int64 `params:"id" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
+	UserID           int64 `uri:"id" validate:"required,min=1"`
+	ShippingMethodID int64 `uri:"methodId" validate:"required,min=1"`
 }
 
-func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
+func (server *Server) getShippingMethod(ctx fiber.Ctx) error {
 	params := &getShippingMethodParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -111,7 +111,7 @@ func (server *Server) getShippingMethod(ctx *fiber.Ctx) error {
 // //////////////* List API //////////////
 
 type listShippingMethodsParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 // type listShippingMethodsQueryRequest struct {
@@ -119,7 +119,7 @@ type listShippingMethodsParamsRequest struct {
 // 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 // }
 
-func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
+func (server *Server) listShippingMethods(ctx fiber.Ctx) error {
 	params := &listShippingMethodsParamsRequest{}
 	// query := &listShippingMethodsQueryRequest{}
 
@@ -162,10 +162,10 @@ func (server *Server) listShippingMethods(ctx *fiber.Ctx) error {
 // //////////////* Admin List API //////////////
 
 type adminListShippingMethodsParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) adminListShippingMethods(ctx *fiber.Ctx) error {
+func (server *Server) adminListShippingMethods(ctx fiber.Ctx) error {
 	params := &adminListShippingMethodsParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -201,8 +201,8 @@ func (server *Server) adminListShippingMethods(ctx *fiber.Ctx) error {
 
 // //////////////* UPDATE API ///////////////
 type updateShippingMethodParamsRequest struct {
-	AdminID          int64 `params:"adminId" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
+	AdminID          int64 `uri:"adminId" validate:"required,min=1"`
+	ShippingMethodID int64 `uri:"methodId" validate:"required,min=1"`
 }
 
 type updateShippingMethodJsonRequest struct {
@@ -210,7 +210,7 @@ type updateShippingMethodJsonRequest struct {
 	Price *string `json:"price" validate:"omitempty,required"`
 }
 
-func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
+func (server *Server) updateShippingMethod(ctx fiber.Ctx) error {
 	params := &updateShippingMethodParamsRequest{}
 	req := &updateShippingMethodJsonRequest{}
 
@@ -253,11 +253,11 @@ func (server *Server) updateShippingMethod(ctx *fiber.Ctx) error {
 // ////////////* Delete API //////////////
 
 type deleteShippingMethodParamsRequest struct {
-	AdminID          int64 `params:"adminId" validate:"required,min=1"`
-	ShippingMethodID int64 `params:"methodId" validate:"required,min=1"`
+	AdminID          int64 `uri:"adminId" validate:"required,min=1"`
+	ShippingMethodID int64 `uri:"methodId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShippingMethod(ctx *fiber.Ctx) error {
+func (server *Server) deleteShippingMethod(ctx fiber.Ctx) error {
 	params := &deleteShippingMethodParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

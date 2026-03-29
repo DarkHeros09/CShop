@@ -5,7 +5,7 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // Custom validation function
@@ -35,67 +35,36 @@ type Input struct {
 	query  any
 }
 
-func (server *Server) parseAndValidate(ctx *fiber.Ctx, input Input) error {
-
-	switch {
-	case input.params != nil && input.req == nil && input.query == nil:
-		if err := ctx.ParamsParser(input.params); err != nil {
+func (server *Server) parseAndValidate(ctx fiber.Ctx, input Input) error {
+	// 1. Handle URI params
+	if input.params != nil {
+		if err := ctx.Bind().URI(input.params); err != nil {
 			return err
 		}
 		if err := server.validate.Struct(input.params); err != nil {
 			return err
 		}
-		return nil
-
-	case input.params == nil && input.req != nil && input.query == nil:
-		if err := ctx.BodyParser(input.req); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.req); err != nil {
-			return err
-		}
-		return nil
-
-	case input.params == nil && input.req == nil && input.query != nil:
-		if err := ctx.QueryParser(input.query); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.query); err != nil {
-			return err
-		}
-		return nil
-
-	case input.params != nil && input.req != nil && input.query == nil:
-		if err := ctx.ParamsParser(input.params); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.params); err != nil {
-			return err
-		}
-
-		if err := ctx.BodyParser(input.req); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.req); err != nil {
-			return err
-		}
-		return nil
-
-	case input.params != nil && input.req == nil && input.query != nil:
-		if err := ctx.ParamsParser(input.params); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.params); err != nil {
-			return err
-		}
-
-		if err := ctx.QueryParser(input.query); err != nil {
-			return err
-		}
-		if err := server.validate.Struct(input.query); err != nil {
-			return err
-		}
-		return nil
 	}
+
+	// 2. Handle Body
+	if input.req != nil {
+		if err := ctx.Bind().Body(input.req); err != nil {
+			return err
+		}
+		if err := server.validate.Struct(input.req); err != nil {
+			return err
+		}
+	}
+
+	// 3. Handle Query params
+	if input.query != nil {
+		if err := ctx.Bind().Query(input.query); err != nil {
+			return err
+		}
+		if err := server.validate.Struct(input.query); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

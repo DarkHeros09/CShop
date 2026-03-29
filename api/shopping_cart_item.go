@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,8 +15,8 @@ import (
 // //////////////* Create API //////////////
 
 // type createShoppingCartItemParamsRequest struct {
-// 	UserID         int64 `params:"id" validate:"required,min=1"`
-// 	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+// 	UserID         int64 `uri:"id" validate:"required,min=1"`
+// 	ShoppingCartID int64 `uri:"cartId" validate:"required,min=1"`
 // }
 
 // type data struct {
@@ -28,7 +28,7 @@ import (
 // 	ShopCartItem []data `json:"data" validate:"required,dive,required"`
 // }
 
-// func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
+// func (server *Server) createShoppingCartItem(ctx fiber.Ctx) error {
 // 	params := &createShoppingCartItemParamsRequest{}
 // 	req := &createShoppingCartItemsRequest{}
 // 	var arg []db.CreateShoppingCartItemParams
@@ -80,8 +80,8 @@ import (
 //////////////* Create API //////////////
 
 type createShoppingCartItemParamsRequest struct {
-	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+	UserID         int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `uri:"cartId" validate:"required,min=1"`
 }
 type createShoppingCartItemRequest struct {
 	ProductItemID int64 `json:"product_item_id" validate:"required,min=1"`
@@ -89,7 +89,7 @@ type createShoppingCartItemRequest struct {
 	QTY           int32 `json:"qty" validate:"required,min=1"`
 }
 
-func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
+func (server *Server) createShoppingCartItem(ctx fiber.Ctx) error {
 	params := &createShoppingCartItemParamsRequest{}
 	req := &createShoppingCartItemRequest{}
 
@@ -131,11 +131,11 @@ func (server *Server) createShoppingCartItem(ctx *fiber.Ctx) error {
 
 // ////////////* Get API //////////////
 type getShoppingCartItemParamsRequest struct {
-	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+	UserID         int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `uri:"cartId" validate:"required,min=1"`
 }
 
-func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
+func (server *Server) getShoppingCartItem(ctx fiber.Ctx) error {
 	params := &getShoppingCartItemParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -177,7 +177,7 @@ func (server *Server) getShoppingCartItem(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listShoppingCartItemsParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 
 type listShoppingCartItemsResponse struct {
@@ -310,7 +310,7 @@ func newlistShoppingCartItemsResponse(
 	return rsp
 }
 
-func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
+func (server *Server) listShoppingCartItems(ctx fiber.Ctx) error {
 	params := &listShoppingCartItemsParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -397,9 +397,9 @@ func (server *Server) listShoppingCartItems(ctx *fiber.Ctx) error {
 
 // ////////////* UPDATE API //////////////
 type updateShoppingCartItemParamsRequest struct {
-	UserID             int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID     int64 `params:"cartId" validate:"required,min=1"`
-	ShoppingCartItemID int64 `params:"itemId" validate:"required,min=1"`
+	UserID             int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID     int64 `uri:"cartId" validate:"required,min=1"`
+	ShoppingCartItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
 type updateShoppingCartItemJsonRequest struct {
@@ -408,7 +408,7 @@ type updateShoppingCartItemJsonRequest struct {
 	QTY           *int64 `json:"qty" validate:"omitempty,required"`
 }
 
-func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
+func (server *Server) updateShoppingCartItem(ctx fiber.Ctx) error {
 	params := &updateShoppingCartItemParamsRequest{}
 	req := &updateShoppingCartItemJsonRequest{}
 
@@ -451,12 +451,12 @@ func (server *Server) updateShoppingCartItem(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deleteShoppingCartItemParamsRequest struct {
-	UserID             int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID     int64 `params:"cartId" validate:"required,min=1"`
-	ShoppingCartItemID int64 `params:"itemId" validate:"required,min=1"`
+	UserID             int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID     int64 `uri:"cartId" validate:"required,min=1"`
+	ShoppingCartItemID int64 `uri:"itemId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
+func (server *Server) deleteShoppingCartItem(ctx fiber.Ctx) error {
 	params := &deleteShoppingCartItemParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -500,11 +500,11 @@ func (server *Server) deleteShoppingCartItem(ctx *fiber.Ctx) error {
 // ////////////* Delete All API //////////////
 
 type deleteShoppingCartItemAllParamsRequest struct {
-	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+	UserID         int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `uri:"cartId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
+func (server *Server) deleteShoppingCartItemAllByUser(ctx fiber.Ctx) error {
 	params := &deleteShoppingCartItemAllParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -546,8 +546,8 @@ func (server *Server) deleteShoppingCartItemAllByUser(ctx *fiber.Ctx) error {
 
 // ////////////* Finish Purshase API //////////////
 type finishPurshaseParamsRequest struct {
-	UserID         int64 `params:"id" validate:"required,min=1"`
-	ShoppingCartID int64 `params:"cartId" validate:"required,min=1"`
+	UserID         int64 `uri:"id" validate:"required,min=1"`
+	ShoppingCartID int64 `uri:"cartId" validate:"required,min=1"`
 }
 type finishPurshaseJsonRequest struct {
 	UserAddressID    int64  `json:"user_address_id" validate:"required,min=1"`
@@ -557,7 +557,7 @@ type finishPurshaseJsonRequest struct {
 	OrderTotal       string `json:"order_total" validate:"required"`
 }
 
-func (server *Server) finishPurchase(ctx *fiber.Ctx) error {
+func (server *Server) finishPurchase(ctx fiber.Ctx) error {
 	params := &finishPurshaseParamsRequest{}
 	req := &finishPurshaseJsonRequest{}
 

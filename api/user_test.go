@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
@@ -1774,7 +1774,7 @@ func TestGetUserAPI(t *testing.T) {
 
 			tc.setupAuth(t, request, server.userTokenMaker)
 
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 			//check response
 			tc.checkResponse(t, rsp)
@@ -1906,7 +1906,7 @@ func TestUpdateUserAPI(t *testing.T) {
 
 			tc.setupAuth(t, request, server.userTokenMaker)
 
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 
 			tc.checkResponse(t, rsp)
@@ -2040,7 +2040,7 @@ func TestAdminUpdateUserAPI(t *testing.T) {
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
 
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 
 			tc.checkResponse(t, rsp)
@@ -2220,7 +2220,7 @@ func TestListUsersAPI(t *testing.T) {
 			request.URL.RawQuery = q.Encode()
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 
 			tc.checkResponse(t, rsp)
@@ -2343,7 +2343,7 @@ func TestAdminSearchUserByEmailAPI(t *testing.T) {
 			request.Header.Set("Content-Type", "application/json")
 
 			tc.setupAuth(t, request, server.adminTokenMaker)
-			rsp, err := server.router.Test(request, -1)
+			rsp, err := server.router.Test(request /*, -1*/)
 			require.NoError(t, err)
 
 			tc.checkResponse(t, rsp)

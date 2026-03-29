@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cshop/v3/token"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/stretchr/testify/require"
 )
 
@@ -109,7 +109,7 @@ func TestAuthMiddlewareForUser(t *testing.T) {
 			server.router.Use(authMiddleware(server.userTokenMaker, false))
 			server.router.Get(
 				authPath,
-				func(ctx *fiber.Ctx) error {
+				func(ctx fiber.Ctx) error {
 					empty := make(map[string]any)
 					ctx.Status(fiber.StatusOK).JSON(fmt.Sprint(empty))
 					return nil

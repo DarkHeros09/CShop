@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,14 +15,14 @@ import (
 //////////////* Create API //////////////
 
 type createUserReviewParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type createUserReviewRequest struct {
 	OrderedProductID int64 `json:"ordered_product_id" validate:"required,min=1"`
 	RatingValue      int32 `json:"rating_value" validate:"required,min=0,max=5"`
 }
 
-func (server *Server) createUserReview(ctx *fiber.Ctx) error {
+func (server *Server) createUserReview(ctx fiber.Ctx) error {
 	params := &createUserReviewParamsRequest{}
 	req := &createUserReviewRequest{}
 
@@ -64,11 +64,11 @@ func (server *Server) createUserReview(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getUserReviewParamsRequest struct {
-	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
+	UserID   int64 `uri:"id" validate:"required,min=1"`
+	ReviewID int64 `uri:"reviewId" validate:"required,min=1"`
 }
 
-func (server *Server) getUserReview(ctx *fiber.Ctx) error {
+func (server *Server) getUserReview(ctx fiber.Ctx) error {
 	params := &getUserReviewParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -109,14 +109,14 @@ func (server *Server) getUserReview(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listUserReviewParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type listUserReviewsRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listUserReviews(ctx *fiber.Ctx) error {
+func (server *Server) listUserReviews(ctx fiber.Ctx) error {
 	params := &listUserReviewParamsRequest{}
 	query := &listUserReviewsRequest{}
 
@@ -158,8 +158,8 @@ func (server *Server) listUserReviews(ctx *fiber.Ctx) error {
 
 // ////////////* UPDATE API //////////////
 type updateUserReviewParamsRequest struct {
-	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
+	UserID   int64 `uri:"id" validate:"required,min=1"`
+	ReviewID int64 `uri:"reviewId" validate:"required,min=1"`
 }
 
 type updateUserReviewJsonRequest struct {
@@ -167,7 +167,7 @@ type updateUserReviewJsonRequest struct {
 	RatingValue      *int64 `json:"rating_value" validate:"omitempty,required,min=0,max=5"`
 }
 
-func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
+func (server *Server) updateUserReview(ctx fiber.Ctx) error {
 	params := &updateUserReviewParamsRequest{}
 	req := &updateUserReviewJsonRequest{}
 
@@ -209,11 +209,11 @@ func (server *Server) updateUserReview(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deleteUserReviewParamsRequest struct {
-	UserID   int64 `params:"id" validate:"required,min=1"`
-	ReviewID int64 `params:"reviewId" validate:"required,min=1"`
+	UserID   int64 `uri:"id" validate:"required,min=1"`
+	ReviewID int64 `uri:"reviewId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteUserReview(ctx *fiber.Ctx) error {
+func (server *Server) deleteUserReview(ctx fiber.Ctx) error {
 	params := &deleteUserReviewParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
