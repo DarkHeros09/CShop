@@ -6,7 +6,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 )
@@ -21,7 +21,7 @@ type renewAccessTokenResponse struct {
 	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
 
-func (server *Server) renewAccessToken(ctx *fiber.Ctx) error {
+func (server *Server) renewAccessToken(ctx fiber.Ctx) error {
 	req := &renewAccessTokenRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -117,7 +117,7 @@ type renewRefreshTokenResponse struct {
 	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
 }
 
-func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
+func (server *Server) renewRefreshToken(ctx fiber.Ctx) error {
 	req := &renewRefreshTokenRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -216,7 +216,7 @@ func (server *Server) renewRefreshToken(ctx *fiber.Ctx) error {
 		ID:           newRefreshPayload.ID,
 		UserID:       userSession.UserID,
 		RefreshToken: newRefreshToken,
-		UserAgent:    string(ctx.Context().UserAgent()),
+		UserAgent:    string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    newRefreshPayload.ExpiredAt,
 	}
@@ -250,7 +250,7 @@ type renewAccessTokenForAdminResponse struct {
 	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
 
-func (server *Server) renewAccessTokenForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) renewAccessTokenForAdmin(ctx fiber.Ctx) error {
 	req := &renewAccessTokenForAdminRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -334,7 +334,7 @@ type renewRefreshTokenForAdminResponse struct {
 	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
 }
 
-func (server *Server) renewRefreshTokenForAdmin(ctx *fiber.Ctx) error {
+func (server *Server) renewRefreshTokenForAdmin(ctx fiber.Ctx) error {
 	req := &renewRefreshTokenForAdminRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{req: req}); err != nil {
@@ -426,7 +426,7 @@ func (server *Server) renewRefreshTokenForAdmin(ctx *fiber.Ctx) error {
 		ID:           newRefreshPayload.ID,
 		AdminID:      userSession.AdminID,
 		RefreshToken: newRefreshToken,
-		AdminAgent:   string(ctx.Context().UserAgent()),
+		AdminAgent:   string(ctx.UserAgent()),
 		ClientIp:     ctx.IP(),
 		ExpiresAt:    newRefreshPayload.ExpiredAt,
 	}

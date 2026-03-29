@@ -5,7 +5,7 @@ import (
 
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgx/v5"
 )
@@ -22,10 +22,10 @@ type dashboardJsonResponse struct {
 }
 
 type dashboardParamsResquest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 
-func (server *Server) getDashboardInfo(ctx *fiber.Ctx) error {
+func (server *Server) getDashboardInfo(ctx fiber.Ctx) error {
 	params := &dashboardParamsResquest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

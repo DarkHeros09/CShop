@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -14,14 +14,14 @@ import (
 
 // ////////////* Create API //////////////
 type createVariationOptionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 type createVariationOptionJsonRequest struct {
 	VariationID int64  `json:"variation_id" validate:"required,min=1"`
 	Value       string `json:"value" validate:"required,alphanumunicode_space"`
 }
 
-func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
+func (server *Server) createVariationOption(ctx fiber.Ctx) error {
 	params := &createVariationOptionParamsRequest{}
 	req := &createVariationOptionJsonRequest{}
 
@@ -62,10 +62,10 @@ func (server *Server) createVariationOption(ctx *fiber.Ctx) error {
 //////////////* Get API //////////////
 
 type getVariationOptionParamsRequest struct {
-	ID int64 `params:"id" validate:"required,min=1"`
+	ID int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) getVariationOption(ctx *fiber.Ctx) error {
+func (server *Server) getVariationOption(ctx fiber.Ctx) error {
 	params := &getVariationOptionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -99,7 +99,7 @@ type listVariationOptionsQueryRequest struct {
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listVariationOptions(ctx *fiber.Ctx) error {
+func (server *Server) listVariationOptions(ctx fiber.Ctx) error {
 	query := &listVariationOptionsQueryRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
@@ -133,8 +133,8 @@ func (server *Server) listVariationOptions(ctx *fiber.Ctx) error {
 //////////////* Update API //////////////
 
 type updateVariationOptionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updateVariationOptionJsonRequest struct {
@@ -142,7 +142,7 @@ type updateVariationOptionJsonRequest struct {
 	Value       *string `json:"value" validate:"omitempty,required"`
 }
 
-func (server *Server) updateVariationOption(ctx *fiber.Ctx) error {
+func (server *Server) updateVariationOption(ctx fiber.Ctx) error {
 	params := &updateVariationOptionParamsRequest{}
 	req := &updateVariationOptionJsonRequest{}
 
@@ -183,11 +183,11 @@ func (server *Server) updateVariationOption(ctx *fiber.Ctx) error {
 //////////////* Delete API //////////////
 
 type deleteVariationOptionParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteVariationOption(ctx *fiber.Ctx) error {
+func (server *Server) deleteVariationOption(ctx fiber.Ctx) error {
 	params := &deleteVariationOptionParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

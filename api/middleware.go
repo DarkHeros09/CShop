@@ -7,7 +7,7 @@ import (
 
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 )
 
 func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
+	return func(ctx fiber.Ctx) error {
 		authorizationHeader := ctx.Get(authorizationHeaderKey)
 
 		if len(authorizationHeader) == 0 {

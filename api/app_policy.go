@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,13 +15,13 @@ import (
 //////////////* Create API //////////////
 
 type createAppPolicyParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
 }
 type createAppPolicyRequest struct {
 	Policy string `json:"policy" validate:"required"`
 }
 
-func (server *Server) createAppPolicy(ctx *fiber.Ctx) error {
+func (server *Server) createAppPolicy(ctx fiber.Ctx) error {
 	params := &createAppPolicyParamsRequest{}
 	req := &createAppPolicyRequest{}
 
@@ -61,7 +61,7 @@ func (server *Server) createAppPolicy(ctx *fiber.Ctx) error {
 
 // ////////////* Get API //////////////
 
-func (server *Server) getAppPolicy(ctx *fiber.Ctx) error {
+func (server *Server) getAppPolicy(ctx fiber.Ctx) error {
 
 	appPolicy, err := server.store.GetAppPolicy(ctx.Context())
 	if err != nil {
@@ -84,15 +84,15 @@ func (server *Server) getAppPolicy(ctx *fiber.Ctx) error {
 
 // ////////////* UPDATE API //////////////
 type updateAppPolicyParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
 type updateAppPolicyJsonRequest struct {
 	Policy *string `json:"policy" validate:"required"`
 }
 
-func (server *Server) updateAppPolicy(ctx *fiber.Ctx) error {
+func (server *Server) updateAppPolicy(ctx fiber.Ctx) error {
 	params := &updateAppPolicyParamsRequest{}
 	req := &updateAppPolicyJsonRequest{}
 
@@ -133,11 +133,11 @@ func (server *Server) updateAppPolicy(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deleteAppPolicyParamsRequest struct {
-	AdminID int64 `params:"adminId" validate:"required,min=1"`
-	ID      int64 `params:"id" validate:"required,min=1"`
+	AdminID int64 `uri:"adminId" validate:"required,min=1"`
+	ID      int64 `uri:"id" validate:"required,min=1"`
 }
 
-func (server *Server) deleteAppPolicy(ctx *fiber.Ctx) error {
+func (server *Server) deleteAppPolicy(ctx fiber.Ctx) error {
 	params := &deleteAppPolicyParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {

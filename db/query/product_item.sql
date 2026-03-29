@@ -523,15 +523,15 @@ WHERE
     ) 
     WHEN COALESCE(sqlc.narg(order_by_high_price), FALSE) = TRUE
 	THEN (
-        (pi.price < sqlc.narg(price)) OR
-        (pi.price = sqlc.narg(price) AND pi.id < sqlc.arg(product_item_id)) OR
-        (pi.price = sqlc.narg(price) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
+        (pi.price::NUMERIC < (sqlc.narg(price)::VARCHAR)::NUMERIC) OR
+        (pi.price::NUMERIC = (sqlc.narg(price)::VARCHAR)::NUMERIC AND pi.id < sqlc.arg(product_item_id)) OR
+        (pi.price::NUMERIC = (sqlc.narg(price)::VARCHAR)::NUMERIC AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
         )
     WHEN COALESCE(sqlc.narg(order_by_low_price), FALSE) = TRUE
 	THEN (
-        (pi.price > sqlc.narg(price)) OR
-        (pi.price = sqlc.narg(price) AND pi.id < sqlc.arg(product_item_id)) OR
-        (pi.price = sqlc.narg(price) AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
+        (pi.price::NUMERIC > (sqlc.narg(price)::VARCHAR)::NUMERIC) OR
+        (pi.price::NUMERIC = (sqlc.narg(price)::VARCHAR)::NUMERIC AND pi.id < sqlc.arg(product_item_id)) OR
+        (pi.price::NUMERIC = (sqlc.narg(price)::VARCHAR)::NUMERIC AND pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id))
          )
 	ELSE (pi.id < sqlc.arg(product_item_id) 
          OR (pi.id = sqlc.arg(product_item_id) AND pi.product_id < sqlc.arg(product_id)))

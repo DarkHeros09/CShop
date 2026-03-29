@@ -6,7 +6,7 @@ import (
 	db "github.com/cshop/v3/db/sqlc"
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +15,7 @@ import (
 //////////////* Create API //////////////
 
 type createUserAddressParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type createUserAddressJsonRequest struct {
 	Name        string `json:"name" validate:"required"`
@@ -49,7 +49,7 @@ func newUserAddressResponseForCreate(address *db.Address, defualtAddressId int64
 	}
 }
 
-func (server *Server) createUserAddress(ctx *fiber.Ctx) error {
+func (server *Server) createUserAddress(ctx fiber.Ctx) error {
 	params := &createUserAddressParamsRequest{}
 	req := &createUserAddressJsonRequest{}
 
@@ -143,11 +143,11 @@ func newUserAddressResponseForGet(address *db.GetUserAddressRow) userAddressResp
 }
 
 type getUserAddressParamsRequest struct {
-	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"addressId" validate:"required,min=1"`
+	UserID    int64 `uri:"id" validate:"required,min=1"`
+	AddressID int64 `uri:"addressId" validate:"required,min=1"`
 }
 
-func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
+func (server *Server) getUserAddress(ctx fiber.Ctx) error {
 	params := &getUserAddressParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
@@ -190,14 +190,14 @@ func (server *Server) getUserAddress(ctx *fiber.Ctx) error {
 //////////////* List API //////////////
 
 type listUserAddressParamsRequest struct {
-	UserID int64 `params:"id" validate:"required,min=1"`
+	UserID int64 `uri:"id" validate:"required,min=1"`
 }
 type listUserAddressesQueryRequest struct {
 	PageID   int32 `query:"page_id" validate:"required,min=1"`
 	PageSize int32 `query:"page_size" validate:"required,min=5,max=10"`
 }
 
-func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
+func (server *Server) listUserAddresses(ctx fiber.Ctx) error {
 	params := &listUserAddressParamsRequest{}
 	query := &listUserAddressesQueryRequest{}
 
@@ -235,8 +235,8 @@ func (server *Server) listUserAddresses(ctx *fiber.Ctx) error {
 
 // ////////////* UPDATE API //////////////
 type updateUserAddressParamsRequest struct {
-	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"addressId" validate:"required,min=1"`
+	UserID    int64 `uri:"id" validate:"required,min=1"`
+	AddressID int64 `uri:"addressId" validate:"required,min=1"`
 }
 
 type updateUserAddressJsonRequest struct {
@@ -261,7 +261,7 @@ func newUserAddressResponseForUpdate(user *db.User, address *db.Address) userAdd
 	}
 }
 
-func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
+func (server *Server) updateUserAddress(ctx fiber.Ctx) error {
 	params := &updateUserAddressParamsRequest{}
 	req := &updateUserAddressJsonRequest{}
 
@@ -323,11 +323,11 @@ func (server *Server) updateUserAddress(ctx *fiber.Ctx) error {
 
 // ////////////* Delete API //////////////
 type deleteUserAddressParamsRequest struct {
-	UserID    int64 `params:"id" validate:"required,min=1"`
-	AddressID int64 `params:"addressId" validate:"required,min=1"`
+	UserID    int64 `uri:"id" validate:"required,min=1"`
+	AddressID int64 `uri:"addressId" validate:"required,min=1"`
 }
 
-func (server *Server) deleteUserAddress(ctx *fiber.Ctx) error {
+func (server *Server) deleteUserAddress(ctx fiber.Ctx) error {
 	params := &deleteUserAddressParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
