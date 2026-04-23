@@ -15,7 +15,7 @@ require (
 	github.com/hibiken/asynq v0.26.0
 	github.com/imagekit-developer/imagekit-go v0.0.0-20240521071536-1d7e6e67fcd7
 	github.com/jackc/pgconn v1.14.3
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/quagmt/udecimal v1.10.0
 	github.com/redis/go-redis/v9 v9.18.0
