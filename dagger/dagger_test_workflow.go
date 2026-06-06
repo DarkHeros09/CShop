@@ -26,7 +26,7 @@ func main() {
 	platform := dagger.Platform("linux/amd64")
 
 	// Get the dotenvx binary from the official image
-	dotenvxBin := client.Container().From("dotenv/dotenvx:v1.52").
+	dotenvxBin := client.Container().From("dotenv/dotenvx:latest").
 		File("/usr/local/bin/dotenvx")
 
 	// Database service used for application tests
@@ -87,7 +87,7 @@ func main() {
 	// multi stage build - stage 2
 	// golang image with cached dependencies
 	container := client.Container(dagger.ContainerOpts{Platform: platform}).
-		From("golang:1.25.5-alpine").
+		From("golang:1.26.4-alpine").
 		// WithEnvVariable("BUST", time.Now().String()).
 		WithEnvVariable("TZ", "Africa/Tripoli").
 		WithServiceBinding("localhost", database). // bind database with the name db
