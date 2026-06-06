@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
 	"github.com/imagekit-developer/imagekit-go/api/media"
-	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type createProductImagesParamsRequest struct {
