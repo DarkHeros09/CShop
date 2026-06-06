@@ -7,8 +7,8 @@ import (
 	"github.com/cshop/v3/token"
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v3"
-	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // ////////////* Create API //////////////
