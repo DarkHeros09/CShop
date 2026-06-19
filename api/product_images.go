@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	db "github.com/cshop/v3/db/sqlc"
@@ -9,7 +10,8 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/gofiber/fiber/v3"
 	"github.com/guregu/null/v6"
-	"github.com/imagekit-developer/imagekit-go/api/media"
+	"github.com/imagekit-developer/imagekit-go/v2"
+	ikparam "github.com/imagekit-developer/imagekit-go/v2/packages/param"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -74,7 +76,7 @@ type listproductImagesParamsResquest struct {
 }
 
 type listproductImagesQueryRequest struct {
-	Path string `query:"path" validate:"omitempty,required,alphaunicode"`
+	Path string `query:"path" validate:"omitempty,required,ascii"`
 	Tag  string `query:"tag" validate:"omitempty,required,alphaunicode"`
 }
 
@@ -94,21 +96,22 @@ func (server *Server) listproductImages(ctx fiber.Ctx) error {
 		return nil
 	}
 
-	resp, err := server.ik.ListAndSearch(ctx.Context(), media.FilesParam{
-		Path: query.Path,
-		Tags: query.Tag,
+	resp, err := server.ik.ListAndSearch(ctx.Context(), imagekit.AssetListParams{
+		Path:        ikparam.Opt[string]{Value: query.Path},
+		SearchQuery: ikparam.Opt[string]{Value: query.Tag},
 	})
 
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
+		fmt.Println(err)
 		return nil
 	}
 
-	imagesURLs := make([]imageResponse, len(resp.Data))
+	imagesURLs := make([]imageResponse, len(*resp))
 
-	for i := 0; i < len(resp.Data); i++ {
+	for i := 0; i < len(*resp); i++ {
 		imagesURLs[i] = imageResponse{
-			URL: resp.Data[i].Url,
+			URL: (*resp)[i].URL,
 		}
 	}
 

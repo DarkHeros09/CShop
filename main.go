@@ -15,7 +15,6 @@ import (
 	"github.com/cshop/v3/util"
 	"github.com/cshop/v3/worker"
 	"github.com/hibiken/asynq"
-	"github.com/imagekit-developer/imagekit-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/option"
@@ -42,7 +41,7 @@ func main() {
 		log.Fatal("cannot connect to db", err)
 	}
 
-	opt := option.WithCredentialsFile("serviceAccountKey.json")
+	opt := option.WithAuthCredentialsFile(option.ServiceAccount, "serviceAccountKey.json")
 
 	fb, err := firebase.NewApp(context.Background(), nil, opt)
 
@@ -58,11 +57,7 @@ func main() {
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
-	ik := image.NewImageKit(imagekit.NewParams{
-		PrivateKey:  config.ImageKitPrivateKey,
-		PublicKey:   config.ImageKitPublicKey,
-		UrlEndpoint: config.ImageKitUrlEndPoint,
-	})
+	ik := image.NewImageKit(config.ImageKitPrivateKey)
 
 	sender := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
 
