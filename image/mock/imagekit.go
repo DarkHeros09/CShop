@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	media "github.com/imagekit-developer/imagekit-go/api/media"
-	url "github.com/imagekit-developer/imagekit-go/url"
+	imagekit "github.com/imagekit-developer/imagekit-go/v2"
+	shared "github.com/imagekit-developer/imagekit-go/v2/shared"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -43,10 +43,10 @@ func (m *MockImageKitManagement) EXPECT() *MockImageKitManagementMockRecorder {
 }
 
 // ListAndSearch mocks base method.
-func (m *MockImageKitManagement) ListAndSearch(ctx context.Context, params media.FilesParam) (*media.FilesResponse, error) {
+func (m *MockImageKitManagement) ListAndSearch(ctx context.Context, params imagekit.AssetListParams) (*[]imagekit.AssetListResponseUnion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAndSearch", ctx, params)
-	ret0, _ := ret[0].(*media.FilesResponse)
+	ret0, _ := ret[0].(*[]imagekit.AssetListResponseUnion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -58,7 +58,7 @@ func (mr *MockImageKitManagementMockRecorder) ListAndSearch(ctx, params any) *go
 }
 
 // UrlGeneration mocks base method.
-func (m *MockImageKitManagement) UrlGeneration(ctx context.Context, params url.UrlParam) (*string, error) {
+func (m *MockImageKitManagement) UrlGeneration(ctx context.Context, params shared.SrcOptionsParam) (*string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UrlGeneration", ctx, params)
 	ret0, _ := ret[0].(*string)

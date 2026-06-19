@@ -3,14 +3,14 @@ package mail
 import (
 	"crypto/tls"
 	"fmt"
-	"net/smtp"
 
-	"github.com/jordan-wright/email"
+	"github.com/wneessen/go-mail"
 )
 
 const (
-	smtpAuthAddress   = "smtp.gmail.com"
-	smtpServerAddress = "smtp.gmail.com:587"
+	smtpAuthAddress = "smtp.gmail.com"
+	// go-mail handles the port separately or parses it; we'll use 587 as an int
+	smtpPort = 587
 )
 
 type EmailSender interface {
@@ -46,34 +46,49 @@ func (sender *GmailSender) SendEmail(
 	bcc []string,
 	attachFiles []string,
 ) error {
-	// Initialize the email object
-	e := email.NewEmail()
-	e.From = fmt.Sprintf("%s <%s>", sender.name, sender.fromEmailAddress)
-	e.Subject = subject
-	e.HTML = []byte(content)
-	e.To = to
-	e.Cc = cc
-	e.Bcc = bcc
+	// Initialize the message
+	m := mail.NewMsg()
+
+	// Set From address formatted nicely with a display name
+	if err := m.FromFormat(sender.name, sender.fromEmailAddress); err != nil {
+		return fmt.Errorf("failed to set from address: %w", err)
+	}
+
+	m.Subject(subject)
+	m.SetBodyString(mail.TypeTextHTML, content)
+
+	// Set bulk recipient slices
+	m.To(to...)
+	m.Cc(cc...)
+	m.Bcc(bcc...)
 
 	// Attach files if any
 	for _, f := range attachFiles {
-		_, err := e.AttachFile(f)
-		if err != nil {
-			return fmt.Errorf("failed to attach file %s: %w", f, err)
-		}
+		// AttachFile handles file reading and content-type detection internally
+		m.AttachFile(f)
 	}
 
-	// Use smtp.PlainAuth for authentication
-	smtpAuth := smtp.PlainAuth("", sender.fromEmailAddress, sender.fromEmailPassword, smtpAuthAddress)
-
-	// Configure TLS settings to ensure secure connection without mTLS
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
-	// Send the email with custom TLS configuration
-	err := e.SendWithStartTLS(smtpServerAddress, smtpAuth, tlsConfig)
+	// Initialize the SMTP client with modern configuration options
+	c, err := mail.NewClient(
+		smtpAuthAddress,
+		mail.WithPort(smtpPort),
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithUsername(sender.fromEmailAddress),
+		mail.WithPassword(sender.fromEmailPassword),
+		// Tell go-mail to explicitly upgrade the plain connection to STARTTLS
+		mail.WithTLSPolicy(mail.TLSMandatory),
+		// Custom TLS config for InsecureSkipVerify
+		mail.WithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         smtpAuthAddress,
+		}),
+	)
 	if err != nil {
+		return fmt.Errorf("failed to initialize smtp client: %w", err)
+	}
+
+	// Dial the server and transmit the message
+	if err := c.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
