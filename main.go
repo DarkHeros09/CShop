@@ -59,7 +59,10 @@ func main() {
 
 	ik := image.NewImageKit(config.ImageKitPrivateKey)
 
-	sender := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	sender, err := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	if err != nil {
+		log.Fatal("failed to create email sender:", err)
+	}
 
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
@@ -80,11 +83,14 @@ func runTaskProcessor(
 	redisOpt asynq.RedisClientOpt,
 	store db.Store,
 ) {
-	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	mailer, err := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	if err != nil {
+		log.Fatal("failed to create email sender:", err)
+	}
 	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer, config)
 
 	// log.Info().Msg("start task processor")
-	err := taskProcessor.Start()
+	err = taskProcessor.Start()
 	if err != nil {
 		// log.Fatal().Err(err).Msg("failed to start task processor")
 	}
