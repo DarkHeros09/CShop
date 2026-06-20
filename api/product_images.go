@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	db "github.com/cshop/v3/db/sqlc"
@@ -103,7 +102,6 @@ func (server *Server) listproductImages(ctx fiber.Ctx) error {
 
 	if err != nil {
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		fmt.Println(err)
 		return nil
 	}
 

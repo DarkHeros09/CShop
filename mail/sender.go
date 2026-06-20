@@ -25,17 +25,37 @@ type EmailSender interface {
 }
 
 type GmailSender struct {
+	client            *mail.Client
 	name              string
 	fromEmailAddress  string
 	fromEmailPassword string
 }
 
-func NewGmailSender(name string, fromEmailAddress string, fromEmailPassword string) EmailSender {
+func NewGmailSender(name string, fromEmailAddress string, fromEmailPassword string) (EmailSender, error) {
+	// Initialize the SMTP client with modern configuration options
+	client, err := mail.NewClient(
+		smtpAuthAddress,
+		mail.WithPort(smtpPort),
+		mail.WithSMTPAuth(mail.SMTPAuthPlain),
+		mail.WithUsername(fromEmailAddress),
+		mail.WithPassword(fromEmailPassword),
+		// Tell go-mail to explicitly upgrade the plain connection to STARTTLS
+		mail.WithTLSPolicy(mail.TLSMandatory),
+		// Custom TLS config for InsecureSkipVerify
+		mail.WithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         smtpAuthAddress,
+		}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize smtp client: %w", err)
+	}
 	return &GmailSender{
+		client:            client,
 		name:              name,
 		fromEmailAddress:  fromEmailAddress,
 		fromEmailPassword: fromEmailPassword,
-	}
+	}, nil
 }
 
 func (sender *GmailSender) SendEmail(
@@ -68,27 +88,8 @@ func (sender *GmailSender) SendEmail(
 		m.AttachFile(f)
 	}
 
-	// Initialize the SMTP client with modern configuration options
-	c, err := mail.NewClient(
-		smtpAuthAddress,
-		mail.WithPort(smtpPort),
-		mail.WithSMTPAuth(mail.SMTPAuthPlain),
-		mail.WithUsername(sender.fromEmailAddress),
-		mail.WithPassword(sender.fromEmailPassword),
-		// Tell go-mail to explicitly upgrade the plain connection to STARTTLS
-		mail.WithTLSPolicy(mail.TLSMandatory),
-		// Custom TLS config for InsecureSkipVerify
-		mail.WithTLSConfig(&tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         smtpAuthAddress,
-		}),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to initialize smtp client: %w", err)
-	}
-
 	// Dial the server and transmit the message
-	if err := c.DialAndSend(m); err != nil {
+	if err := sender.client.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
