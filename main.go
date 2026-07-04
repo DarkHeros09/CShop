@@ -107,8 +107,6 @@ func runTaskProcessor(
 }
 
 func runFiberServer(
-	// ctx context.Context,
-	// waitGroup *errgroup.Group,
 	config util.Config,
 	store db.Store,
 	fb *firebase.App,
@@ -125,14 +123,4 @@ func runFiberServer(
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
-
-	// waitGroup.Go(func() error {
-	// 	<-ctx.Done()
-	// 	// log.Info().Msg("graceful shutdown gRPC server")
-
-	// 	server.GracefulShutdown()
-	// 	// log.Info().Msg("gRPC server is stopped")
-
-	// 	return nil
-	// })
 }

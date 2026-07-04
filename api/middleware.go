@@ -57,7 +57,7 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 			}
 
 			ctx.Locals(authorizationAdminPayloadKey, adminPayload)
-			ctx.Next()
+			return ctx.Next()
 		}
 
 		userPayload, err = tokenMaker.VerifyTokenForUser(accessToken)
@@ -70,8 +70,6 @@ func authMiddleware(tokenMaker token.Maker, admin bool) fiber.Handler {
 		}
 
 		ctx.Locals(authorizationUserPayloadKey, userPayload)
-		ctx.Next()
-
-		return nil
+		return ctx.Next()
 	}
 }

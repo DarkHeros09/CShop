@@ -103,22 +103,11 @@ func (server *Server) getProductCategory(ctx fiber.Ctx) error {
 // }
 
 func (server *Server) listProductCategories(ctx fiber.Ctx) error {
-	// query := &listProductCategoriesQueryRequest{}
-
-	// if err := server.parseAndValidate(ctx, Input{query: query}); err != nil {
-	// 	ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
-	// 	return nil
-	// }
-
-	// arg := db.ListProductCategoriesParams{
-	// 	Limit:  query.PageSize,
-	// 	Offset: (query.PageID - 1) * query.PageSize,
-	// }
 	productCategories, err := server.store.ListProductCategories(ctx.Context())
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
-			return err
+			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil

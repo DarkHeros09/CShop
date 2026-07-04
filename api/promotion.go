@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	db "github.com/cshop/v3/db/sqlc"
@@ -37,7 +36,6 @@ func (server *Server) createPromotion(ctx fiber.Ctx) error {
 	req := &createPromotionJsonRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params, req: req}); err != nil {
-		log.Fatal(err)
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))
 		return nil
 	}

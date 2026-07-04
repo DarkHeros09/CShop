@@ -70,7 +70,7 @@ type listProductSizesParamsRequest struct {
 }
 
 func (server *Server) listProductSizes(ctx fiber.Ctx) error {
-	params := &getProductItemsParamsRequest{}
+	params := &listProductSizesParamsRequest{}
 
 	if err := server.parseAndValidate(ctx, Input{params: params}); err != nil {
 		ctx.Status(fiber.StatusBadRequest).JSON(errorResponse(err))

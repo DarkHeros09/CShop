@@ -224,9 +224,7 @@ func TestCreateUserAPI(t *testing.T) {
 					)
 			},
 			checkResponse: func(rsp *http.Response) {
-				//! should return forbiddenStatus
-				// fix url path
-				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+				require.Equal(t, http.StatusForbidden, rsp.StatusCode)
 			},
 		},
 		// {
@@ -482,9 +480,7 @@ func TestSignUpAPI(t *testing.T) {
 					)
 			},
 			checkResponse: func(rsp *http.Response) {
-				//! should return forbiddenStatus
-				// fix url path
-				require.Equal(t, http.StatusInternalServerError, rsp.StatusCode)
+				require.Equal(t, http.StatusForbidden, rsp.StatusCode)
 			},
 		},
 		{

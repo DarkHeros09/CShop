@@ -95,11 +95,11 @@ func (server *Server) createUser(ctx fiber.Ctx) error {
 			switch pqErr.Message {
 			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-				return err
+				return nil
 			}
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
-		return err
+		return nil
 	}
 
 	accessToken, accessPayload, err := server.userTokenMaker.CreateTokenForUser(
@@ -230,7 +230,7 @@ func (server *Server) signUp(ctx fiber.Ctx) error {
 			switch pqErr.Message {
 			case util.ForeignKeyViolation, util.UniqueViolation:
 				ctx.Status(fiber.StatusForbidden).JSON(errorResponse(err))
-				return err
+				return nil
 			}
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
