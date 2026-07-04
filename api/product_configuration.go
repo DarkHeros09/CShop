@@ -127,7 +127,7 @@ func (server *Server) listProductConfigurations(ctx fiber.Ctx) error {
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			ctx.Status(fiber.StatusNotFound).JSON(errorResponse(err))
-			return err
+			return nil
 		}
 		ctx.Status(fiber.StatusInternalServerError).JSON(errorResponse(err))
 		return nil
